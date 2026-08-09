@@ -182,7 +182,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /const deactivateStickyTool = useCallback/);
   assert.match(
     source,
-    /stickyToolIsActive[\s\S]*appState\.activeTool\.customType === "astryx-sticky-note"[\s\S]*if \(!stickyToolIsActive\) deactivateStickyTool\(\);/,
+    /stickyToolIsActive[\s\S]*appState\.activeTool\.customType === "astryx-sticky-note"[\s\S]*if \(!stickyToolIsActive && !stickyPlacementRef\.current\) \{[\s\S]*deactivateStickyTool\(\);/,
   );
   assert.match(
     source,
@@ -1022,7 +1022,7 @@ test("gives a selected sticky note its own formatting toolbar", () => {
   );
   assert.match(
     playgroundSource,
-    /note\.textElementId && element\.id === note\.textElementId[\s\S]{0,300}strokeColor: color\.text/,
+    /note\.textElementId && element\.id === note\.textElementId[\s\S]{0,700}strokeColor: color\.text/,
   );
 
   /*
@@ -1067,20 +1067,44 @@ test("gives a selected sticky note its own formatting toolbar", () => {
   );
   const css = readCss("./styles.css");
 
-  // Keep the selected-note controls inside a small, accessible surface instead
-  // of allowing every collaboration action to push the toolbar off-canvas.
-  assert.match(toolbarSource, /label="More sticky note options"/);
-  assert.match(toolbarSource, /aria-label="More sticky note options"/);
-  assert.match(
-    toolbarSource,
-    /ariaLabel=\{`\$\{objectLabel\} text alignment`\}/,
-  );
-  assert.doesNotMatch(toolbarSource, /project-sticky-note-toolbar__identity/);
+  // Match FigJam's selected sticky toolbar, including its exact group order.
+  assert.match(toolbarSource, /ariaLabel = "Selection Properties Menu"/);
+  const controlOrder = [
+    "project-object-toolbar__color-control",
+    'ariaLabel={`Typeface, ${typefaceLabel}`}',
+    'ariaLabel={`Font size, ${sizeLabel.toLowerCase()}`}',
+    'aria-label="Bold"',
+    'aria-label="Strikethrough"',
+    'aria-label={format.link ? "Edit link" : "Create link"}',
+    'aria-label="Bulleted list"',
+    'aria-label="Show/hide author"',
+  ].map((needle) => toolbarSource.indexOf(needle));
+  assert.ok(controlOrder.every((index) => index >= 0));
+  assert.deepEqual(controlOrder, [...controlOrder].sort((a, b) => a - b));
+  assert.doesNotMatch(toolbarSource, /More sticky note options/);
+  assert.match(toolbarSource, /aria-pressed=\{format\.bold\}/);
+  assert.match(toolbarSource, /aria-pressed=\{format\.strikethrough\}/);
+  assert.match(toolbarSource, /aria-pressed=\{format\.bulletedList\}/);
+  assert.match(toolbarSource, /projectObjectFontSizeLabel/);
+  assert.match(toolbarSource, /fontSize: 16/);
+  assert.match(toolbarSource, /textAlign: "left"/);
   assert.match(
     css,
-    /left:\s*clamp\(\s*184px,\s*var\(--project-object-toolbar-anchor-x\),\s*calc\(100vw - 184px\)\s*\);/,
+    /\.project-object-toolbar\s*\{[\s\S]*height:\s*40px;[\s\S]*border-radius:\s*13px;[\s\S]*background:\s*#1e1e1e;/,
   );
-  assert.match(css, /max-width: calc\(100vw - 24px\);/);
+  assert.match(css, /\.project-object-toolbar__color-trigger\s*\{[\s\S]*width:\s*54px;/);
+  assert.match(css, /\.project-object-toolbar__typeface-trigger\s*\{[\s\S]*width:\s*56px/);
+  assert.match(css, /\.project-object-toolbar__size-trigger\s*\{[\s\S]*width:\s*144px/);
+  assert.match(css, /\.project-object-toolbar__action\s*\{[\s\S]*width:\s*32px/);
+  assert.match(playgroundSource, /canvasTextWithBulletedList/);
+  assert.match(playgroundSource, /astryxTextFormat: format/);
+  assert.match(playgroundSource, /noteTop - 80/);
+  assert.match(playgroundSource, /textTop - 80/);
+  assert.match(playgroundSource, /stickyPlacementRef\.current = \{ color, mode \}/);
+  assert.match(
+    playgroundSource,
+    /stopStickyPlacement\(\);\s*setStickyDraft\(draft\);/,
+  );
 });
 
 test("deactivates Sticky Notes when another canvas tool becomes active", () => {
@@ -1090,12 +1114,16 @@ test("deactivates Sticky Notes when another canvas tool becomes active", () => {
   );
 
   assert.match(source, /const deactivateStickyTool = useCallback/);
+  assert.match(source, /stickyPlacementRef\.current = undefined;/);
   assert.match(source, /setStickyPickerOpen\(false\);/);
   assert.match(source, /setStickyPlacement\(undefined\);/);
-  assert.match(source, /setStickyDraft\(undefined\);/);
   assert.match(
     source,
-    /stickyToolIsActive[\s\S]*appState\.activeTool\.customType === "astryx-sticky-note"[\s\S]*if \(!stickyToolIsActive\) deactivateStickyTool\(\);/,
+    /stickyToolIsActive[\s\S]*appState\.activeTool\.customType === "astryx-sticky-note"[\s\S]*if \(!stickyToolIsActive && !stickyPlacementRef\.current\) \{[\s\S]*deactivateStickyTool\(\);/,
+  );
+  assert.match(
+    source,
+    /handleCanvasToolPointerDownCapture[\s\S]*deactivateStickyTool\(\);[\s\S]*setStickyDraft\(undefined\);/,
   );
   assert.match(
     source,
@@ -1447,7 +1475,6 @@ test("keeps every canvas panel's ink on the theme, not on light-mode hexes", () 
   const panels = [
     "project-canvas-tools-catalog",
     "project-sticky-note-picker",
-    "project-sticky-note-toolbar",
     "project-screen-library",
   ];
   for (const panel of panels) {

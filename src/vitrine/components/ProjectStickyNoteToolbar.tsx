@@ -1,13 +1,11 @@
 import { Button, Icon, TextInput } from "@astryxdesign/core";
 import {
+  BoldIcon,
   BookmarkIcon,
   CommentIcon,
-  EyeCloseIcon,
-  EyeIcon,
   HeartIcon,
-  LightningIcon,
-  QuestionIcon,
-  ThumbsUpIcon,
+  LinkIcon,
+  ListUnorderedIcon,
   UserIcon,
 } from "@storybook/icons";
 import { useEffect, useState, type CSSProperties } from "react";
@@ -26,6 +24,9 @@ export interface ProjectStickyNoteFormat {
   font: ProjectStickyNoteFont;
   fontSize: ProjectStickyNoteFontSize;
   textAlign: ProjectStickyNoteTextAlign;
+  bold: boolean;
+  strikethrough: boolean;
+  bulletedList: boolean;
   link: string;
   locked: boolean;
 }
@@ -61,11 +62,11 @@ export function defaultProjectStickyNoteCollaboration(): ProjectStickyNoteCollab
   };
 }
 
-const projectStickyNoteReactionOptions = [
-  { id: "agree", label: "Agree", icon: ThumbsUpIcon },
-  { id: "love", label: "Love", icon: HeartIcon },
-  { id: "question", label: "Question", icon: QuestionIcon },
-  { id: "idea", label: "Idea", icon: LightningIcon },
+const projectStickyNoteReactionIds = [
+  "agree",
+  "love",
+  "question",
+  "idea",
 ] as const;
 
 export function normalizeProjectStickyNoteCollaboration(
@@ -73,7 +74,7 @@ export function normalizeProjectStickyNoteCollaboration(
 ): ProjectStickyNoteCollaboration {
   const defaults = defaultProjectStickyNoteCollaboration();
   const reactionIds = new Set<ProjectStickyNoteReactionId>(
-    projectStickyNoteReactionOptions.map((option) => option.id),
+    projectStickyNoteReactionIds,
   );
   return {
     showAuthor: value?.showAuthor === true,
@@ -182,16 +183,13 @@ export function ProjectStickyNoteMetadata({
   );
 }
 
-function stickyNoteCommentTime(createdAt: string): string {
-  const date = new Date(createdAt);
-  if (Number.isNaN(date.getTime())) return "Recently";
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
 export const defaultProjectStickyNoteFormat: ProjectStickyNoteFormat = {
   font: "sans",
-  fontSize: 20,
-  textAlign: "center",
+  fontSize: 16,
+  textAlign: "left",
+  bold: false,
+  strikethrough: false,
+  bulletedList: false,
   link: "",
   locked: false,
 };
@@ -207,17 +205,23 @@ function normalizedStickyNoteLink(value: string): string {
   return `https://${trimmed}`;
 }
 
+function projectObjectFontSizeLabel(fontSize: ProjectStickyNoteFontSize) {
+  if (fontSize === 16) return "Small";
+  if (fontSize === 20) return "Medium";
+  return "Large";
+}
+
 /*
- * The compact contextual shell is shared by Canvas objects. Sticky notes add
- * collaboration controls, while text and future objects use the same type,
- * link and colour controls without inheriting note-specific behaviour.
+ * FigJam uses one dark contextual surface for selected objects and changes
+ * only the controls the object supports. Sticky notes and plain text share
+ * the typography controls; author visibility is the sticky-only capability.
  */
 export function ProjectObjectToolbar({
   color,
   format,
   style,
   collaboration,
-  ariaLabel = "Object formatting",
+  ariaLabel = "Selection Properties Menu",
   objectLabel = "Object",
   colorOptions = projectStickyNoteColors,
   onColorChange,
@@ -236,19 +240,9 @@ export function ProjectObjectToolbar({
   onCollaborationChange?(collaboration: ProjectStickyNoteCollaboration): void;
 }) {
   const [openPanel, setOpenPanel] = useState<
-    | "font"
-    | "size"
-    | "align"
-    | "color"
-    | "link"
-    | "tags"
-    | "reactions"
-    | "comments"
+    "font" | "size" | "color" | "link"
   >();
-  const [moreOpen, setMoreOpen] = useState(false);
   const [linkDraft, setLinkDraft] = useState(format.link);
-  const [tagDraft, setTagDraft] = useState("");
-  const [commentDraft, setCommentDraft] = useState("");
 
   useEffect(() => setLinkDraft(format.link), [format.link]);
 
@@ -268,199 +262,40 @@ export function ProjectObjectToolbar({
     );
   };
 
-  const addTag = () => {
-    const tag = tagDraft.trim();
-    if (!tag || !collaboration) return;
-    updateCollaboration({ tags: [...collaboration.tags, tag] });
-    setTagDraft("");
-  };
-
-  const addComment = () => {
-    const body = commentDraft.trim();
-    if (!body || !collaboration) return;
-    updateCollaboration({
-      comments: [
-        ...collaboration.comments,
-        {
-          id: crypto.randomUUID(),
-          body,
-          author: collaboration.author,
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    });
-    setCommentDraft("");
-  };
-
   const closePanel = () => setOpenPanel(undefined);
+  const typefaceLabel = format.font === "sans" ? "simple" : "handwritten";
+  const sizeLabel = projectObjectFontSizeLabel(format.fontSize);
 
   return (
     <div
-      className="project-sticky-note-toolbar"
+      className="project-object-toolbar"
       style={style}
       role="toolbar"
       aria-label={ariaLabel}
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
     >
-      <AstryxDropdown
-        label={format.font === "sans" ? "Sans" : "Sketch"}
-        ariaLabel={`${objectLabel} font`}
-        open={openPanel === "font"}
-        triggerVariant="secondary"
-        triggerClassName="project-sticky-note-toolbar__dropdown-trigger"
-        menuWidth={136}
-        onOpenChange={(open) => setOpenPanel(open ? "font" : undefined)}
-      >
-        <AstryxDropdownItem
-          label="Sans"
-          selected={format.font === "sans"}
-          onSelect={() => {
-            updateFormat({ font: "sans" });
-            closePanel();
-          }}
-        />
-        <AstryxDropdownItem
-          label="Sketch"
-          selected={format.font === "sketch"}
-          onSelect={() => {
-            updateFormat({ font: "sketch" });
-            closePanel();
-          }}
-        />
-      </AstryxDropdown>
-      <AstryxDropdown
-        label={`${format.fontSize}`}
-        ariaLabel={`${objectLabel} text size`}
-        open={openPanel === "size"}
-        triggerVariant="secondary"
-        triggerClassName="project-sticky-note-toolbar__size-trigger"
-        menuWidth={104}
-        onOpenChange={(open) => setOpenPanel(open ? "size" : undefined)}
-      >
-        {([16, 20, 28] as const).map((fontSize) => (
-          <AstryxDropdownItem
-            key={fontSize}
-            label={`${fontSize}px`}
-            selected={format.fontSize === fontSize}
-            onSelect={() => {
-              updateFormat({ fontSize });
-              closePanel();
-            }}
-          />
-        ))}
-      </AstryxDropdown>
-      <AstryxDropdown
-        label={
-          format.textAlign === "left"
-            ? "Left"
-            : format.textAlign === "center"
-              ? "Centre"
-              : "Right"
-        }
-        ariaLabel={`${objectLabel} text alignment`}
-        open={openPanel === "align"}
-        triggerVariant="secondary"
-        triggerClassName="project-sticky-note-toolbar__align-trigger"
-        menuWidth={124}
-        onOpenChange={(open) => setOpenPanel(open ? "align" : undefined)}
-      >
-        {(["left", "center", "right"] as const).map((textAlign) => (
-          <AstryxDropdownItem
-            key={textAlign}
-            label={
-              textAlign === "center"
-                ? "Centre"
-                : textAlign === "left"
-                  ? "Left"
-                  : "Right"
-            }
-            selected={format.textAlign === textAlign}
-            onSelect={() => {
-              updateFormat({ textAlign });
-              closePanel();
-            }}
-          />
-        ))}
-      </AstryxDropdown>
-      <AstryxDropdown
-        label="Link"
-        ariaLabel={
-          format.link
-            ? `Edit ${objectLabel.toLowerCase()} link`
-            : `Add ${objectLabel.toLowerCase()} link`
-        }
-        open={openPanel === "link"}
-        mode="panel"
-        hasChevron={false}
-        triggerVariant="secondary"
-        triggerEndContent={<Icon icon="externalLink" size="xsm" />}
-        panelAriaLabel={`${objectLabel} link`}
-        triggerClassName="project-sticky-note-toolbar__link-trigger"
-        onOpenChange={(open) => setOpenPanel(open ? "link" : undefined)}
-      >
-        <div className="project-sticky-note-toolbar__link-panel">
-          <TextInput
-            label={`${objectLabel} link`}
-            isLabelHidden
-            value={linkDraft}
-            onChange={setLinkDraft}
-            placeholder="Paste a URL…"
-            width="100%"
-            size="sm"
-          />
-          <div className="project-sticky-note-toolbar__link-actions">
-            {format.link ? (
-              <Button
-                label="Remove"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setLinkDraft("");
-                  updateFormat({ link: "" });
-                  closePanel();
-                }}
-              />
-            ) : null}
-            <Button
-              label="Apply"
-              variant="primary"
-              size="sm"
-              isDisabled={!linkDraft.trim()}
-              onClick={() => {
-                const link = normalizedStickyNoteLink(linkDraft);
-                setLinkDraft(link);
-                updateFormat({ link });
-                closePanel();
-              }}
-            />
-          </div>
-        </div>
-      </AstryxDropdown>
-      <div className="project-sticky-note-toolbar__color-control">
-        <Button
-          label={color.name}
-          aria-label={`${objectLabel} color: ${color.name}`}
+      <div className="project-object-toolbar__control project-object-toolbar__color-control">
+        <button
+          type="button"
+          className="project-object-toolbar__color-trigger"
+          aria-label={`Change ${objectLabel.toLowerCase()} color`}
           aria-expanded={openPanel === "color"}
-          variant="secondary"
-          size="sm"
-          className="project-sticky-note-toolbar__color-trigger"
-          icon={
-            <span
-              className="project-sticky-note-toolbar__color-dot"
-              style={{ "--sticky-color": color.fill } as CSSProperties}
-            />
-          }
-          isIconOnly
           onClick={() =>
             setOpenPanel((current) =>
               current === "color" ? undefined : "color",
             )
           }
-        />
+        >
+          <span
+            className="project-object-toolbar__color-dot"
+            style={{ "--object-color": color.fill } as CSSProperties}
+          />
+          <Icon icon="chevronDown" size="xsm" aria-hidden="true" />
+        </button>
         {openPanel === "color" ? (
           <div
-            className="project-sticky-note-toolbar__color-panel"
+            className="project-object-toolbar__panel project-object-toolbar__color-panel"
             role="dialog"
             aria-label={`${objectLabel} colors`}
           >
@@ -468,13 +303,13 @@ export function ProjectObjectToolbar({
               <button
                 key={option.id}
                 type="button"
-                className="project-sticky-note-toolbar__color-swatch"
+                className="project-object-toolbar__color-swatch"
                 aria-label={`Use ${option.name}`}
                 aria-pressed={color.id === option.id}
                 style={
                   {
-                    "--sticky-color": option.fill,
-                    "--sticky-stroke": option.stroke,
+                    "--object-color": option.fill,
+                    "--object-stroke": option.stroke,
                   } as CSSProperties
                 }
                 onClick={() => {
@@ -486,266 +321,163 @@ export function ProjectObjectToolbar({
           </div>
         ) : null}
       </div>
-      {collaboration && onCollaborationChange ? (
-        <div className="project-sticky-note-toolbar__more-control">
-          <Button
-            label="More sticky note options"
-            aria-expanded={moreOpen}
-            variant={moreOpen ? "primary" : "ghost"}
-            size="sm"
-            className="project-sticky-note-toolbar__icon-trigger"
-            icon={<Icon icon="moreHorizontal" size="sm" />}
-            isIconOnly
-            onClick={() => setMoreOpen((open) => !open)}
+      <span className="project-object-toolbar__divider" aria-hidden="true" />
+      <AstryxDropdown
+        label="Aa"
+        ariaLabel={`Typeface, ${typefaceLabel}`}
+        open={openPanel === "font"}
+        triggerVariant="secondary"
+        triggerClassName="project-object-toolbar__typeface-trigger"
+        menuWidth={160}
+        onOpenChange={(open) => setOpenPanel(open ? "font" : undefined)}
+      >
+        <AstryxDropdownItem
+          label="Simple"
+          selected={format.font === "sans"}
+          onSelect={() => {
+            updateFormat({ font: "sans" });
+            closePanel();
+          }}
+        />
+        <AstryxDropdownItem
+          label="Handwritten"
+          selected={format.font === "sketch"}
+          onSelect={() => {
+            updateFormat({ font: "sketch" });
+            closePanel();
+          }}
+        />
+      </AstryxDropdown>
+      <span className="project-object-toolbar__divider" aria-hidden="true" />
+      <AstryxDropdown
+        label={sizeLabel}
+        ariaLabel={`Font size, ${sizeLabel.toLowerCase()}`}
+        open={openPanel === "size"}
+        triggerVariant="secondary"
+        triggerClassName="project-object-toolbar__size-trigger"
+        menuWidth={144}
+        onOpenChange={(open) => setOpenPanel(open ? "size" : undefined)}
+      >
+        {([16, 20, 28] as const).map((fontSize) => (
+          <AstryxDropdownItem
+            key={fontSize}
+            label={projectObjectFontSizeLabel(fontSize)}
+            selected={format.fontSize === fontSize}
+            onSelect={() => {
+              updateFormat({ fontSize });
+              closePanel();
+            }}
           />
-          {moreOpen ? (
-            <div
-              className="project-sticky-note-toolbar__more-panel"
-              role="dialog"
-              aria-label="More sticky note options"
-            >
+        ))}
+      </AstryxDropdown>
+      <span className="project-object-toolbar__divider" aria-hidden="true" />
+      <button
+        type="button"
+        className="project-object-toolbar__action"
+        aria-label="Bold"
+        aria-pressed={format.bold}
+        onClick={() => updateFormat({ bold: !format.bold })}
+      >
+        <BoldIcon />
+      </button>
+      <button
+        type="button"
+        className="project-object-toolbar__action project-object-toolbar__strikethrough"
+        aria-label="Strikethrough"
+        aria-pressed={format.strikethrough}
+        onClick={() =>
+          updateFormat({ strikethrough: !format.strikethrough })
+        }
+      >
+        <span aria-hidden="true">S</span>
+      </button>
+      <div className="project-object-toolbar__control project-object-toolbar__link-control">
+        <button
+          type="button"
+          className="project-object-toolbar__action"
+          aria-label={format.link ? "Edit link" : "Create link"}
+          aria-expanded={openPanel === "link"}
+          onClick={() =>
+            setOpenPanel((current) =>
+              current === "link" ? undefined : "link",
+            )
+          }
+        >
+          <LinkIcon />
+        </button>
+        {openPanel === "link" ? (
+          <div
+            className="project-object-toolbar__panel project-object-toolbar__link-panel"
+            role="dialog"
+            aria-label={`${objectLabel} link`}
+          >
+            <TextInput
+              label={`${objectLabel} link`}
+              isLabelHidden
+              value={linkDraft}
+              onChange={setLinkDraft}
+              placeholder="Paste a URL…"
+              width="100%"
+              size="sm"
+            />
+            <div className="project-object-toolbar__link-actions">
+              {format.link ? (
+                <Button
+                  label="Remove"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setLinkDraft("");
+                    updateFormat({ link: "" });
+                    closePanel();
+                  }}
+                />
+              ) : null}
               <Button
-                label={collaboration.showAuthor ? "Hide author" : "Show author"}
-                aria-pressed={collaboration.showAuthor}
-                variant={collaboration.showAuthor ? "primary" : "ghost"}
+                label="Apply"
+                variant="primary"
                 size="sm"
-                className="project-sticky-note-toolbar__icon-trigger"
-                icon={collaboration.showAuthor ? <EyeIcon /> : <EyeCloseIcon />}
-                isIconOnly
-                onClick={() =>
-                  updateCollaboration({ showAuthor: !collaboration.showAuthor })
-                }
-              />
-              <div className="project-sticky-note-toolbar__panel-control">
-                <Button
-                  label="Add tag"
-                  aria-expanded={openPanel === "tags"}
-                  variant={collaboration.tags.length ? "primary" : "ghost"}
-                  size="sm"
-                  className="project-sticky-note-toolbar__icon-trigger"
-                  icon={<BookmarkIcon />}
-                  isIconOnly
-                  onClick={() =>
-                    setOpenPanel((current) =>
-                      current === "tags" ? undefined : "tags",
-                    )
-                  }
-                />
-                {collaboration.tags.length ? (
-                  <span
-                    className="project-sticky-note-toolbar__count"
-                    aria-hidden="true"
-                  >
-                    {collaboration.tags.length}
-                  </span>
-                ) : null}
-                {openPanel === "tags" ? (
-                  <div
-                    className="project-sticky-note-toolbar__panel"
-                    role="dialog"
-                    aria-label="Sticky note tags"
-                  >
-                    <strong>Tags</strong>
-                    {collaboration.tags.length ? (
-                      <div className="project-sticky-note-toolbar__tags">
-                        {collaboration.tags.map((tag) => (
-                          <button
-                            key={tag}
-                            type="button"
-                            className="project-sticky-note-toolbar__tag"
-                            aria-label={`Remove tag ${tag}`}
-                            onClick={() =>
-                              updateCollaboration({
-                                tags: collaboration.tags.filter(
-                                  (current) => current !== tag,
-                                ),
-                              })
-                            }
-                          >
-                            <span>{tag}</span>
-                            <span aria-hidden="true">×</span>
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <p>No tags yet.</p>
-                    )}
-                    <div className="project-sticky-note-toolbar__panel-entry">
-                      <TextInput
-                        label="Tag name"
-                        isLabelHidden
-                        value={tagDraft}
-                        onChange={setTagDraft}
-                        placeholder="Add a tag…"
-                        width="100%"
-                        size="sm"
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter") {
-                            event.preventDefault();
-                            addTag();
-                          }
-                        }}
-                      />
-                      <Button
-                        label="Add"
-                        variant="primary"
-                        size="sm"
-                        isDisabled={!tagDraft.trim()}
-                        onClick={addTag}
-                      />
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-              <div className="project-sticky-note-toolbar__panel-control">
-                <Button
-                  label="Add reaction"
-                  aria-expanded={openPanel === "reactions"}
-                  variant={collaboration.reactions.length ? "primary" : "ghost"}
-                  size="sm"
-                  className="project-sticky-note-toolbar__icon-trigger"
-                  icon={<HeartIcon />}
-                  isIconOnly
-                  onClick={() =>
-                    setOpenPanel((current) =>
-                      current === "reactions" ? undefined : "reactions",
-                    )
-                  }
-                />
-                {collaboration.reactions.length ? (
-                  <span
-                    className="project-sticky-note-toolbar__count"
-                    aria-hidden="true"
-                  >
-                    {collaboration.reactions.length}
-                  </span>
-                ) : null}
-                {openPanel === "reactions" ? (
-                  <div
-                    className="project-sticky-note-toolbar__panel project-sticky-note-toolbar__reaction-panel"
-                    role="dialog"
-                    aria-label="Sticky note reactions"
-                  >
-                    <strong>Reactions</strong>
-                    <div className="project-sticky-note-toolbar__reactions">
-                      {projectStickyNoteReactionOptions.map((option) => {
-                        const active = collaboration.reactions.includes(
-                          option.id,
-                        );
-                        const ReactionIcon = option.icon;
-                        return (
-                          <Button
-                            key={option.id}
-                            label={option.label}
-                            aria-pressed={active}
-                            variant={active ? "primary" : "secondary"}
-                            size="sm"
-                            icon={<ReactionIcon />}
-                            onClick={() =>
-                              updateCollaboration({
-                                reactions: active
-                                  ? collaboration.reactions.filter(
-                                      (reaction) => reaction !== option.id,
-                                    )
-                                  : [...collaboration.reactions, option.id],
-                              })
-                            }
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-              <div className="project-sticky-note-toolbar__panel-control">
-                <Button
-                  label="Comments"
-                  aria-expanded={openPanel === "comments"}
-                  variant={collaboration.comments.length ? "primary" : "ghost"}
-                  size="sm"
-                  className="project-sticky-note-toolbar__icon-trigger"
-                  icon={<CommentIcon />}
-                  isIconOnly
-                  onClick={() =>
-                    setOpenPanel((current) =>
-                      current === "comments" ? undefined : "comments",
-                    )
-                  }
-                />
-                {collaboration.comments.length ? (
-                  <span
-                    className="project-sticky-note-toolbar__count"
-                    aria-hidden="true"
-                  >
-                    {collaboration.comments.length}
-                  </span>
-                ) : null}
-                {openPanel === "comments" ? (
-                  <div
-                    className="project-sticky-note-toolbar__panel project-sticky-note-toolbar__comment-panel"
-                    role="dialog"
-                    aria-label="Sticky note comments"
-                  >
-                    <strong>Comments</strong>
-                    {collaboration.comments.length ? (
-                      <div className="project-sticky-note-toolbar__comments">
-                        {collaboration.comments.map((comment) => (
-                          <article key={comment.id}>
-                            <header>
-                              <strong>{comment.author}</strong>
-                              <time dateTime={comment.createdAt}>
-                                {stickyNoteCommentTime(comment.createdAt)}
-                              </time>
-                            </header>
-                            <p>{comment.body}</p>
-                          </article>
-                        ))}
-                      </div>
-                    ) : (
-                      <p>Start a conversation about this note.</p>
-                    )}
-                    <div className="project-sticky-note-toolbar__panel-entry">
-                      <TextInput
-                        label="Comment"
-                        isLabelHidden
-                        value={commentDraft}
-                        onChange={setCommentDraft}
-                        placeholder="Add a comment…"
-                        width="100%"
-                        size="sm"
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter") {
-                            event.preventDefault();
-                            addComment();
-                          }
-                        }}
-                      />
-                      <Button
-                        label="Post"
-                        variant="primary"
-                        size="sm"
-                        isDisabled={!commentDraft.trim()}
-                        onClick={addComment}
-                      />
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-              <span
-                className="project-sticky-note-toolbar__divider"
-                aria-hidden="true"
-              />
-              <Button
-                label={format.locked ? "Unlock" : "Lock"}
-                aria-pressed={format.locked}
-                variant={format.locked ? "primary" : "ghost"}
-                size="sm"
-                className="project-sticky-note-toolbar__lock-trigger"
-                onClick={() => updateFormat({ locked: !format.locked })}
+                isDisabled={!linkDraft.trim()}
+                onClick={() => {
+                  const link = normalizedStickyNoteLink(linkDraft);
+                  setLinkDraft(link);
+                  updateFormat({ link });
+                  closePanel();
+                }}
               />
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
+      </div>
+      <button
+        type="button"
+        className="project-object-toolbar__action"
+        aria-label="Bulleted list"
+        aria-pressed={format.bulletedList}
+        onClick={() =>
+          updateFormat({ bulletedList: !format.bulletedList })
+        }
+      >
+        <ListUnorderedIcon />
+      </button>
+      {collaboration && onCollaborationChange ? (
+        <>
+          <span
+            className="project-object-toolbar__divider"
+            aria-hidden="true"
+          />
+          <button
+            type="button"
+            className="project-object-toolbar__action project-object-toolbar__author"
+            aria-label="Show/hide author"
+            aria-pressed={collaboration.showAuthor}
+            onClick={() =>
+              updateCollaboration({ showAuthor: !collaboration.showAuthor })
+            }
+          >
+            <UserIcon />
+          </button>
+        </>
       ) : null}
     </div>
   );

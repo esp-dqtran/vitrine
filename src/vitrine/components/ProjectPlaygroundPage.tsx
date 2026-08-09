@@ -982,6 +982,17 @@ interface CanvasTextReference {
   format: ProjectStickyNoteFormat;
 }
 
+function canvasTextWithBulletedList(text: string, enabled: boolean): string {
+  return text
+    .split("\n")
+    .map((line) => {
+      const plainLine = line.replace(/^\s*•\s?/, "");
+      if (!enabled || !plainLine) return plainLine;
+      return `• ${plainLine}`;
+    })
+    .join("\n");
+}
+
 function canvasTextReferenceForElement(
   element: ExcalidrawElement,
 ): CanvasTextReference | undefined {
@@ -1000,6 +1011,9 @@ function canvasTextReferenceForElement(
       ? candidate
       : closest,
   );
+  const savedFormat = element.customData?.astryxTextFormat as
+    | Partial<ProjectStickyNoteFormat>
+    | undefined;
   return {
     elementId: element.id,
     x: element.x,
@@ -1017,6 +1031,9 @@ function canvasTextReferenceForElement(
         element.textAlign === "center" || element.textAlign === "right"
           ? element.textAlign
           : "left",
+      bold: savedFormat?.bold === true,
+      strikethrough: savedFormat?.strikethrough === true,
+      bulletedList: savedFormat?.bulletedList === true,
       link: element.link ?? "",
       locked: element.locked,
     },
@@ -1037,6 +1054,9 @@ function canvasTextReferencesEqual(
     left?.format.font === right?.format.font &&
     left?.format.fontSize === right?.format.fontSize &&
     left?.format.textAlign === right?.format.textAlign &&
+    left?.format.bold === right?.format.bold &&
+    left?.format.strikethrough === right?.format.strikethrough &&
+    left?.format.bulletedList === right?.format.bulletedList &&
     left?.format.link === right?.format.link &&
     left?.format.locked === right?.format.locked
   );
@@ -1099,6 +1119,9 @@ function stickyNoteReferencesEqual(
     left?.format.font === right?.format.font &&
     left?.format.fontSize === right?.format.fontSize &&
     left?.format.textAlign === right?.format.textAlign &&
+    left?.format.bold === right?.format.bold &&
+    left?.format.strikethrough === right?.format.strikethrough &&
+    left?.format.bulletedList === right?.format.bulletedList &&
     left?.format.link === right?.format.link &&
     left?.format.locked === right?.format.locked &&
     JSON.stringify(left?.collaboration) === JSON.stringify(right?.collaboration)
@@ -2036,6 +2059,7 @@ export function ProjectPlayground({
   const stickyComposerRef = useRef<HTMLDivElement | null>(null);
   const stickyInputRef = useRef<HTMLDivElement | null>(null);
   const canvasTextEditingRef = useRef(false);
+  const stickyPlacementRef = useRef<StickyPlacement>();
   const tablePlacementRef = useRef(false);
   const stampPlacementRef = useRef<CanvasStampOption>();
   const canvasCommentsRef = useRef<readonly DesignerCanvasCommentThread[]>([]);
@@ -2404,9 +2428,9 @@ export function ProjectPlayground({
      from the editor tool change itself so the newly selected tool never gets
      reset back to Select while React is reconciling the toolbar. */
   const deactivateStickyTool = useCallback(() => {
+    stickyPlacementRef.current = undefined;
     setStickyPickerOpen(false);
     setStickyPlacement(undefined);
-    setStickyDraft(undefined);
   }, []);
 
   const deactivateTableTool = useCallback(() => {
@@ -2428,6 +2452,7 @@ export function ProjectPlayground({
         ?.querySelector('input[data-testid^="toolbar-"]');
       if (nativeTool) {
         deactivateStickyTool();
+        setStickyDraft(undefined);
         deactivateTableTool();
         deactivateStampTool();
         setWidgetsLauncherOpen(false);
@@ -2445,7 +2470,12 @@ export function ProjectPlayground({
       const stickyToolIsActive =
         appState.activeTool.type === "custom" &&
         appState.activeTool.customType === "astryx-sticky-note";
-      if (!stickyToolIsActive) deactivateStickyTool();
+      /* Excalidraw normalizes an external custom tool back to Selection. The
+         placement ref is the durable source of truth until the person places
+         the note or deliberately switches tools. */
+      if (!stickyToolIsActive && !stickyPlacementRef.current) {
+        deactivateStickyTool();
+      }
       const nextCanvasTextEditing = Boolean(appState.editingTextElement);
       canvasTextEditingRef.current = nextCanvasTextEditing;
       setCanvasTextEditing((current) =>
@@ -3472,6 +3502,7 @@ export function ProjectPlayground({
       setResearchFramesOpen(false);
       setStickyDraft(undefined);
       setStickyToolColor(color);
+      stickyPlacementRef.current = { color, mode };
       setStickyPlacement({ color, mode });
       setScreensOpen(false);
       setTemplatesOpen(false);
@@ -3512,6 +3543,7 @@ export function ProjectPlayground({
     setShapePlacement(undefined);
     editorRef.current?.resetCursor();
     deactivateStickyTool();
+    setStickyDraft(undefined);
     deactivateStampTool();
     setWidgetsLauncherOpen(false);
     setDocumentPlacement(false);
@@ -3549,6 +3581,7 @@ export function ProjectPlayground({
       setShapeLibraryQuery("");
       setShapeColorPickerOpen(false);
       deactivateStickyTool();
+      setStickyDraft(undefined);
       setDocumentPlacement(false);
       setCommentPlacement(false);
       deactivateTableTool();
@@ -3575,6 +3608,7 @@ export function ProjectPlayground({
       setMarkerDrawing(true);
       setShapePlacement(undefined);
       deactivateStickyTool();
+      setStickyDraft(undefined);
       deactivateTableTool();
       deactivateStampTool();
       setWidgetsLauncherOpen(false);
@@ -4004,14 +4038,18 @@ export function ProjectPlayground({
         stopStickyPlacement();
         return;
       }
-      setStickyDraft({
+      const draft = {
         x,
         y,
         color: stickyPlacement.color,
         value: "",
         format: defaultProjectStickyNoteFormat,
-      });
+      };
+      /* stopStickyPlacement clears the previous draft as part of switching the
+         editor back to Select. Run it first so the new composer survives the
+         same React batch instead of being cleared immediately. */
       stopStickyPlacement();
+      setStickyDraft(draft);
     },
     [
       documentPlacement,
@@ -4049,13 +4087,18 @@ export function ProjectPlayground({
         event.preventDefault();
         drawResearchFrame();
       } else if (
-        stampPlacementRef.current &&
+        (stickyPlacementRef.current ||
+          tablePlacementRef.current ||
+          stampPlacementRef.current) &&
         ["v", "1", "h", "p", "7", "t", "8", "9"].includes(
           event.key.toLowerCase(),
         )
       ) {
         // Let Excalidraw handle the native shortcut after clearing Vitrines'
-        // persistent Stamp placement mode.
+        // persistent placement mode.
+        deactivateStickyTool();
+        setStickyDraft(undefined);
+        deactivateTableTool();
         deactivateStampTool();
       } else if (event.key === "Escape") {
         event.preventDefault();
@@ -4081,6 +4124,7 @@ export function ProjectPlayground({
       window.removeEventListener("keydown", handleStickyShortcut, true);
   }, [
     cancelStickyDraft,
+    deactivateStickyTool,
     deactivateStampTool,
     deactivateTableTool,
     drawResearchFrame,
@@ -4170,6 +4214,8 @@ export function ProjectPlayground({
       const color = patch.color ?? note.color;
       const format = patch.format ?? note.format;
       const collaboration = patch.collaboration ?? note.collaboration;
+      const bulletedListChanged =
+        format.bulletedList !== note.format.bulletedList;
 
       const elements = editor.getSceneElements().map((element) => {
         if (element.id === note.elementId) {
@@ -4196,11 +4242,24 @@ export function ProjectPlayground({
           } as Partial<ExcalidrawElement>);
         }
         if (note.textElementId && element.id === note.textElementId) {
+          const textElement = element as ExcalidrawElement & {
+            text: string;
+            originalText?: string;
+          };
+          const nextText = bulletedListChanged
+            ? canvasTextWithBulletedList(
+                textElement.text,
+                format.bulletedList,
+              )
+            : textElement.text;
           return withCanvasElementUpdate(element, {
             fontSize: format.fontSize,
             fontFamily: projectStickyNoteFontFamilies[format.font],
             textAlign: format.textAlign,
             strokeColor: color.text,
+            ...(bulletedListChanged
+              ? { text: nextText, originalText: nextText }
+              : {}),
           } as Partial<ExcalidrawElement>);
         }
         return element;
@@ -4219,7 +4278,7 @@ export function ProjectPlayground({
     const noteTop = (selectedStickyNote.y + scrollY) * zoom;
     return {
       "--project-object-toolbar-anchor-x": `${centreX}px`,
-      "--project-object-toolbar-top": `${Math.max(76, noteTop - 56)}px`,
+      "--project-object-toolbar-top": `${Math.max(76, noteTop - 80)}px`,
     } as CSSProperties;
   }, [canvasViewport, selectedStickyNote]);
 
@@ -4231,7 +4290,7 @@ export function ProjectPlayground({
     const textTop = (selectedCanvasText.y + scrollY) * zoom;
     return {
       "--project-object-toolbar-anchor-x": `${centreX}px`,
-      "--project-object-toolbar-top": `${Math.max(76, textTop - 56)}px`,
+      "--project-object-toolbar-top": `${Math.max(76, textTop - 80)}px`,
     } as CSSProperties;
   }, [canvasViewport, selectedCanvasText]);
 
@@ -4245,18 +4304,33 @@ export function ProjectPlayground({
       if (!editor || !text) return;
       const color = patch.color ?? text.color;
       const format = patch.format ?? text.format;
-      const elements = editor.getSceneElements().map((element) =>
-        element.id === text.elementId
-          ? withCanvasElementUpdate(element, {
-              fontSize: format.fontSize,
-              fontFamily: projectStickyNoteFontFamilies[format.font],
-              textAlign: format.textAlign,
-              strokeColor: color.text,
-              link: format.link || null,
-              locked: format.locked,
-            } as Partial<ExcalidrawElement>)
-          : element,
-      );
+      const bulletedListChanged =
+        format.bulletedList !== text.format.bulletedList;
+      const elements = editor.getSceneElements().map((element) => {
+        if (element.id !== text.elementId) return element;
+        const textElement = element as ExcalidrawElement & {
+          text: string;
+          originalText?: string;
+        };
+        const nextText = bulletedListChanged
+          ? canvasTextWithBulletedList(textElement.text, format.bulletedList)
+          : textElement.text;
+        return withCanvasElementUpdate(element, {
+          fontSize: format.fontSize,
+          fontFamily: projectStickyNoteFontFamilies[format.font],
+          textAlign: format.textAlign,
+          strokeColor: color.text,
+          link: format.link || null,
+          locked: format.locked,
+          customData: {
+            ...element.customData,
+            astryxTextFormat: format,
+          },
+          ...(bulletedListChanged
+            ? { text: nextText, originalText: nextText }
+            : {}),
+        } as Partial<ExcalidrawElement>);
+      });
       editor.updateScene({
         elements,
         appState: {
