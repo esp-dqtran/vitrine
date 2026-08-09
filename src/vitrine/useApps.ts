@@ -22,6 +22,15 @@ const catalogPageCache = new Map<string, {
   page: CatalogPage;
 }>();
 
+/**
+ * Catalog previews can change when an admin selects a new AppCard image.
+ * Keep the short in-memory cache for ordinary navigation, but let that action
+ * explicitly discard its old entry before the user returns to the Apps grid.
+ */
+export function invalidateCatalogPageCache(): void {
+  catalogPageCache.clear();
+}
+
 export function appendUniqueApps(current: App[], next: App[]): App[] {
   const seen = new Set(current.map(({ id }) => id));
   return [...current, ...next.filter(({ id }) => !seen.has(id))];
@@ -52,10 +61,11 @@ export async function fetchCatalogPage(
     const cached = cachedCatalogPage(endpoint);
     if (cached) return cached;
   }
-  const response = await apiFetch(endpoint, {
-    signal,
-    ...(options.bypassCache ? { cache: 'no-store' as const } : {}),
-  });
+  // Apple imports and admin preview selection can replace a card's media at
+  // any time. Never let the browser's HTTP cache keep an old/unservable
+  // catalog response after a reload; the bounded in-memory cache above still
+  // avoids duplicate requests within the current view.
+  const response = await apiFetch(endpoint, { signal, cache: 'no-store' });
   if (!response.ok) throw new Error(`${endpoint} returned ${response.status}`);
   const page = parseCatalogDiscoveryPage(await response.json());
   const result = {
@@ -159,7 +169,10 @@ export function useApps(
     try {
       const cursor = `cursor=${encodeURIComponent(nextCursor)}`;
       const endpoint = `/api/catalog${catalogSuffix}&${cursor}`;
-      const response = await apiFetch(endpoint, { signal: controller.signal });
+      const response = await apiFetch(endpoint, {
+        signal: controller.signal,
+        cache: 'no-store',
+      });
       if (!response.ok) throw new Error(`${endpoint} returned ${response.status}`);
       const page = parseCatalogDiscoveryPage(await response.json());
       const nextApps = catalogApps(page as CatalogResponse);

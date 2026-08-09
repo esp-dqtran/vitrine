@@ -117,9 +117,9 @@ test('keeps App-card copy in one compact text group', async () => {
 test('balances App-detail tab height, label size, and secondary controls', async () => {
   const styles = await read('./productSpacing.css');
 
-  assert.match(styles, /\.reference-detail__navigation\s*\{[\s\S]*?min-height:\s*var\(--spacing-12\)\s*!important/);
-  assert.match(styles, /\.reference-detail \.reference-detail__tabs > button\s*\{[\s\S]*?height:\s*var\(--spacing-12\)\s*!important[\s\S]*?font-size:\s*15px\s*!important/);
-  assert.match(styles, /\.reference-detail__tab-controls\s*\{[\s\S]*?min-height:\s*var\(--spacing-12\)\s*!important/);
+  assert.match(styles, /\.reference-detail__navigation\s*\{[\s\S]*?min-height:\s*var\(--reference-nav-height\)\s*!important/);
+  assert.match(styles, /\.reference-detail \.reference-detail__tabs > button\s*\{[\s\S]*?height:\s*var\(--vitrine-control-height\)\s*!important[\s\S]*?font-size:\s*15px\s*!important/);
+  assert.match(styles, /\.reference-detail__tab-controls\s*\{[\s\S]*?min-height:\s*var\(--vitrine-control-height\)\s*!important/);
   assert.match(styles, /\.reference-detail__tab-leading :is\([\s\S]*?\.astryx-button\.astryx-button\.astryx-button,[\s\S]*?\.astryx-selector\.astryx-selector\.astryx-selector[\s\S]*?\),/);
   assert.match(styles, /\.reference-detail__tab-controls :is\([\s\S]*?\.astryx-button\.astryx-button\.astryx-button,[\s\S]*?\.astryx-selector\.astryx-selector\.astryx-selector[\s\S]*?\)\s*\{[\s\S]*?height:\s*var\(--vitrine-control-height\)\s*!important/);
   assert.match(styles, /\.apps-platform-switcher\s+button\.astryx-button\s*\{[\s\S]*?height:\s*auto\s*!important[\s\S]*?min-height:\s*0\s*!important/);

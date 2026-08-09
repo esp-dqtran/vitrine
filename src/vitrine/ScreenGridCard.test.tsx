@@ -92,7 +92,7 @@ test("shows screen-pattern badges on App detail screenshots", () => {
   );
 
   assert.match(html, /screen-grid-card__patterns/);
-  assert.match(html, />Preview</);
+  assert.doesNotMatch(html, />Preview</);
   assert.match(html, />Wallpaper</);
   assert.doesNotMatch(html, />Button</);
 });

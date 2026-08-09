@@ -28,6 +28,7 @@ export interface PublishedCatalogAppRecord {
   app_id: number;
   app: string;
   display_name: string | null;
+  description?: string | null;
   categories: Category[];
   website_url: string | null;
   icon_url: string | null;
@@ -536,7 +537,7 @@ async function catalogPage(
            ${visibility === "public" ? "av.published_at" : "av.captured_at"} DESC,
            av.version_number DESC
        )
-       SELECT a.id AS app_id, a.name AS app, a.display_name,
+       SELECT a.id AS app_id, a.name AS app, a.display_name, a.description,
          COALESCE((
            SELECT jsonb_agg(
              jsonb_build_object(
@@ -576,7 +577,7 @@ async function catalogPage(
        FROM apps a
        JOIN latest ON latest.app_id = a.id
        WHERE a.id = ANY($1::integer[])
-       GROUP BY a.id, a.name, a.display_name, a.website_url,
+       GROUP BY a.id, a.name, a.display_name, a.description, a.website_url,
          a.icon_url, a.accent_color`,
       [appIds, snapshotAt, input.platform ?? null],
     ),
@@ -632,6 +633,10 @@ async function catalogPage(
                AND pfp.facet_group = 'screens'
                AND lower(pfp.facet_value) = 'preview'
                AND vi.captured_at <= $2::timestamptz
+               AND NOT EXISTS (
+                 SELECT 1 FROM app_preview_images manual
+                 WHERE manual.version_id = latest.version_id
+               )
              GROUP BY i.id, i.image_url, i.kind, i.description, i.analysis,
                vi.source_url, vi.viewport_width, vi.viewport_height,
                vi.state_context, vi.captured_at
@@ -726,6 +731,10 @@ async function catalogPage(
                AND p.name = latest.platform
                AND vi.captured_at <= $2::timestamptz
                AND NOT EXISTS (
+                 SELECT 1 FROM app_preview_images manual
+                 WHERE manual.version_id = latest.version_id
+               )
+               AND NOT EXISTS (
                  SELECT 1 FROM preview_category
                  WHERE preview_category.id = vi.image_id
                )
@@ -760,6 +769,10 @@ async function catalogPage(
                LEFT JOIN stored_objects heft ON heft.object_key = i.object_key
                WHERE vi.version_id = latest.version_id
                  AND vi.captured_at <= $2::timestamptz
+                 AND NOT EXISTS (
+                   SELECT 1 FROM app_preview_images manual
+                   WHERE manual.version_id = latest.version_id
+                 )
                  AND (
                    (SELECT COUNT(*) FROM preview_category)
                    + (SELECT COUNT(*) FROM exact)

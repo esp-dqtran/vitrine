@@ -1,6 +1,13 @@
-import { useEffect, useMemo, useState, type DragEvent as ReactDragEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type DragEvent as ReactDragEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import {
   Card,
+  Button,
   Icon,
   IconButton,
   SegmentedControl,
@@ -9,7 +16,6 @@ import {
 } from "@astryxdesign/core";
 
 import type { AppsDiscoveryScreenResult, AppsPlatform } from "../appsDiscovery.ts";
-import type { App } from "../types.ts";
 import {
   flowCatalogItemKey,
   loadFlowCatalogPage,
@@ -30,9 +36,8 @@ const platforms: Array<{ value: AppsPlatform; label: string }> = [
 ];
 
 const screenKey = ({ app, screen }: AppsDiscoveryScreenResult) => `${app.id}:${screen.id}`;
-const appCardKey = (app: App) => `app:${app.id}`;
 
-export type ScreenLibraryMode = "apps" | "screens" | "flows";
+export type ScreenLibraryMode = "screens" | "flows";
 
 /*
  * What is being dragged. Handed to the page on dragstart rather than serialised
@@ -44,14 +49,119 @@ export type ScreenLibraryMode = "apps" | "screens" | "flows";
 export const catalogDragMimeType = "application/x-astryx-catalog";
 
 export type CatalogDragPayload =
-  | { kind: "app"; app: App; platform: AppsPlatform }
   | { kind: "flow"; item: FlowCatalogItem; platform: AppsPlatform }
   | { kind: "screen"; result: AppsDiscoveryScreenResult };
 
-/* Apps first: browsing raw screens showed four cards from one app before you
-   reached a second, which is the wrong grain for finding something. */
+type ProjectScreenFacetGroup = "area" | "state" | "pattern" | "component";
+
+export type ProjectScreenFacet = {
+  key: string;
+  group: ProjectScreenFacetGroup;
+  value: string;
+  label: string;
+  count: number;
+};
+
+const unhelpfulScreenLabels = new Set(["", "unclassified", "unknown", "other"]);
+
+const usefulScreenLabel = (value: string | null | undefined) => {
+  const label = value?.trim();
+  return label && !unhelpfulScreenLabels.has(label.toLowerCase()) ? label : undefined;
+};
+
+const firstUsefulScreenLabel = (values: string[] | null | undefined) =>
+  values?.map(usefulScreenLabel).find((value): value is string => Boolean(value));
+
+export function projectScreenTitle({ screen }: AppsDiscoveryScreenResult) {
+  return usefulScreenLabel(screen.type)
+    ?? usefulScreenLabel(screen.productArea)
+    ?? firstUsefulScreenLabel(screen.visibleText)
+    ?? "Screen";
+}
+
+function hasSpecificScreenTitle({ screen }: AppsDiscoveryScreenResult) {
+  return Boolean(
+    usefulScreenLabel(screen.type)
+    ?? usefulScreenLabel(screen.productArea)
+    ?? firstUsefulScreenLabel(screen.visibleText),
+  );
+}
+
+function projectScreenCardTitle(result: AppsDiscoveryScreenResult) {
+  return hasSpecificScreenTitle(result) ? projectScreenTitle(result) : result.app.app;
+}
+
+const screenFacetValues = (result: AppsDiscoveryScreenResult, group: ProjectScreenFacetGroup) => {
+  const { screen } = result;
+  switch (group) {
+    case "area": return [screen.productArea];
+    case "state": return [screen.stateContext, ...(screen.visibleStates ?? [])];
+    case "pattern": return screen.layoutPatterns ?? [];
+    case "component": return screen.componentNames ?? [];
+  }
+};
+
+export function projectScreenFacetOptions(results: AppsDiscoveryScreenResult[]): ProjectScreenFacet[] {
+  const labels: Record<ProjectScreenFacetGroup, string> = {
+    area: "Area",
+    state: "State",
+    pattern: "Pattern",
+    component: "UI",
+  };
+  const counts = new Map<string, ProjectScreenFacet>();
+  results.forEach((result) => {
+    (Object.keys(labels) as ProjectScreenFacetGroup[]).forEach((group) => {
+      new Set(screenFacetValues(result, group).map(usefulScreenLabel).filter(Boolean)).forEach((value) => {
+        const key = `${group}:${value!.toLowerCase()}`;
+        const current = counts.get(key);
+        counts.set(key, current
+          ? { ...current, count: current.count + 1 }
+          : { key, group, value: value!, label: `${labels[group]}: ${value}`, count: 1 });
+      });
+    });
+  });
+  return [...counts.values()]
+    .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label))
+    .slice(0, 8);
+}
+
+export function projectScreenMatchesFacet(result: AppsDiscoveryScreenResult, facet: ProjectScreenFacet) {
+  return screenFacetValues(result, facet.group)
+    .some((value) => usefulScreenLabel(value)?.toLowerCase() === facet.value.toLowerCase());
+}
+
+const searchScore = (result: AppsDiscoveryScreenResult, query: string) => {
+  if (!query) return 0;
+  const score = (value: string | null | undefined, weight: number) => {
+    const text = value?.toLowerCase() ?? "";
+    return text === query ? weight * 2 : text.startsWith(query) ? weight : text.includes(query) ? weight / 2 : 0;
+  };
+  const valuesScore = (values: string[] | null | undefined, weight: number) =>
+    Math.max(0, ...(values ?? []).map((value) => score(value, weight)));
+  const { app, screen } = result;
+  return Math.max(
+    score(screen.type, 80),
+    score(screen.productArea, 70),
+    score(screen.stateContext, 65),
+    valuesScore(screen.visibleStates, 60),
+    valuesScore(screen.visibleText, 55),
+    score(screen.description, 45),
+    valuesScore(screen.layoutPatterns, 40),
+    valuesScore(screen.componentNames, 35),
+    score(app.app, 20),
+  );
+};
+
+export function rankProjectScreenResults(results: AppsDiscoveryScreenResult[], query: string) {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) return results;
+  return results
+    .map((result, index) => ({ result, index, score: searchScore(result, normalizedQuery) }))
+    .sort((left, right) => right.score - left.score || left.index - right.index)
+    .map(({ result }) => result);
+}
+
 const modes: Array<{ value: ScreenLibraryMode; label: string }> = [
-  { value: "apps", label: "Apps" },
   { value: "screens", label: "Screens" },
   { value: "flows", label: "Flows" },
 ];
@@ -60,21 +170,42 @@ export function ProjectScreenLibrary({
   message,
   onClose,
   onDragItem,
+  onAddItem,
 }: {
   message: string;
   onClose(): void;
   onDragItem(payload: CatalogDragPayload | undefined): void;
+  /* Returning the placement work keeps a chosen reference visibly busy until
+     its image and canvas card have both been created. */
+  onAddItem(payload: CatalogDragPayload): Promise<void>;
 }) {
   const [query, setQuery] = useState("");
   const [platform, setPlatform] = useState<AppsPlatform>("web");
   const platformSwitcherRef = useSegmentedIndicator(platform);
   const [state, setState] = useState<ScreenLibraryState>("loading");
   const [results, setResults] = useState<AppsDiscoveryScreenResult[]>([]);
-  const [apps, setApps] = useState<App[]>([]);
   const [flows, setFlows] = useState<FlowCatalogItem[]>([]);
-  const [mode, setMode] = useState<ScreenLibraryMode>("apps");
+  const [mode, setMode] = useState<ScreenLibraryMode>("screens");
+  const [activeScreenFacet, setActiveScreenFacet] = useState<string>();
+  const [addingKey, setAddingKey] = useState<string>();
   const modeSwitcherRef = useSegmentedIndicator(mode);
-  /* The field searches whichever grain is showing, so it should say so. */
+  const addToCanvas = (key: string, payload: CatalogDragPayload) => {
+    if (addingKey) return;
+    setAddingKey(key);
+    /* Card drags can prevent the design-system Button's async action. Use the
+       ordinary click path here, then keep the action's own promise visible. */
+    void onAddItem(payload).finally(() => setAddingKey(undefined));
+  };
+  const addScreenFromKeyboard = (
+    event: ReactKeyboardEvent<HTMLElement>,
+    key: string,
+    result: AppsDiscoveryScreenResult,
+  ) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    addToCanvas(key, { kind: "screen", result });
+  };
+  /* The field searches whichever grain is showing, so its accessible name should say so. */
   /* Same handlers on every card: mark the drag copy-only, give the OS a label,
      and hand the record to the page for the drop. */
   const dragProps = (payload: CatalogDragPayload, label: string) => ({
@@ -110,12 +241,8 @@ export function ProjectScreenLibrary({
     },
   });
 
-  const searchLabel = mode === "apps"
-    ? "Search apps"
-    : mode === "flows" ? "Search flows" : "Search screens";
-  const searchPlaceholder = mode === "apps"
-    ? "Search apps…"
-    : mode === "flows" ? "Search flows…" : "Search apps or screen types…";
+  const searchLabel = mode === "flows" ? "Search flows" : "Search visual references";
+  const searchPlaceholder = mode === "flows" ? "Search flows…" : "Search feature, state, or UI text…";
 
   const endpoint = useMemo(() => {
     const params = new URLSearchParams({
@@ -132,8 +259,7 @@ export function ProjectScreenLibrary({
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       setState("loading");
-      /* Apps and screens come from one catalog response — screens are that
-         response flattened — so only flows need a request of their own. */
+      /* Screens come from the catalog response; flows have their own endpoint. */
       const request = mode === "flows"
         ? loadFlowCatalogPage({
           platform,
@@ -144,13 +270,12 @@ export function ProjectScreenLibrary({
           setFlows(page.items);
         })
         : fetchCatalogPage(endpoint, controller.signal).then((page) => {
-          setApps(page.apps.slice(0, 24));
-          setResults(filterAppsDiscoveryScreens(page.apps, {
+          setResults(rankProjectScreenResults(filterAppsDiscoveryScreens(page.apps, {
             query,
             facets: [],
             platform,
             sort: "latest",
-          }).slice(0, 24));
+          }), query).slice(0, 24));
         });
       void request
         .then(() => setState("ready"))
@@ -164,14 +289,25 @@ export function ProjectScreenLibrary({
     };
   }, [endpoint, mode, platform, query]);
 
+  const screenFacets = useMemo(() => projectScreenFacetOptions(results), [results]);
+  const visibleScreenResults = useMemo(() => activeScreenFacet
+    ? results.filter((result) => {
+      const facet = screenFacets.find(({ key }) => key === activeScreenFacet);
+      return facet ? projectScreenMatchesFacet(result, facet) : true;
+    })
+    : results, [activeScreenFacet, results, screenFacets]);
+  const activeFacet = screenFacets.find(({ key }) => key === activeScreenFacet);
+  const resultSummary = query.trim()
+    ? `${visibleScreenResults.length} ${visibleScreenResults.length === 1 ? "reference" : "references"} matching “${query.trim()}”`
+    : `${visibleScreenResults.length} visual ${visibleScreenResults.length === 1 ? "reference" : "references"}${activeFacet ? ` in ${activeFacet.value}` : ""}`;
+
   return (
-    <aside className="project-screen-library" aria-label="Astryx catalog">
+    <aside className="project-screen-library" aria-label="Inspiration">
       <header className="project-screen-library__header">
         <div>
-          {/* The panel outgrew "Screens" — it browses three grains now, and the
-              switcher below says which one you are in. */}
-          <h2>Catalog</h2>
-          <p>Search apps, screens and flows, then place them on this canvas.</p>
+          <p className="project-screen-library__eyebrow">Reference library</p>
+          <h2>Inspiration</h2>
+          <p>Browse visual references, then drag the ones worth exploring onto your canvas.</p>
         </div>
         {/* Icon, like every other canvas panel — a word here rendered as a
             stray uppercase "CLOSE" beside the heading. */}
@@ -196,7 +332,7 @@ export function ProjectScreenLibrary({
       <div className="project-screen-library__platforms">
         <SegmentedControl
           ref={modeSwitcherRef}
-          label="Catalog type"
+          label="Reference type"
           size="sm"
           value={mode}
           onChange={(value) => setMode(value as ScreenLibraryMode)}
@@ -206,6 +342,40 @@ export function ProjectScreenLibrary({
           ))}
         </SegmentedControl>
       </div>
+
+      {mode === "screens" && state === "ready" && (
+        <>
+          <div className="project-screen-library__browse-heading">
+            <span>Explore references</span>
+            <p className="project-screen-library__result-summary" role="status" aria-live="polite">
+              {resultSummary}
+            </p>
+          </div>
+          {screenFacets.length > 0 && (
+            <div className="project-screen-library__facets" role="group" aria-label="Refine screens">
+              <button
+                type="button"
+                className="project-screen-library__facet"
+                aria-pressed={!activeScreenFacet}
+                onClick={() => setActiveScreenFacet(undefined)}
+              >
+                All screens
+              </button>
+              {screenFacets.map((facet) => (
+                <button
+                  key={facet.key}
+                  type="button"
+                  className="project-screen-library__facet"
+                  aria-pressed={activeScreenFacet === facet.key}
+                  onClick={() => setActiveScreenFacet(facet.key)}
+                >
+                  {facet.label} ({facet.count})
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      )}
 
       <div className="project-screen-library__platforms">
         <SegmentedControl
@@ -224,56 +394,13 @@ export function ProjectScreenLibrary({
       {message && <p className="project-screen-library__message" role="status">{message}</p>}
       {state === "loading" && (
         <p className="project-screen-library__empty" role="status">
-          Loading {mode === "apps" ? "apps" : mode === "flows" ? "flows" : "screens"}…
+          Loading {mode === "flows" ? "flows" : "screens"}…
         </p>
       )}
       {state === "error" && (
         <p className="project-screen-library__empty" role="alert">
-          {mode === "apps" ? "Apps" : mode === "flows" ? "Flows" : "Screens"} could not be loaded. Try again in a moment.
+          {mode === "flows" ? "Flows" : "Screens"} could not be loaded. Try again in a moment.
         </p>
-      )}
-      {state === "ready" && mode === "apps" && (
-        <div className="project-screen-library__grid">
-          {apps.map((app) => {
-            const key = appCardKey(app);
-            return (
-              <Card
-                key={key}
-                padding={1}
-                className="project-screen-library__card"
-                {...dragProps({ kind: "app", app, platform }, app.app)}
-              >
-                <div className="project-screen-library__preview">
-                  <PlaceholderImage
-                    src={app.screens?.[0]?.url}
-                    accent={app.accent}
-                    style={{ objectFit: "contain" }}
-                  />
-                </div>
-                <div className="project-screen-library__identity">
-                  <AppIcon
-                    name={app.app}
-                    iconUrl={app.iconUrl}
-                    accent={app.accent}
-                    size={26}
-                    className="project-screen-library__app-icon"
-                  />
-                  <span>
-                    <strong>{app.app}</strong>
-                    <small>
-                      {app.totalScreens} {app.totalScreens === 1 ? "screen" : "screens"}
-                    </small>
-                  </span>
-                </div>
-              </Card>
-            );
-          })}
-          {apps.length === 0 && (
-            <p className="project-screen-library__empty" role="status">
-              No apps match this search.
-            </p>
-          )}
-        </div>
       )}
       {state === "ready" && mode === "flows" && (
         <div className="project-screen-library__grid">
@@ -309,6 +436,18 @@ export function ProjectScreenLibrary({
                     </small>
                   </span>
                 </div>
+                <Button
+                  label={addingKey === key ? "Adding…" : "Add to canvas"}
+                  variant="secondary"
+                  size="sm"
+                  isDisabled={addingKey !== undefined}
+                  draggable={false}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    addToCanvas(key, { kind: "flow", item, platform });
+                  }}
+                />
+                <small className="project-screen-library__drag-hint">or drag to place</small>
               </Card>
             );
           })}
@@ -320,41 +459,44 @@ export function ProjectScreenLibrary({
         </div>
       )}
       {state === "ready" && mode === "screens" && (
-        <div className="project-screen-library__grid">
-          {results.map((result) => {
+        <div className="project-screen-library__grid project-screen-library__grid--inspiration">
+          {visibleScreenResults.map((result) => {
             const key = screenKey(result);
             const { app, screen } = result;
             return (
               <Card
                 key={key}
                 padding={1}
-                className="project-screen-library__card"
-                {...dragProps({ kind: "screen", result }, app.app)}
+                className="project-screen-library__card project-screen-library__card--screen"
+                role="button"
+                tabIndex={0}
+                aria-label={`Place ${projectScreenCardTitle(result)} from ${app.app} on the canvas`}
+                aria-busy={addingKey === key || undefined}
+                onClick={() => addToCanvas(key, { kind: "screen", result })}
+                onKeyDown={(event) => addScreenFromKeyboard(event, key, result)}
+                {...dragProps({ kind: "screen", result }, projectScreenCardTitle(result))}
               >
-                <div className="project-screen-library__preview">
+                <div className="project-screen-library__preview project-screen-library__preview--screen">
                   <PlaceholderImage
-                    src={screen.url}
+                    src={screen.thumbnailUrl ?? screen.url}
                     accent={app.accent}
                     style={{ objectFit: "contain" }}
                   />
-                </div>
-                <div className="project-screen-library__identity">
                   <AppIcon
                     name={app.app}
                     iconUrl={app.iconUrl}
                     accent={app.accent}
-                    size={26}
-                    className="project-screen-library__app-icon"
+                    size={28}
+                    className="project-screen-library__app-icon project-screen-library__app-icon--overlay"
                   />
-                  <span>
-                    <strong>{app.app}</strong>
-                    <small>{screen.type || screen.productArea || "Screen"}</small>
+                  <span className="project-screen-library__place-hint" aria-hidden="true">
+                    Drag to canvas
                   </span>
                 </div>
               </Card>
             );
           })}
-          {!results.length && (
+          {!visibleScreenResults.length && (
             <p className="project-screen-library__empty">
               No screens match this search yet.
             </p>

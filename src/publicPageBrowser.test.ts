@@ -24,7 +24,7 @@ async function fixtureServer(): Promise<{ server: Server; url: string }> {
     if (request.url === "/static") {
       response.writeHead(200, { "content-type": "text/html" });
       response.end(
-        "<html><head><title>First website</title></head><body>" +
+        "<html><head><title>Home \\ First website</title></head><body>" +
           "<h1>Home of the first website</h1><p>From here you can browse.</p>" +
           "<ul><li><a href='/history'>Web history</a></li></ul></body></html>",
       );
@@ -235,6 +235,8 @@ async function fixtureServer(): Promise<{ server: Server; url: string }> {
           <title>Fixture App | Design platform</title>
           <meta name="description" content="A deterministic browser fixture">
           <meta name="theme-color" content="#123456">
+          <link rel="shortcut icon" href="/favicon-32.png" sizes="32x32">
+          <link rel="apple-touch-icon" href="/apple-touch-icon-180.png" sizes="180x180">
           <link rel="canonical" href="/publisher-canonical-lie">
           <script type="application/json">${oversizedInlineScript}</script>
           <style>
@@ -663,6 +665,10 @@ test("captures ordered HTML sections, crops, metadata, and a continuous WebM pre
   assert.equal(result.capture.metadata.description, "Structured fixture");
   assert.equal(result.capture.metadata.category, "ProductivityApplication");
   assert.equal(result.capture.metadata.accent, "#123456");
+  assert.equal(
+    result.capture.metadata.iconUrl,
+    new URL("/apple-touch-icon-180.png", fixture.url).toString(),
+  );
   assert.equal(result.capture.canonicalUrl, fixture.url);
   assert.ok(result.capture.document.height > 30_000);
   assert.ok(Buffer.byteLength(result.capture.html, "utf8") <= 2 * 1_024 * 1_024);

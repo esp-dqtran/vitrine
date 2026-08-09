@@ -84,6 +84,23 @@ test("renders one unified, searchable directory with account actions", () => {
   assert.doesNotMatch(html, /admin-users-groups/);
 });
 
+test("offers a reversible Pro access grant from the user actions", () => {
+  const html = renderToStaticMarkup(<UserDirectory
+    users={[{ ...users[1], active: true, subscription_status: null, manual_pro_grant: false }]}
+    hasMore={false}
+    loadingMore={false}
+    query=""
+    filter="all"
+    onQueryChange={() => undefined}
+    onFilterChange={() => undefined}
+    onLoadMore={() => undefined}
+    onSetActive={async () => undefined}
+    onSetProGrant={async () => undefined}
+    onSelectUser={() => undefined}
+  />);
+  assert.match(html, /Upgrade to Pro/);
+});
+
 test("renders the insight switchers on the Insights section", () => {
   const html = renderToStaticMarkup(
     <UserUsageInsights

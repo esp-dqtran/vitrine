@@ -225,6 +225,7 @@ export interface AdminUser {
   active: boolean;
   created_at: string;
   subscription_status: string | null;
+  manual_pro_grant?: boolean;
 }
 
 export type UserFilter = 'all' | 'admin' | 'pro' | 'free' | 'disabled';

@@ -161,7 +161,8 @@ export function SettingsWorkspacePage({
   const planInfo = subscription?.plan === 'pro'
     ? subscription.entitlementSource === 'paid'
       ? `${subscription.interval === 'year' ? 'Yearly' : 'Monthly'} plan${subscription.currentPeriodEnd ? ` · ${subscription.cancelAtPeriodEnd ? 'ends' : 'renews'} ${formatDate(subscription.currentPeriodEnd)}` : ''}`
-      : subscription.promotionExpiresAt ? `Promotional access · ends ${formatDate(subscription.promotionExpiresAt)}` : 'Pro access'
+      : subscription.entitlementSource === 'admin_grant' ? 'Pro access granted by an administrator'
+        : subscription.promotionExpiresAt ? `Promotional access · ends ${formatDate(subscription.promotionExpiresAt)}` : 'Pro access'
     : `${3 - (subscription?.freeUnlocksRemaining ?? 3)} of 3 apps unlocked`;
 
   useWorkspaceChrome(

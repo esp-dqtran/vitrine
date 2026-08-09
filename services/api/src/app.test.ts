@@ -1600,6 +1600,34 @@ test("reviews and publishes an existing admin draft while hiding drafts from des
   assert.equal(publishedOnly, true);
 });
 
+test("allows only admins to choose AppCard preview screens", async (t) => {
+  const selections: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    verifyAuthToken: async (token) => token === "admin" ? admin : user,
+    replaceAppPreviewImages: async (input) => {
+      selections.push(input);
+      return { versionId: 7, imageIds: input.imageIds };
+    },
+  }));
+  t.after(() => close(server));
+  const body = JSON.stringify({ platform: "ios", version: 1, imageIds: [41, 19, 28] });
+  const member = await fetch(`${base}/apps/linear/preview-screens`, {
+    method: "PUT", headers: { authorization: "Bearer user", "content-type": "application/json" }, body,
+  });
+  assert.equal(member.status, 403);
+  const selected = await fetch(`${base}/apps/linear/preview-screens`, {
+    method: "PUT", headers: { ...adminAuth, "content-type": "application/json" }, body,
+  });
+  assert.equal(selected.status, 200);
+  assert.deepEqual(await selected.json(), { versionId: 7, imageIds: [41, 19, 28] });
+  assert.deepEqual(selections, [{ app: "linear", platform: "ios", versionNumber: 1, imageIds: [41, 19, 28] }]);
+  const tooMany = await fetch(`${base}/apps/linear/preview-screens`, {
+    method: "PUT", headers: { ...adminAuth, "content-type": "application/json" },
+    body: JSON.stringify({ platform: "ios", version: 1, imageIds: [1, 2, 3, 4] }),
+  });
+  assert.equal(tooMany.status, 400);
+});
+
 test("returns 404 when an app has no structured design system", async (t) => {
   const { base, server } = await serve(
     createApiApp({
@@ -2828,6 +2856,30 @@ test("updates account state and maps safety errors", async (t) => {
   assert.equal(response.status, 403);
   assert.deepEqual(requested, { actorUserId: admin.id, userId: admin.id, active: false });
   assert.deepEqual(await response.json(), { error: "You cannot disable your own account", code: "self_disable" });
+});
+
+test("grants and revokes manual Pro access for an admin", async (t) => {
+  const userRow = {
+    id: user.id, email: user.email, role: "user" as const, active: true,
+    created_at: "2026-07-14T00:00:00.000Z", subscription_status: "active", manual_pro_grant: true,
+  };
+  const requests: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    verifyAuthToken: async () => admin,
+    grantAdminUserPro: async (input) => { requests.push(["grant", input]); return { status: "updated", user: userRow }; },
+    revokeAdminUserProGrant: async (userId) => { requests.push(["revoke", userId]); return { status: "updated", user: { ...userRow, manual_pro_grant: false, subscription_status: null } }; },
+  }));
+  t.after(() => close(server));
+
+  const grant = await fetch(`${base}/admin/users/${user.id}/subscription/upgrade`, { method: "POST", headers: adminAuth });
+  const revoke = await fetch(`${base}/admin/users/${user.id}/subscription/grant`, { method: "DELETE", headers: adminAuth });
+  assert.equal(grant.status, 200);
+  assert.deepEqual(await grant.json(), userRow);
+  assert.equal(revoke.status, 200);
+  assert.deepEqual(requests, [
+    ["grant", { actorUserId: admin.id, userId: user.id }],
+    ["revoke", user.id],
+  ]);
 });
 
 test("returns global and per-user usage for supported ranges", async (t) => {

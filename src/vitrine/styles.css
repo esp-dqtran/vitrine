@@ -1550,6 +1550,17 @@ body {
   }
 }
 
+@keyframes screenBatchToolbarFadeUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
 @keyframes vtScaleIn {
   from {
     opacity: 0;
@@ -2918,14 +2929,14 @@ body {
   top: var(--reference-nav-height);
   z-index: 35;
   min-width: 0;
-  min-height: 64px;
+  min-height: var(--reference-nav-height);
   display: flex;
   align-self: stretch;
   align-items: center;
   gap: 24px;
   overflow: visible;
   flex: 0 0 auto;
-  padding-bottom: 10px;
+  padding-block: calc((var(--reference-nav-height) - var(--vitrine-control-height)) / 2);
   background: var(--color-background-body);
 }
 
@@ -2961,8 +2972,8 @@ body {
 .reference-detail__tabs > button {
   position: relative;
   min-width: max-content !important;
-  min-height: 64px;
-  height: 56px !important;
+  min-height: var(--vitrine-control-height);
+  height: var(--vitrine-control-height) !important;
   padding: 0 !important;
   border: 0 !important;
   background: transparent !important;
@@ -3390,7 +3401,7 @@ body {
   box-shadow: 0 18px 60px rgb(0 0 0 / 40%);
   transform: translateX(-50%);
   backdrop-filter: blur(22px);
-  animation: vtFadeUp 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: screenBatchToolbarFadeUp 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .screen-batch-toolbar > strong {
@@ -5576,19 +5587,11 @@ body {
 }
 
 .project-playground__canvas .excalidraw {
-  /*
-   * The left rail's geometry and states, in one place. Excalidraw's own tools
-   * and the Astryx tools portaled in beside them read the same values, so the
-   * two halves of one toolbar cannot drift apart in size, radius or hover —
-   * which is exactly what they had been doing.
-   */
-  --project-canvas-tool-size: 36px;
-  /* Where the rail starts, and how much vertical room the header above and the
-     zoom/undo cluster below need. Both have a phone value further down. */
-  --project-canvas-rail-top: 120px;
-  --project-canvas-rail-reserved: 222px;
+  /* Native and Vitrines actions share one compact FigJam-style toolbelt. */
+  --project-canvas-tool-size: 40px;
+  --project-canvas-toolbelt-bottom: 64px;
   --project-canvas-tool-gap: 2px;
-  --project-canvas-tool-radius: 8px;
+  --project-canvas-tool-radius: 10px;
   --project-canvas-tool-hover: var(
     --button-hover-bg,
     var(--project-canvas-muted-surface, #f1f2f5)
@@ -5698,21 +5701,24 @@ body {
 }
 
 .project-playground__canvas .excalidraw .shapes-section {
-  position: absolute;
-  top: var(--project-canvas-rail-top, 120px);
-  left: -8px;
-  width: calc(var(--project-canvas-tool-size, 36px) + 8px);
-  height: auto;
+  position: fixed;
+  z-index: 651;
+  bottom: var(--project-canvas-toolbelt-bottom, 64px);
+  left: 50%;
+  width: auto;
+  max-width: calc(100vw - 32px);
+  height: 52px;
+  transform: translateX(-50%);
 }
 
 .project-playground__canvas .excalidraw .App-toolbar-container,
 .project-playground__canvas .excalidraw .App-toolbar {
-  width: calc(var(--project-canvas-tool-size, 36px) + 8px);
-  height: auto;
+  width: auto;
+  height: 52px;
 }
 
 .project-playground__canvas .excalidraw .App-toolbar {
-  padding: 4px;
+  padding: 6px;
   background: var(
     --project-canvas-surface-translucent-strong,
     rgb(255 255 255 / 97%)
@@ -5727,13 +5733,15 @@ body {
 
 .project-playground__canvas .excalidraw .App-toolbar > .Stack_horizontal {
   display: flex;
-  width: var(--project-canvas-tool-size, 36px);
-  height: auto;
-  max-height: calc(100dvh - var(--project-canvas-rail-reserved, 222px));
-  flex-direction: column;
+  width: auto;
+  max-width: min(760px, calc(100vw - 44px));
+  height: 40px;
+  max-height: none;
+  flex-direction: row;
   gap: var(--project-canvas-tool-gap, 2px);
   align-items: center;
-  overflow-y: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
 }
 
@@ -5745,9 +5753,9 @@ body {
 }
 
 .project-playground__canvas .excalidraw .App-toolbar__divider {
-  width: 24px;
-  height: 1px;
-  margin: 4px 0;
+  width: 1px;
+  height: 40px;
+  margin: 0 6px;
 }
 
 .project-playground__canvas .excalidraw .HintViewer,
@@ -5778,6 +5786,40 @@ body {
   order: -1;
 }
 
+/* Keep Excalidraw's shortcuts, but merge the visible geometry tools into the
+   persistent Shapes and connectors library beside the canvas. */
+.project-playground__canvas .excalidraw .App-toolbar label:has(input[data-testid="toolbar-rectangle"]),
+.project-playground__canvas .excalidraw .App-toolbar label:has(input[data-testid="toolbar-diamond"]),
+.project-playground__canvas .excalidraw .App-toolbar label:has(input[data-testid="toolbar-ellipse"]),
+.project-playground__canvas .excalidraw .App-toolbar label:has(input[data-testid="toolbar-arrow"]),
+.project-playground__canvas .excalidraw .App-toolbar label:has(input[data-testid="toolbar-line"]) {
+  display: none;
+}
+
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-freedraw"]) {
+  order: -1;
+  position: relative;
+  margin-left: 10px;
+}
+
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-freedraw"])::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -7px;
+  width: 1px;
+  margin: auto;
+  height: 40px;
+  content: "";
+  background: #e5e7eb;
+}
+
 .project-playground__canvas
   .excalidraw
   .ToolIcon_type_radio:checked
@@ -5786,34 +5828,42 @@ body {
   .excalidraw
   .ToolIcon_type_checkbox:checked
   + .ToolIcon__icon {
-  color: var(--color-on-primary-container, #1f2a7c);
-  background: var(--color-surface-primary-container, #e6e7ff);
+  color: #fff;
+  background: #9747ff;
 }
 
 .project-playground__canvas .excalidraw .App-toolbar .ToolIcon__icon:hover,
 .project-playground__canvas
   .excalidraw
   .App-toolbar__extra-tools-trigger:hover {
-  background: var(--project-canvas-tool-hover);
+  background: #f2f4f7;
 }
 
+.project-playground__sticky-tools,
 .project-playground__astryx-tools {
-  order: -1;
-  width: var(--project-canvas-tool-size, 36px);
+  width: auto;
   flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: var(--project-canvas-tool-gap, 2px);
   align-items: center;
-  padding-top: 2px;
+  padding: 0 2px;
   box-sizing: border-box;
 }
 
+.project-playground__sticky-tools {
+  order: -1;
+}
+
+.project-playground__astryx-tools {
+  order: 1;
+}
+
 .project-playground__astryx-tools-divider {
-  width: 1.5rem;
-  height: 1px;
+  width: 1px;
+  height: 40px;
   align-self: center;
-  margin: calc(var(--project-canvas-tool-gap, 2px) * 3) 0;
+  margin: 0 6px;
   background: var(--default-border-color, var(--project-canvas-border, rgb(17 24 39 / 10%)));
 }
 
@@ -5824,6 +5874,7 @@ body {
 
 .project-playground__screens-trigger,
 .project-playground__sticky-trigger,
+.project-playground__shapes-trigger,
 .project-playground__comments-trigger,
 .project-playground__document-trigger,
 .project-playground__more-tools-trigger {
@@ -5844,6 +5895,12 @@ body {
     transform 120ms ease;
 }
 
+.project-playground__sticky-trigger img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
 /*
  * The same pair Excalidraw uses for a checked ToolIcon. The triggers are
  * portaled into its toolbar Island, so a hardcoded light pair read as wrong
@@ -5851,27 +5908,30 @@ body {
  */
 .project-playground__screens-trigger[aria-pressed="true"],
 .project-playground__sticky-trigger[aria-pressed="true"],
+.project-playground__shapes-trigger[aria-pressed="true"],
 .project-playground__comments-trigger[aria-pressed="true"],
 .project-playground__document-trigger[aria-pressed="true"],
 .project-playground__more-tools-trigger[aria-pressed="true"] {
-  color: var(--color-on-primary-container);
-  background: var(--color-surface-primary-container);
+  color: #fff;
+  background: #9747ff;
 }
 
 .project-playground__screens-trigger:hover,
 .project-playground__sticky-trigger:hover,
+.project-playground__shapes-trigger:hover,
 .project-playground__comments-trigger:hover,
 .project-playground__document-trigger:hover,
 .project-playground__more-tools-trigger:hover {
-  background: var(--project-canvas-tool-hover);
+  background: #f2f4f7;
 }
 
 .project-playground__screens-trigger:focus-visible,
 .project-playground__sticky-trigger:focus-visible,
+.project-playground__shapes-trigger:focus-visible,
 .project-playground__comments-trigger:focus-visible,
 .project-playground__document-trigger:focus-visible,
 .project-playground__more-tools-trigger:focus-visible {
-  outline: 2px solid var(--color-primary, #2563eb);
+  outline: 2px solid #0d99ff;
   outline-offset: 1px;
 }
 
@@ -5895,6 +5955,110 @@ body {
   font-size: 9px;
   font-weight: 700;
   line-height: 1;
+}
+
+.project-canvas-shape-library {
+  position: fixed;
+  z-index: 652;
+  top: 82px;
+  left: 72px;
+  width: min(248px, calc(100vw - 96px));
+  max-height: calc(100dvh - 106px);
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  overflow: auto;
+  color: var(--project-canvas-text, #172033);
+  border: 1px solid #d0d5dd;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 98%);
+  box-shadow: 0 10px 28px rgb(15 23 42 / 16%);
+  backdrop-filter: blur(20px);
+}
+
+.project-canvas-shape-library__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.project-canvas-shape-library__header h2,
+.project-canvas-shape-library__section h3,
+.project-canvas-shape-library__empty {
+  margin: 0;
+}
+
+.project-canvas-shape-library__header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.project-canvas-shape-library .astryx-text-input {
+  width: 100%;
+  color: inherit;
+  border-color: #d0d5dd;
+  background: #f8fafc;
+}
+
+.project-canvas-shape-library input {
+  color: inherit;
+  background: transparent;
+}
+
+.project-canvas-shape-library__section {
+  display: grid;
+  gap: 8px;
+}
+
+.project-canvas-shape-library__section h3 {
+  color: #667085;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.project-canvas-shape-library__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.project-canvas-shape-library__tile {
+  min-height: 42px;
+  padding: 8px;
+  color: #344054;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.project-canvas-shape-library__tile:hover {
+  border-color: #b2b8c4;
+  background: #f8fafc;
+}
+
+.project-canvas-shape-library__tile[aria-pressed="true"] {
+  color: #fff;
+  border-color: #9747ff;
+  background: #9747ff;
+}
+
+.project-canvas-shape-library__tile:focus-visible {
+  outline: 2px solid #4262ff;
+  outline-offset: 1px;
+}
+
+.project-canvas-shape-library__empty {
+  color: #667085;
+  font-size: 13px;
 }
 
 .project-canvas-tools-catalog {
@@ -7443,10 +7607,10 @@ body {
   z-index: 3;
   top: auto !important;
   right: auto !important;
-  bottom: 0 !important;
-  left: 56px !important;
+  bottom: calc(var(--project-canvas-toolbelt-bottom, 64px) + 56px) !important;
+  left: 50% !important;
   width: 240px !important;
-  transform: none !important;
+  transform: translateX(-50%) !important;
 }
 
 .project-playground__canvas
@@ -7756,10 +7920,93 @@ body {
   backdrop-filter: blur(20px);
 }
 
+.project-playground__canvas .excalidraw .App-toolbar {
+  color: #1d1d1f;
+  --icon-fill-color: #1d1d1f;
+  background: #fff;
+  border-color: #d0d5dd;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 14%);
+}
+
 .project-playground__canvas .excalidraw .App-toolbar__extra-tools-trigger,
 .project-playground__canvas .excalidraw .ToolIcon__icon {
   border-radius: 8px;
 }
+
+.project-playground__canvas .excalidraw .App-toolbar__extra-tools-trigger,
+.project-playground__canvas .excalidraw .App-toolbar .ToolIcon__icon {
+  color: #1d1d1f !important;
+  border-radius: var(--project-canvas-tool-radius, 10px);
+}
+
+/* The selection glyph is the exact FigJam pointer asset supplied in the reference. */
+.project-playground__canvas
+  .excalidraw
+  label:has(input[data-testid="toolbar-selection"])
+  .ToolIcon__icon
+  > svg {
+  display: none;
+}
+
+.project-playground__canvas
+  .excalidraw
+  label:has(input[data-testid="toolbar-selection"])
+  .ToolIcon__icon::before {
+  width: 20px;
+  height: 20px;
+  display: block;
+  content: "";
+  background: currentColor;
+  mask: url("./assets/figjam-select-tool.svg") center / contain no-repeat;
+}
+
+/* The free-draw tool uses AFFiNE's physical Pen asset while retaining Excalidraw's draw action. */
+.project-playground__canvas
+  .excalidraw
+  label:has(input[data-testid="toolbar-freedraw"])
+  .ToolIcon__icon
+  > svg {
+  display: none;
+}
+
+.project-playground__canvas
+  .excalidraw
+  label:has(input[data-testid="toolbar-freedraw"])
+  .ToolIcon__icon::before {
+  width: 16px;
+  height: 34px;
+  display: block;
+  content: "";
+  background: url("./assets/figjam-marker-tool.svg") center / contain no-repeat;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 18%));
+}
+
+.project-playground__astryx-tools button {
+  color: #1d1d1f !important;
+}
+
+.project-playground__canvas .excalidraw .ToolIcon_type_radio:checked + .ToolIcon__icon,
+.project-playground__canvas .excalidraw .ToolIcon_type_checkbox:checked + .ToolIcon__icon {
+  --icon-fill-color: #fff;
+  color: #fff !important;
+  background: #9747ff !important;
+}
+
+.project-playground__screens-trigger[aria-pressed="true"],
+.project-playground__sticky-trigger[aria-pressed="true"],
+.project-playground__comments-trigger[aria-pressed="true"],
+.project-playground__document-trigger[aria-pressed="true"],
+.project-playground__more-tools-trigger[aria-pressed="true"] {
+  color: #fff !important;
+  background: #9747ff !important;
+}
+
+.project-playground__canvas .excalidraw .App-toolbar__divider,
+.project-playground__astryx-tools-divider {
+  background: #e5e7eb;
+}
+
 
 .project-playground__canvas .excalidraw .layer-ui__wrapper__footer-left {
   display: contents;
@@ -8018,6 +8265,7 @@ body {
 .project-screen-library__header h2,
 .project-screen-library__header p,
 .project-screen-library__message,
+.project-screen-library__result-summary,
 .project-screen-library__empty {
   margin: 0;
 }
@@ -8083,6 +8331,64 @@ body {
   border-radius: 8px;
 }
 
+.project-screen-library__result-summary {
+  margin: -2px 0 0;
+  color: var(--project-canvas-muted-text, #737985);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.project-screen-library__eyebrow {
+  margin: 0 0 3px;
+  color: var(--color-on-primary-container, #23447a);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.project-screen-library__browse-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.project-screen-library__browse-heading > span {
+  color: var(--project-canvas-text, #17191d);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.project-screen-library__facets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 84px;
+  padding-right: 2px;
+  overflow-y: auto;
+}
+
+.project-screen-library__facet {
+  min-width: 0;
+  padding: 5px 8px;
+  color: var(--project-canvas-muted-text, #606773);
+  background: var(--project-canvas-muted-surface, #f1f3f5);
+  border: 1px solid var(--project-canvas-border, rgb(17 24 39 / 10%));
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.project-screen-library__facet[aria-pressed="true"] {
+  color: var(--color-on-primary-container, #23447a);
+  background: var(--color-surface-primary-container, #eef4ff);
+  border-color: var(--color-outline-primary, #8cabdc);
+}
+
 .project-screen-library__grid {
   min-height: 0;
   display: grid;
@@ -8091,6 +8397,11 @@ body {
   gap: 10px;
   padding-right: 3px;
   overflow-y: auto;
+}
+
+.project-screen-library__grid--inspiration {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
 }
 
 .project-screen-library__card {
@@ -8108,6 +8419,27 @@ body {
 
 .project-screen-library__card:active {
   cursor: grabbing;
+}
+
+.project-screen-library__card--screen {
+  gap: 0;
+  padding: 6px !important;
+  border-radius: 13px !important;
+  transition:
+    border-color var(--vitrine-transition-fast),
+    box-shadow var(--vitrine-transition-fast),
+    transform var(--vitrine-transition-fast);
+}
+
+.project-screen-library__card--screen:hover {
+  border-color: var(--color-outline-primary, #8cabdc) !important;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%) !important;
+  transform: translateY(-1px);
+}
+
+.project-screen-library__card--screen:focus-visible {
+  outline: 2px solid var(--color-focus-ring, #5e8ef7);
+  outline-offset: 2px;
 }
 
 /*
@@ -8145,6 +8477,13 @@ body {
   object-fit: contain;
 }
 
+.project-screen-library__preview--screen {
+  height: auto;
+  aspect-ratio: 8 / 5;
+  border-radius: 9px;
+  isolation: isolate;
+}
+
 .project-screen-library__identity {
   min-width: 0;
   display: flex;
@@ -8172,6 +8511,51 @@ body {
   object-fit: cover;
 }
 
+.project-screen-library__app-icon--overlay {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 1;
+  border: 2px solid var(--project-canvas-surface, #fff);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
+  pointer-events: none;
+}
+
+.project-screen-library__place-hint {
+  position: absolute;
+  z-index: 1;
+  max-width: calc(100% - 88px);
+  overflow: hidden;
+  color: var(--project-canvas-overlay-text, #fff);
+  background: color-mix(in srgb, var(--project-canvas-ink, #101216) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--project-canvas-surface, #fff) 18%, transparent);
+  border-radius: 999px;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 20%);
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+}
+
+.project-screen-library__place-hint {
+  right: 10px;
+  bottom: 10px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(3px);
+  transition:
+    opacity var(--vitrine-transition-fast),
+    transform var(--vitrine-transition-fast);
+}
+
+.project-screen-library__card--screen:hover .project-screen-library__place-hint,
+.project-screen-library__card--screen:focus-visible .project-screen-library__place-hint {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .project-screen-library__identity > span:last-child {
   min-width: 0;
   display: grid;
@@ -8182,6 +8566,22 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.project-screen-library__screen-text,
+.project-screen-library__drag-hint {
+  overflow: hidden;
+  display: block;
+  color: var(--project-canvas-muted-text, #737985);
+  font-size: 10px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-screen-library__drag-hint {
+  margin-top: -3px;
+  text-align: center;
 }
 
 .project-screen-library__identity strong {
@@ -8199,231 +8599,6 @@ body {
 }
 
 .project-screen-library__empty {
-  grid-column: 1 / -1;
-  padding: 28px 12px;
-  text-align: center;
-}
-
-.project-canvas-data-library {
-  position: absolute;
-  z-index: 411;
-  top: 136px;
-  right: auto;
-  bottom: 12px;
-  left: 64px;
-  width: min(460px, calc(100% - 76px));
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  overflow: hidden;
-  color: var(--project-canvas-text, #202124);
-  background: var(
-    --project-canvas-surface-translucent-strong,
-    rgb(255 255 255 / 98%)
-  );
-  border: 1px solid var(--project-canvas-border, rgb(17 24 39 / 10%));
-  border-radius: 14px;
-  box-shadow:
-    0 12px 36px rgb(17 24 39 / 16%),
-    0 2px 7px var(--project-canvas-border, rgb(17 24 39 / 10%));
-  backdrop-filter: blur(20px);
-}
-
-.project-canvas-data-library__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.project-canvas-data-library__header span,
-.project-canvas-data-library__header h2,
-.project-canvas-data-library__header p,
-.project-canvas-data-library__message,
-.project-canvas-data-library__empty {
-  margin: 0;
-}
-
-.project-canvas-data-library__header span {
-  color: #737985;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.project-canvas-data-library__header h2 {
-  margin-top: 2px;
-  color: #17191d;
-  font-size: 20px;
-  line-height: 1.2;
-}
-
-.project-canvas-data-library__header p,
-.project-canvas-data-library__message,
-.project-canvas-data-library__empty {
-  color: var(--project-canvas-muted-text, #6b7280);
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.project-canvas-data-library__header p {
-  max-width: 330px;
-  margin-top: 4px;
-}
-
-.project-canvas-data-library .astryx-button {
-  color: var(--project-canvas-text, #202124) !important;
-}
-
-.project-canvas-data-library .astryx-button.ghost {
-  background: transparent !important;
-}
-
-.project-canvas-data-library .astryx-button.secondary {
-  background: var(--project-canvas-muted-surface, #f1f3f5) !important;
-  border-color: var(--project-canvas-border, rgb(17 24 39 / 10%)) !important;
-}
-
-.project-canvas-data-library .astryx-text-input {
-  background: var(--project-canvas-bg, #f7f8fa) !important;
-  border: 1px solid var(--project-canvas-border, rgb(17 24 39 / 10%)) !important;
-}
-
-.project-canvas-data-library input {
-  color: var(--project-canvas-text, #202124) !important;
-  background: transparent !important;
-}
-
-.project-canvas-data-library input::placeholder {
-  color: var(--project-canvas-disabled-text, #8a9099) !important;
-}
-
-.project-canvas-data-library__tabs,
-.project-canvas-data-library__platforms {
-  /* No track here: SegmentedControl draws its own, and the wrapper's made a
-     second pill around the first. This is now only a row to sit in. */
-  display: flex;
-  width: fit-content;
-}
-
-.project-canvas-data-library__tabs {
-  display: flex;
-  width: 100%;
-}
-
-.project-canvas-data-library__message {
-  padding: 8px 10px;
-  color: #23447a;
-  background: #eef4ff;
-  border-radius: 8px;
-}
-
-.project-canvas-data-library__grid {
-  min-height: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-content: start;
-  gap: 10px;
-  padding-right: 3px;
-  overflow-y: auto;
-}
-
-.project-canvas-data-library__card {
-  min-width: 0;
-  display: grid;
-  align-content: start;
-  gap: 8px;
-  padding: 8px !important;
-  background: var(--project-canvas-surface, #fff) !important;
-  border: 1px solid var(--project-canvas-border, rgb(17 24 39 / 10%)) !important;
-  border-radius: 11px !important;
-  box-shadow: none !important;
-}
-
-.project-canvas-data-library__preview {
-  position: relative;
-  height: 118px;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  background: #f5f6f8;
-  border-radius: 8px;
-}
-
-.project-canvas-data-library__preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.project-canvas-data-library__preview--flow > span {
-  position: absolute;
-  right: 6px;
-  bottom: 6px;
-  padding: 4px 6px;
-  color: #374151;
-  background: rgb(255 255 255 / 90%);
-  border-radius: 6px;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.project-canvas-data-library__identity {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.project-canvas-data-library__app-icon {
-  width: 28px;
-  height: 28px;
-  flex: 0 0 28px;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  color: #4b5563;
-  background: var(--project-canvas-muted-surface, #f1f3f5);
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.project-canvas-data-library__app-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.project-canvas-data-library__identity > span:last-child {
-  min-width: 0;
-  display: grid;
-}
-
-.project-canvas-data-library__identity strong,
-.project-canvas-data-library__identity small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.project-canvas-data-library__identity strong {
-  color: var(--project-canvas-text, #202124);
-  font-size: 12px;
-}
-
-.project-canvas-data-library__identity small {
-  color: #737985;
-  font-size: 10px;
-}
-
-.project-canvas-data-library__card > .astryx-button {
-  width: 100%;
-}
-
-.project-canvas-data-library__empty {
   grid-column: 1 / -1;
   padding: 28px 12px;
   text-align: center;
@@ -8959,12 +9134,11 @@ body {
   }
 
   .project-playground__canvas .excalidraw {
-    --project-canvas-rail-top: 104px;
-    --project-canvas-rail-reserved: 310px;
+    --project-canvas-toolbelt-bottom: 72px;
   }
 
   .project-playground__canvas .excalidraw .shapes-section {
-    left: 0;
+    left: 50%;
   }
 
   .project-playground__canvas
@@ -9234,18 +9408,6 @@ body {
     bottom: 8px;
     left: 68px;
     width: auto;
-  }
-
-  .project-canvas-data-library {
-    top: 68px;
-    right: 8px;
-    bottom: 8px;
-    left: 68px;
-    width: auto;
-  }
-
-  .project-canvas-data-library__grid {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .project-screen-library__grid {

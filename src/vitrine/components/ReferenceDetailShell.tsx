@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { Button, Icon, Skeleton, ToggleButton } from '@astryxdesign/core';
 import { useSlidingIndicator } from '../useSlidingIndicator';
+import { ControlRail } from './ControlRail.tsx';
 
 export interface DetailTab<T extends string> {
   id: T;
@@ -134,7 +135,11 @@ export function ReferenceDetailShell<T extends string>({
           {actions && <div className={`reference-detail__actions${loading ? ' app-detail-loading__actions' : ''}`}>{actions}</div>}
         </div>
       </header>
-      <div className="reference-detail__navigation">
+      <ControlRail
+        as="nav"
+        ariaLabel={`${accessibleTitle} controls`}
+        className="reference-detail__navigation"
+      >
         {tabLeading ? <div className="reference-detail__tab-leading">{tabLeading}</div> : null}
         <div role="tablist" aria-label={`${accessibleTitle} sections`} className={`reference-detail__tabs${loading ? ' app-detail-loading__tabs' : ''}`}>
           {tabs.map((tab, index) => loading ? (
@@ -163,7 +168,7 @@ export function ReferenceDetailShell<T extends string>({
         </div>
         {tabControls ? <div className="reference-detail__tab-controls">{tabControls}</div> : null}
         {tabTrailing && <div className="reference-detail__tab-trailing">{tabTrailing}</div>}
-      </div>
+      </ControlRail>
       <div style={{ minHeight: 400 }}>
         <div className="reference-detail__body-inner" style={{ paddingTop: bodyPadding.split(' ')[0], paddingBottom: bodyPadding.split(' ')[2] ?? bodyPadding.split(' ')[0] }}>
           {children}

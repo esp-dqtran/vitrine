@@ -14,8 +14,10 @@ import { hasDesignSystemContent } from '../designSystemAvailability.ts';
 import {
   fetchAppFlows,
   fetchAppUiElementSummary,
+  replaceAppCardPreviewScreens,
   type UiElementSummaryResult,
 } from '../appsApi.ts';
+import { invalidateCatalogPageCache } from '../useApps.ts';
 import { resolveAppSectionTotals } from '../appSectionTotals';
 import {
   EMPTY_FLOW_FILTERS,
@@ -161,6 +163,25 @@ export function appDetailTabs(hasDesignSystem: boolean) {
   ];
 }
 
+export function appVisitSiteUrl(
+  versions: ReadonlyArray<{ version_number: number; source_url: string | null }>,
+  selectedVersion: number | undefined,
+  fallback: string | null | undefined,
+  platform?: Platform,
+): string | null {
+  const versionSource = versions.find(({ version_number }) => version_number === selectedVersion)?.source_url;
+  if (versionSource) return versionSource;
+  if (!fallback) return null;
+  try {
+    const hostname = new URL(fallback).hostname.toLowerCase();
+    if (platform === 'ios' && hostname === 'play.google.com') return null;
+    if (platform === 'android' && (hostname === 'apps.apple.com' || hostname === 'itunes.apple.com')) return null;
+  } catch {
+    return null;
+  }
+  return fallback;
+}
+
 const resolveSection = (initialSection: string | undefined, role: 'admin' | 'user'): DetailSection => {
   const allowed = role === 'admin' ? SECTIONS : MEMBER_SECTIONS;
   return allowed.includes(initialSection as DetailSection)
@@ -203,6 +224,18 @@ interface ScreenDetailProps {
   ) => void;
   accountControls?: ReactNode;
   onOpenSearch?: () => void;
+}
+
+/** The order of the selection is the AppCard preview order. */
+export function selectedScreensInSelectionOrder<T extends { id: number }>(
+  screens: readonly T[],
+  selectedIds: ReadonlySet<number>,
+): T[] {
+  const screensById = new Map(screens.map((screen) => [screen.id, screen]));
+  return [...selectedIds].flatMap((id) => {
+    const screen = screensById.get(id);
+    return screen ? [screen] : [];
+  });
 }
 
 export function ScreenDetail({
@@ -311,6 +344,7 @@ export function ScreenDetail({
   const [lightbox, setLightbox] = useState<LightboxState>(null);
   const [selectedScreenIds, setSelectedScreenIds] = useState<Set<number>>(() => new Set());
   const [copyProgress, setCopyProgress] = useState<ImageBatchProgress | null>(null);
+  const [previewSelectionSaving, setPreviewSelectionSaving] = useState(false);
   const showApplicationToast = useApplicationToast();
   const contentRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -342,7 +376,7 @@ export function ScreenDetail({
     states: [...new Set(flowValues.flatMap(({ states: flowStates }) => flowStates))],
   };
   const filteredFlows = flows.filter((flow) => flowMatchesFilters(flow, flowFilters));
-  const selectedScreens = screens.filter((screen) => selectedScreenIds.has(screen.id));
+  const selectedScreens = selectedScreensInSelectionOrder(screens, selectedScreenIds);
   const selectedScreenReferences = selectedScreens.map((screen): SaveReference => ({
     kind: 'screen',
     app: app.id,
@@ -354,6 +388,27 @@ export function ScreenDetail({
           ? screen.productArea
           : `Screen ${screen.id}`),
   }));
+
+  const saveAppCardPreview = async () => {
+    if (!sectionData.resolvedVersion || selectedScreens.length > 3) return;
+    setPreviewSelectionSaving(true);
+    try {
+      await replaceAppCardPreviewScreens(app.id, {
+        platform: selectedPlatform,
+        version: sectionData.resolvedVersion,
+        imageIds: selectedScreens.map(({ id }) => id),
+      });
+      invalidateCatalogPageCache();
+      setSelectedScreenIds(new Set());
+      showApplicationToast(selectedScreens.length
+        ? `AppCard preview updated with ${selectedScreens.length} ${selectedScreens.length === 1 ? 'screen' : 'screens'}`
+        : 'AppCard preview reset to automatic selection');
+    } catch {
+      showApplicationToast('Could not update the AppCard preview');
+    } finally {
+      setPreviewSelectionSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (section !== 'screens' || sectionData.versionsLoading) return;
@@ -643,6 +698,15 @@ export function ScreenDetail({
             variant="secondary"
             size="sm"
           />
+          {role === 'admin' ? (
+            <Button
+              label={previewSelectionSaving ? 'Saving preview…' : 'Use in AppCard'}
+              variant="primary"
+              size="sm"
+              isDisabled={Boolean(copyProgress) || previewSelectionSaving || selectedScreens.length > 3}
+              onClick={() => void saveAppCardPreview()}
+            />
+          ) : null}
           <CollectionPicker
             references={selectedScreenReferences}
             collections={collections}
@@ -674,14 +738,15 @@ export function ScreenDetail({
     { label: 'Screens', value: String(sectionTotals.screens) },
     ...(app.lastCapturedAt ? [{ label: 'Last updated', value: formatCapturedAt(app.lastCapturedAt) }] : []),
   ];
-  const actions = role === 'admin' || app.websiteUrl ? (
-    <>
-      {role === 'admin' ? <HeroButton primary onClick={() => setSection('export')}>Export to Figma</HeroButton> : null}
-      {app.websiteUrl && <HeroButton onClick={() => window.open(app.websiteUrl!, '_blank', 'noopener,noreferrer')}>Visit Site</HeroButton>}
-    </>
-  ) : undefined;
   const versions = sectionData.versions ?? [];
   const latestVersion = versions.find(({ status }) => status === 'published') ?? versions[0];
+  const visitSiteUrl = appVisitSiteUrl(versions, sectionData.resolvedVersion, app.websiteUrl, selectedPlatform);
+  const actions = role === 'admin' || visitSiteUrl ? (
+    <>
+      {role === 'admin' ? <HeroButton primary onClick={() => setSection('export')}>Export to Figma</HeroButton> : null}
+      {visitSiteUrl && <HeroButton onClick={() => window.open(visitSiteUrl, '_blank', 'noopener,noreferrer')}>Visit Site</HeroButton>}
+    </>
+  ) : undefined;
   const versionOptions = versions.length
     ? versions.map((version) => ({
         value: String(version.version_number),

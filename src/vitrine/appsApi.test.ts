@@ -6,6 +6,7 @@ import {
   fetchAppScreens,
   fetchAppUiElements,
   fetchAppUiElementSummary,
+  replaceAppCardPreviewScreens,
 } from './appsApi.ts';
 
 const metadata = {
@@ -56,4 +57,20 @@ test('reports a metadata API failure without converting it to empty data', async
     () => fetchAppMetadata('missing', undefined, async () => new Response(null, { status: 404 })),
     /\/api\/apps\/missing returned 404/,
   );
+});
+
+test('replaces the ordered AppCard preview selection', async () => {
+  let requested = '';
+  let init: RequestInit | undefined;
+  const result = await replaceAppCardPreviewScreens('quora mobile', {
+    platform: 'ios', version: 3, imageIds: [41, 19, 28],
+  }, async (input, options) => {
+    requested = String(input);
+    init = options;
+    return new Response(JSON.stringify({ versionId: 7, imageIds: [41, 19, 28] }), { status: 200 });
+  });
+  assert.equal(requested, '/api/apps/quora%20mobile/preview-screens');
+  assert.equal(init?.method, 'PUT');
+  assert.equal(init?.body, JSON.stringify({ platform: 'ios', version: 3, imageIds: [41, 19, 28] }));
+  assert.deepEqual(result.imageIds, [41, 19, 28]);
 });

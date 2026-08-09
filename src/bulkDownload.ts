@@ -237,6 +237,12 @@ async function selectAllOwnCards(
   let totalClicked = 0;
   let totalSkipped = 0;
   let stableAtBottom = 0;
+  // UI Elements use a denser virtualized grid than Screens. A slower, shorter sweep
+  // gives React time to mount the tail cards; the faster Screens settings plateaued
+  // at 529/561 on Qonto even though all 561 cards were selectable.
+  const selectionStep = tab === "ui-elements" ? 400 : CARD_SELECTION_SCROLL_STEP;
+  const selectionDelay = tab === "ui-elements" ? 450 : SCROLL_DELAY_MS;
+  const bottomStability = tab === "ui-elements" ? 12 : STABLE_AT_BOTTOM_STREAK;
   const selectVisibleCards = () => page.evaluate(({ prefix, includeEveryCard, targetHrefs }) => {
     // Only grids that actually hold screen links — excludes the unrelated "similar apps"
     // icon carousel, which uses the same "content-start" class but no /screens/ hrefs.
@@ -264,7 +270,7 @@ async function selectAllOwnCards(
     return { clicked, skipped };
   }, { prefix: appAltPrefix, includeEveryCard: tab === "ui-elements", targetHrefs });
 
-  for (let i = 0; i < MAX_SCROLL_ITERATIONS && stableAtBottom < STABLE_AT_BOTTOM_STREAK; i++) {
+  for (let i = 0; i < MAX_SCROLL_ITERATIONS && stableAtBottom < bottomStability; i++) {
     const first = await selectVisibleCards();
     // Mobbin mounts every Shopee checkbox, but React can replace a just-clicked virtual
     // card before its selection is committed. One settled recheck of the same viewport
@@ -277,10 +283,19 @@ async function selectAllOwnCards(
     const atBottom = await page.evaluate(
       () => window.scrollY + window.innerHeight >= document.body.scrollHeight - 300
     );
-    stableAtBottom = atBottom ? stableAtBottom + 1 : 0;
+    // A virtualized grid can append cards while we are already at the bottom. Count
+    // only empty bottom sweeps as stable; counting a pass that clicked cards caused
+    // Qonto's UI-elements crawl to stop at 541/561 before the tail mounted.
+    const clickedThisPass = first.clicked + settled.clicked;
+    stableAtBottom = atBottom && clickedThisPass === 0 ? stableAtBottom + 1 : 0;
 
-    await page.evaluate((step) => window.scrollBy(0, step), CARD_SELECTION_SCROLL_STEP);
-    await page.waitForTimeout(SCROLL_DELAY_MS);
+    // Targeted repair batches can stop as soon as their requested cards are selected;
+    // waiting for the whole catalog's bottom-stability window would make each batch
+    // needlessly expensive.
+    if (targetHrefs.length > 0 && (await toolbarSelectedCount(page)) === targetHrefs.length) break;
+
+    await page.evaluate((step) => window.scrollBy(0, step), selectionStep);
+    await page.waitForTimeout(selectionDelay);
   }
   return { clicked: totalClicked, skipped: totalSkipped };
 }
@@ -613,9 +628,10 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
       : `[${appName}] Selecting every ${label} card (filtering to alt prefix "${appAltPrefix}")...`);
     writeProgress({ stage: "crawl", app: appName, done: 0, total: 0, status: "running", message: `Selecting ${label}` });
 
-    const targetHrefs = tab === "screens"
-      ? (process.env.MOBBIN_SCREEN_TARGET_HREFS ?? "").split(",").map((href) => href.trim()).filter(Boolean)
-      : [];
+    const targetHrefs = (tab === "screens"
+      ? process.env.MOBBIN_SCREEN_TARGET_HREFS
+      : process.env.MOBBIN_UI_TARGET_HREFS
+    ?? "").split(",").map((href) => href.trim()).filter(Boolean);
     const { skipped } = await selectAllOwnCards(page, appAltPrefix, tab, true, targetHrefs);
     const shown = await shownTotalCount(page);
     let selected = (await toolbarSelectedCount(page)) ?? 0;

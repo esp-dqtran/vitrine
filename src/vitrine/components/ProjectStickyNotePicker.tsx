@@ -1,5 +1,6 @@
 import { Button } from "@astryxdesign/core";
 import type { CSSProperties } from "react";
+import figjamStickyNoteTool from "../assets/figjam-sticky-note-tool.svg";
 
 export interface ProjectStickyNoteColor {
   id: string;
@@ -30,15 +31,13 @@ export const projectStickyNoteColors: readonly ProjectStickyNoteColor[] = [
 
 export function StickyNoteGlyph() {
   return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
-      <path
-        d="M5.5 3.75h13v10.5l-5.75 5.75H5.5z"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
-      <path d="M12.75 20v-5.75h5.75" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-    </svg>
+    <img
+      src={figjamStickyNoteTool}
+      width="20"
+      height="20"
+      alt=""
+      aria-hidden="true"
+    />
   );
 }
 

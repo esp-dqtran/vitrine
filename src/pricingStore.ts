@@ -34,7 +34,7 @@ export interface StripeSubscriptionInput {
 
 export interface AccountEntitlements {
   plan: "free" | "pro";
-  entitlementSource: "paid" | "promotion" | "free";
+  entitlementSource: "paid" | "promotion" | "admin_grant" | "free";
   promotionExpiresAt: string | null;
   subscription: SubscriptionRecord | null;
   freeUnlocks: string[];
@@ -54,12 +54,21 @@ export async function getSubscription(userId: number): Promise<SubscriptionRecor
   return result.rows[0];
 }
 
+export async function hasAdminProGrant(userId: number): Promise<boolean> {
+  const result = await query(
+    "SELECT 1 FROM admin_pro_grants WHERE user_id = $1 AND revoked_at IS NULL",
+    [userId],
+  );
+  return result.rowCount === 1;
+}
+
 export async function isProUser(userId: number, now = new Date()): Promise<boolean> {
-  const [subscription, promotion] = await Promise.all([
+  const [subscription, promotion, adminGrant] = await Promise.all([
     getSubscription(userId),
     activePromotionalEntitlement(userId, now),
+    hasAdminProGrant(userId),
   ]);
-  return effectivePlan(subscription, now) === "pro" || Boolean(promotion);
+  return effectivePlan(subscription, now) === "pro" || Boolean(promotion) || adminGrant;
 }
 
 export async function countUserCollections(userId: number): Promise<number> {
@@ -187,18 +196,21 @@ function usageWindow(subscription: SubscriptionRecord, now: Date): { start: Date
 }
 
 export async function getAccountEntitlements(userId: number, now = new Date()): Promise<AccountEntitlements> {
-  const [subscription, promotion, freeUnlocks] = await Promise.all([
+  const [subscription, promotion, adminGrant, freeUnlocks] = await Promise.all([
     getSubscription(userId),
     activePromotionalEntitlement(userId, now),
+    hasAdminProGrant(userId),
     listFreeUnlocks(userId),
   ]);
   const paid = effectivePlan(subscription, now) === "pro";
-  const plan = paid || promotion ? "pro" : "free";
-  const entitlementSource = paid ? "paid" : promotion ? "promotion" : "free";
+  const plan = paid || promotion || adminGrant ? "pro" : "free";
+  const entitlementSource = paid ? "paid" : promotion ? "promotion" : adminGrant ? "admin_grant" : "free";
   const window = paid && subscription
     ? usageWindow(subscription, now)
     : promotion
       ? { start: new Date(promotion.startsAt), end: new Date(promotion.expiresAt) }
+      : adminGrant
+        ? calendarMonthWindow(now)
       : undefined;
   let used = 0;
   if (window) {
@@ -216,6 +228,13 @@ export async function getAccountEntitlements(userId: number, now = new Date()): 
     freeUnlocks,
     freeUnlocksRemaining: Math.max(0, FREE_APP_LIMIT - freeUnlocks.length),
     exportUsage: { used, limit: EXPORT_LIMIT, resetAt: window?.end.toISOString() ?? null },
+  };
+}
+
+function calendarMonthWindow(now: Date): { start: Date; end: Date } {
+  return {
+    start: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)),
+    end: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)),
   };
 }
 
@@ -240,14 +259,21 @@ export async function reserveExportOperation(
       [userId, now],
     );
     const promotion = promotionResult.rows[0];
+    const adminGrantResult = await client.query(
+      "SELECT 1 FROM admin_pro_grants WHERE user_id = $1 AND revoked_at IS NULL FOR UPDATE",
+      [userId],
+    );
+    const adminGrant = adminGrantResult.rowCount === 1;
     const paid = Boolean(subscription && effectivePlan(subscription, now) === "pro");
-    if (!paid && !promotion) {
+    if (!paid && !promotion && !adminGrant) {
       return { status: "not_pro", used: 0, limit: EXPORT_LIMIT, resetAt: null };
     }
     const window = paid && subscription
       ? usageWindow(subscription, now)
       : promotion
         ? { start: new Date(promotion.starts_at), end: new Date(promotion.expires_at) }
+        : adminGrant
+          ? calendarMonthWindow(now)
         : undefined;
     if (!window) return { status: "not_pro", used: 0, limit: EXPORT_LIMIT, resetAt: null };
     const reserved = await client.query<{ operation_count: number }>(

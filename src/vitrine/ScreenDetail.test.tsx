@@ -2,7 +2,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { appDetailTabs, ScreenDetail } from './components/ScreenDetail.tsx';
+import {
+  appDetailTabs,
+  appVisitSiteUrl,
+  ScreenDetail,
+  selectedScreensInSelectionOrder,
+} from './components/ScreenDetail.tsx';
 import { flowMatchesFilters, screenMatchesFilters } from './detailFilters.ts';
 
 test('shows the Design System tab only when the App has a snapshot', () => {
@@ -69,6 +74,16 @@ test('falls back removed Review selections to Screens', () => {
 
   assert.doesNotMatch(html, /aria-label="Review"/);
   assert.match(html, /aria-selected="true"[^>]*aria-label="Screens"/);
+});
+
+test('preserves selection order when setting an AppCard preview', () => {
+  const screens = [{ id: 10 }, { id: 20 }, { id: 30 }];
+  const selected = new Set([30, 10, 20]);
+
+  assert.deepEqual(
+    selectedScreensInSelectionOrder(screens, selected).map(({ id }) => id),
+    [30, 10, 20],
+  );
 });
 
 test('does not expose capture version controls in app detail', () => {
@@ -178,7 +193,25 @@ test('renders Visit Site beside the primary action when the App has a website', 
 
   assert.match(html, />Export to Figma</);
   assert.match(html, />Visit Site</);
-  assert.match(source, /window\.open\(app\.websiteUrl!, '_blank', 'noopener,noreferrer'\)/);
+  assert.match(source, /window\.open\(visitSiteUrl, '_blank', 'noopener,noreferrer'\)/);
+});
+
+test('uses the selected platform version source for Visit Site', () => {
+  assert.equal(appVisitSiteUrl([
+    { version_number: 1, source_url: 'https://apps.apple.com/gb/app/cleo/id1447274646' },
+  ], 1, 'https://play.google.com/store/apps/details?id=com.meetcleo.cleo'),
+  'https://apps.apple.com/gb/app/cleo/id1447274646');
+  assert.equal(appVisitSiteUrl([], undefined, 'https://cleo.com'), 'https://cleo.com');
+});
+
+test('does not fall back to a store URL for the wrong active platform', () => {
+  assert.equal(appVisitSiteUrl(
+    [], undefined, 'https://play.google.com/store/apps/details?id=com.example', 'ios',
+  ), null);
+  assert.equal(appVisitSiteUrl(
+    [], undefined, 'https://apps.apple.com/us/app/example/id123456789', 'android',
+  ), null);
+  assert.equal(appVisitSiteUrl([], undefined, 'https://example.com', 'android'), 'https://example.com');
 });
 
 test('does not render a Back to all apps button in App detail', () => {
@@ -467,11 +500,15 @@ test('renders the Mobbin-style App detail navigation rail with real version stat
   assert.match(source, /<span>Showing<\/span>/);
   assert.match(
     css,
-    /\.reference-detail__navigation\s*\{[^}]*min-height:\s*64px/,
+    /\.reference-detail__navigation\s*\{[^}]*min-height:\s*var\(--reference-nav-height\)/,
   );
   assert.match(
     css,
     /\.reference-detail__navigation\s*\{[^}]*gap:\s*24px/,
+  );
+  assert.match(
+    css,
+    /\.reference-detail__navigation\s*\{[^}]*padding-block:\s*calc\(\(var\(--reference-nav-height\) - var\(--vitrine-control-height\)\) \/ 2\)/,
   );
   assert.match(
     css,

@@ -26,6 +26,7 @@ import type {
   ExcalidrawProps,
   PointerDownState,
   SocketId,
+  ToolType,
 } from "@excalidraw/excalidraw/types";
 import type {
   ExcalidrawElement,
@@ -41,7 +42,6 @@ import {
 import type { Platform } from "../../platformFromUrl.ts";
 import type { AppsDiscoveryScreenResult } from "../appsDiscovery.ts";
 import type { FlowCatalogItem } from "../flowCatalogApi.ts";
-import type { App } from "../types.ts";
 import { getResearchProject } from "../researchProjectsApi.ts";
 import {
   DesignerCanvasApiError,
@@ -74,10 +74,6 @@ import {
   projectScreenKey,
   type CatalogDragPayload,
 } from "./ProjectScreenLibrary.tsx";
-import {
-  ProjectCanvasDataLibrary,
-  projectCanvasDataKey,
-} from "./ProjectCanvasDataLibrary.tsx";
 import {
   ProjectCanvasDocumentEditor,
   type ProjectCanvasDocumentData,
@@ -188,9 +184,27 @@ type ProjectCanvasTool =
   | "sticky"
   | "comments"
   | "document"
-  | "data"
   | "templates"
   | "more";
+
+type CanvasShapeTool = Extract<
+  ToolType,
+  "rectangle" | "ellipse" | "diamond" | "line" | "arrow"
+>;
+
+interface CanvasShapeOption {
+  tool: CanvasShapeTool;
+  label: string;
+  group: "Connections" | "Basic";
+}
+
+const canvasShapeOptions: readonly CanvasShapeOption[] = [
+  { tool: "arrow", label: "Arrow", group: "Connections" },
+  { tool: "line", label: "Line", group: "Connections" },
+  { tool: "rectangle", label: "Rectangle", group: "Basic" },
+  { tool: "ellipse", label: "Ellipse", group: "Basic" },
+  { tool: "diamond", label: "Diamond", group: "Basic" },
+];
 
 interface ProjectCanvasToolCatalogItem {
   tool: Exclude<ProjectCanvasTool, "more">;
@@ -203,7 +217,7 @@ const projectCanvasToolCatalogItems: readonly ProjectCanvasToolCatalogItem[] = [
   {
     tool: "screens",
     title: "Catalog",
-    description: "Search apps, screens and flows, then add them to the canvas.",
+    description: "Search screens and flows, then add them to the canvas.",
     /* Pinned to the rail now, so the catalog lists it as one. */
     pinned: true,
   },
@@ -232,12 +246,6 @@ const projectCanvasToolCatalogItems: readonly ProjectCanvasToolCatalogItem[] = [
     pinned: false,
   },
   {
-    tool: "data",
-    title: "Astryx data",
-    description: "Add apps and flows from the Astryx catalog.",
-    pinned: false,
-  },
-  {
     tool: "templates",
     title: "Templates",
     description: "Start common designer workflows from a reusable layout.",
@@ -249,7 +257,6 @@ const projectCanvasToolIcons: Record<Exclude<ProjectCanvasTool, "sticky" | "comm
   "research-frames": "viewColumns",
   screens: "viewColumns",
   document: "copy",
-  data: "wrench",
   templates: "checkDouble",
   more: "moreHorizontal",
 };
@@ -591,8 +598,84 @@ function truncateCardText(value: string, max: number): string {
   return clean.length > max ? `${clean.slice(0, max - 1)}…` : clean;
 }
 
+function blobDataUrl(blob: Blob): Promise<DataURL> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result) as DataURL);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+const canvasAssetResolveTimeoutMs = 1_500;
+
+async function resolvedCanvasImageBlob(source: string): Promise<Blob | undefined> {
+  const response = await apiFetch(source, {
+    credentials: "same-origin",
+    signal: AbortSignal.timeout(canvasAssetResolveTimeoutMs),
+  });
+  const blob = await response.blob();
+  return response.ok && canvasMediaMimeTypeSet.has(blob.type) ? blob : undefined;
+}
+
 /*
- * Fetch a catalog thumbnail into an Excalidraw file. Returns undefined rather
+ * Excalidraw's BinaryFileData needs decoded bytes, not an authenticated API
+ * path. Resolve older persisted asset paths as well so pre-existing cards stop
+ * showing its broken-image glyph after a reload.
+ */
+function screenMediaUrlsByFileId(elements: readonly ExcalidrawElement[]): Map<string, string> {
+  const mediaUrlByGroupId = new Map<string, string>();
+  const mediaUrlByFileId = new Map<string, string>();
+  for (const element of elements) {
+    const reference = (element.customData as { astryxReference?: { mediaUrl?: unknown } } | undefined)
+      ?.astryxReference;
+    if (typeof reference?.mediaUrl !== "string") continue;
+    if (element.type === "image" && element.fileId) {
+      mediaUrlByFileId.set(element.fileId, reference.mediaUrl);
+    }
+    for (const groupId of element.groupIds ?? []) mediaUrlByGroupId.set(groupId, reference.mediaUrl);
+  }
+  for (const element of elements) {
+    if (element.type !== "image" || !element.fileId) continue;
+    const mediaUrl = (element.groupIds ?? [])
+      .map((groupId) => mediaUrlByGroupId.get(groupId))
+      .find((value): value is string => Boolean(value));
+    if (mediaUrl && !mediaUrlByFileId.has(element.fileId)) mediaUrlByFileId.set(element.fileId, mediaUrl);
+  }
+  return mediaUrlByFileId;
+}
+
+async function resolveCanvasAssetDataUrls(
+  files: BinaryFiles,
+  elements: readonly ExcalidrawElement[],
+): Promise<BinaryFiles> {
+  const screenMediaUrls = screenMediaUrlsByFileId(elements);
+  const entries = await Promise.all(Object.entries(files).map(async ([id, file]) => {
+    if (file.dataURL.startsWith("data:")) return [id, file] as const;
+    try {
+      const blob = await resolvedCanvasImageBlob(file.dataURL);
+      if (blob) {
+        return [id, { ...file, dataURL: await blobDataUrl(blob) }] as const;
+      }
+    } catch {
+      // The asset might predate asset storage. Try the catalog media recorded
+      // on its screen card before leaving the historical card unresolved.
+    }
+    const mediaUrl = screenMediaUrls.get(id);
+    if (!mediaUrl) return [id, file] as const;
+    try {
+      const blob = await resolvedCanvasImageBlob(canvasMediaFetchUrl(mediaUrl));
+      if (!blob) return [id, file] as const;
+      return [id, { ...file, dataURL: await blobDataUrl(blob) }] as const;
+    } catch {
+      return [id, file] as const;
+    }
+  }));
+  return Object.fromEntries(entries) as BinaryFiles;
+}
+
+/*
+ * Fetch a catalog image into an Excalidraw file. Returns undefined rather
  * than throwing: a card without its image is still a useful card, and a dead
  * media URL should not stop one being placed.
  */
@@ -607,31 +690,22 @@ async function loadCatalogCardImage(
     const blob = await response.blob();
     if (!canvasMediaMimeTypeSet.has(blob.type)) return undefined;
     const fileId = `asset:${crypto.randomUUID()}` as FileId;
-    /*
-     * Stored in the project when possible; a card is still worth placing if the
-     * upload fails, so fall back to an inline data URL. Never fall back to the
-     * catalog URL itself — we only reached the bytes through the media proxy,
-     * so handing that URL to an <img> renders a broken image.
-     */
-    let src: string;
+    /* Store the asset for the project, but keep decoded bytes in the scene.
+       Passing the authenticated asset path as `dataURL` is what produced the
+       broken-image card: it is a URL, not a data URL Excalidraw can decode. */
+    const dataURL = await blobDataUrl(blob);
     let stored = true;
     try {
-      src = await uploadProjectCanvasAsset(projectId, fileId, blob);
+      await uploadProjectCanvasAsset(projectId, fileId, blob);
     } catch {
       stored = false;
-      src = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(blob);
-      });
     }
     const dimensions = await imageDimensions(blob);
     return {
       file: {
         id: fileId,
         mimeType: blob.type as BinaryFileData["mimeType"],
-        dataURL: src as DataURL,
+        dataURL,
         created: Date.now(),
       },
       image: { fileId, width: dimensions.width, height: dimensions.height },
@@ -688,7 +762,7 @@ function createCatalogCardElements({
   ];
 
   if (image) {
-    /* Contain the thumbnail in the media band rather than stretching it — these
+    /* Contain the screen image in the media band rather than stretching it — these
        are screenshots, and squashed screenshots are unreadable. */
     const scale = Math.min(
       (width - padding * 2) / image.width,
@@ -1066,9 +1140,11 @@ export function ProjectPlayground({
   const [researchFrameDrawing, setResearchFrameDrawing] = useState(false);
   const [researchFrames, setResearchFrames] = useState<readonly AstryxResearchFrameReference[]>([]);
   const [selectedResearchFrame, setSelectedResearchFrame] = useState<AstryxResearchFrameReference>();
-  const [dataToolsOpen, setDataToolsOpen] = useState(false);
   const [toolsCatalogOpen, setToolsCatalogOpen] = useState(false);
   const [toolsCatalogQuery, setToolsCatalogQuery] = useState("");
+  const [shapePickerOpen, setShapePickerOpen] = useState(false);
+  const [shapePickerQuery, setShapePickerQuery] = useState("");
+  const [activeShapeTool, setActiveShapeTool] = useState<CanvasShapeTool>();
   const [stickyPickerOpen, setStickyPickerOpen] = useState(false);
   const [stickyPlacement, setStickyPlacement] = useState<StickyPlacement>();
   const [commentPlacement, setCommentPlacement] = useState(false);
@@ -1093,7 +1169,6 @@ export function ProjectPlayground({
   const [screenMessage, setScreenMessage] = useState("");
   const showToast = useApplicationToast();
   const [selectedScreenReference, setSelectedScreenReference] = useState<AstryxScreenReference>();
-  const [insertingDataKey, setInsertingDataKey] = useState<string>();
   const [selectedDataReference, setSelectedDataReference] = useState<AstryxCanvasDataReference>();
   const [canvasToolbarHost, setCanvasToolbarHost] = useState<HTMLElement | null>(null);
   const editorRef = useRef<ExcalidrawImperativeAPI | null>(null);
@@ -1111,6 +1186,7 @@ export function ProjectPlayground({
   const lastQueuedSnapshotKeyRef = useRef<string | undefined>(undefined);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const uploadingFileIdsRef = useRef(new Set<string>());
+  const persistedFileIdsRef = useRef(new Set<string>());
   const collaborationRef = useRef<DesignerCanvasCollaborationSession | null>(null);
   const remoteCollaboratorsRef = useRef(new Map<string, DesignerCanvasCollaborator>());
   const remoteCursorsRef = useRef(new Map<string, DesignerCanvasRemoteCursor>());
@@ -1292,12 +1368,16 @@ export function ProjectPlayground({
         : await getDesignerCanvas(projectId);
       const remote = isExcalidrawSnapshot(canvas.snapshot) ? canvas.snapshot : undefined;
       const sourceSnapshot = remote ?? readLocalCanvas() ?? blankCanvas(resolvedTheme);
-      const snapshot = withCanvasPresentation(sourceSnapshot, resolvedTheme);
+      const snapshot = withCanvasPresentation({
+        ...sourceSnapshot,
+        files: await resolveCanvasAssetDataUrls(sourceSnapshot.files, sourceSnapshot.elements),
+      }, resolvedTheme);
       canvasCommentsRef.current = snapshot.comments;
       if (activeRef.current) setCanvasComments(snapshot.comments);
       lastQueuedSnapshotKeyRef.current = canvasSaveKey(snapshot);
       writeLocalCanvas(snapshot);
-      if (!remote || !usesCanvasPresentation(remote, resolvedTheme)) {
+      if (!remote || !usesCanvasPresentation(remote, resolvedTheme)
+        || canvasSaveKey(snapshot) !== canvasSaveKey(sourceSnapshot)) {
         if (canvasId) await saveDesignerCanvasFile(projectId, canvasId, snapshot);
         else await saveDesignerCanvas(projectId, snapshot);
       }
@@ -1369,26 +1449,22 @@ export function ProjectPlayground({
     const editor = editorRef.current;
     if (!editor) return;
     for (const file of Object.values(files)) {
-      if (!file.dataURL.startsWith("data:") || uploadingFileIdsRef.current.has(file.id)) continue;
+      if (!file.dataURL.startsWith("data:")
+        || uploadingFileIdsRef.current.has(file.id)
+        || persistedFileIdsRef.current.has(file.id)) continue;
       uploadingFileIdsRef.current.add(file.id);
       void apiFetch(file.dataURL)
         .then((response) => response.blob())
         .then(async (blob) => {
-          const src = await uploadProjectCanvasAsset(projectId, `asset:${file.id}`, blob);
-          editor.addFiles([{ ...file, dataURL: src as DataURL }]);
-          queueSnapshot(serializeCanvas(
-            editor.getSceneElementsIncludingDeleted(),
-            editor.getAppState(),
-            editor.getFiles(),
-            canvasCommentsRef.current,
-          ));
+          await uploadProjectCanvasAsset(projectId, `asset:${file.id}`, blob);
+          persistedFileIdsRef.current.add(file.id);
         })
         .catch((error) => {
           if (activeRef.current) setReferenceMessage((error as Error).message);
         })
         .finally(() => uploadingFileIdsRef.current.delete(file.id));
     }
-  }, [projectId, queueSnapshot]);
+  }, [projectId]);
 
   const handleCanvasChange = useCallback((
     elements: readonly ExcalidrawElement[],
@@ -1602,13 +1678,14 @@ export function ProjectPlayground({
         throw new Error("This reference is not a supported PNG, JPEG, or WebP image.");
       }
       const fileId = crypto.randomUUID() as FileId;
-      const src = await uploadProjectCanvasAsset(projectId, `asset:${fileId}`, blob);
+      const dataURL = await blobDataUrl(blob);
+      await uploadProjectCanvasAsset(projectId, `asset:${fileId}`, blob);
       const dimensions = await imageDimensions(blob);
       const placement = canvasImagePlacement(dimensions.width, dimensions.height);
       const file: BinaryFileData = {
         id: fileId,
         mimeType: blob.type as BinaryFileData["mimeType"],
-        dataURL: src as DataURL,
+        dataURL,
         created: Date.now(),
       };
       const [image] = convertToExcalidrawElements([{
@@ -1634,6 +1711,7 @@ export function ProjectPlayground({
         },
       } as ExcalidrawElement;
       editor.addFiles([file]);
+      persistedFileIdsRef.current.add(file.id);
       editor.updateScene({ elements: [...editor.getSceneElements(), referenceImage] });
       editor.scrollToContent(referenceImage, { animate: true, fitToViewport: false });
       setReferenceMessage(`Added ${item.stepLabel || item.snapshot.title} to the canvas.`);
@@ -1658,55 +1736,63 @@ export function ProjectPlayground({
          proxy, stores the asset in the project, and keeps the bytes inline when
          that upload fails — so the card never points an <img> at a URL the page
          cannot load. */
+      /* Catalog tiles may use a resized preview, but the canvas is evidence:
+         only the original screen capture belongs on the board. */
       const loaded = await loadCatalogCardImage(screen.url, projectId);
-      if (!loaded) throw new Error("This screen image could not be loaded.");
-      const { file, image, stored: storedInProject } = loaded;
-      /* A drop names its own spot; a click centres it in the viewport. */
+      const image = loaded?.image;
+      if (!image || !loaded) {
+        setScreenMessage("This screen image could not be loaded. Try another reference.");
+        return;
+      }
+      /* A drop names its own spot; repeated clicks cascade images to the right
+         instead of stacking every newly chosen screen in the same place. */
       const auto = canvasImagePlacement(image.width, image.height);
+      const lastScreenImage = dropPoint ? undefined : [...editor.getSceneElements()]
+        .reverse()
+        .find((element) => screenReferenceForElement(element));
       const placement = dropPoint
         ? { ...auto, x: dropPoint.x - auto.width / 2, y: dropPoint.y - auto.height / 2 }
-        : auto;
-      /*
-       * A screen goes onto the board as a card like an app or a flow, so it
-       * carries which app and which screen type it is instead of being an
-       * unlabelled rectangle of pixels.
-       */
-      const created = createCatalogCardElements({
-        x: placement.x + placement.width / 2,
-        y: placement.y + placement.height / 2,
-        eyebrow: "Screen",
-        title: app.app,
-        meta: [screen.type || screen.productArea || "Screen", screen.platform]
-          .filter(Boolean)
-          .join(" · "),
-        accent: { stroke: "#a3c3ae", fill: "#eef7f1" },
-        image,
-        reference: {
-          kind: "screen",
-          appId: app.id,
-          appName: app.app,
-          screenId: screen.id,
-          screenType: screen.type,
-          platform: screen.platform,
-          mediaUrl: screen.url,
-          sourceUrl: screen.sourceUrl ?? null,
+        : lastScreenImage
+          ? {
+            ...auto,
+            x: lastScreenImage.x + lastScreenImage.width + 40,
+            y: lastScreenImage.y,
+          }
+          : auto;
+      const [imageElement] = convertToExcalidrawElements([{
+        type: "image",
+        x: placement.x,
+        y: placement.y,
+        width: placement.width,
+        height: placement.height,
+        fileId: image.fileId,
+        status: "saved",
+      }]);
+      const canvasImage = {
+        ...imageElement,
+        frameId: placement.frameId ?? null,
+        customData: {
+          ...imageElement.customData,
+          astryxReference: {
+            kind: "screen",
+            appId: app.id,
+            appName: app.app,
+            screenId: screen.id,
+            screenType: screen.type,
+            platform: screen.platform,
+            mediaUrl: screen.url,
+            sourceUrl: screen.sourceUrl ?? null,
+          },
         },
-      });
-      /* The container carries the frame, so a card dropped into a frame
-         still belongs to it. */
-      const card = created.map((element) => (
-        element.type === "rectangle"
-          ? { ...element, frameId: placement.frameId ?? null } as ExcalidrawElement
-          : element
-      ));
-      const container = card.find((element) => element.type === "rectangle");
-      editor.addFiles([file]);
+      } as ExcalidrawElement;
+      editor.addFiles([loaded.file]);
+      if (loaded.stored) persistedFileIdsRef.current.add(loaded.file.id);
       editor.updateScene({
-        elements: [...editor.getSceneElements(), ...card],
-        appState: { selectedElementIds: container ? { [container.id]: true } : {} },
+        elements: [...editor.getSceneElements(), canvasImage],
+        appState: { selectedElementIds: { [canvasImage.id]: true } },
       });
-      editor.scrollToContent(card, { animate: true, fitToViewport: false });
-      showToast(storedInProject
+      editor.scrollToContent(canvasImage, { animate: true, fitToViewport: false });
+      showToast(loaded.stored
         ? `Added ${app.app} to the canvas.`
         : `Added ${app.app} to the canvas locally. Sign in to sync it.`);
     } catch (error) {
@@ -1760,7 +1846,10 @@ export function ProjectPlayground({
       reference: reference as unknown as Record<string, unknown>,
     });
     const container = created.find((element) => element.type === "rectangle");
-    if (loaded) editor.addFiles([loaded.file]);
+    if (loaded) {
+      editor.addFiles([loaded.file]);
+      if (loaded.stored) persistedFileIdsRef.current.add(loaded.file.id);
+    }
     editor.updateScene({
       elements: [...editor.getSceneElements(), ...created],
       appState: { selectedElementIds: container ? { [container.id]: true } : {} },
@@ -1770,52 +1859,24 @@ export function ProjectPlayground({
     showToast(message);
   }, [showToast]);
 
-  const insertCatalogApp = useCallback((
-    app: App,
-    platform: Platform,
-    placement?: { x: number; y: number },
-  ) => {
-    const key = projectCanvasDataKey(app);
-    setInsertingDataKey(key);
-    try {
-      void insertCanvasDataReference({
-        kind: "app",
-        appId: app.id,
-        appName: app.app,
-        description: app.description ?? "",
-        category: app.categories[0]?.name ?? "Uncategorized",
-        platform,
-        totalScreens: app.totalScreens,
-      }, `Added ${app.app} to the canvas.`, placement, app.screens?.[0]?.url);
-    } finally {
-      setInsertingDataKey(undefined);
-    }
-  }, [insertCanvasDataReference]);
-
   const insertCatalogFlow = useCallback((
     item: FlowCatalogItem,
     platform: Platform,
     placement?: { x: number; y: number },
   ) => {
-    const key = projectCanvasDataKey(item);
-    setInsertingDataKey(key);
-    try {
-      void insertCanvasDataReference({
-        kind: "flow",
-        appId: item.preview.appId,
-        appName: item.preview.appName,
-        flowId: item.preview.sourceFlowId,
-        flowTitle: item.title,
-        category: item.category,
-        description: item.preview.flow.description,
-        platform,
-        version: item.preview.version,
-        stepCount: item.preview.screenCount,
-      }, `Added ${item.title} to the canvas.`, placement,
-        item.preview.flow.steps.flatMap((step) => step.evidence)[0]?.thumbnailUrl);
-    } finally {
-      setInsertingDataKey(undefined);
-    }
+    return insertCanvasDataReference({
+      kind: "flow",
+      appId: item.preview.appId,
+      appName: item.preview.appName,
+      flowId: item.preview.sourceFlowId,
+      flowTitle: item.title,
+      category: item.category,
+      description: item.preview.flow.description,
+      platform,
+      version: item.preview.version,
+      stepCount: item.preview.screenCount,
+    }, `Added ${item.title} to the canvas.`, placement,
+      item.preview.flow.steps.flatMap((step) => step.evidence)[0]?.thumbnailUrl);
   }, [insertCanvasDataReference]);
 
   const insertTemplate = useCallback((template: ProjectCanvasTemplate) => {
@@ -1909,7 +1970,6 @@ export function ProjectPlayground({
     setDocumentPlacement(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
-    setDataToolsOpen(false);
     setReferencesOpen(false);
     editor.setActiveTool({ type: "frame" });
     editor.setCursor("crosshair");
@@ -1950,7 +2010,6 @@ export function ProjectPlayground({
     setResearchFramesOpen(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
-    setDataToolsOpen(false);
     setReferencesOpen(false);
     setToolsCatalogOpen(false);
     setCommentPlacement(true);
@@ -1968,7 +2027,6 @@ export function ProjectPlayground({
     stopStickyPlacement();
     setScreensOpen(false);
     setTemplatesOpen(false);
-    setDataToolsOpen(false);
     setReferencesOpen(false);
     const editor = editorRef.current;
     editor?.setActiveTool({ type: "custom", customType: "astryx-document" });
@@ -2024,7 +2082,6 @@ export function ProjectPlayground({
     setStickyPlacement({ color, mode });
     setScreensOpen(false);
     setTemplatesOpen(false);
-    setDataToolsOpen(false);
     setReferencesOpen(false);
     const editor = editorRef.current;
     editor?.setActiveTool({ type: "custom", customType: "astryx-sticky-note" });
@@ -2048,11 +2105,48 @@ export function ProjectPlayground({
     stopStickyPlacement,
   ]);
 
+  const toggleShapePicker = useCallback(() => {
+    const nextOpen = !shapePickerOpen;
+    setToolsCatalogOpen(false);
+    setShapePickerQuery("");
+    stopStickyPlacement();
+    stopDocumentPlacement();
+    stopCommentPlacement();
+    setResearchFramesOpen(false);
+    setScreensOpen(false);
+    setTemplatesOpen(false);
+    setDataToolsOpen(false);
+    setReferencesOpen(false);
+    setShapePickerOpen(nextOpen);
+  }, [
+    shapePickerOpen,
+    stopCommentPlacement,
+    stopDocumentPlacement,
+    stopStickyPlacement,
+  ]);
+
+  const selectCanvasShape = useCallback((tool: CanvasShapeTool) => {
+    stopStickyPlacement();
+    stopDocumentPlacement();
+    stopCommentPlacement();
+    setToolsCatalogOpen(false);
+    setResearchFramesOpen(false);
+    setScreensOpen(false);
+    setTemplatesOpen(false);
+    setDataToolsOpen(false);
+    setReferencesOpen(false);
+    setActiveShapeTool(tool);
+    editorRef.current?.resetCursor();
+    editorRef.current?.setActiveTool({ type: tool });
+  }, [stopCommentPlacement, stopDocumentPlacement, stopStickyPlacement]);
+
 
 
 
   const activateCanvasTool = useCallback((tool: ProjectCanvasTool) => {
     setToolsCatalogQuery("");
+    setShapePickerOpen(false);
+    setShapePickerQuery("");
 
     if (tool === "more") {
       const nextOpen = !toolsCatalogOpen;
@@ -2061,7 +2155,6 @@ export function ProjectPlayground({
       setResearchFramesOpen(false);
       setScreensOpen(false);
       setTemplatesOpen(false);
-      setDataToolsOpen(false);
       setReferencesOpen(false);
       setToolsCatalogOpen(nextOpen);
       return;
@@ -2088,7 +2181,6 @@ export function ProjectPlayground({
     setResearchFramesOpen(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
-    setDataToolsOpen(false);
     setReferencesOpen(false);
 
     if (tool === "screens") {
@@ -2098,14 +2190,11 @@ export function ProjectPlayground({
       editorRef.current?.resetCursor();
       setResearchFrameDrawing(false);
       setResearchFramesOpen(!researchFramesOpen);
-    } else if (tool === "data") {
-      setDataToolsOpen(!dataToolsOpen);
     } else if (tool === "templates") {
       setTemplatesOpen(!templatesOpen);
     }
   }, [
     armDocumentPlacement,
-    dataToolsOpen,
     documentPlacement,
     researchFramesOpen,
     screensOpen,
@@ -2268,9 +2357,7 @@ export function ProjectPlayground({
         y: (event.clientY - rect.top) / zoom - appState.scrollY,
       };
 
-      if (payload.kind === "app") {
-        insertCatalogApp(payload.app, payload.platform as Platform, placement);
-      } else if (payload.kind === "flow") {
+      if (payload.kind === "flow") {
         insertCatalogFlow(payload.item, payload.platform as Platform, placement);
       } else {
         void insertCatalogScreen(payload.result, placement);
@@ -2294,7 +2381,7 @@ export function ProjectPlayground({
       document.removeEventListener("drop", onDrop, true);
       document.removeEventListener("dragend", onDragEnd, true);
     };
-  }, [insertCatalogApp, insertCatalogFlow, insertCatalogScreen]);
+  }, [insertCatalogFlow, insertCatalogScreen]);
 
   const handleCanvasPointerUp = useCallback((
     _activeTool: AppState["activeTool"],
@@ -2363,10 +2450,11 @@ export function ProjectPlayground({
       } else if (event.key === "Escape") {
         event.preventDefault();
         setToolsCatalogOpen(false);
+        setShapePickerOpen(false);
+        setShapePickerQuery("");
         setResearchFramesOpen(false);
         setScreensOpen(false);
         setTemplatesOpen(false);
-        setDataToolsOpen(false);
         stopDocumentPlacement();
         stopCommentPlacement();
         setCommentDraftAnchor(undefined);
@@ -2705,11 +2793,15 @@ export function ProjectPlayground({
     !normalizedToolsCatalogQuery
     || `${item.title} ${item.description}`.toLowerCase().includes(normalizedToolsCatalogQuery)
   ));
+  const normalizedShapePickerQuery = shapePickerQuery.trim().toLowerCase();
+  const filteredCanvasShapeOptions = canvasShapeOptions.filter((shape) => (
+    !normalizedShapePickerQuery || shape.label.toLowerCase().includes(normalizedShapePickerQuery)
+  ));
   const canvasToolPanelOpen = toolsCatalogOpen
+    || shapePickerOpen
     || researchFramesOpen
     || screensOpen
     || templatesOpen
-    || dataToolsOpen
     || stickyPickerOpen
     || Boolean(commentDraftAnchor)
     || Boolean(selectedComment);
@@ -2722,7 +2814,7 @@ export function ProjectPlayground({
           data-canvas-toolbar-region="top-left"
         >
           <IconButton
-            label="Astryx projects home"
+            label="Projects home"
             icon={<img className="project-canvas-header__brand-mark" src="/favicon.svg" alt="" aria-hidden="true" />}
             variant="ghost"
             size="sm"
@@ -2867,14 +2959,11 @@ export function ProjectPlayground({
           />
         </div>
         {canvasToolbarHost && createPortal(
-          <div
-            className="project-playground__astryx-tools"
-            role="group"
-            aria-label="Astryx canvas tools"
-            data-canvas-toolbar-region="left"
-            onPointerDown={(event) => event.stopPropagation()}
-          >
-            <span className="project-playground__astryx-tools-divider" aria-hidden="true" />
+          <>
+            <div
+              className="project-playground__sticky-tools"
+              onPointerDown={(event) => event.stopPropagation()}
+            >
             <button
               type="button"
               className="project-playground__sticky-trigger"
@@ -2884,6 +2973,26 @@ export function ProjectPlayground({
               onClick={() => activateCanvasTool("sticky")}
             >
               <ProjectCanvasToolGlyph tool="sticky" />
+            </button>
+            </div>
+            <div
+              className="project-playground__astryx-tools"
+              role="group"
+              aria-label="Vitrines canvas tools"
+              data-canvas-toolbar-region="bottom"
+              onPointerDown={(event) => event.stopPropagation()}
+            >
+            <span className="project-playground__astryx-tools-divider" aria-hidden="true" />
+            <button
+              type="button"
+              className="project-playground__shapes-trigger"
+              aria-label={shapePickerOpen ? "Close shapes and connectors" : "Shapes and connectors"}
+              aria-expanded={shapePickerOpen}
+              aria-pressed={shapePickerOpen}
+              title="Shapes and connectors"
+              onClick={toggleShapePicker}
+            >
+              <Icon icon="viewColumns" size="sm" />
             </button>
             <button
               type="button"
@@ -2915,7 +3024,7 @@ export function ProjectPlayground({
             <button
               type="button"
               className="project-playground__screens-trigger"
-              aria-label={screensOpen ? "Close Astryx catalog" : "Astryx catalog"}
+              aria-label={screensOpen ? "Close catalog" : "Catalog"}
               aria-pressed={screensOpen}
               title="Catalog"
               onClick={() => activateCanvasTool("screens")}
@@ -2925,15 +3034,16 @@ export function ProjectPlayground({
             <button
               type="button"
               className="project-playground__more-tools-trigger"
-              aria-label={toolsCatalogOpen ? "Close Astryx tools" : "Astryx tools"}
+              aria-label={toolsCatalogOpen ? "Close tools" : "More tools"}
               aria-expanded={toolsCatalogOpen}
               aria-pressed={toolsCatalogOpen}
-              title="Astryx tools"
+              title="More tools"
               onClick={() => activateCanvasTool("more")}
             >
               <ProjectCanvasToolGlyph tool="more" />
             </button>
-          </div>,
+            </div>
+          </>,
           canvasToolbarHost,
         )}
         {canvasComments.map((thread, index) => (
@@ -3032,6 +3142,58 @@ export function ProjectPlayground({
             })}
             {filteredCanvasToolCatalogItems.length === 0 ? (
               <p className="project-canvas-tools-catalog__empty">No tools match “{toolsCatalogQuery}”.</p>
+            ) : null}
+          </aside>
+        )}
+        {shapePickerOpen && (
+          <aside
+            className="project-canvas-shape-library"
+            aria-label="Shapes and connectors"
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            <header className="project-canvas-shape-library__header">
+              <h2>Shapes</h2>
+              <IconButton
+                label="Close shapes"
+                icon={<Icon icon="close" size="sm" />}
+                variant="ghost"
+                size="sm"
+                clickAction={() => setShapePickerOpen(false)}
+              />
+            </header>
+            <TextInput
+              label="Search shapes"
+              isLabelHidden
+              value={shapePickerQuery}
+              onChange={setShapePickerQuery}
+              placeholder="Search shapes"
+              width="100%"
+              autoFocus
+            />
+            {(["Connections", "Basic"] as const).map((group) => {
+              const shapes = filteredCanvasShapeOptions.filter((shape) => shape.group === group);
+              if (shapes.length === 0) return null;
+              return (
+                <section key={group} className="project-canvas-shape-library__section">
+                  <h3>{group}</h3>
+                  <div className="project-canvas-shape-library__grid">
+                    {shapes.map((shape) => (
+                      <button
+                        key={shape.tool}
+                        type="button"
+                        className="project-canvas-shape-library__tile"
+                        aria-pressed={activeShapeTool === shape.tool}
+                        onClick={() => selectCanvasShape(shape.tool)}
+                      >
+                        {shape.label}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+            {filteredCanvasShapeOptions.length === 0 ? (
+              <p className="project-canvas-shape-library__empty">No shapes match “{shapePickerQuery}”.</p>
             ) : null}
           </aside>
         )}
@@ -3186,8 +3348,8 @@ export function ProjectPlayground({
             />
           </aside>
         )}
-        {selectedDataReference && !dataToolsOpen && (
-          <aside className="project-canvas-data-inspector" aria-label="Selected Astryx data card">
+        {selectedDataReference && (
+          <aside className="project-canvas-data-inspector" aria-label="Selected catalog card">
             <header className="project-screen-inspector__header">
               <span className="project-screen-inspector__icon" aria-hidden="true">
                 <Icon icon={selectedDataReference.kind === "app" ? "viewColumns" : "arrowsUpDown"} size="sm" />
@@ -3199,7 +3361,7 @@ export function ProjectPlayground({
                   : selectedDataReference.flowTitle}</strong>
               </div>
               <IconButton
-                label="Close data inspector"
+                label="Close catalog inspector"
                 icon={<Icon icon="close" size="sm" />}
                 variant="ghost"
                 size="sm"
@@ -3248,18 +3410,16 @@ export function ProjectPlayground({
             />
           </aside>
         )}
-        {dataToolsOpen && (
-          <ProjectCanvasDataLibrary
-            insertingKey={insertingDataKey}
-            onInsertApp={insertCatalogApp}
-            onInsertFlow={insertCatalogFlow}
-            onClose={() => setDataToolsOpen(false)}
-          />
-        )}
         {screensOpen && (
           <ProjectScreenLibrary
             message={screenMessage}
             onDragItem={(payload) => { catalogDragRef.current = payload; }}
+            onAddItem={(payload) => {
+              if (payload.kind === "flow") {
+                return insertCatalogFlow(payload.item, payload.platform as Platform);
+              }
+              return insertCatalogScreen(payload.result);
+            }}
             onClose={() => setScreensOpen(false)}
           />
         )}

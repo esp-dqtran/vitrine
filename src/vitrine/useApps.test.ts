@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import {
   appendUniqueApps,
   fetchCatalogPage,
+  invalidateCatalogPageCache,
   refreshCatalogPage,
 } from "./useApps.ts";
 
@@ -51,7 +52,44 @@ test("refresh bypasses a cached first catalog page and updates its data", async 
     assert.equal(first.apps[0]?.id, "before");
     assert.equal(cached.apps[0]?.id, "before");
     assert.equal(refreshed.apps[0]?.id, "after");
+    assert.equal(options[0]?.cache, "no-store");
     assert.equal(options[1]?.cache, "no-store");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("invalidating the catalog cache reloads an AppCard preview", async () => {
+  const originalFetch = globalThis.fetch;
+  let requests = 0;
+  globalThis.fetch = (async () => {
+    requests += 1;
+    return new Response(JSON.stringify({
+      items: [{
+        id: `preview-${requests}`,
+        app: "Preview",
+        categories: [],
+        accent: "#000",
+        totalScreens: 1,
+        platforms: ["ios"],
+        previewScreens: [],
+        websiteUrl: null,
+        iconUrl: null,
+      }],
+      nextCursor: null,
+      totalCount: 1,
+      facets: [],
+    }), { status: 200, headers: { "content-type": "application/json" } });
+  }) as typeof fetch;
+
+  try {
+    const endpoint = "/api/catalog?test=preview-cache-invalidation";
+    await fetchCatalogPage(endpoint);
+    invalidateCatalogPageCache();
+    const reloaded = await fetchCatalogPage(endpoint);
+
+    assert.equal(requests, 2);
+    assert.equal(reloaded.apps[0]?.id, "preview-2");
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -61,7 +99,7 @@ test("legacy load-more requests own an AbortController and pass its signal", () 
   const source = readFileSync(new URL("./useApps.ts", import.meta.url), "utf8");
   assert.match(source, /loadMoreControllerRef/);
   assert.match(source, /loadMoreControllerRef\.current\?\.abort\(\)/);
-  assert.match(source, /apiFetch\(endpoint,\s*\{\s*signal:\s*controller\.signal\s*\}\)/);
+  assert.match(source, /apiFetch\(endpoint,\s*\{\s*signal:\s*controller\.signal,\s*cache:\s*'no-store',?\s*\}\)/);
 });
 
 test("does not cache an invalid catalog response", async () => {

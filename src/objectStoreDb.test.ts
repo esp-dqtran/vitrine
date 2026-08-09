@@ -3,6 +3,7 @@ import test from "node:test";
 import type { PoolClient, QueryResult } from "pg";
 import {
   attachImageObject,
+  replaceImageObject,
   attachThumbnailObject,
   adminImageObject,
   crawlFailureObject,
@@ -120,6 +121,23 @@ test("accepts an existing image attachment when the stored bytes are identical",
 
   assert.equal(calls.at(-1), "COMMIT");
   assert.equal(calls.includes("ROLLBACK"), false);
+});
+
+test("replaces an existing image attachment only through the explicit replacement API", async () => {
+  const calls: Array<{ sql: string; values?: unknown[] }> = [];
+  const client = {
+    async query(sql: string, values?: unknown[]) {
+      calls.push({ sql, values });
+      if (sql.includes("INSERT INTO stored_objects")) return result([{ object_key: metadata.key }]);
+      if (sql.includes("UPDATE images")) return result([{ id: 7 }]);
+      return result();
+    },
+  } as unknown as PoolClient;
+
+  await replaceImageObject(client, { imageId: 7, metadata });
+
+  assert.match(calls[2]?.sql ?? "", /UPDATE images SET object_key = \$2 WHERE id = \$1/);
+  assert.deepEqual(calls[2]?.values, [7, metadata.key]);
 });
 
 test("customer image lookup is app-scoped, entitled, and in the latest published version", async () => {

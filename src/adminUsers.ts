@@ -17,6 +17,7 @@ export interface AdminUserRow {
   active: boolean;
   created_at: string;
   subscription_status: string | null;
+  manual_pro_grant: boolean;
 }
 
 interface UserCursor {
@@ -55,15 +56,25 @@ export async function listAdminUsersPage(input: {
   if (!ADMIN_USER_FILTERS.has(filter)) throw new Error("Invalid user filter");
   const cursor = input.cursor ? decodeAdminUserCursor(input.cursor) : undefined;
   const email = input.query?.trim() || null;
+  const hasProAccess = `(s.status = 'active'
+      OR EXISTS (
+        SELECT 1 FROM promotional_entitlements p
+        WHERE p.user_id = u.id AND p.revoked_at IS NULL AND p.starts_at <= now() AND p.expires_at > now()
+      )
+      OR EXISTS (
+        SELECT 1 FROM admin_pro_grants g WHERE g.user_id = u.id AND g.revoked_at IS NULL
+      ))`;
   const predicates = `
     ($1::text IS NULL OR u.email ILIKE '%' || $1 || '%')
     AND ($2 = 'all'
       OR ($2 = 'admin' AND u.role = 'admin')
-      OR ($2 = 'pro' AND s.status = 'active')
-      OR ($2 = 'free' AND s.status IS DISTINCT FROM 'active')
+      OR ($2 = 'pro' AND ${hasProAccess})
+      OR ($2 = 'free' AND NOT ${hasProAccess})
       OR ($2 = 'disabled' AND u.active = false))`;
   const rows = await query<AdminUserRow>(
-    `SELECT u.id, u.email, u.role, u.active, u.created_at, s.status AS subscription_status
+    `SELECT u.id, u.email, u.role, u.active, u.created_at,
+       CASE WHEN ${hasProAccess} THEN 'active' ELSE s.status END AS subscription_status,
+       EXISTS (SELECT 1 FROM admin_pro_grants g WHERE g.user_id = u.id AND g.revoked_at IS NULL) AS manual_pro_grant
      FROM users u
      LEFT JOIN subscriptions s ON s.user_id = u.id
      WHERE ${predicates}
@@ -134,9 +145,94 @@ export async function setAdminUserActive(input: {
        SET active = $2, updated_at = now()
        WHERE id = $1
        RETURNING id, email, role, active, created_at,
-         (SELECT status FROM subscriptions WHERE user_id = users.id) AS subscription_status`,
+         CASE WHEN (SELECT status FROM subscriptions WHERE user_id = users.id) = 'active'
+           OR EXISTS (SELECT 1 FROM promotional_entitlements p
+             WHERE p.user_id = users.id AND p.revoked_at IS NULL AND p.starts_at <= now() AND p.expires_at > now())
+           OR EXISTS (SELECT 1 FROM admin_pro_grants g WHERE g.user_id = users.id AND g.revoked_at IS NULL)
+           THEN 'active' ELSE (SELECT status FROM subscriptions WHERE user_id = users.id) END AS subscription_status,
+         EXISTS (SELECT 1 FROM admin_pro_grants g WHERE g.user_id = users.id AND g.revoked_at IS NULL) AS manual_pro_grant`,
       [input.userId, input.active],
     );
+    await client.query("COMMIT");
+    return { status: "updated", user: updated.rows[0] };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export type SetAdminUserProResult =
+  | { status: "updated"; user: AdminUserRow }
+  | { status: "not_found" }
+  | { status: "already_pro"; user: AdminUserRow };
+
+const adminUserSelect = `
+  SELECT u.id, u.email, u.role, u.active, u.created_at,
+    CASE WHEN s.status = 'active'
+      OR EXISTS (SELECT 1 FROM promotional_entitlements p
+        WHERE p.user_id = u.id AND p.revoked_at IS NULL AND p.starts_at <= now() AND p.expires_at > now())
+      OR EXISTS (SELECT 1 FROM admin_pro_grants g WHERE g.user_id = u.id AND g.revoked_at IS NULL)
+      THEN 'active' ELSE s.status END AS subscription_status,
+    EXISTS (SELECT 1 FROM admin_pro_grants g WHERE g.user_id = u.id AND g.revoked_at IS NULL) AS manual_pro_grant
+  FROM users u
+  LEFT JOIN subscriptions s ON s.user_id = u.id
+  WHERE u.id = $1`;
+
+export async function grantAdminUserPro(input: {
+  actorUserId: number;
+  userId: number;
+}): Promise<SetAdminUserProResult> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const target = await client.query<AdminUserRow>(`${adminUserSelect} FOR UPDATE OF u`, [input.userId]);
+    const user = target.rows[0];
+    if (!user) {
+      await client.query("ROLLBACK");
+      return { status: "not_found" };
+    }
+    if (user.role === "admin" || user.subscription_status === "active") {
+      await client.query("ROLLBACK");
+      return { status: "already_pro", user };
+    }
+    await client.query(
+      `INSERT INTO admin_pro_grants (user_id, granted_by_user_id, granted_at, revoked_at)
+       VALUES ($1, $2, now(), NULL)
+       ON CONFLICT (user_id) DO UPDATE SET
+         granted_by_user_id = EXCLUDED.granted_by_user_id,
+         granted_at = EXCLUDED.granted_at,
+         revoked_at = NULL`,
+      [input.userId, input.actorUserId],
+    );
+    const updated = await client.query<AdminUserRow>(adminUserSelect, [input.userId]);
+    await client.query("COMMIT");
+    return { status: "updated", user: updated.rows[0] };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function revokeAdminUserProGrant(userId: number): Promise<SetAdminUserProResult> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const target = await client.query<AdminUserRow>(`${adminUserSelect} FOR UPDATE OF u`, [userId]);
+    const user = target.rows[0];
+    if (!user) {
+      await client.query("ROLLBACK");
+      return { status: "not_found" };
+    }
+    if (!user.manual_pro_grant) {
+      await client.query("ROLLBACK");
+      return { status: "already_pro", user };
+    }
+    await client.query("UPDATE admin_pro_grants SET revoked_at = now() WHERE user_id = $1", [userId]);
+    const updated = await client.query<AdminUserRow>(adminUserSelect, [userId]);
     await client.query("COMMIT");
     return { status: "updated", user: updated.rows[0] };
   } catch (error) {

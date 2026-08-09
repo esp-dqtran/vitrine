@@ -52,11 +52,12 @@ export function BillingSettings({ subscription, onUpgrade, onManage, busy = fals
   const isPro = subscription.plan === 'pro';
   const isPaid = subscription.entitlementSource === 'paid';
   const isPromotion = subscription.entitlementSource === 'promotion';
+  const isAdminGrant = subscription.entitlementSource === 'admin_grant';
   return (
     <section style={{ marginTop: 24 }}>
       <h3 style={{ margin: '0 0 10px', fontSize: 13.5 }}>Subscription</h3>
       <div style={{ display: 'grid', gap: 6, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
-        <strong style={{ color: 'var(--color-text-primary)' }}>{isPromotion ? 'Promotional Pro' : isPro ? 'Pro plan' : 'Free plan'}</strong>
+        <strong style={{ color: 'var(--color-text-primary)' }}>{isPromotion ? 'Promotional Pro' : isAdminGrant ? 'Administrator-granted Pro' : isPro ? 'Pro plan' : 'Free plan'}</strong>
         {isPaid ? (
           <>
             <span>{subscription.interval === 'year' ? 'Yearly billing' : 'Monthly billing'}</span>
@@ -69,10 +70,15 @@ export function BillingSettings({ subscription, onUpgrade, onManage, busy = fals
             {subscription.promotionExpiresAt && <span>Access ends {formatDate(subscription.promotionExpiresAt)}</span>}
             <span>{subscription.exportUsage.used} of {subscription.exportUsage.limit} exports used</span>
           </>
+        ) : isAdminGrant ? (
+          <>
+            <span>Pro access granted by an administrator</span>
+            <span>{subscription.exportUsage.used} of {subscription.exportUsage.limit} exports used</span>
+          </>
         ) : <span>{3 - subscription.freeUnlocksRemaining} of 3 apps unlocked</span>}
       </div>
       <div style={{ marginTop: 12 }}>
-        {isPaid || subscription.hasBillingCustomer
+        {isAdminGrant && !subscription.hasBillingCustomer ? null : isPaid || subscription.hasBillingCustomer
           ? <Button label="Manage billing" size="sm" variant="secondary" isLoading={busy} isDisabled={busy} clickAction={onManage} />
           : <Button label="Upgrade to Pro" size="sm" variant="primary" clickAction={onUpgrade} />}
       </div>

@@ -2,7 +2,7 @@ import { apiFetch } from './apiFetch.ts';
 
 export interface SubscriptionView {
   plan: 'free' | 'pro';
-  entitlementSource: 'paid' | 'promotion' | 'free';
+  entitlementSource: 'paid' | 'promotion' | 'admin_grant' | 'free';
   promotionExpiresAt: string | null;
   status: string | null;
   interval: 'month' | 'year' | null;

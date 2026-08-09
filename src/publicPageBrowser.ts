@@ -668,13 +668,31 @@ async function analyzeRenderedPage(
     });
     const [meta] = [(selector: string) => clean(document.querySelector<HTMLMetaElement>(selector)?.content, 500)] as const;
     const fallbackName = new URL(location.href).hostname.replace(/^www\./, "").split(".")[0] || "Website";
-    const titleName = clean(document.title.split(/\s+[|–—-]\s+/)[0], 160);
+    const titleName = clean(
+      document.title
+        .replace(/^home\s*[\\\\|/]\s*/i, "")
+        .split(/\s+[|–—-]\s+/)[0],
+      160,
+    );
     const name = clean(structured?.name, 160) || meta('meta[property="og:site_name"]') || titleName || fallbackName;
     const description = clean(structured?.description, 500) || meta('meta[property="og:description"]') || meta('meta[name="description"]');
     const category = clean(structured?.applicationCategory, 100) || "Website";
     const rawAccent = meta('meta[name="theme-color"]');
     const accent = /^#[0-9a-f]{6}$/i.test(rawAccent) ? rawAccent.toLowerCase() : "#3b6ef6";
-    const iconUrl = document.querySelector<HTMLLinkElement>('link[rel~="icon"],link[rel="apple-touch-icon"]')?.href;
+    const [iconScore] = [(link: HTMLLinkElement): number => {
+      const rel = link.rel.toLowerCase().split(/\s+/);
+      const largestDeclaredSize = Math.max(
+        0,
+        ...link.sizes.value.split(/\s+/).map((size) => {
+          const match = /^(\d+)x(\d+)$/i.exec(size);
+          return match ? Math.min(Number(match[1]), Number(match[2])) : 0;
+        }),
+      );
+      return (rel.includes("apple-touch-icon") ? 1_000_000 : 0) + largestDeclaredSize;
+    }] as const;
+    const iconUrl = [...document.querySelectorAll<HTMLLinkElement>(
+      'link[rel~="apple-touch-icon"],link[rel~="icon"]',
+    )].sort((left, right) => iconScore(right) - iconScore(left)).at(0)?.href;
 
     const [selectorFor] = [(element: Element): string => {
       if (element.id && /^[A-Za-z][\w-]{0,80}$/.test(element.id)) return `#${CSS.escape(element.id)}`;
@@ -1024,14 +1042,15 @@ async function recordContinuousScroll(
     }
     const initialFrame = await sharp(await page.screenshot({
       type: "jpeg",
-      quality: 85,
+      quality: 95,
     }))
       .resize(PREVIEW_VIDEO_SIZE.width, PREVIEW_VIDEO_SIZE.height)
-      .jpeg({ quality: 85 })
+      .jpeg({ quality: 95 })
       .toBuffer();
     await writeFrame(initialFrame);
     await page.screencast.start({
       size: PREVIEW_VIDEO_SIZE,
+      quality: 95,
       onFrame: ({ data, timestamp }) => {
         if (nextFrameTimestamp === undefined) nextFrameTimestamp = timestamp;
         if (timestamp + 0.001 < nextFrameTimestamp) return;
@@ -1106,7 +1125,7 @@ async function encodePreviewVideo(
     "-cpu-used", "5",
     "-row-mt", "1",
     "-b:v", "0",
-    "-crf", "25",
+    "-crf", "20",
     "-pix_fmt", "yuv420p",
     videoPath,
   ], { stdio: ["ignore", "ignore", "pipe"] });

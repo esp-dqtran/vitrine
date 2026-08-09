@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { AppsPlatform } from '../appsDiscovery';
-import { categoryNames, type App } from '../types';
+import type { App } from '../types';
 import { AppIcon } from './AppIcon';
 import { DiscoveryCard } from './DiscoveryCard';
 import { PlaceholderImage } from './PlaceholderImage';
@@ -28,9 +28,10 @@ export function AppCard({
   const activePlatform = active?.platform
     ?? (platform && app.platforms?.includes(platform) ? platform : app.platforms?.[0]);
   const isMobile = activePlatform === 'ios' || activePlatform === 'android';
+  const mobilePreviewFit = activePlatform === 'android' ? 'cover' : 'contain';
   // A screen-derived preview is the same image the phone-framed path already
-  // renders, so on iOS/Android it is ignored and mobile cards keep their
-  // original treatment: PlaceholderImage, `contain`, inside the phone frame.
+  // renders, so on iOS/Android it is ignored and mobile cards keep the shared
+  // phone-frame treatment below.
   const previewIsScreen = isScreenPreview(resolvedPreviewUrl);
   const usingSitePreview = Boolean(resolvedPreviewUrl) && !sitePreviewFailed;
   // A phone screenshot belongs in the phone frame whether it arrives as the
@@ -63,9 +64,9 @@ export function AppCard({
         inset: 0,
         width: '100%',
         height: '100%',
-        // Fill the phone mask edge-to-edge for a website capture; letterbox a
-        // phone screenshot so the whole screen stays visible.
-        objectFit: showsPhoneScreenshot ? 'contain' : 'cover',
+        // Fill website captures edge-to-edge. Keep iOS screens intact while
+        // Android AppCard thumbnails fill the same narrow phone slot.
+        objectFit: showsPhoneScreenshot ? mobilePreviewFit : 'cover',
         objectPosition: 'top',
       }}
     />
@@ -76,7 +77,7 @@ export function AppCard({
       accent={app.accent}
       style={{
         background: 'transparent',
-        objectFit: 'contain',
+        objectFit: mobilePreviewFit,
       }}
     />
   );
@@ -113,7 +114,7 @@ export function AppCard({
                         src={src}
                         srcSet={srcSet}
                         accent={app.accent}
-                        style={{ background: 'transparent', objectFit: 'contain' }}
+                        style={{ background: 'transparent', objectFit: mobilePreviewFit }}
                       />
                     </span>
                   );
@@ -128,7 +129,7 @@ export function AppCard({
       )}
       logo={<AppIcon name={app.app} iconUrl={app.iconUrl} accent={app.accent} size={44} />}
       title={app.app}
-      description={app.description || categoryNames(app).join(', ')}
+      description={app.description}
     />
   );
 }

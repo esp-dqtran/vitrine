@@ -343,6 +343,7 @@ test("selects published Apps globally by Updated At and emits a snapshot cursor"
   assert.match(calls[1]?.sql ?? "", /\b(?:FROM|JOIN) app_categories/);
   assert.match(calls[1]?.sql ?? "", /JOIN categories/);
   assert.match(calls[1]?.sql ?? "", /jsonb_agg/);
+  assert.match(calls[1]?.sql ?? "", /a\.description/);
   assert.doesNotMatch(calls[1]?.sql ?? "", /\ba\.category\b/);
 });
 
@@ -389,6 +390,7 @@ test("selects one extra Updated At identity before reading bounded catalog metad
   assert.match(calls[2]?.sql ?? "", /preview_rank <= 3/);
   assert.match(calls[2]?.sql ?? "", /JOIN LATERAL/);
   assert.match(calls[2]?.sql ?? "", /preview_category AS MATERIALIZED/);
+  assert.match(calls[2]?.sql ?? "", /preview_category[\s\S]*app_preview_images manual/);
   assert.match(calls[2]?.sql ?? "", /lower\(pfp\.facet_value\) = 'preview'/);
   assert.match(calls[2]?.sql ?? "", /-2 AS source_priority/);
   assert.match(calls[2]?.sql ?? "", /curated AS MATERIALIZED/);

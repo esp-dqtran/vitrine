@@ -33,6 +33,12 @@ export interface FlowSectionResult {
   version: AppVersion | null;
 }
 
+export interface AppCardPreviewSelection {
+  platform: Platform;
+  version: number;
+  imageIds: number[];
+}
+
 export interface UiElementSummaryItem {
   type: string;
   group: string;
@@ -127,4 +133,18 @@ export async function fetchAppFlows(
   const endpoint = `/api/apps/${encodeURIComponent(appId)}/flows?${params.toString()}`;
   const response = await request(endpoint, { signal: input.signal });
   return responseJson<FlowSectionResult>(response, endpoint);
+}
+
+export async function replaceAppCardPreviewScreens(
+  appId: string,
+  input: AppCardPreviewSelection,
+  request: Requester = apiFetch,
+): Promise<{ versionId: number; imageIds: number[] }> {
+  const endpoint = `/api/apps/${encodeURIComponent(appId)}/preview-screens`;
+  const response = await request(endpoint, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  return responseJson(response, endpoint);
 }

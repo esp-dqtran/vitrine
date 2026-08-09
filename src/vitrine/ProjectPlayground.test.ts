@@ -68,11 +68,11 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /<ProjectCanvasDocumentEditor/);
   assert.match(source, /canvasDocuments\.map\(\(document\) =>/);
   assert.match(source, /isSelected=\{selectedCanvasDocument\?\.elementId === document\.elementId\}/);
-  assert.match(source, /<ProjectCanvasDataLibrary/);
+  assert.doesNotMatch(source, /ProjectCanvasDataLibrary/);
   assert.match(source, /<ProjectResearchFramePicker/);
   assert.match(source, /createPortal\(/);
   assert.match(source, /className="project-playground__astryx-tools"/);
-  assert.match(source, /role="group"[\s\S]*?aria-label="Astryx canvas tools"/);
+  assert.match(source, /role="group"[\s\S]*?aria-label="Vitrines canvas tools"/);
   assert.match(source, /onPointerDown=\{\(event\) => event\.stopPropagation\(\)\}/);
   assert.match(source, /function ProjectCanvasToolGlyph/);
   assert.match(source, /tool="document"/);
@@ -83,7 +83,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /placeholder="Search tools…"/);
   assert.match(source, /const projectCanvasToolCatalogItems/);
   assert.match(source, /tool: "research-frames"/);
-  assert.match(source, /tool: "data"/);
+  assert.doesNotMatch(source, /tool: "data"/);
   assert.match(source, /tool: "templates"/);
   assert.match(source, /activateCanvasTool\("sticky"\)/);
   assert.match(source, /activateCanvasTool\("document"\)/);
@@ -197,7 +197,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /className="project-canvas-header"/);
   assert.match(source, /data-canvas-toolbar-region="top-left"/);
   assert.match(source, /data-canvas-toolbar-region="top-right"/);
-  assert.match(source, /data-canvas-toolbar-region="left"/);
+  assert.match(source, /data-canvas-toolbar-region="bottom"/);
   assert.match(source, /className=\{`project-playground__canvas\$\{/);
   assert.doesNotMatch(source, /project-playground__canvas--native-ui/);
   assert.doesNotMatch(source, /project-playground__mobile-viewport-controls/);
@@ -238,13 +238,9 @@ test("gives the infinite canvas the full available viewport", () => {
   assert.match(css, /\.project-playground__references\s*\{[^}]*position:\s*absolute;[^}]*z-index:/s);
   assert.match(css, /\.project-playground__canvas \.excalidraw\s*\{[^}]*--color-primary:[^}]*background:\s*var\(--project-canvas-bg/s);
   assert.match(css, /\.project-playground__canvas \.excalidraw \.App-menu_top\s*\{[^}]*display:\s*block;[^}]*transform:\s*none;/s);
-  /*
-   * Rail widths derive from --project-canvas-tool-size rather than repeating a
-   * literal in four places: the column, the Astryx group and the triggers all
-   * have to move together, and they did not when the size was written out.
-   */
-  assert.match(css, /\.project-playground__canvas \.excalidraw \.App-toolbar > \.Stack_horizontal\s*\{[^}]*width:\s*var\(--project-canvas-tool-size[^}]*flex-direction:\s*column;/s);
-  assert.match(css, /\.project-playground__astryx-tools\s*\{[^}]*width:\s*var\(--project-canvas-tool-size[^}]*flex-direction:\s*column;/s);
+  /* Native and Vitrines tools share one horizontal, centered toolbelt. */
+  assert.match(css, /\.project-playground__canvas \.excalidraw \.App-toolbar > \.Stack_horizontal\s*\{[^}]*max-width:\s*min\(760px,[^}]*flex-direction:\s*row;/s);
+  assert.match(css, /\.project-playground__astryx-tools\s*\{[^}]*width:\s*auto;[^}]*flex-direction:\s*row;/s);
   assert.match(css, /\.project-playground__screens-trigger,[\s\S]*?\.project-playground__more-tools-trigger\s*\{[^}]*width:\s*var\(--project-canvas-tool-size[^}]*height:\s*var\(--project-canvas-tool-size/s);
   assert.match(css, /\.project-canvas-tools-catalog\s*\{[^}]*position:\s*absolute;[^}]*top:\s*136px;[^}]*left:\s*64px;[^}]*width:\s*min\(420px,/s);
   // \s+ between the compounds, not a literal space: the formatter wraps long
@@ -265,8 +261,7 @@ test("gives the infinite canvas the full available viewport", () => {
   assert.match(css, /\.project-screen-library\s*\{[^}]*position:\s*absolute;[^}]*top:\s*136px;[^}]*left:\s*64px;[^}]*width:\s*min\(420px,/s);
   assert.match(css, /\.project-screen-library__grid\s*\{[^}]*grid-template-columns:\s*repeat\(2,/s);
   assert.match(css, /\.project-screen-library__preview\s*\{[^}]*position:\s*relative;[^}]*height:\s*122px;/s);
-  assert.match(css, /\.project-canvas-data-library\s*\{[^}]*position:\s*absolute;[^}]*top:\s*136px;[^}]*left:\s*64px;[^}]*width:\s*min\(460px,/s);
-  assert.match(css, /\.project-canvas-data-library__tabs\s*\{[^}]*display:\s*flex;/s);
+  assert.doesNotMatch(css, /\.project-canvas-data-library/);
   assert.match(css, /\.project-playground__canvas--screen-selected\s+\.excalidraw\s+\.excalidraw-hyperlinkContainer,[\s\S]*?\.selected-shape-actions\s*\{[^}]*display:\s*none !important;/s);
   assert.match(css, /\.project-screen-inspector\s*\{[^}]*position:\s*absolute;[^}]*right:\s*16px;[^}]*width:\s*280px;/s);
   assert.match(css, /\.project-playground__canvas \.excalidraw \.zoom-actions\s*\{[^}]*position:\s*fixed;[^}]*right:\s*56px;[^}]*bottom:\s*8px;[^}]*height:\s*48px;/s);
@@ -277,7 +272,7 @@ test("gives the infinite canvas the full available viewport", () => {
   assert.match(css, /\.project-playground__canvas \.excalidraw \.App-menu_top__left \.App-menu__left\s*\{[^}]*top:\s*72px !important;[^}]*left:\s*12px !important;/s);
   assert.match(css, /\.project-playground__canvas \.excalidraw \.selected-shape-actions > \.App-menu__left\s*\{[^}]*position:\s*fixed !important;[^}]*top:\s*104px !important;[^}]*left:\s*72px !important;/s);
   assert.match(css, /\.project-playground__canvas \.excalidraw \.App-menu_top__left \.dropdown-menu\s*\{[^}]*top:\s*var\(--project-menu-top, 72px\) !important;[^}]*right:\s*var\(--project-menu-right, 12px\) !important;[^}]*left:\s*auto !important;/s);
-  assert.match(css, /\.project-playground__canvas \.excalidraw \.App-toolbar__extra-tools-dropdown\s*\{[^}]*bottom:\s*0 !important;[^}]*left:\s*56px !important;/s);
+  assert.match(css, /\.project-playground__canvas \.excalidraw \.App-toolbar__extra-tools-dropdown\s*\{[^}]*bottom:\s*calc\(var\(--project-canvas-toolbelt-bottom[^}]*left:\s*50%[^}]*transform:\s*translateX\(-50%\)/s);
   assert.match(css, /\.project-playground__canvas\s+\.excalidraw\s+\.layer-ui__wrapper__footer-right\s+\.help-icon\s*\{[^}]*width:\s*47px;[^}]*height:\s*46px;/s);
   assert.match(css, /\.project-playground__canvas \.excalidraw \.layer-ui__wrapper__top-right\s*\{[^}]*display:\s*none;/s);
   assert.match(css, /\.project-template-library\s*\{[^}]*grid-template-columns:\s*276px minmax\(0, 1fr\);[^}]*border-radius:\s*16px;/s);
@@ -297,7 +292,7 @@ test("matches the compact Miro-style board header proportions", () => {
   assert.match(css, /\.project-canvas-header__group\s*\{[^}]*height:\s*48px;[^}]*gap:\s*4px;[^}]*pointer-events:\s*all;[^}]*border:\s*0?\.5px solid[^}]*border-radius:\s*8px;[^}]*box-shadow:\s*0 2px 4px rgb\(34 36 40 \/ 8%\);/s);
   assert.match(css, /\.project-canvas-collaborators\s*\{[^}]*display:\s*flex;[^}]*align-items:\s*center;/s);
   assert.match(css, /\.project-canvas-collaborators__avatars > span\s*\{[^}]*border-radius:\s*50%;/s);
-  assert.match(source, /label="Astryx projects home"/);
+  assert.match(source, /label="Projects home"/);
   assert.match(source, /className="project-canvas-header__brand-mark" src="\/favicon\.svg"/);
   /*
    * 32px is held by width + flex-basis, and the height is deliberately `auto`
@@ -469,37 +464,29 @@ test("offers a data-aware Screens tool for the designer canvas", () => {
   assert.match(source, /IconButton/);
   assert.match(source, /fetchCatalogPage\(endpoint, controller\.signal\)/);
   assert.match(source, /filterAppsDiscoveryScreens/);
-  assert.match(source, /Search apps or screen types…/);
+  assert.match(source, /Search feature, state, or UI text…/);
   assert.match(source, /Screen platform/);
   assert.match(source, /<PlaceholderImage/);
-  /* Cards are dragged onto the board now; the per-card button is gone. */
-  assert.doesNotMatch(source, /Add to canvas/);
+  assert.match(source, /projectScreenFacetOptions/);
+  assert.match(source, /rankProjectScreenResults/);
+  assert.match(source, /"Add to canvas"/);
+  assert.match(source, /onClick=\{\(event\) =>/);
+  assert.match(source, /project-screen-library__card--screen/);
+  assert.match(source, /project-screen-library__app-icon--overlay/);
+  assert.match(source, /<h2>Inspiration<\/h2>/);
+  assert.match(source, /Explore references/);
+  assert.match(source, /project-screen-library__grid--inspiration/);
+  assert.match(source, /Place \$\{projectScreenCardTitle\(result\)\}/);
+  const screenCards = source.match(/state === "ready" && mode === "screens"([\s\S]*?)\{!visibleScreenResults\.length/)?.[1] ?? "";
+  assert.match(screenCards, /project-screen-library__preview--screen/);
+  assert.doesNotMatch(screenCards, /project-screen-library__screen-title/);
+  assert.match(screenCards, /Drag to canvas/);
+  assert.doesNotMatch(screenCards, /project-screen-library__identity/);
+  assert.doesNotMatch(screenCards, /project-screen-library__drag-hint/);
+  assert.doesNotMatch(screenCards, /Add to canvas/);
+  assert.match(source, /onAddItem/);
   assert.match(source, /draggable: true/);
   assert.match(source, /No screens match this search yet/);
-});
-
-test("offers a Miro-style Astryx data catalog for apps and flows", () => {
-  const source = readFileSync(
-    new URL("./components/ProjectCanvasDataLibrary.tsx", import.meta.url),
-    "utf8",
-  );
-
-  assert.match(source, /SegmentedControl/);
-  assert.match(source, /fetchCatalogPage\(endpoint, controller\.signal\)/);
-  assert.match(source, /loadFlowCatalogPage\(/);
-  assert.match(source, /role="dialog" aria-label="Astryx data tools"/);
-  /* SegmentedControl owns the roles now — it renders a radiogroup, which is the
-     correct semantic for a single-choice switcher and is what the rest of the
-     product uses. A row of ghost buttons carrying role="tab" was neither. */
-  assert.match(source, /<SegmentedControl[\s\S]{0,200}label="Data type"/);
-  assert.match(source, /<SegmentedControl[\s\S]{0,200}label="Data platform"/);
-  assert.doesNotMatch(source, /role="tab"/);
-  assert.match(source, /Search apps…/);
-  assert.match(source, /Search flows…/);
-  assert.match(source, /Add app to canvas/);
-  assert.match(source, /Add flow to canvas/);
-  assert.match(source, /No apps match this search yet/);
-  assert.match(source, /No flows match this search yet/);
 });
 
 test("themes the canvas tools catalog instead of hardcoding light-mode ink", () => {
@@ -526,7 +513,7 @@ test("themes the canvas tools catalog instead of hardcoding light-mode ink", () 
   assert.match(css, /\.project-canvas-tools-catalog__item\s*\{[^}]*color:\s*var\(--project-canvas-text/s);
 });
 
-test("lights an Astryx canvas tool the same way Excalidraw lights its own", () => {
+test("keeps Vitrines actions inside the FigJam-style canvas toolbelt", () => {
   const css = readCss("./styles.css");
 
   /*
@@ -540,15 +527,15 @@ test("lights an Astryx canvas tool the same way Excalidraw lights its own", () =
    */
   const pressed =
     /\.project-playground__more-tools-trigger\[aria-pressed="true"\]\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
-  assert.match(pressed, /background:\s*var\(--color-surface-primary-container/);
-  assert.match(pressed, /color:\s*var\(--color-on-primary-container/);
+  assert.match(pressed, /background:\s*#9747ff/);
+  assert.match(pressed, /color:\s*#fff/);
 
   // The native override that sits above it must use the same pair, or the two
   // halves of one toolbar drift apart again.
   const native =
     /\.ToolIcon_type_checkbox:checked \+ \.ToolIcon__icon\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
-  assert.match(native, /background:\s*var\(--color-surface-primary-container/);
-  assert.match(native, /color:\s*var\(--color-on-primary-container/);
+  assert.match(native, /background:\s*#9747ff/);
+  assert.match(native, /color:\s*#fff/);
 
   /*
    * Size, radius and hover come from one rail geometry rather than each half
@@ -563,21 +550,34 @@ test("lights an Astryx canvas tool the same way Excalidraw lights its own", () =
    * rather than the geometry they drive being restated per breakpoint — 222px
    * and 310px are "header + zoom cluster", which nothing said out loud.
    */
-  assert.match(css, /--project-canvas-rail-reserved:\s*\d+px;/);
-  assert.match(css, /max-height:\s*calc\(100dvh - var\(--project-canvas-rail-reserved/);
-  assert.match(css, /@media \(max-width:\s*640px\)[\s\S]*?--project-canvas-rail-reserved:\s*\d+px;/s);
-  assert.doesNotMatch(css, /max-height:\s*calc\(100dvh - 310px\)/);
+  assert.match(css, /--project-canvas-toolbelt-bottom:\s*\d+px;/);
+  assert.match(css, /\.project-playground__canvas \.excalidraw \.shapes-section\s*\{[^}]*bottom:\s*var\(--project-canvas-toolbelt-bottom[^}]*left:\s*50%[^}]*transform:\s*translateX\(-50%\)/s);
+  assert.match(css, /\.project-playground__canvas \.excalidraw \.App-toolbar > \.Stack_horizontal\s*\{[^}]*flex-direction:\s*row[^}]*overflow-x:\s*auto/s);
   const railHover = /\.project-playground__more-tools-trigger:hover\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
   const nativeHover =
     /\.excalidraw \.App-toolbar__extra-tools-trigger:hover\s*\{([^}]*)\}/.exec(css)?.[1] ??
     /\.App-toolbar \.ToolIcon__icon:hover[^{]*\{([^}]*)\}/.exec(css)?.[1] ?? "";
-  assert.match(railHover, /var\(--project-canvas-tool-hover\)/);
-  assert.match(nativeHover, /var\(--project-canvas-tool-hover\)/);
+  assert.match(railHover, /#f2f4f7/);
+  assert.match(nativeHover, /#f2f4f7/);
   const triggerSize =
     /\.project-playground__more-tools-trigger\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
   assert.match(triggerSize, /width:\s*var\(--project-canvas-tool-size/);
   assert.doesNotMatch(triggerSize, /--default-button-size/);
-  assert.match(css, /\.project-playground__more-tools-trigger:focus-visible\s*\{[^}]*outline:\s*2px solid var\(--color-primary/s);
+  assert.match(css, /\.project-playground__more-tools-trigger:focus-visible\s*\{[^}]*outline:\s*2px solid #0d99ff/s);
+  const playground = readFileSync(
+    new URL("./components/ProjectPlaygroundPage.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(playground, /aria-label="Vitrines canvas tools"/);
+  assert.match(playground, /data-canvas-toolbar-region="bottom"/);
+  assert.match(css, /toolbar-selection[\s\S]*figjam-select-tool\.svg/s);
+  assert.match(css, /toolbar-freedraw[\s\S]*figjam-marker-tool\.svg/s);
+  assert.match(css, /toolbar-freedraw[\s\S]*order:\s*-1/s);
+  const stickyPicker = readFileSync(
+    new URL("./components/ProjectStickyNotePicker.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(stickyPicker, /figjam-sticky-note-tool\.svg/);
 });
 
 test("keeps every canvas panel's ink on the theme, not on light-mode hexes", () => {
@@ -715,7 +715,7 @@ test("gives the board the whole viewport, outside the workspace shell", () => {
 
   // Nothing to publish to a shell it no longer renders in, and its own way out.
   assert.doesNotMatch(playgroundSource, /useWorkspaceChrome/);
-  assert.match(playgroundSource, /label="Astryx projects home"/);
+  assert.match(playgroundSource, /label="Projects home"/);
 });
 
 test("closes every canvas panel with the same control", () => {
@@ -735,7 +735,7 @@ test("closes every canvas panel with the same control", () => {
   assert.match(playground, /icon=\{<Icon icon="close" size="sm" \/>\}/);
 });
 
-test("browses the catalog by app before by screen", () => {
+test("limits the catalog to screens and flows", () => {
   const source = readFileSync(
     new URL("./components/ProjectScreenLibrary.tsx", import.meta.url),
     "utf8",
@@ -745,25 +745,16 @@ test("browses the catalog by app before by screen", () => {
     "utf8",
   );
 
-  /*
-   * The panel fetched whole apps and then flattened them into screens, so four
-   * cards from one app came before you reached a second — the wrong grain for
-   * finding anything. Apps are kept from the same response, no extra request.
-   */
-  assert.match(source, /setApps\(page\.apps\.slice\(0, 24\)\);/);
-  assert.match(source, /useState<ScreenLibraryMode>\("apps"\)/);
-  assert.match(source, /\{ value: "apps", label: "Apps" \}/);
+  assert.doesNotMatch(source, /kind: "app"/);
+  assert.doesNotMatch(source, /\{ value: "apps", label: "Apps" \}/);
   assert.match(source, /\{ value: "screens", label: "Screens" \}/);
-  assert.match(source, /state === "ready" && mode === "apps"/);
   assert.match(source, /state === "ready" && mode === "screens"/);
-  // Placing an app reuses the existing catalog-reference path.
-  assert.match(source, /dragProps\(\{ kind: "app", app, platform \}/);
   assert.match(playground, /onDragItem=\{\(payload\) => \{ catalogDragRef\.current = payload; \}\}/);
+  assert.match(playground, /onAddItem=\{\(payload\) => \{/);
 
   /*
-   * Flows are a third grain in the same panel. Only they need a request of their
-   * own — apps and screens are one catalog response, screens being that response
-   * flattened — so the fetch branches on mode rather than always hitting both.
+   * Screens come from the catalog response; flows use their own endpoint, so
+   * the fetch branches on mode rather than always hitting both.
    */
   assert.match(source, /\{ value: "flows", label: "Flows" \}/);
   assert.match(source, /mode === "flows"\s*\?\s*loadFlowCatalogPage/);
@@ -771,7 +762,7 @@ test("browses the catalog by app before by screen", () => {
   assert.match(source, /dragProps\(\{ kind: "flow", item, platform \}/);
 });
 
-test("promotes the catalog to the rail and names it for what it holds", () => {
+test("promotes the catalog to the canvas toolbelt and names it for what it holds", () => {
   const playground = readFileSync(
     new URL("./components/ProjectPlaygroundPage.tsx", import.meta.url),
     "utf8",
@@ -782,7 +773,7 @@ test("promotes the catalog to the rail and names it for what it holds", () => {
   );
 
   /*
-   * The panel is the way onto the canvas for apps, screens and flows, so it is
+   * The panel is the way onto the canvas for screens and flows, so it is
    * a rail tool rather than something to find inside the "more tools" catalog.
    * Its own styling already existed — only the button was missing.
    */
@@ -790,20 +781,17 @@ test("promotes the catalog to the rail and names it for what it holds", () => {
   assert.match(playground, /onClick=\{\(\) => activateCanvasTool\("screens"\)\}/);
   assert.match(playground, /tool: "screens",[\s\S]{0,260}pinned: true/);
 
-  // "Screens" undersold a panel that browses three grains.
-  assert.match(panel, /<h2>Catalog<\/h2>/);
-  /*
-   * No eyebrow. Removing the markup alone would have been worse than leaving
-   * it: `.project-screen-library__header span` would then have caught the close
-   * button's icon wrapper and sized the glyph to the eyebrow's 10px.
-   */
+  // The rail tool stays named Catalog while the panel speaks to the designer's
+  // actual job: finding a useful visual reference.
+  assert.match(panel, /<h2>Inspiration<\/h2>/);
+  assert.match(panel, /Reference library/);
   assert.doesNotMatch(panel, /<span>Astryx data<\/span>/);
   const css = readCss("./styles.css");
   assert.doesNotMatch(css, /\.project-screen-library__header span/);
-  assert.match(panel, /Search apps, screens and flows, then place them on this canvas\./);
+  assert.match(panel, /Browse visual references, then drag the ones worth exploring onto your canvas\./);
   assert.doesNotMatch(panel, /Search captured product screens and place them/);
   // The search field names whichever grain is showing.
-  assert.match(panel, /const searchLabel = mode === "apps"/);
+  assert.match(panel, /const searchLabel = mode === "flows"/);
   assert.match(panel, /label=\{searchLabel\}/);
   assert.match(panel, /placeholder=\{searchPlaceholder\}/);
 });
@@ -894,14 +882,17 @@ test("places catalog records as composed cards, not a labelled rectangle", () =>
   assert.match(source, /async function loadCatalogCardImage[\s\S]{0,900}return undefined;/);
   assert.match(source, /image: loaded\?\.image/);
 
-  /*
-   * All three grains are cards: an app, a flow and a screen each carry an
-   * eyebrow, a title and their metadata rather than one being a bare image.
-   */
+  // Apps and flows remain composed cards; a selected screen is evidence and
+  // therefore lands on the board as the original image only.
   assert.match(source, /eyebrow: isApp \? "App" : "Flow"/);
-  assert.match(source, /eyebrow: "Screen"/);
-  // A screen card dropped into a frame still belongs to it.
-  assert.match(source, /frameId: placement\.frameId \?\? null/);
+  const insertScreen = /const insertCatalogScreen = useCallback\(([\s\S]*?)\n  \}, \[/.exec(source)?.[1] ?? "";
+  assert.match(insertScreen, /type: "image"/);
+  assert.match(insertScreen, /fileId: image\.fileId/);
+  assert.match(insertScreen, /customData: \{[\s\S]*kind: "screen"/);
+  assert.doesNotMatch(insertScreen, /createCatalogCardElements/);
+  assert.doesNotMatch(insertScreen, /eyebrow: "Screen"/);
+  // A screen image dropped into a frame still belongs to it.
+  assert.match(insertScreen, /frameId: placement\.frameId \?\? null/);
 });
 
 /*
@@ -941,21 +932,27 @@ test("never points a catalog card at an image URL the page cannot load", () => {
   const insertScreen = /const insertCatalogScreen = useCallback\(([\s\S]*?)\n  \}, \[/.exec(source)?.[1] ?? "";
   assert.ok(insertScreen, "expected to find insertCatalogScreen");
   assert.match(insertScreen, /loadCatalogCardImage\(screen\.url, projectId\)/);
+  assert.doesNotMatch(insertScreen, /thumbnailUrl/);
+  assert.match(insertScreen, /const lastScreenImage = dropPoint \? undefined/);
+  assert.match(insertScreen, /lastScreenImage\.x \+ lastScreenImage\.width \+ 40/);
+  assert.match(insertScreen, /This screen image could not be loaded/);
   assert.doesNotMatch(insertScreen, /=\s*screen\.url;/);
   assert.doesNotMatch(insertScreen, /uploadProjectCanvasAsset/);
 
-  // The one loader keeps the bytes inline rather than reaching for the origin.
+  // The loader keeps decoded bytes inline rather than reaching for the origin.
   const loader = /async function loadCatalogCardImage\(([\s\S]*?)\n\}/.exec(source)?.[1] ?? "";
-  assert.match(loader, /readAsDataURL/);
+  assert.match(source, /function blobDataUrl[\s\S]*readAsDataURL/);
+  assert.match(loader, /const dataURL = await blobDataUrl\(blob\)/);
+  assert.match(loader, /dataURL,/);
   assert.doesNotMatch(loader, /src = url/);
 });
 
 /*
- * Placing a card is a transient success, so it belongs in the app toast rather
+ * Placing a reference is a transient success, so it belongs in the app toast rather
  * than as a line of text left sitting inside a catalog panel. The panels keep
  * their message channel only where it still reports a failure.
  */
-test("confirms a placed card with the app toast", () => {
+test("confirms a placed reference with the app toast", () => {
   const source = readFileSync(
     new URL("./components/ProjectPlaygroundPage.tsx", import.meta.url),
     "utf8",
@@ -963,18 +960,10 @@ test("confirms a placed card with the app toast", () => {
 
   assert.match(source, /import \{ useApplicationToast \} from "\.\/ApplicationToast\.tsx"/);
   assert.match(source, /const showToast = useApplicationToast\(\);/);
-  assert.match(source, /showToast\(storedInProject/);
+  assert.match(source, /showToast\(loaded\.stored/);
   assert.match(source, /showToast\(message\);/);
 
-  // The screen panel no longer narrates success, and the data library lost a
-  // message channel that nothing wrote to once the toast took over.
+  // The Catalog panel no longer narrates success; failures remain visible.
   assert.doesNotMatch(source, /setScreenMessage\(\s*storedInProject/);
-  assert.doesNotMatch(source, /dataToolsMessage/);
   assert.match(source, /setScreenMessage\(\(error as Error\)\.message\)/);
-
-  const library = readFileSync(
-    new URL("./components/ProjectCanvasDataLibrary.tsx", import.meta.url),
-    "utf8",
-  );
-  assert.doesNotMatch(library, /project-canvas-data-library__message/);
 });

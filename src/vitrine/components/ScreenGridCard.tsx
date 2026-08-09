@@ -73,6 +73,7 @@ export function ScreenGridCard({
     (screen.matchedFacets ?? [])
       .filter(({ group }) => group === 'screens')
       .map(({ value }) => cleanLabel(value))
+      .filter((value) => value?.toLocaleLowerCase() !== 'preview')
       .filter((value): value is string => Boolean(value)),
   )];
   const actions = (

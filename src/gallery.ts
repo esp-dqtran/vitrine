@@ -40,6 +40,7 @@ export interface CatalogScreen {
 export interface CatalogApp {
   id: string;
   app: string;
+  description: string | null;
   categories: Category[];
   accent: string;
   totalScreens: number;
@@ -126,6 +127,9 @@ function screen(
     : null;
   const previewUrl = exactPreviewUrl
     ?? (hash ? `/api/preview-media/${app}/${previewRank}` : null);
+  const mediaUrl = imageUrl(app, image.image_url)
+    || (image.capture_url ? imageUrl(app, image.capture_url) : "");
+  const thumbnailMediaUrl = imageUrl(app, image.image_url, "thumb") || mediaUrl;
   return {
     id: image.id,
     type: image.analysis?.pageType ?? "Unclassified",
@@ -153,8 +157,8 @@ function screen(
           },
         }
       : {}),
-    url: previewRank && previewUrl ? `${previewUrl}?variant=full` : imageUrl(app, image.image_url),
-    thumbnailUrl: previewRank ? previewUrl : imageUrl(app, image.image_url, "thumb"),
+    url: previewRank && previewUrl ? `${previewUrl}?variant=full` : mediaUrl || null,
+    thumbnailUrl: previewRank ? previewUrl : thumbnailMediaUrl || null,
   };
 }
 
@@ -180,6 +184,7 @@ function catalogApp(app: string, images: CrawledImage[], previews: PublishedPrev
   return {
     id: app,
     app: meta.label,
+    description: null,
     categories: images[0]?.categories ?? [],
     accent: meta.accent,
     totalScreens: images.length,
@@ -270,6 +275,7 @@ export function buildPublishedCatalogPage(
       return {
         id: row.app,
         app: row.display_name ?? meta.label,
+        description: row.description ?? null,
         categories: row.categories,
         accent: row.accent_color ?? meta.accent,
         totalScreens: row.total_screens,

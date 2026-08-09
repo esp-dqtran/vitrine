@@ -49,6 +49,7 @@ import {
   appKnowledgeEvidenceSource,
   getVersionFlows,
   flowEvidenceImages,
+  replaceAppPreviewImages,
 } from "../../../src/db.ts";
 import {
   authenticateUser,
@@ -60,7 +61,9 @@ import { createJwtAuth } from "../../../src/jwtAuth.ts";
 import { getDailySignups, getGrowthStats } from "../../../src/adminStats.ts";
 import {
   ADMIN_USER_FILTERS,
+  grantAdminUserPro,
   listAdminUsersPage,
+  revokeAdminUserProGrant,
   setAdminUserActive,
   type AdminUserFilter,
 } from "../../../src/adminUsers.ts";
@@ -392,6 +395,7 @@ const defaults = {
   appUiElementSummary,
   getVersionFlows,
   flowEvidenceImages,
+  replaceAppPreviewImages,
   createExport,
   completeExport,
   failExport,
@@ -455,6 +459,8 @@ const defaults = {
   appUrl: process.env.APP_URL?.replace(/\/$/, "") ?? "http://localhost:5173",
   listAdminUsersPage,
   setAdminUserActive,
+  grantAdminUserPro,
+  revokeAdminUserProGrant,
   getFeatureUsageOverview,
   getUserFeatureUsage,
   getGrowthStats,
@@ -2347,6 +2353,31 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
   });
 
+  app.put("/apps/:app/preview-screens", requireAdmin, async (req, res) => {
+    const appSlug = String(req.params.app);
+    const body = exactBody(req.body, ["platform", "version", "imageIds"]);
+    const platform = body ? platformQuery(body.platform) : undefined;
+    const version = body ? boundedInteger(body.version, 1, Number.MAX_SAFE_INTEGER) : undefined;
+    const imageIds = body?.imageIds;
+    if (!isAppSlug(appSlug) || !platform || !version || !Array.isArray(imageIds)
+      || imageIds.length > 3 || new Set(imageIds).size !== imageIds.length
+      || imageIds.some((id) => !Number.isSafeInteger(id) || id < 1)) {
+      res.status(400).json({ error: "invalid AppCard preview selection" });
+      return;
+    }
+    try {
+      res.json(await deps.replaceAppPreviewImages({
+        app: appSlug,
+        platform,
+        versionNumber: version,
+        imageIds,
+      }));
+    } catch (error) {
+      if (error instanceof RangeError) res.status(400).json({ error: error.message });
+      else throw error;
+    }
+  });
+
   app.get("/search", async (req, res) => {
     const requestedKind = optionalQuery(req.query.kind) ?? "all";
     if (requestedKind !== "all" && !catalogKinds.has(requestedKind as CatalogEntityKind)) {
@@ -3392,6 +3423,42 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         ? "You cannot disable your own account"
         : "The last active administrator cannot be disabled";
       res.status(403).json({ error, code: result.reason });
+      return;
+    }
+    res.json(result.user);
+  });
+
+  app.post("/admin/users/:id/subscription/upgrade", requireAdmin, async (req, res) => {
+    const userId = positiveId(String(req.params.id));
+    if (!userId) {
+      res.status(400).json({ error: "invalid user id" });
+      return;
+    }
+    const result = await deps.grantAdminUserPro({ actorUserId: res.locals.user.id, userId });
+    if (result.status === "not_found") {
+      res.status(404).json({ error: "user not found" });
+      return;
+    }
+    if (result.status === "already_pro") {
+      res.status(409).json({ error: "user already has Pro access", user: result.user });
+      return;
+    }
+    res.json(result.user);
+  });
+
+  app.delete("/admin/users/:id/subscription/grant", requireAdmin, async (req, res) => {
+    const userId = positiveId(String(req.params.id));
+    if (!userId) {
+      res.status(400).json({ error: "invalid user id" });
+      return;
+    }
+    const result = await deps.revokeAdminUserProGrant(userId);
+    if (result.status === "not_found") {
+      res.status(404).json({ error: "user not found" });
+      return;
+    }
+    if (result.status === "already_pro") {
+      res.status(409).json({ error: "user does not have a manual Pro grant", user: result.user });
       return;
     }
     res.json(result.user);

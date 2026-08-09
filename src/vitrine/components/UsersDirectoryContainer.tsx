@@ -2,7 +2,7 @@ import { Spinner } from './Spinner.tsx';
 import { useState } from 'react';
 import { Button } from '@astryxdesign/core';
 import type { AdminUser, UsageRangeKey, UserFilter } from '../types.ts';
-import { setAdminUserActive } from '../usersApi.ts';
+import { grantAdminUserPro, revokeAdminUserProGrant, setAdminUserActive } from '../usersApi.ts';
 import { useUsersDirectory } from '../useUsersDirectory.ts';
 import { UserDirectory } from './UserDirectory.tsx';
 import { UserUsageDialog } from './UserUsageDialog.tsx';
@@ -19,6 +19,11 @@ export function UsersDirectoryContainer({ range }: UsersDirectoryContainerProps)
 
   const updateActive = async (user: AdminUser, active: boolean) => {
     const updated = await setAdminUserActive(user.id, active);
+    directory.updateUser(updated);
+    setSelectedUser((selected) => selected?.id === updated.id ? updated : selected);
+  };
+  const updatePro = async (user: AdminUser, grant: boolean) => {
+    const updated = grant ? await grantAdminUserPro(user.id) : await revokeAdminUserProGrant(user.id);
     directory.updateUser(updated);
     setSelectedUser((selected) => selected?.id === updated.id ? updated : selected);
   };
@@ -56,6 +61,7 @@ export function UsersDirectoryContainer({ range }: UsersDirectoryContainerProps)
         onFilterChange={setFilter}
         onLoadMore={() => void directory.loadMore()}
         onSetActive={updateActive}
+        onSetProGrant={updatePro}
         onSelectUser={setSelectedUser}
       />
       <UserUsageDialog user={selectedUser} range={range} onClose={() => setSelectedUser(null)} />

@@ -57,6 +57,14 @@ export function setAdminUserActive(userId: number, active: boolean): Promise<Adm
   });
 }
 
+export function grantAdminUserPro(userId: number): Promise<AdminUser> {
+  return apiJson(`/api/admin/users/${userId}/subscription/upgrade`, { method: 'POST' });
+}
+
+export function revokeAdminUserProGrant(userId: number): Promise<AdminUser> {
+  return apiJson(`/api/admin/users/${userId}/subscription/grant`, { method: 'DELETE' });
+}
+
 export function fetchReferralCampaignMetrics(): Promise<ReferralCampaignMetrics> {
   return apiJson('/api/admin/referrals/metrics');
 }

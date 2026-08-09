@@ -85,22 +85,24 @@ test('renders a preview from the active platform for a mixed-platform App', () =
   assert.doesNotMatch(html, /src="\/ios\.png"/);
 });
 
-test('contains complete iOS and Android previews instead of cropping them', () => {
-  for (const platform of ['ios', 'android'] as const) {
-    const html = renderToStaticMarkup(
-      <AppCard
-        app={app([screen(1, `/${platform}.png`, platform)])}
-        platform={platform}
-        onOpen={() => undefined}
-      />,
-    );
+test('fills Android AppCard slots like iOS while keeping iOS previews uncropped', () => {
+  const iosHtml = renderToStaticMarkup(
+    <AppCard app={app([screen(1, '/ios.png', 'ios')])} platform="ios" onOpen={() => undefined} />,
+  );
+  const androidHtml = renderToStaticMarkup(
+    <AppCard app={app([screen(1, '/android.png', 'android')])} platform="android" onOpen={() => undefined} />,
+  );
 
-    assert.match(html, /class="app-discovery-card__phone-preview"/);
-    assert.match(html, /background:transparent/);
-    assert.match(html, /object-fit:contain/);
-    assert.match(html, new RegExp(`data-preview-platform="${platform}"`));
-    assert.doesNotMatch(html, /object-fit:cover/);
-  }
+  assert.match(iosHtml, /class="app-discovery-card__phone-preview"/);
+  assert.match(iosHtml, /background:transparent/);
+  assert.match(iosHtml, /object-fit:contain/);
+  assert.match(iosHtml, /data-preview-platform="ios"/);
+  assert.doesNotMatch(iosHtml, /object-fit:cover/);
+
+  assert.match(androidHtml, /class="app-discovery-card__phone-preview"/);
+  assert.match(androidHtml, /background:transparent/);
+  assert.match(androidHtml, /object-fit:cover/);
+  assert.match(androidHtml, /data-preview-platform="android"/);
 });
 
 test('renders the first three phone previews as one AppCard row', () => {
@@ -134,4 +136,21 @@ test('keeps a single-screen App card free from an empty next layer', () => {
   assert.doesNotMatch(html, /data-app-card-preview/);
   assert.doesNotMatch(html, /app-discovery-card__overlay/);
   assert.doesNotMatch(html, /Jul 25, 2026/);
+});
+
+test('shows the stored app description instead of its category', () => {
+  const description = 'Bring all your people data into one place.';
+  const html = renderToStaticMarkup(
+    <AppCard
+      app={{
+        ...app([screen(1, '/only.png')]),
+        description,
+        categories: [{ id: 7, name: 'Productivity', slug: 'productivity' }],
+      }}
+      onOpen={() => undefined}
+    />,
+  );
+
+  assert.match(html, new RegExp(description));
+  assert.doesNotMatch(html, />Productivity</);
 });

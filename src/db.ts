@@ -45,6 +45,69 @@ export async function withTransaction<T>(work: (client: pg.PoolClient) => Promis
   }
 }
 
+export interface AppPreviewImageSelection {
+  app: string;
+  platform: string;
+  versionNumber: number;
+  imageIds: number[];
+}
+
+/**
+ * Replaces the ordered AppCard preview selection for one captured app version.
+ * An empty list deliberately clears the manual choice and returns that version
+ * to the automatic preview ranking.
+ */
+export async function replaceAppPreviewImages(input: AppPreviewImageSelection): Promise<{ versionId: number; imageIds: number[] }> {
+  const imageIds = [...new Set(input.imageIds)];
+  if (imageIds.length !== input.imageIds.length || imageIds.length > 3
+    || imageIds.some((id) => !Number.isSafeInteger(id) || id < 1)) {
+    throw new RangeError("choose up to three unique screen images");
+  }
+
+  return withTransaction(async (client) => {
+    const version = await client.query<{ id: number }>(
+      `SELECT av.id
+       FROM app_versions av
+       JOIN apps a ON a.id = av.app_id
+       WHERE a.name = $1 AND av.platform = $2 AND av.version_number = $3
+       FOR UPDATE`,
+      [input.app, input.platform, input.versionNumber],
+    );
+    const versionId = version.rows[0]?.id;
+    if (!versionId) throw new RangeError("app version not found");
+
+    if (imageIds.length) {
+      const available = await client.query<{ image_id: number }>(
+        `SELECT image_id
+         FROM version_images
+         WHERE version_id = $1 AND image_id = ANY($2::integer[])`,
+        [versionId, imageIds],
+      );
+      if (available.rowCount !== imageIds.length) {
+        throw new RangeError("every selected image must be a screen in this app version");
+      }
+      const screens = await client.query<{ id: number }>(
+        `SELECT id FROM images WHERE id = ANY($1::integer[]) AND kind = 'screen'`,
+        [imageIds],
+      );
+      if (screens.rowCount !== imageIds.length) {
+        throw new RangeError("every selected image must be a screen");
+      }
+    }
+
+    await client.query("DELETE FROM app_preview_images WHERE version_id = $1", [versionId]);
+    if (imageIds.length) {
+      await client.query(
+        `INSERT INTO app_preview_images (version_id, image_id, rank)
+         SELECT $1, selected.image_id, selected.rank::smallint
+         FROM UNNEST($2::integer[]) WITH ORDINALITY AS selected(image_id, rank)`,
+        [versionId, imageIds],
+      );
+    }
+    return { versionId, imageIds };
+  });
+}
+
 // Narrow migration seam: the caller owns the surrounding transaction so startup and
 // migration orchestration can use the same consolidation without nesting BEGIN/COMMIT.
 export async function closePool(): Promise<void> {
@@ -1380,7 +1443,9 @@ export interface AppVersion {
 }
 
 const versionSelect = `SELECT av.id, av.app_id, platform_identity.id AS platform_id,
-  a.name AS app, av.platform, av.version_number, av.label, av.source_url, av.provider, av.status,
+  a.name AS app, av.platform, av.version_number, av.label,
+  COALESCE(av.source_url, apple_listing.source_url) AS source_url,
+  av.provider, av.status,
   av.notes, av.captured_at, av.submitted_at, av.published_at,
   COALESCE(image_counts.screen_count, 0)::int AS screen_count,
   COALESCE(image_counts.ui_element_count, 0)::int AS ui_element_count,
@@ -1395,6 +1460,17 @@ const versionSelect = `SELECT av.id, av.app_id, platform_identity.id AS platform
   FROM app_versions av JOIN apps a ON a.id = av.app_id
   JOIN platforms platform_identity ON platform_identity.app_id = av.app_id
     AND platform_identity.name = av.platform
+  LEFT JOIN LATERAL (
+    SELECT 'https://apps.apple.com/app/id'
+      || substring(i.image_url FROM '^apple-store:([0-9]+):') AS source_url
+    FROM version_images vi
+    JOIN images i ON i.id = vi.image_id
+    WHERE vi.version_id = av.id
+      AND av.platform = 'ios'
+      AND i.image_url ~ '^apple-store:[0-9]+:'
+    ORDER BY i.id
+    LIMIT 1
+  ) apple_listing ON true
   LEFT JOIN LATERAL (
     SELECT COUNT(*) FILTER (WHERE i.kind = 'screen')::int AS screen_count,
       COUNT(*) FILTER (WHERE i.kind = 'ui_element' AND NOT (
@@ -1907,9 +1983,8 @@ export async function publishedPreviewImages(app?: string): Promise<PublishedPre
              AND NOT EXISTS (
                SELECT 1 FROM app_preview_images preview
                WHERE preview.version_id = latest.version_id
-                 AND preview.image_id = version_image.image_id
              )
-           ORDER BY heft.byte_size DESC NULLS LAST,
+             ORDER BY heft.byte_size DESC NULLS LAST,
              version_image.captured_at DESC NULLS LAST, version_image.image_id DESC
            LIMIT 3
          ) fallback ON true

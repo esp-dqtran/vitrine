@@ -196,6 +196,31 @@ test('filters Apps across Mobbin taxonomy fields and platform', () => {
   );
 });
 
+test('finds screen results from visible UI text and state context', () => {
+  const app = makeApp({
+    screens: [{
+      ...makeApp().screens[0]!,
+      type: 'Unclassified',
+      productArea: 'Unclassified',
+      visibleText: ['Invite a teammate'],
+      stateContext: 'Empty state',
+      visibleStates: [],
+    }],
+  });
+
+  for (const query of ['invite', 'empty state']) {
+    assert.deepEqual(
+      filterAndSortApps([app], { query, platform: 'web', sort: 'latest' }).map(({ id }) => id),
+      ['base'],
+    );
+    assert.deepEqual(
+      filterAppsDiscoveryScreens([app], { query, facets: [], platform: 'web', sort: 'latest' })
+        .map(({ screen }) => screen.id),
+      [1],
+    );
+  }
+});
+
 test('shows only Apps that contain the active platform', () => {
   const apps = [
     makeApp({ id: 'web', app: 'Web App', platforms: ['web'] }),

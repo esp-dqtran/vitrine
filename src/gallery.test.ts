@@ -66,6 +66,24 @@ test("builds an evidence page without re-paginating it", () => {
   assert.equal(page.nextCursor, "Mg");
 });
 
+test("uses the captured Apple source URL when its internal import reference has no media object", () => {
+  const sourceUrl = "https://is1-ssl.mzstatic.com/image/thumb/example.png";
+  const page = buildEvidencePage({
+    rows: [{
+      id: 3,
+      app: "tripsy",
+      platform: "ios",
+      image_url: "apple-store:1429967544:1",
+      capture_url: sourceUrl,
+      description: null,
+    }],
+    nextCursor: null,
+  });
+
+  assert.equal(page.screens[0].url, sourceUrl);
+  assert.equal(page.screens[0].thumbnailUrl, sourceUrl);
+});
+
 test("groups images, preserves metadata, maps local media, and caps screens", () => {
   const images = Array.from({ length: 121 }, (_, index) => ({
     id: index + 1,
@@ -217,6 +235,7 @@ test("builds the existing public catalog contract from bounded app records", () 
       app_id: 1,
       app: "linear",
       display_name: "Linear",
+      description: "Plan and build products.",
       categories: [productivity],
       website_url: "https://linear.app",
       icon_url: "https://linear.app/icon.png",
@@ -249,6 +268,7 @@ test("builds the existing public catalog contract from bounded app records", () 
     { group: "screens", value: "Dashboard" },
   ]);
   assert.equal(page.apps[0]?.iconUrl, "https://linear.app/icon.png");
+  assert.equal(page.apps[0]?.description, "Plan and build products.");
   assert.equal(page.apps[0]?.lastCapturedAt, "2026-07-26T03:14:54.618Z");
   assert.deepEqual(page.apps[0]?.categories, [productivity]);
   assert.equal("cat" in page.apps[0]!, false);

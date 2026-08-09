@@ -276,9 +276,12 @@ for (const job of state.jobs) {
       saveState(state);
     }
     const expected = {
-      screens: job.verification.screens?.discovered,
-      uiElements: job.verification.uiElements?.discovered,
-      flows: job.verification.flows?.discovered,
+      // Verify against the number actually captured by the crawler. In normal
+      // runs this equals `discovered`; a provider can expose duplicate cards,
+      // however, which are intentionally deduplicated when persisted.
+      screens: job.verification.screens?.captured,
+      uiElements: job.verification.uiElements?.captured,
+      flows: job.verification.flows?.captured,
     };
     const persistedByJob = await loadCatalogPersistence(pool, [{ app: job.slug, platform: job.platform }]);
     const persisted = persistedByJob.get(catalogJobKey(job.slug, job.platform))

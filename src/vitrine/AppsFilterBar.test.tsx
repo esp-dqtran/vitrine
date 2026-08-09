@@ -59,6 +59,7 @@ test('renders the compact sticky Apps filter controls and result summary', () =>
   );
 
   assert.match(html, /data-apps-filterbar="true"/);
+  assert.match(html, /class="control-rail apps-filterbar"/);
   assert.match(html, /aria-label="App platform: Web"/);
   assert.match(html, />Categories</);
   assert.match(html, /apps-filterbar__selection-count[^>]*>3</);

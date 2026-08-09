@@ -5,7 +5,9 @@ import {
   fetchFeatureUsage,
   fetchReferralCampaignMetrics,
   fetchUserFeatureUsage,
+  grantAdminUserPro,
   revokeReferral,
+  revokeAdminUserProGrant,
   setAdminUserActive,
 } from "./usersApi.ts";
 
@@ -37,6 +39,23 @@ test("updates account state with the narrow active contract", async () => {
   assert.equal(request?.method, "PATCH");
   assert.equal(request?.body, JSON.stringify({ active: false }));
   assert.equal(user.active, false);
+});
+
+test("grants and revokes a manual Pro access grant", async () => {
+  const requests: Array<{ url: string; method?: string }> = [];
+  globalThis.fetch = async (input, init) => {
+    requests.push({ url: String(input), method: init?.method });
+    return new Response(JSON.stringify({ id: 4, subscription_status: "active", manual_pro_grant: init?.method === "POST" }), { status: 200 });
+  };
+
+  const granted = await grantAdminUserPro(4);
+  const revoked = await revokeAdminUserProGrant(4);
+  assert.equal(granted.manual_pro_grant, true);
+  assert.equal(revoked.manual_pro_grant, false);
+  assert.deepEqual(requests, [
+    { url: "/api/admin/users/4/subscription/upgrade", method: "POST" },
+    { url: "/api/admin/users/4/subscription/grant", method: "DELETE" },
+  ]);
 });
 
 test("loads overview and per-user analytics for one supported range", async () => {

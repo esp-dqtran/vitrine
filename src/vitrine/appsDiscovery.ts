@@ -149,6 +149,8 @@ export function filterAndSortApps(
           ...(screen.componentNames ?? []),
           ...(screen.layoutPatterns ?? []),
           ...(screen.visibleStates ?? []),
+          screen.stateContext,
+          ...(screen.visibleText ?? []),
         ]),
       ]).includes(query)) return false;
       return facetsMatchByGroup(facets, (facet) => appMatchesFacet(app, facet));
@@ -182,6 +184,8 @@ export function filterAppsDiscoveryScreens(
       ...(screen.componentNames ?? []),
       ...(screen.layoutPatterns ?? []),
       ...(screen.visibleStates ?? []),
+      screen.stateContext,
+      ...(screen.visibleText ?? []),
     ]).includes(query))
     .map((screen, index) => ({ app, screen, index })));
   if (options.sort === 'latest') {

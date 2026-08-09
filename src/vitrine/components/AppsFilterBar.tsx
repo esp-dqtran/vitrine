@@ -6,6 +6,7 @@ import {
   AstryxDropdown,
   AstryxDropdownItem,
 } from './AstryxDropdown.tsx';
+import { ControlRail } from './ControlRail.tsx';
 
 type DiscoveryFilterMenuContainer = Pick<HTMLElement, 'contains'>;
 type DiscoveryDropdownPortalTarget = EventTarget & {
@@ -516,13 +517,15 @@ export function DiscoveryFilterBar({
   };
 
   return (
-    <section
+    <ControlRail
       className="apps-filterbar"
-      aria-label={ariaLabel}
-      data-discovery-filterbar={kind}
-      data-apps-filterbar={kind === 'apps' ? 'true' : undefined}
-      data-sites-filterbar={kind === 'sites' ? 'true' : undefined}
-      data-flows-filterbar={kind === 'flows' ? 'true' : undefined}
+      ariaLabel={ariaLabel}
+      dataAttributes={{
+        'data-discovery-filterbar': kind,
+        'data-apps-filterbar': kind === 'apps' ? 'true' : undefined,
+        'data-sites-filterbar': kind === 'sites' ? 'true' : undefined,
+        'data-flows-filterbar': kind === 'flows' ? 'true' : undefined,
+      }}
     >
       <div className="apps-filterbar__controls">
         <div
@@ -615,6 +618,6 @@ export function DiscoveryFilterBar({
           onChange={onSortChange}
         />
       </div>
-    </section>
+    </ControlRail>
   );
 }

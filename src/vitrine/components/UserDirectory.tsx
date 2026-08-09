@@ -17,11 +17,13 @@ interface UserDirectoryProps {
   onFilterChange: (value: UserFilter) => void;
   onLoadMore: () => void;
   onSetActive: (user: AdminUser, active: boolean) => Promise<void>;
+  onSetProGrant?: (user: AdminUser, grant: boolean) => Promise<void>;
   onSelectUser: (user: AdminUser) => void;
 }
 
-function MemberRow({ user, onSetActive, onSelectUser }: Pick<UserDirectoryProps, 'onSetActive' | 'onSelectUser'> & { user: AdminUser }) {
+function MemberRow({ user, onSetActive, onSetProGrant, onSelectUser }: Pick<UserDirectoryProps, 'onSetActive' | 'onSetProGrant' | 'onSelectUser'> & { user: AdminUser }) {
   const [pendingDisable, setPendingDisable] = useState(false);
+  const [pendingProGrant, setPendingProGrant] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const plan = userPlanLabel(user);
@@ -32,6 +34,19 @@ function MemberRow({ user, onSetActive, onSelectUser }: Pick<UserDirectoryProps,
     try {
       await onSetActive(user, active);
       setPendingDisable(false);
+    } catch (cause) {
+      setError((cause as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const updateProGrant = async (grant: boolean) => {
+    setBusy(true);
+    setError(null);
+    try {
+      if (!onSetProGrant) return;
+      await onSetProGrant(user, grant);
+      setPendingProGrant(false);
     } catch (cause) {
       setError((cause as Error).message);
     } finally {
@@ -67,10 +82,11 @@ function MemberRow({ user, onSetActive, onSelectUser }: Pick<UserDirectoryProps,
         <AstryxMenu
           button={{ label: 'Actions', size: 'sm', variant: 'primary', isDisabled: busy }}
           menuWidth={150}
-          items={[{
-            label: user.active ? 'Disable' : 'Enable',
-            onClick: () => user.active ? setPendingDisable(true) : void update(true),
-          }]}
+          items={[
+            ...((onSetProGrant && user.role === 'user' && plan === 'Free') ? [{ label: 'Upgrade to Pro', onClick: () => setPendingProGrant(true) }] : []),
+            ...((onSetProGrant && user.manual_pro_grant) ? [{ label: 'Remove Pro grant', onClick: () => setPendingProGrant(true) }] : []),
+            { label: user.active ? 'Disable' : 'Enable', onClick: () => user.active ? setPendingDisable(true) : void update(true) },
+          ]}
         />
       </div>
 
@@ -83,6 +99,17 @@ function MemberRow({ user, onSetActive, onSelectUser }: Pick<UserDirectoryProps,
         actionLabel="Disable account"
         isActionLoading={busy}
         onAction={() => void update(false)}
+      />
+      <AstryxAlertModal
+        isOpen={pendingProGrant}
+        onOpenChange={setPendingProGrant}
+        title={user.manual_pro_grant ? 'Remove manual Pro access?' : 'Upgrade to Pro?'}
+        description={user.manual_pro_grant
+          ? `${user.email} will lose the Pro access granted here. Paid subscriptions and promotional access are unchanged.`
+          : `${user.email} will receive Pro access without a Stripe charge or subscription.`}
+        actionLabel={user.manual_pro_grant ? 'Remove Pro access' : 'Upgrade to Pro'}
+        isActionLoading={busy}
+        onAction={() => void updateProGrant(!user.manual_pro_grant)}
       />
     </li>
   );
@@ -136,7 +163,7 @@ export function UserDirectory(props: UserDirectoryProps) {
       ) : (
         <>
           <ul className="admin-users-list product-data-grid">
-            {props.users.map((user) => <MemberRow key={user.id} user={user} onSetActive={props.onSetActive} onSelectUser={props.onSelectUser} />)}
+            {props.users.map((user) => <MemberRow key={user.id} user={user} onSetActive={props.onSetActive} onSetProGrant={props.onSetProGrant} onSelectUser={props.onSelectUser} />)}
           </ul>
           <div ref={sentinel} className="admin-users-load-more">
             {props.hasMore && <Button label="Load more" size="sm" variant="ghost" isLoading={props.loadingMore} clickAction={props.onLoadMore} />}

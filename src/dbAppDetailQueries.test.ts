@@ -74,7 +74,10 @@ test("app version and Flow reads use normalized rows after the hierarchical migr
   const versionBody = source.slice(versionStart, versionEnd);
   assert.match(versionBody, /SELECT COUNT\(\*\) FROM app_flows/);
   assert.match(versionBody, /SELECT COUNT\(\*\) FROM app_flow_versions/);
-  assert.match(versionBody, /COUNT\(\*\) FILTER \(WHERE i\.kind = 'ui_element'\)::int AS ui_element_count/);
+  assert.match(
+    versionBody,
+    /COUNT\(\*\) FILTER \(WHERE i\.kind = 'ui_element' AND NOT \([\s\S]*\)\)::int AS ui_element_count/,
+  );
   assert.doesNotMatch(versionBody, /i\.kind = 'ui_element' AND EXISTS/);
   assert.doesNotMatch(versionBody, /\b(?:af|afv)\.flows\b/);
 

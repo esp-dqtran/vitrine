@@ -11,7 +11,6 @@ import { apiFetch } from './apiFetch.ts';
 import { AnimatePresence } from "framer-motion";
 import { Button, EmptyState } from "@astryxdesign/core";
 import { useAuth } from "./AuthProvider";
-import { ProgressBanner } from "./components/ProgressBanner";
 import { CommandPalette } from "./components/CommandPalette";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { UnlockModal } from "./components/UnlockModal";
@@ -956,14 +955,11 @@ export function App() {
           onOpenApp={(appId) => void openApp(appId)}
           accountControls={accountControls}
           beforeGrid={
-            <>
-              {isAdmin ? <ProgressBanner /> : null}
-              {searchError ? (
-                <div role="alert" className="apps-discovery__search-error">
-                  {searchError}
-                </div>
-              ) : null}
-            </>
+            searchError ? (
+              <div role="alert" className="apps-discovery__search-error">
+                {searchError}
+              </div>
+            ) : null
           }
         />
       );

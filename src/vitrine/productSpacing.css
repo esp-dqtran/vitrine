@@ -192,24 +192,24 @@
 
 .reference-detail__navigation {
   gap: var(--spacing-6) !important;
-  min-height: var(--spacing-12) !important;
+  min-height: var(--reference-nav-height) !important;
   padding-inline: var(--spacing-6) !important;
 }
 
 .reference-detail__tab-leading,
 .reference-detail__tabs,
 .reference-detail__tabs > button {
-  min-height: var(--spacing-12) !important;
+  min-height: var(--vitrine-control-height) !important;
 }
 
 .reference-detail .reference-detail__tabs > button {
-  height: var(--spacing-12) !important;
+  height: var(--vitrine-control-height) !important;
   font-size: 15px !important;
   line-height: 20px !important;
 }
 
 .reference-detail__tab-controls {
-  min-height: var(--spacing-12) !important;
+  min-height: var(--vitrine-control-height) !important;
 }
 
 .reference-detail__tab-leading :is(

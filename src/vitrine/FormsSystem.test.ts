@@ -96,7 +96,6 @@ test('specialized editor and canvas owners retain their higher-specificity geome
     '.project-canvas-document-editor__page .astryx-text-input',
     '.project-template-library__content .astryx-text-input',
     '.project-screen-library .astryx-text-input',
-    '.project-canvas-data-library .astryx-text-input',
     '.project-playground__references .astryx-text-input',
   ]) assert.match(styles, new RegExp(owner.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 

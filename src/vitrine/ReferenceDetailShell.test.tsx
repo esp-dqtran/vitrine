@@ -41,6 +41,7 @@ test('renders the Apps-style hero, actions, metadata, and accessible tabs', () =
   assert.match(html, /Overview content/);
   assert.match(html, /data-reference-detail="site"/);
   assert.match(html, /class="vitrine-page reference-detail site-detail"/);
+  assert.match(html, /<nav class="control-rail reference-detail__navigation" aria-label="V7 controls">/);
   assert.match(html, /AI-powered visual data platform\./);
   assert.match(html, /reference-detail__tab-leading[^>]*><button>Latest<\/button>/);
   assert.match(html, /reference-detail__navigation[\s\S]*reference-detail__tab-controls[^>]*><button>Filter screens<\/button>/);
@@ -208,7 +209,11 @@ test('shares the compact Apps detail presentation with Sites', async () => {
   assert.match(actionsRule, /grid-area:\s*actions/);
   assert.match(actionsRule, /padding:\s*0/);
 
-  assert.match(navigationRule, /min-height:\s*64px/);
+  assert.match(navigationRule, /min-height:\s*var\(--reference-nav-height\)/);
+  assert.match(
+    navigationRule,
+    /padding-block:\s*calc\(\(var\(--reference-nav-height\) - var\(--vitrine-control-height\)\) \/ 2\)/,
+  );
   assert.doesNotMatch(navigationRule, /border-top:/);
   assert.match(tabsRule, /gap:\s*24px/);
   assert.match(tabsRule, /justify-content:\s*flex-start/);
@@ -216,8 +221,8 @@ test('shares the compact Apps detail presentation with Sites', async () => {
   assert.match(tabsRule, /overflow-x:\s*auto/);
   assert.match(tabsRule, /scroll-snap-type:\s*inline proximity/);
   assert.match(tabRule, /min-width:\s*max-content/);
-  assert.match(tabRule, /min-height:\s*64px/);
-  assert.match(tabRule, /height:\s*56px/);
+  assert.match(tabRule, /min-height:\s*var\(--vitrine-control-height\)/);
+  assert.match(tabRule, /height:\s*var\(--vitrine-control-height\)/);
   assert.match(tabRule, /font:\s*var\(--vitrine-presentation-body-large\)\s*!important/);
   assert.match(activeRule, /background:\s*transparent/);
   assert.match(activeRule, /color:\s*var\(--color-text-primary\)/);
