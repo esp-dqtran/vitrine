@@ -18,6 +18,7 @@ import {
 } from "@astryxdesign/core";
 import { ChevronSmallDownIcon, FaceHappyIcon } from "@storybook/icons";
 import {
+  CaptureUpdateAction,
   convertToExcalidrawElements,
   Excalidraw,
   hashElementsVersion,
@@ -74,6 +75,7 @@ import { ProjectAccessButton } from "./ProjectAccessDialog.tsx";
 import { useApplicationToast } from "./ApplicationToast.tsx";
 import {
   ProjectCanvasCommentGlyph,
+  ProjectCanvasCommentInbox,
   ProjectCanvasCommentPanel,
   ProjectCanvasCommentPin,
 } from "./ProjectCanvasComments.tsx";
@@ -519,53 +521,6 @@ function coloredFigJamFreehandToolIcon(
     : source.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ');
   return `data:image/svg+xml,${encodeURIComponent(standaloneSource)}`;
 }
-
-interface ProjectCanvasToolCatalogItem {
-  tool: Exclude<ProjectCanvasTool, "more">;
-  title: string;
-  description: string;
-  pinned: boolean;
-}
-
-const projectCanvasToolCatalogItems: readonly ProjectCanvasToolCatalogItem[] = [
-  {
-    tool: "screens",
-    title: "Catalog",
-    description: "Search screens and flows, then add them to the canvas.",
-    /* Pinned to the rail now, so the catalog lists it as one. */
-    pinned: true,
-  },
-  {
-    tool: "sticky",
-    title: "Sticky notes",
-    description: "Capture observations and ideas without leaving the canvas.",
-    pinned: true,
-  },
-  {
-    tool: "comments",
-    title: "Comments",
-    description: "Place a discussion on the canvas for feedback and review.",
-    pinned: true,
-  },
-  {
-    tool: "document",
-    title: "Document",
-    description: "Place a structured Markdown document on the canvas.",
-    pinned: true,
-  },
-  {
-    tool: "research-frames",
-    title: "Research frames",
-    description: "Organize evidence, insights, concepts, and decisions.",
-    pinned: false,
-  },
-  {
-    tool: "templates",
-    title: "Templates",
-    description: "Start common designer workflows from a reusable layout.",
-    pinned: false,
-  },
-];
 
 interface CanvasWidgetsLauncherItem {
   id: string;
@@ -2058,6 +2013,14 @@ export function ProjectPlayground({
     useState<AstryxResearchFrameReference>();
   const [toolsCatalogOpen, setToolsCatalogOpen] = useState(false);
   const [toolsCatalogQuery, setToolsCatalogQuery] = useState("");
+  const [canvasFindOpen, setCanvasFindOpen] = useState(false);
+  const [canvasFindQuery, setCanvasFindQuery] = useState("");
+  const [canvasReplaceQuery, setCanvasReplaceQuery] = useState("");
+  const [canvasFindMatchIndex, setCanvasFindMatchIndex] = useState(0);
+  const [canvasUiMinimized, setCanvasUiMinimized] = useState(true);
+  const [canvasChromeVisible, setCanvasChromeVisible] = useState(true);
+  const [canvasRemoteCursorsVisible, setCanvasRemoteCursorsVisible] =
+    useState(true);
   const [shapePickerOpen, setShapePickerOpen] = useState(false);
   const [shapeLibraryOpen, setShapeLibraryOpen] = useState(false);
   const [shapeLibraryQuery, setShapeLibraryQuery] = useState("");
@@ -2094,6 +2057,9 @@ export function ProjectPlayground({
     useState<AstryxStickyNoteReference>();
   const [selectedCanvasShape, setSelectedCanvasShape] =
     useState<CanvasShapeReference>();
+  const [selectedCanvasElementIds, setSelectedCanvasElementIds] = useState<
+    readonly string[]
+  >([]);
   const [selectedShapePanel, setSelectedShapePanel] = useState<
     "shape" | "fill" | "line"
   >();
@@ -2211,17 +2177,23 @@ export function ProjectPlayground({
         socketId: collaborator.clientId as SocketId,
         username: collaborator.name,
         color: canvasCollaboratorColor(collaborator.name),
-        pointer: cursor?.pointer
+        pointer: canvasRemoteCursorsVisible && cursor?.pointer
           ? { ...cursor.pointer, tool: "pointer", renderCursor: true }
           : undefined,
         button: cursor?.button,
-        selectedElementIds: Object.fromEntries(
-          (cursor?.selectedElementIds ?? []).map((id) => [id, true]),
-        ),
+        selectedElementIds: canvasRemoteCursorsVisible
+          ? Object.fromEntries(
+              (cursor?.selectedElementIds ?? []).map((id) => [id, true]),
+            )
+          : {},
       });
     }
     editorRef.current?.updateScene({ collaborators });
-  }, []);
+  }, [canvasRemoteCursorsVisible]);
+
+  useEffect(() => {
+    syncCanvasCollaborators();
+  }, [syncCanvasCollaborators]);
 
   const handleCanvasPointerUpdate = useCallback(
     ({ pointer, button }: CanvasPointerUpdate) => {
@@ -2542,6 +2514,18 @@ export function ProjectPlayground({
       const stickyToolIsActive =
         appState.activeTool.type === "custom" &&
         appState.activeTool.customType === "astryx-sticky-note";
+      const nextSelectedCanvasElementIds = elements
+        .filter(
+          (element) =>
+            !element.isDeleted && appState.selectedElementIds[element.id],
+        )
+        .map((element) => element.id);
+      setSelectedCanvasElementIds((current) =>
+        current.length === nextSelectedCanvasElementIds.length &&
+        current.every((id, index) => id === nextSelectedCanvasElementIds[index])
+          ? current
+          : nextSelectedCanvasElementIds,
+      );
       /* Excalidraw normalizes an external custom tool back to Selection. The
          placement ref is the durable source of truth until the person places
          the note or deliberately switches tools. */
@@ -4684,6 +4668,182 @@ export function ProjectPlayground({
     setSelectedCommentId(undefined);
   }, [commitCanvasComments, selectedCommentId]);
 
+  const selectAllCanvasElements = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const selectedElementIds = Object.fromEntries(
+      editor
+        .getSceneElements()
+        .filter((element) => !element.isDeleted && !element.locked)
+        .map((element) => [element.id, true]),
+    );
+    editor.updateScene({
+      appState: { selectedElementIds },
+      captureUpdate: CaptureUpdateAction.NEVER,
+    });
+    setToolsCatalogOpen(false);
+  }, []);
+
+  const toggleSelectedCanvasElementsLocked = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const appState = editor.getAppState();
+    const selectedIds = new Set(Object.keys(appState.selectedElementIds));
+    const selectedElements = editor
+      .getSceneElements()
+      .filter((element) => !element.isDeleted && selectedIds.has(element.id));
+    if (selectedElements.length === 0) return;
+    const nextLocked = !selectedElements.every((element) => element.locked);
+    editor.updateScene({
+      elements: editor.getSceneElements().map((element) =>
+        selectedIds.has(element.id)
+          ? withCanvasElementUpdate(element, { locked: nextLocked })
+          : element,
+      ),
+      appState: { selectedElementIds: appState.selectedElementIds },
+      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+    });
+    setToolsCatalogOpen(false);
+  }, []);
+
+  const alignSelectedCanvasElements = useCallback(
+    (axis: "horizontal" | "vertical") => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const appState = editor.getAppState();
+      const selectedIds = new Set(Object.keys(appState.selectedElementIds));
+      const selectedElements = editor
+        .getSceneElements()
+        .filter((element) => !element.isDeleted && selectedIds.has(element.id));
+      if (selectedElements.length < 2) return;
+      const targetCenter =
+        axis === "horizontal"
+          ? (Math.min(...selectedElements.map((element) => element.x)) +
+              Math.max(
+                ...selectedElements.map(
+                  (element) => element.x + element.width,
+                ),
+              )) /
+            2
+          : (Math.min(...selectedElements.map((element) => element.y)) +
+              Math.max(
+                ...selectedElements.map(
+                  (element) => element.y + element.height,
+                ),
+              )) /
+            2;
+      const offsets = new Map(
+        selectedElements.map((element) => [
+          element.id,
+          axis === "horizontal"
+            ? { x: targetCenter - element.width / 2 - element.x, y: 0 }
+            : { x: 0, y: targetCenter - element.height / 2 - element.y },
+        ]),
+      );
+      const elements = editor.getSceneElements().map((element) => {
+        const ownOffset = offsets.get(element.id);
+        const containerOffset = (
+          element as ExcalidrawElement & { containerId?: string | null }
+        ).containerId;
+        const offset =
+          ownOffset ??
+          (containerOffset ? offsets.get(containerOffset) : undefined);
+        return offset
+          ? withCanvasElementUpdate(element, {
+              x: element.x + offset.x,
+              y: element.y + offset.y,
+            })
+          : element;
+      });
+      editor.updateScene({
+        elements,
+        appState: { selectedElementIds: appState.selectedElementIds },
+        captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+      });
+      setToolsCatalogOpen(false);
+    },
+    [],
+  );
+
+  const undoCanvasAction = useCallback(() => {
+    canvasRootRef.current
+      ?.querySelector<HTMLButtonElement>('button[aria-label="Undo"]')
+      ?.click();
+    setToolsCatalogOpen(false);
+  }, []);
+
+  const openCanvasKeyboardShortcuts = useCallback(() => {
+    canvasRootRef.current
+      ?.querySelector<HTMLButtonElement>('button[aria-label="Help"]')
+      ?.click();
+    setToolsCatalogOpen(false);
+  }, []);
+
+  const openCanvasFind = useCallback(() => {
+    setToolsCatalogOpen(false);
+    setCanvasFindMatchIndex(0);
+    setCanvasFindOpen(true);
+  }, []);
+
+  const focusCanvasFindMatch = useCallback(
+    (offset: number) => {
+      const editor = editorRef.current;
+      const query = canvasFindQuery.trim().toLowerCase();
+      if (!editor || !query) return;
+      const matches = editor
+        .getSceneElements()
+        .filter(
+          (element) =>
+            !element.isDeleted &&
+            element.type === "text" &&
+            (element as ExcalidrawElement & { text: string }).text
+              .toLowerCase()
+              .includes(query),
+        );
+      if (matches.length === 0) return;
+      const nextIndex =
+        (canvasFindMatchIndex + offset + matches.length) % matches.length;
+      const match = matches[nextIndex];
+      setCanvasFindMatchIndex(nextIndex);
+      editor.updateScene({
+        appState: { selectedElementIds: { [match.id]: true } },
+        captureUpdate: CaptureUpdateAction.NEVER,
+      });
+      editor.scrollToContent(match, { fitToContent: true, maxZoom: 1 });
+    },
+    [canvasFindMatchIndex, canvasFindQuery],
+  );
+
+  const replaceAllCanvasTextMatches = useCallback(() => {
+    const editor = editorRef.current;
+    const query = canvasFindQuery.trim();
+    if (!editor || !query) return;
+    const pattern = new RegExp(
+      query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+      "gi",
+    );
+    const elements = editor.getSceneElements().map((element) => {
+      if (element.isDeleted || element.type !== "text") return element;
+      const textElement = element as ExcalidrawElement & {
+        text: string;
+        originalText?: string;
+      };
+      if (!pattern.test(textElement.text)) return element;
+      pattern.lastIndex = 0;
+      const text = textElement.text.replace(pattern, canvasReplaceQuery);
+      pattern.lastIndex = 0;
+      return withCanvasElementUpdate(element, {
+        text,
+        originalText: text,
+      } as Partial<ExcalidrawElement>);
+    });
+    editor.updateScene({
+      elements,
+      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+    });
+    setCanvasFindMatchIndex(0);
+  }, [canvasFindQuery, canvasReplaceQuery]);
+
   const commentPinStyle = useCallback(
     (thread: DesignerCanvasCommentThread) =>
       ({
@@ -4699,13 +4859,134 @@ export function ProjectPlayground({
       ? `${saveLabels[saveState]}: ${saveErrorMessage}`
       : saveLabels[saveState];
   const normalizedToolsCatalogQuery = toolsCatalogQuery.trim().toLowerCase();
-  const filteredCanvasToolCatalogItems = projectCanvasToolCatalogItems.filter(
-    (item) =>
-      !normalizedToolsCatalogQuery ||
-      `${item.title} ${item.description}`
-        .toLowerCase()
-        .includes(normalizedToolsCatalogQuery),
+  const selectedCanvasElementsForActions =
+    editorRef.current
+      ?.getSceneElements()
+      .filter((element) => selectedCanvasElementIds.includes(element.id)) ?? [];
+  const selectedCanvasElementsLocked =
+    selectedCanvasElementsForActions.length > 0 &&
+    selectedCanvasElementsForActions.every((element) => element.locked);
+  const canvasActionSections = [
+    {
+      title: selectedCanvasElementIds.length > 0 ? "Selection" : "Suggestions",
+      items:
+        selectedCanvasElementIds.length > 0
+          ? [
+              {
+                id: "lock",
+                title: selectedCanvasElementsLocked
+                  ? "Unlock selection"
+                  : "Lock selection",
+                shortcut: "⇧⌘L",
+                disabled: false,
+                checked: undefined,
+                onClick: toggleSelectedCanvasElementsLocked,
+              },
+              {
+                id: "align-horizontal",
+                title: "Align horizontal centers",
+                shortcut: "⌥H",
+                disabled: selectedCanvasElementIds.length < 2,
+                checked: undefined,
+                onClick: () => alignSelectedCanvasElements("horizontal"),
+              },
+              {
+                id: "align-vertical",
+                title: "Align vertical centers",
+                shortcut: "⌥V",
+                disabled: selectedCanvasElementIds.length < 2,
+                checked: undefined,
+                onClick: () => alignSelectedCanvasElements("vertical"),
+              },
+            ]
+          : [
+              {
+                id: "find-replace",
+                title: "Find and replace…",
+                shortcut: "⌘F",
+                disabled: false,
+                checked: undefined,
+                onClick: openCanvasFind,
+              },
+              {
+                id: "select-all",
+                title: "Select all",
+                shortcut: "⌘A",
+                disabled: false,
+                checked: undefined,
+                onClick: selectAllCanvasElements,
+              },
+              {
+                id: "undo",
+                title: "Undo",
+                shortcut: "⌘Z",
+                disabled: false,
+                checked: undefined,
+                onClick: undoCanvasAction,
+              },
+            ],
+    },
+    {
+      title: "Common settings",
+      items: [
+        {
+          id: "minimize-ui",
+          title: "Minimize UI",
+          shortcut: "⇧⌘\\",
+          disabled: false,
+          checked: canvasUiMinimized,
+          onClick: () => setCanvasUiMinimized((minimized) => !minimized),
+        },
+        {
+          id: "show-ui",
+          title: "Show/Hide UI",
+          shortcut: "⌘\\",
+          disabled: false,
+          checked: canvasChromeVisible,
+          onClick: () => setCanvasChromeVisible((visible) => !visible),
+        },
+        {
+          id: "multiplayer-cursors",
+          title: "Multiplayer cursors",
+          shortcut: "⌥⌘\\",
+          disabled: false,
+          checked: canvasRemoteCursorsVisible,
+          onClick: () => setCanvasRemoteCursorsVisible((visible) => !visible),
+        },
+        {
+          id: "keyboard-shortcuts",
+          title: "Keyboard shortcuts",
+          shortcut: "?",
+          disabled: false,
+          checked: undefined,
+          onClick: openCanvasKeyboardShortcuts,
+        },
+      ],
+    },
+  ].map((section) => ({
+    ...section,
+    items: section.items.filter(
+      (item) =>
+        !normalizedToolsCatalogQuery ||
+        item.title.toLowerCase().includes(normalizedToolsCatalogQuery),
+    ),
+  }));
+  const filteredCanvasActionCount = canvasActionSections.reduce(
+    (count, section) => count + section.items.length,
+    0,
   );
+  const canvasFindMatchCount =
+    editorRef.current
+      ?.getSceneElements()
+      .filter(
+        (element) =>
+          !element.isDeleted &&
+          element.type === "text" &&
+          Boolean(canvasFindQuery.trim()) &&
+          (element as ExcalidrawElement & { text: string }).text
+            .toLowerCase()
+            .includes(canvasFindQuery.trim().toLowerCase()),
+      ).length ?? 0;
   const normalizedWidgetsLauncherQuery = widgetsLauncherQuery
     .trim()
     .toLowerCase();
@@ -4719,6 +5000,7 @@ export function ProjectPlayground({
   );
   const canvasToolPanelOpen =
     toolsCatalogOpen ||
+    canvasFindOpen ||
     widgetsLauncherOpen ||
     stampPickerOpen ||
     shapePickerOpen ||
@@ -4726,6 +5008,7 @@ export function ProjectPlayground({
     screensOpen ||
     templatesOpen ||
     stickyPickerOpen ||
+    commentPlacement ||
     Boolean(commentDraftAnchor) ||
     Boolean(selectedComment);
   const selectedShapeOption = selectedCanvasShape
@@ -4744,7 +5027,13 @@ export function ProjectPlayground({
     : "#1e1e1e";
 
   return (
-    <main className="vitrine-page research-project-page research-project-page--playground">
+    <main
+      className={`vitrine-page research-project-page research-project-page--playground${
+        canvasUiMinimized ? "" : " research-project-page--canvas-ui-expanded"
+      }${
+        canvasChromeVisible ? "" : " research-project-page--canvas-ui-hidden"
+      }`}
+    >
       <header
         className="project-canvas-header"
         aria-label="Project canvas controls"
@@ -5235,16 +5524,15 @@ export function ProjectPlayground({
             }}
           />
         ))}
-        {commentPlacement ? (
-          <div
-            className="project-canvas-comment-placement-hint"
-            role="status"
-            aria-live="polite"
-          >
-            <ProjectCanvasCommentGlyph />
-            <span>Click anywhere to place a comment.</span>
-            <kbd>Esc</kbd>
-          </div>
+        {commentPlacement && !commentDraftAnchor && !selectedComment ? (
+          <ProjectCanvasCommentInbox
+            threads={canvasComments}
+            onSelectThread={(threadId) => {
+              stopCommentPlacement();
+              setSelectedCommentId(threadId);
+            }}
+            onClose={stopCommentPlacement}
+          />
         ) : null}
         {commentDraftAnchor || selectedComment ? (
           <ProjectCanvasCommentPanel
@@ -5260,6 +5548,73 @@ export function ProjectPlayground({
               setSelectedCommentId(undefined);
             }}
           />
+        ) : null}
+        {canvasFindOpen ? (
+          <aside
+            className="project-canvas-find"
+            role="dialog"
+            aria-label="Find and replace"
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            <header className="project-canvas-find__header">
+              <strong>Find and replace</strong>
+              <IconButton
+                label="Close find and replace"
+                icon={<Icon icon="close" size="sm" />}
+                variant="ghost"
+                size="sm"
+                clickAction={() => setCanvasFindOpen(false)}
+              />
+            </header>
+            <TextInput
+              label="Find"
+              value={canvasFindQuery}
+              onChange={(value) => {
+                setCanvasFindQuery(value);
+                setCanvasFindMatchIndex(0);
+              }}
+              placeholder="Find text on canvas"
+              width="100%"
+              autoFocus
+            />
+            <TextInput
+              label="Replace with"
+              value={canvasReplaceQuery}
+              onChange={setCanvasReplaceQuery}
+              placeholder="Replacement text"
+              width="100%"
+            />
+            <footer className="project-canvas-find__footer">
+              <span role="status">
+                {canvasFindMatchCount > 0
+                  ? `${Math.min(canvasFindMatchIndex + 1, canvasFindMatchCount)} of ${canvasFindMatchCount}`
+                  : canvasFindQuery.trim()
+                    ? "No matches"
+                    : "Enter text to search"}
+              </span>
+              <button
+                type="button"
+                onClick={() => focusCanvasFindMatch(-1)}
+                disabled={canvasFindMatchCount === 0}
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                onClick={() => focusCanvasFindMatch(1)}
+                disabled={canvasFindMatchCount === 0}
+              >
+                Next
+              </button>
+              <button
+                type="button"
+                onClick={replaceAllCanvasTextMatches}
+                disabled={canvasFindMatchCount === 0}
+              >
+                Replace all
+              </button>
+            </footer>
+          </aside>
         ) : null}
         {toolsCatalogOpen && (
           <aside
@@ -5277,44 +5632,46 @@ export function ProjectPlayground({
               width="100%"
               autoFocus
             />
-            {[true, false].map((pinned) => {
-              const items = filteredCanvasToolCatalogItems.filter(
-                (item) => item.pinned === pinned,
-              );
-              if (items.length === 0) return null;
+            {canvasActionSections.map((section) => {
+              if (section.items.length === 0) return null;
               return (
                 <section
-                  key={pinned ? "pinned" : "more"}
+                  key={section.title}
                   className="project-canvas-tools-catalog__section"
                 >
-                  <h3>{pinned ? "Suggestions" : "Canvas tools"}</h3>
+                  <h3>{section.title}</h3>
                   <div className="project-canvas-tools-catalog__list">
-                    {items.map((item) => (
+                    {section.items.map((item) => (
                       <button
-                        key={item.tool}
+                        key={item.id}
                         type="button"
                         className="project-canvas-tools-catalog__item"
-                        onClick={() => activateCanvasTool(item.tool)}
+                        onClick={item.onClick}
+                        disabled={item.disabled}
+                        role={item.checked === undefined ? undefined : "switch"}
+                        aria-checked={item.checked}
                       >
                         <span
-                          className="project-canvas-tools-catalog__icon"
+                          className="project-canvas-tools-catalog__state"
                           aria-hidden="true"
                         >
-                          <ProjectCanvasToolGlyph tool={item.tool} />
+                          {item.checked ? <Icon icon="check" size="sm" /> : null}
                         </span>
                         <span className="project-canvas-tools-catalog__copy">
                           <strong>{item.title}</strong>
-                          <small>{item.description}</small>
                         </span>
+                        <kbd className="project-canvas-tools-catalog__shortcut">
+                          {item.shortcut}
+                        </kbd>
                       </button>
                     ))}
                   </div>
                 </section>
               );
             })}
-            {filteredCanvasToolCatalogItems.length === 0 ? (
+            {filteredCanvasActionCount === 0 ? (
               <p className="project-canvas-tools-catalog__empty">
-                No tools match “{toolsCatalogQuery}”.
+                No actions match “{toolsCatalogQuery}”.
               </p>
             ) : null}
           </aside>

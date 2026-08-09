@@ -337,10 +337,22 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     source,
     /const canvasWidgetsTabs:[\s\S]*?All[\s\S]*?Stickers[\s\S]*?Templates[\s\S]*?Widgets[\s\S]*?Plugins[\s\S]*?More/,
   );
-  assert.match(source, /const projectCanvasToolCatalogItems/);
-  assert.match(source, /tool: "research-frames"/);
-  assert.doesNotMatch(source, /tool: "data"/);
-  assert.match(source, /tool: "templates"/);
+  assert.match(source, /const canvasActionSections = \[/);
+  assert.match(source, /title: "Select all"/);
+  assert.match(source, /title: "Find and replace…"/);
+  assert.match(source, /aria-label="Find and replace"/);
+  assert.match(source, /onClick={replaceAllCanvasTextMatches}/);
+  assert.match(source, /editor\.scrollToContent\(match,/);
+  assert.match(source, /title: "Undo"/);
+  assert.match(source, /"Unlock selection"[\s\S]*"Lock selection"/);
+  assert.match(source, /title: "Align horizontal centers"/);
+  assert.match(source, /title: "Align vertical centers"/);
+  assert.match(source, /title: "Keyboard shortcuts"/);
+  assert.match(source, /title: "Minimize UI"/);
+  assert.match(source, /title: "Show\/Hide UI"/);
+  assert.match(source, /title: "Multiplayer cursors"/);
+  assert.match(source, /captureUpdate: CaptureUpdateAction\.IMMEDIATELY/);
+  assert.match(source, /captureUpdate: CaptureUpdateAction\.NEVER/);
   assert.match(source, /activateCanvasTool\("sticky"\)/);
   assert.match(source, /activateCanvasTool\("document"\)/);
   assert.match(source, /activateCanvasTool\("more"\)/);
@@ -490,6 +502,12 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /tool="comments"/);
   assert.match(source, /customType: "astryx-comment"/);
   assert.match(source, /<ProjectCanvasCommentPin/);
+  assert.match(source, /<ProjectCanvasCommentInbox/);
+  assert.match(
+    source,
+    /commentPlacement && !commentDraftAnchor && !selectedComment/,
+  );
+  assert.match(source, /onSelectThread=\{\(threadId\) =>/);
   assert.match(source, /<ProjectCanvasCommentPanel/);
   assert.match(source, /const deleteSelectedComment = useCallback/);
   assert.match(
@@ -665,7 +683,7 @@ test("gives the infinite canvas the full available viewport", () => {
   );
   assert.match(
     css,
-    /\.project-canvas-tools-catalog\s*\{[^}]*position:\s*absolute;[^}]*top:\s*50%;[^}]*left:\s*50%;[^}]*width:\s*min\(588px,/s,
+    /\.project-canvas-tools-catalog\s*\{[^}]*position:\s*absolute;[^}]*bottom:\s*76px;[^}]*left:\s*50%;[^}]*width:\s*min\(588px,/s,
   );
   // \s+ between the compounds, not a literal space: the formatter wraps long
   // selectors across lines, which is not a change to what they select.
@@ -1753,7 +1771,10 @@ test("promotes the catalog to the canvas toolbelt and names it for what it holds
     playground,
     /onClick=\{\(\) => activateCanvasTool\("screens"\)\}/,
   );
-  assert.match(playground, /tool: "screens",[\s\S]{0,260}pinned: true/);
+  assert.doesNotMatch(
+    playground,
+    /title: "Catalog"[\s\S]{0,260}title: "Sticky notes"/,
+  );
 
   // The rail tool stays named Catalog while the panel speaks to the designer's
   // actual job: finding a useful visual reference.
