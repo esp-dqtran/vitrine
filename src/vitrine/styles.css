@@ -6096,6 +6096,7 @@ body {
 
 .project-playground__sticky-tools,
 .project-playground__section-tool,
+.project-playground__creation-tools,
 .project-playground__astryx-tools {
   width: auto;
   flex: 0 0 auto;
@@ -6129,6 +6130,12 @@ body {
 .project-playground__section-tool {
   order: 1;
   gap: 0;
+}
+
+.project-playground__creation-tools {
+  order: 2;
+  gap: var(--project-canvas-tool-gap, 2px);
+  padding: 0;
 }
 
 .project-playground__section-tool-divider {
@@ -6200,6 +6207,47 @@ body {
     color 120ms ease,
     background-color 120ms ease,
     transform 120ms ease;
+}
+
+.project-playground__table-trigger {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-on-surface, var(--project-canvas-text, #202124));
+  background: transparent;
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease,
+    transform 120ms ease;
+}
+
+.project-playground__table-trigger img {
+  width: 24px;
+  height: 24px;
+}
+
+.project-playground__table-trigger:hover {
+  background: #f2f4f7;
+}
+
+.project-playground__table-trigger[aria-pressed="true"] {
+  color: #fff;
+  background: #9747ff;
+}
+
+.project-playground__table-trigger[aria-pressed="true"] img {
+  filter: invert(1);
+}
+
+.project-playground__table-trigger:focus-visible {
+  outline: 2px solid #0d99ff;
+  outline-offset: 1px;
 }
 
 .project-playground__shapes-trigger {

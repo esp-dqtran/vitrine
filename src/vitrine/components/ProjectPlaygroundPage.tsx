@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
 } from "react";
 import { apiFetch } from "../apiFetch.ts";
 import { createPortal } from "react-dom";
@@ -136,6 +137,7 @@ import figjamDownTriangleIcon from "../assets/figjam-down-triangle.svg";
 import figjamCylinderIcon from "../assets/figjam-cylinder.svg";
 import figjamMindMapIcon from "../assets/figjam-mind-map.svg";
 import figjamSectionToolIcon from "../assets/figjam-section-tool.svg";
+import figjamTableToolIcon from "../assets/figjam-table-tool.svg";
 
 const canvasMediaMimeTypeSet = new Set([
   "image/png",
@@ -709,6 +711,54 @@ function createCanvasCustomShapeElements({
     default:
       return [];
   }
+}
+
+function createCanvasTableElements({
+  x,
+  y,
+  rows = 3,
+  columns = 3,
+}: {
+  x: number;
+  y: number;
+  rows?: number;
+  columns?: number;
+}): ExcalidrawElement[] {
+  const cellWidth = 160;
+  const cellHeight = 64;
+  const tableId = crypto.randomUUID();
+  const groupId = crypto.randomUUID();
+  const left = x - (columns * cellWidth) / 2;
+  const top = y - (rows * cellHeight) / 2;
+
+  return convertToExcalidrawElements(
+    Array.from({ length: rows * columns }, (_, index) => {
+      const row = Math.floor(index / columns);
+      const column = index % columns;
+      return {
+        type: "rectangle",
+        x: left + column * cellWidth,
+        y: top + row * cellHeight,
+        width: cellWidth,
+        height: cellHeight,
+        strokeColor: "#757575",
+        backgroundColor: row === 0 ? "#f3f4f6" : "#ffffff",
+        fillStyle: "solid",
+        strokeWidth: 1,
+        roughness: 0,
+        roundness: null,
+        groupIds: [groupId],
+        customData: {
+          astryxReference: {
+            kind: "table-cell",
+            tableId,
+            row,
+            column,
+          },
+        },
+      } as ElementSkeleton;
+    }),
+  ) as ExcalidrawElement[];
 }
 
 function createStickyNoteElements({
@@ -1745,6 +1795,7 @@ export function ProjectPlayground({
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [researchFramesOpen, setResearchFramesOpen] = useState(false);
   const [researchFrameDrawing, setResearchFrameDrawing] = useState(false);
+  const [tablePlacement, setTablePlacement] = useState(false);
   const [markerDrawing, setMarkerDrawing] = useState(false);
   const [markerMode, setMarkerMode] = useState<CanvasMarkerMode>("marker");
   const [markerStrokeWeight, setMarkerStrokeWeight] =
@@ -1832,6 +1883,7 @@ export function ProjectPlayground({
   const stickyComposerRef = useRef<HTMLDivElement | null>(null);
   const stickyInputRef = useRef<HTMLDivElement | null>(null);
   const canvasTextEditingRef = useRef(false);
+  const tablePlacementRef = useRef(false);
   const canvasCommentsRef = useRef<readonly DesignerCanvasCommentThread[]>([]);
   const activeRef = useRef(true);
   const loadedRef = useRef(false);
@@ -2203,6 +2255,25 @@ export function ProjectPlayground({
     setStickyDraft(undefined);
   }, []);
 
+  const deactivateTableTool = useCallback(() => {
+    tablePlacementRef.current = false;
+    setTablePlacement(false);
+  }, []);
+
+  const handleCanvasToolPointerDownCapture = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      const target = event.target as HTMLElement;
+      const nativeTool = target
+        .closest("label")
+        ?.querySelector('input[data-testid^="toolbar-"]');
+      if (nativeTool) {
+        deactivateStickyTool();
+        deactivateTableTool();
+      }
+    },
+    [deactivateStickyTool, deactivateTableTool],
+  );
+
   const handleCanvasChange = useCallback(
     (
       elements: readonly ExcalidrawElement[],
@@ -2436,7 +2507,12 @@ export function ProjectPlayground({
       }
       persistEmbeddedFiles(files);
     },
-    [deactivateStickyTool, markerMode, persistEmbeddedFiles, queueSnapshot],
+    [
+      deactivateStickyTool,
+      markerMode,
+      persistEmbeddedFiles,
+      queueSnapshot,
+    ],
   );
 
   useEffect(() => {
@@ -2900,6 +2976,7 @@ export function ProjectPlayground({
     setStickyPickerOpen(false);
     setStickyDraft(undefined);
     setStickyPlacement(undefined);
+    deactivateTableTool();
     setShapePlacement(undefined);
     setDocumentPlacement(false);
     setScreensOpen(false);
@@ -2907,7 +2984,7 @@ export function ProjectPlayground({
     setReferencesOpen(false);
     editor.setActiveTool({ type: "frame" });
     editor.setCursor("crosshair");
-  }, []);
+  }, [deactivateTableTool]);
 
   const stopStickyPlacement = useCallback(() => {
     deactivateStickyTool();
@@ -2915,6 +2992,13 @@ export function ProjectPlayground({
     editor?.resetCursor();
     editor?.setActiveTool({ type: "selection" });
   }, [deactivateStickyTool]);
+
+  const stopTablePlacement = useCallback(() => {
+    deactivateTableTool();
+    const editor = editorRef.current;
+    editor?.resetCursor();
+    editor?.setActiveTool({ type: "selection" });
+  }, [deactivateTableTool]);
 
   const stopDocumentPlacement = useCallback(() => {
     setDocumentPlacement(false);
@@ -2941,6 +3025,7 @@ export function ProjectPlayground({
     setCommentDraft("");
     setSelectedCommentId(undefined);
     setShapePlacement(undefined);
+    deactivateTableTool();
     setResearchFramesOpen(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
@@ -2953,6 +3038,7 @@ export function ProjectPlayground({
   }, [
     commentPlacement,
     stopCommentPlacement,
+    deactivateTableTool,
     stopDocumentPlacement,
     stopStickyPlacement,
   ]);
@@ -2964,6 +3050,7 @@ export function ProjectPlayground({
     setStickyPickerOpen(false);
     setStickyDraft(undefined);
     setShapePlacement(undefined);
+    deactivateTableTool();
     stopStickyPlacement();
     setScreensOpen(false);
     setTemplatesOpen(false);
@@ -2971,7 +3058,7 @@ export function ProjectPlayground({
     const editor = editorRef.current;
     editor?.setActiveTool({ type: "custom", customType: "astryx-document" });
     editor?.setCursor("crosshair");
-  }, [stopCommentPlacement, stopStickyPlacement]);
+  }, [deactivateTableTool, stopCommentPlacement, stopStickyPlacement]);
 
   const insertCanvasDocumentAt = useCallback((x: number, y: number) => {
     const editor = editorRef.current;
@@ -3035,6 +3122,78 @@ export function ProjectPlayground({
     [shapeColor],
   );
 
+  const insertCanvasTableAt = useCallback((x: number, y: number) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const created = createCanvasTableElements({ x, y });
+    editor.updateScene({
+      elements: [...editor.getSceneElements(), ...created],
+      appState: {
+        selectedElementIds: Object.fromEntries(
+          created.map((element) => [element.id, true]),
+        ),
+      },
+    });
+  }, []);
+
+  const handleCanvasPlacementPointerUp = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!tablePlacementRef.current || event.button !== 0) return;
+      const target = event.target as HTMLElement;
+      if (!target.closest(".excalidraw__canvas")) return;
+
+      const editor = editorRef.current;
+      const root = canvasRootRef.current;
+      if (!editor || !root) return;
+      const appState = editor.getAppState();
+      const zoom = appState.zoom.value;
+      const rect = root.getBoundingClientRect();
+      const placement = {
+        x: (event.clientX - rect.left) / zoom - appState.scrollX,
+        y: (event.clientY - rect.top) / zoom - appState.scrollY,
+      };
+
+      // Excalidraw finalizes its own click selection after the DOM pointer-up.
+      // Add the table on the next frame so that reconciliation cannot restore
+      // the pre-click scene over the newly created cells.
+      window.requestAnimationFrame(() => {
+        if (!tablePlacementRef.current) return;
+        insertCanvasTableAt(placement.x, placement.y);
+        stopTablePlacement();
+      });
+    },
+    [insertCanvasTableAt, stopTablePlacement],
+  );
+
+  const toggleTableTool = useCallback(() => {
+    if (tablePlacement) {
+      stopTablePlacement();
+      return;
+    }
+    stopStickyPlacement();
+    stopCommentPlacement();
+    setDocumentPlacement(false);
+    setShapePickerOpen(false);
+    setShapeLibraryOpen(false);
+    setShapePlacement(undefined);
+    setMarkerDrawing(false);
+    setResearchFrameDrawing(false);
+    setScreensOpen(false);
+    setTemplatesOpen(false);
+    setReferencesOpen(false);
+    setToolsCatalogOpen(false);
+    tablePlacementRef.current = true;
+    setTablePlacement(true);
+    const editor = editorRef.current;
+    editor?.setActiveTool({ type: "custom", customType: "astryx-table" });
+    editor?.setCursor("crosshair");
+  }, [
+    stopCommentPlacement,
+    stopStickyPlacement,
+    stopTablePlacement,
+    tablePlacement,
+  ]);
+
   const armStickyPlacement = useCallback(
     (
       color: ProjectStickyNoteColor,
@@ -3051,6 +3210,7 @@ export function ProjectPlayground({
       setShapeColorPickerOpen(false);
       setMarkerDrawing(false);
       setResearchFrameDrawing(false);
+      deactivateTableTool();
       setShapePlacement(undefined);
       setDocumentPlacement(false);
       setStickyPickerOpen(keepPickerOpen);
@@ -3068,7 +3228,7 @@ export function ProjectPlayground({
       });
       editor?.setCursor(stickyNotePlacementCursor(color, mode));
     },
-    [stopCommentPlacement],
+    [deactivateTableTool, stopCommentPlacement],
   );
 
   const toggleStickyNoteTool = useCallback(() => {
@@ -3099,7 +3259,8 @@ export function ProjectPlayground({
     deactivateStickyTool();
     setDocumentPlacement(false);
     setCommentPlacement(false);
-  }, [deactivateStickyTool]);
+    deactivateTableTool();
+  }, [deactivateStickyTool, deactivateTableTool]);
 
   const selectCanvasShape = useCallback(
     (shape: CanvasShapeOption) => {
@@ -3133,8 +3294,9 @@ export function ProjectPlayground({
       deactivateStickyTool();
       setDocumentPlacement(false);
       setCommentPlacement(false);
+      deactivateTableTool();
     },
-    [deactivateStickyTool, shapeColor],
+    [deactivateStickyTool, deactivateTableTool, shapeColor],
   );
 
   const selectCanvasShapeColor = useCallback((color: string) => {
@@ -3156,6 +3318,7 @@ export function ProjectPlayground({
       setMarkerDrawing(true);
       setShapePlacement(undefined);
       deactivateStickyTool();
+      deactivateTableTool();
       if (!editor) return;
       if (mode === "eraser") {
         editor.setActiveTool({ type: "eraser" });
@@ -3175,7 +3338,13 @@ export function ProjectPlayground({
       });
       editor.setActiveTool({ type: "freedraw" });
     },
-    [deactivateStickyTool, highlighterColor, markerColor, markerStrokeWeight],
+    [
+      deactivateStickyTool,
+      deactivateTableTool,
+      highlighterColor,
+      markerColor,
+      markerStrokeWeight,
+    ],
   );
 
   const selectMarkerStrokeWeight = useCallback(
@@ -3577,6 +3746,7 @@ export function ProjectPlayground({
         setCommentDraftAnchor(undefined);
         setSelectedCommentId(undefined);
         setStickyPickerOpen(false);
+        deactivateTableTool();
         cancelStickyDraft();
         stopStickyPlacement();
       }
@@ -3586,6 +3756,7 @@ export function ProjectPlayground({
       window.removeEventListener("keydown", handleStickyShortcut, true);
   }, [
     cancelStickyDraft,
+    deactivateTableTool,
     drawResearchFrame,
     stopCommentPlacement,
     stopDocumentPlacement,
@@ -4131,6 +4302,8 @@ export function ProjectPlayground({
       >
         <div
           ref={canvasRootRef}
+          onPointerDownCapture={handleCanvasToolPointerDownCapture}
+          onPointerUp={handleCanvasPlacementPointerUp}
           data-marker-mode={markerDrawing ? markerMode : undefined}
           data-marker-color-transition={markerColorTransition ? "b" : "a"}
           className={`project-playground__canvas${
@@ -4185,7 +4358,7 @@ export function ProjectPlayground({
             commentPlacement
               ? " project-playground__canvas--comment-placement"
               : ""
-          }`}
+          }${tablePlacement ? " project-playground__canvas--table-placement" : ""}`}
           style={
             {
               "--canvas-marker-tool-icon": `url("${coloredFigJamFreehandToolIcon("marker", markerColor)}")`,
@@ -4302,6 +4475,23 @@ export function ProjectPlayground({
                   onClick={drawResearchFrame}
                 >
                   <img src={figjamSectionToolIcon} alt="" aria-hidden="true" />
+                </button>
+              </div>
+              <div
+                className="project-playground__creation-tools"
+                role="group"
+                aria-label="Creation tools"
+                onPointerDown={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  className="project-playground__table-trigger"
+                  aria-label="Table"
+                  aria-pressed={tablePlacement}
+                  title="Table"
+                  onClick={toggleTableTool}
+                >
+                  <img src={figjamTableToolIcon} alt="" aria-hidden="true" />
                 </button>
               </div>
               <div

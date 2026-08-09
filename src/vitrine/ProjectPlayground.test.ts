@@ -285,6 +285,26 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   );
   assert.match(
     source,
+    /import figjamTableToolIcon from "\.\.\/assets\/figjam-table-tool\.svg"/,
+  );
+  assert.match(source, /className="project-playground__creation-tools"/);
+  assert.match(
+    source,
+    /aria-label="Table"[\s\S]*?aria-pressed=\{tablePlacement\}[\s\S]*?onClick=\{toggleTableTool\}/,
+  );
+  assert.match(source, /function createCanvasTableElements\(/);
+  assert.match(source, /customType: "astryx-table"/);
+  assert.match(
+    source,
+    /const handleCanvasPlacementPointerUp = useCallback\([\s\S]*?if \(!tablePlacementRef\.current[\s\S]*?insertCanvasTableAt\([\s\S]*?stopTablePlacement\(\);/,
+  );
+  assert.match(source, /onPointerUp=\{handleCanvasPlacementPointerUp\}/);
+  assert.match(
+    source,
+    /if \(nativeTool\) \{[\s\S]*?deactivateStickyTool\(\);[\s\S]*?deactivateTableTool\(\);/,
+  );
+  assert.match(
+    source,
     /event\.shiftKey && event\.key\.toLowerCase\(\) === "s"[\s\S]*?drawResearchFrame\(\)/,
   );
   assert.match(
@@ -618,6 +638,10 @@ test("gives the infinite canvas the full available viewport", () => {
     /\.project-playground__screens-trigger,[\s\S]*?\.project-playground__more-tools-trigger\s*\{[^}]*width:\s*var\(--project-canvas-tool-size[^}]*height:\s*var\(--project-canvas-tool-size/s,
   );
   assert.match(css, /\.project-playground__section-tool\s*\{[^}]*order:\s*1;/s);
+  assert.match(
+    css,
+    /\.project-playground__creation-tools\s*\{[^}]*order:\s*2;/s,
+  );
   assert.match(css, /toolbar-image"\]\)\s*\{[^}]*order:\s*3;/s);
   assert.match(
     css,
@@ -1747,7 +1771,13 @@ test("places catalog records as composed cards, not a labelled rectangle", () =>
   assert.match(source, /function createCatalogCardElements\(/);
   assert.match(source, /const groupId = `astryx-card-/);
   // Every part shares the group, so the card moves and deletes as one object.
-  assert.equal((source.match(/groupIds: \[groupId\]/g) ?? []).length, 5);
+  const createCatalogCardSource =
+    /function createCatalogCardElements\([\s\S]*?\n}\n\nfunction/.exec(source)?.[0] ??
+    "";
+  assert.equal(
+    (createCatalogCardSource.match(/groupIds: \[groupId\]/g) ?? []).length,
+    5,
+  );
   // The container keeps the reference, so selection and "open source" still work.
   assert.match(source, /customData: \{ astryxReference: reference \}/);
 
