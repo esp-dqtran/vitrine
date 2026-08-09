@@ -106,6 +106,7 @@ import {
   projectStickyNoteFontFamilies,
   ProjectStickyNoteMetadata,
   ProjectObjectToolbar,
+  ProjectSelectionToolbar,
   type ProjectStickyNoteCollaboration,
   type ProjectStickyNoteFormat,
 } from "./ProjectStickyNoteToolbar.tsx";
@@ -276,6 +277,22 @@ interface CanvasShapeOption {
   glyphFill?: "rectangle" | "rounded-rectangle" | "ellipse";
   arrowType?: "round" | "sharp" | "elbow";
   roundness?: "round" | "sharp";
+}
+
+type CanvasSelectableShapeType = "rectangle" | "ellipse" | "diamond";
+type CanvasShapeLineStyle = "solid" | "dashed" | "dotted";
+
+interface CanvasShapeReference {
+  elementId: string;
+  type: CanvasSelectableShapeType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fillColor: string;
+  strokeColor: string;
+  strokeStyle: CanvasShapeLineStyle;
+  opacity: number;
 }
 
 interface CanvasMarkerColor {
@@ -1763,6 +1780,56 @@ function withCanvasElementUpdate(
   } as ExcalidrawElement;
 }
 
+function canvasShapeReferenceForElement(
+  element: ExcalidrawElement,
+): CanvasShapeReference | undefined {
+  if (
+    element.type !== "rectangle" &&
+    element.type !== "ellipse" &&
+    element.type !== "diamond"
+  )
+    return undefined;
+  if (stickyNoteReferenceForElement(element)) return undefined;
+  const customData = element.customData as Record<string, unknown> | undefined;
+  if (customData?.astryxReference) return undefined;
+  const shape = element as ExcalidrawElement & {
+    backgroundColor: string;
+    strokeColor: string;
+    strokeStyle: CanvasShapeLineStyle;
+    opacity: number;
+  };
+  return {
+    elementId: shape.id,
+    type: shape.type,
+    x: shape.x,
+    y: shape.y,
+    width: shape.width,
+    height: shape.height,
+    fillColor: shape.backgroundColor,
+    strokeColor: shape.strokeColor,
+    strokeStyle: shape.strokeStyle,
+    opacity: shape.opacity,
+  };
+}
+
+function canvasShapeReferencesEqual(
+  left?: CanvasShapeReference,
+  right?: CanvasShapeReference,
+) {
+  return (
+    left?.elementId === right?.elementId &&
+    left?.type === right?.type &&
+    left?.x === right?.x &&
+    left?.y === right?.y &&
+    left?.width === right?.width &&
+    left?.height === right?.height &&
+    left?.fillColor === right?.fillColor &&
+    left?.strokeColor === right?.strokeColor &&
+    left?.strokeStyle === right?.strokeStyle &&
+    left?.opacity === right?.opacity
+  );
+}
+
 function documentReferenceForElement(
   element: ExcalidrawElement,
 ): AstryxCanvasDocumentReference | undefined {
@@ -2025,6 +2092,11 @@ export function ProjectPlayground({
     useState<CanvasTextReference>();
   const [selectedStickyNote, setSelectedStickyNote] =
     useState<AstryxStickyNoteReference>();
+  const [selectedCanvasShape, setSelectedCanvasShape] =
+    useState<CanvasShapeReference>();
+  const [selectedShapePanel, setSelectedShapePanel] = useState<
+    "shape" | "fill" | "line"
+  >();
   const [stickyNotes, setStickyNotes] = useState<
     readonly AstryxStickyNoteReference[]
   >([]);
@@ -2657,6 +2729,22 @@ export function ProjectPlayground({
         stickyNoteReferencesEqual(current, selectedSticky)
           ? current
           : selectedSticky,
+      );
+      const selectedShapes = elements
+        .filter(
+          (element) =>
+            !element.isDeleted && appState.selectedElementIds[element.id],
+        )
+        .map(canvasShapeReferenceForElement)
+        .filter((shape): shape is CanvasShapeReference => Boolean(shape));
+      const selectedShape =
+        selectedShapes.length === 1 && !selectedSticky
+          ? selectedShapes[0]
+          : undefined;
+      setSelectedCanvasShape((current) =>
+        canvasShapeReferencesEqual(current, selectedShape)
+          ? current
+          : selectedShape,
       );
       const nextStickyNotes = elements
         .map(stickyNoteReferenceForElement)
@@ -4247,10 +4335,7 @@ export function ProjectPlayground({
             originalText?: string;
           };
           const nextText = bulletedListChanged
-            ? canvasTextWithBulletedList(
-                textElement.text,
-                format.bulletedList,
-              )
+            ? canvasTextWithBulletedList(textElement.text, format.bulletedList)
             : textElement.text;
           return withCanvasElementUpdate(element, {
             fontSize: format.fontSize,
@@ -4293,6 +4378,75 @@ export function ProjectPlayground({
       "--project-object-toolbar-top": `${Math.max(76, textTop - 80)}px`,
     } as CSSProperties;
   }, [canvasViewport, selectedCanvasText]);
+
+  const canvasShapeToolbarStyle = useMemo(() => {
+    if (!selectedCanvasShape) return undefined;
+    const { scrollX, scrollY, zoom } = canvasViewport;
+    const centreX =
+      (selectedCanvasShape.x + selectedCanvasShape.width / 2 + scrollX) * zoom;
+    const shapeTop = (selectedCanvasShape.y + scrollY) * zoom;
+    return {
+      "--project-object-toolbar-anchor-x": `${centreX}px`,
+      "--project-object-toolbar-top": `${Math.max(76, shapeTop - 64)}px`,
+      "--project-object-toolbar-half-width": "92px",
+    } as CSSProperties;
+  }, [canvasViewport, selectedCanvasShape]);
+
+  useEffect(() => {
+    setSelectedShapePanel(undefined);
+  }, [selectedCanvasShape?.elementId]);
+
+  const updateSelectedCanvasShape = useCallback(
+    (patch: {
+      type?: CanvasSelectableShapeType;
+      fillColor?: string;
+      strokeColor?: string;
+      strokeStyle?: CanvasShapeLineStyle;
+      opacity?: number;
+    }) => {
+      const editor = editorRef.current;
+      const shape = selectedCanvasShape;
+      if (!editor || !shape) return;
+      const elements = editor.getSceneElements().map((element) =>
+        element.id === shape.elementId
+          ? withCanvasElementUpdate(element, {
+              ...(patch.type ? { type: patch.type } : {}),
+              ...(patch.fillColor !== undefined
+                ? { backgroundColor: patch.fillColor, fillStyle: "solid" }
+                : {}),
+              ...(patch.strokeColor !== undefined
+                ? { strokeColor: patch.strokeColor }
+                : {}),
+              ...(patch.strokeStyle !== undefined
+                ? { strokeStyle: patch.strokeStyle }
+                : {}),
+              ...(patch.opacity !== undefined
+                ? { opacity: patch.opacity }
+                : {}),
+              roughness: 0,
+            } as Partial<ExcalidrawElement>)
+          : element,
+      );
+      editor.updateScene({
+        elements,
+        appState: {
+          ...(patch.fillColor !== undefined
+            ? { currentItemBackgroundColor: patch.fillColor }
+            : {}),
+          ...(patch.strokeColor !== undefined
+            ? { currentItemStrokeColor: patch.strokeColor }
+            : {}),
+          ...(patch.strokeStyle !== undefined
+            ? { currentItemStrokeStyle: patch.strokeStyle }
+            : {}),
+          ...(patch.opacity !== undefined
+            ? { currentItemOpacity: patch.opacity }
+            : {}),
+        },
+      });
+    },
+    [selectedCanvasShape],
+  );
 
   const updateSelectedCanvasText = useCallback(
     (patch: {
@@ -4574,6 +4728,20 @@ export function ProjectPlayground({
     stickyPickerOpen ||
     Boolean(commentDraftAnchor) ||
     Boolean(selectedComment);
+  const selectedShapeOption = selectedCanvasShape
+    ? canvasShapeOptions.find(
+        (shape) =>
+          shape.id === selectedCanvasShape.type &&
+          shape.tool === selectedCanvasShape.type,
+      )
+    : undefined;
+  const selectedShapeDisplayColor = selectedCanvasShape
+    ? selectedCanvasShape.fillColor === "transparent"
+      ? selectedCanvasShape.strokeColor === "transparent"
+        ? "#1e1e1e"
+        : selectedCanvasShape.strokeColor
+      : selectedCanvasShape.fillColor
+    : "#1e1e1e";
 
   return (
     <main className="vitrine-page research-project-page research-project-page--playground">
@@ -4737,6 +4905,10 @@ export function ProjectPlayground({
           }${
             selectedStickyNote
               ? " project-playground__canvas--sticky-selected"
+              : ""
+          }${
+            selectedCanvasShape
+              ? " project-playground__canvas--shape-selected"
               : ""
           }${
             selectedResearchFrame
@@ -5640,6 +5812,283 @@ export function ProjectPlayground({
             onFormatChange={(format) => updateSelectedCanvasText({ format })}
           />
         )}
+        {selectedCanvasShape &&
+        selectedShapeOption &&
+        !selectedStickyNote &&
+        !selectedCanvasText &&
+        !canvasReadOnly ? (
+          <ProjectSelectionToolbar
+            style={canvasShapeToolbarStyle}
+            className="project-shape-object-toolbar"
+          >
+            <div className="project-object-toolbar__control project-shape-object-toolbar__shape-control">
+              <button
+                type="button"
+                className="project-shape-object-toolbar__shape-trigger"
+                aria-label={`Shape, ${selectedShapeOption.label.toLowerCase()}`}
+                aria-expanded={selectedShapePanel === "shape"}
+                onClick={() =>
+                  setSelectedShapePanel((panel) =>
+                    panel === "shape" ? undefined : "shape",
+                  )
+                }
+              >
+                <ShapeLibraryGlyph shape={selectedShapeOption} />
+                <ChevronSmallDownIcon aria-hidden="true" />
+              </button>
+              {selectedShapePanel === "shape" ? (
+                <div
+                  className="project-shape-object-toolbar__panel project-shape-object-toolbar__shape-panel"
+                  role="dialog"
+                  aria-label="Change shape"
+                >
+                  {canvasShapeOptions
+                    .filter(
+                      (shape) =>
+                        shape.id === "rectangle" ||
+                        shape.id === "ellipse" ||
+                        shape.id === "diamond",
+                    )
+                    .map((shape) => (
+                      <button
+                        key={shape.id}
+                        type="button"
+                        aria-label={shape.label}
+                        aria-pressed={selectedCanvasShape.type === shape.id}
+                        onClick={() => {
+                          updateSelectedCanvasShape({
+                            type: shape.id as CanvasSelectableShapeType,
+                          });
+                          setActiveShapeOptionId(shape.id);
+                          setSelectedShapePanel(undefined);
+                        }}
+                      >
+                        <ShapeLibraryGlyph shape={shape} />
+                      </button>
+                    ))}
+                </div>
+              ) : null}
+            </div>
+            <span
+              className="project-object-toolbar__divider"
+              aria-hidden="true"
+            />
+            <div className="project-object-toolbar__control project-shape-object-toolbar__fill-control">
+              <button
+                type="button"
+                className="project-object-toolbar__color-trigger"
+                aria-label="Change color"
+                aria-expanded={selectedShapePanel === "fill"}
+                onClick={() =>
+                  setSelectedShapePanel((panel) =>
+                    panel === "fill" ? undefined : "fill",
+                  )
+                }
+              >
+                <span
+                  className="project-object-toolbar__color-dot"
+                  style={
+                    {
+                      "--object-color": selectedShapeDisplayColor,
+                    } as CSSProperties
+                  }
+                />
+                <ChevronSmallDownIcon aria-hidden="true" />
+              </button>
+              {selectedShapePanel === "fill" ? (
+                <div
+                  className="project-shape-object-toolbar__panel project-shape-object-toolbar__color-panel"
+                  role="dialog"
+                  aria-label="Shape fill"
+                >
+                  <div
+                    className="project-shape-object-toolbar__modes"
+                    role="radiogroup"
+                    aria-label="Fill style"
+                  >
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={
+                        selectedCanvasShape.fillColor !== "transparent" &&
+                        selectedCanvasShape.opacity === 100
+                      }
+                      onClick={() =>
+                        updateSelectedCanvasShape({
+                          fillColor: selectedShapeDisplayColor,
+                          opacity: 100,
+                        })
+                      }
+                    >
+                      Fill
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={
+                        selectedCanvasShape.fillColor !== "transparent" &&
+                        selectedCanvasShape.opacity < 100
+                      }
+                      onClick={() =>
+                        updateSelectedCanvasShape({
+                          fillColor: selectedShapeDisplayColor,
+                          opacity: 50,
+                        })
+                      }
+                    >
+                      Transparent
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={
+                        selectedCanvasShape.fillColor === "transparent"
+                      }
+                      onClick={() =>
+                        updateSelectedCanvasShape({
+                          fillColor: "transparent",
+                          opacity: 100,
+                        })
+                      }
+                    >
+                      No fill
+                    </button>
+                  </div>
+                  <div className="project-shape-object-toolbar__swatches">
+                    {canvasShapeColors.map((color) => (
+                      <button
+                        key={color.value}
+                        type="button"
+                        aria-label={`Use ${color.label} fill`}
+                        aria-pressed={
+                          selectedCanvasShape.fillColor === color.value
+                        }
+                        style={
+                          { "--shape-color": color.value } as CSSProperties
+                        }
+                        onClick={() => {
+                          updateSelectedCanvasShape({
+                            fillColor: color.value,
+                            opacity: 100,
+                          });
+                          setSelectedShapePanel(undefined);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+            <div className="project-object-toolbar__control project-shape-object-toolbar__line-control">
+              <button
+                type="button"
+                className="project-shape-object-toolbar__line-trigger"
+                aria-label="Line style"
+                aria-expanded={selectedShapePanel === "line"}
+                onClick={() =>
+                  setSelectedShapePanel((panel) =>
+                    panel === "line" ? undefined : "line",
+                  )
+                }
+              >
+                <img
+                  src={figjamConnectorNoEndpointsIcon}
+                  alt=""
+                  aria-hidden="true"
+                />
+                <ChevronSmallDownIcon aria-hidden="true" />
+              </button>
+              {selectedShapePanel === "line" ? (
+                <div
+                  className="project-shape-object-toolbar__panel project-shape-object-toolbar__line-panel"
+                  role="dialog"
+                  aria-label="Line style"
+                >
+                  <div
+                    className="project-shape-object-toolbar__modes"
+                    role="radiogroup"
+                    aria-label="Stroke style"
+                  >
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={
+                        selectedCanvasShape.strokeColor !== "transparent" &&
+                        selectedCanvasShape.strokeStyle === "solid"
+                      }
+                      onClick={() =>
+                        updateSelectedCanvasShape({
+                          strokeColor:
+                            selectedCanvasShape.strokeColor === "transparent"
+                              ? selectedShapeDisplayColor
+                              : selectedCanvasShape.strokeColor,
+                          strokeStyle: "solid",
+                        })
+                      }
+                    >
+                      Solid
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={
+                        selectedCanvasShape.strokeColor !== "transparent" &&
+                        selectedCanvasShape.strokeStyle === "dashed"
+                      }
+                      onClick={() =>
+                        updateSelectedCanvasShape({
+                          strokeColor:
+                            selectedCanvasShape.strokeColor === "transparent"
+                              ? selectedShapeDisplayColor
+                              : selectedCanvasShape.strokeColor,
+                          strokeStyle: "dashed",
+                        })
+                      }
+                    >
+                      Dashed
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={
+                        selectedCanvasShape.strokeColor === "transparent"
+                      }
+                      onClick={() =>
+                        updateSelectedCanvasShape({
+                          strokeColor: "transparent",
+                        })
+                      }
+                    >
+                      None
+                    </button>
+                  </div>
+                  <div className="project-shape-object-toolbar__swatches">
+                    {canvasShapeColors.map((color) => (
+                      <button
+                        key={color.value}
+                        type="button"
+                        aria-label={`Use ${color.label} stroke`}
+                        aria-pressed={
+                          selectedCanvasShape.strokeColor === color.value
+                        }
+                        style={
+                          { "--shape-color": color.value } as CSSProperties
+                        }
+                        onClick={() => {
+                          updateSelectedCanvasShape({
+                            strokeColor: color.value,
+                            strokeStyle: "solid",
+                          });
+                          setSelectedShapePanel(undefined);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </ProjectSelectionToolbar>
+        ) : null}
         {stickyNotes.map((note) => (
           <ProjectStickyNoteMetadata
             key={note.noteId}

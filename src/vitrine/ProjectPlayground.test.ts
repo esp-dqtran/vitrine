@@ -1071,8 +1071,8 @@ test("gives a selected sticky note its own formatting toolbar", () => {
   assert.match(toolbarSource, /ariaLabel = "Selection Properties Menu"/);
   const controlOrder = [
     "project-object-toolbar__color-control",
-    'ariaLabel={`Typeface, ${typefaceLabel}`}',
-    'ariaLabel={`Font size, ${sizeLabel.toLowerCase()}`}',
+    "ariaLabel={`Typeface, ${typefaceLabel}`}",
+    "ariaLabel={`Font size, ${sizeLabel.toLowerCase()}`}",
     'aria-label="Bold"',
     'aria-label="Strikethrough"',
     'aria-label={format.link ? "Edit link" : "Create link"}',
@@ -1080,7 +1080,10 @@ test("gives a selected sticky note its own formatting toolbar", () => {
     'aria-label="Show/hide author"',
   ].map((needle) => toolbarSource.indexOf(needle));
   assert.ok(controlOrder.every((index) => index >= 0));
-  assert.deepEqual(controlOrder, [...controlOrder].sort((a, b) => a - b));
+  assert.deepEqual(
+    controlOrder,
+    [...controlOrder].sort((a, b) => a - b),
+  );
   assert.doesNotMatch(toolbarSource, /More sticky note options/);
   assert.match(toolbarSource, /aria-pressed=\{format\.bold\}/);
   assert.match(toolbarSource, /aria-pressed=\{format\.strikethrough\}/);
@@ -1092,15 +1095,30 @@ test("gives a selected sticky note its own formatting toolbar", () => {
     css,
     /\.project-object-toolbar\s*\{[\s\S]*height:\s*40px;[\s\S]*border-radius:\s*13px;[\s\S]*background:\s*#1e1e1e;/,
   );
-  assert.match(css, /\.project-object-toolbar__color-trigger\s*\{[\s\S]*width:\s*54px;/);
-  assert.match(css, /\.project-object-toolbar__typeface-trigger\s*\{[\s\S]*width:\s*56px/);
-  assert.match(css, /\.project-object-toolbar__size-trigger\s*\{[\s\S]*width:\s*144px/);
-  assert.match(css, /\.project-object-toolbar__action\s*\{[\s\S]*width:\s*32px/);
+  assert.match(
+    css,
+    /\.project-object-toolbar__color-trigger\s*\{[\s\S]*width:\s*54px;/,
+  );
+  assert.match(
+    css,
+    /\.project-object-toolbar__typeface-trigger\s*\{[\s\S]*width:\s*56px/,
+  );
+  assert.match(
+    css,
+    /\.project-object-toolbar__size-trigger\s*\{[\s\S]*width:\s*144px/,
+  );
+  assert.match(
+    css,
+    /\.project-object-toolbar__action\s*\{[\s\S]*width:\s*32px/,
+  );
   assert.match(playgroundSource, /canvasTextWithBulletedList/);
   assert.match(playgroundSource, /astryxTextFormat: format/);
   assert.match(playgroundSource, /noteTop - 80/);
   assert.match(playgroundSource, /textTop - 80/);
-  assert.match(playgroundSource, /stickyPlacementRef\.current = \{ color, mode \}/);
+  assert.match(
+    playgroundSource,
+    /stickyPlacementRef\.current = \{ color, mode \}/,
+  );
   assert.match(
     playgroundSource,
     /stopStickyPlacement\(\);\s*setStickyDraft\(draft\);/,
@@ -1132,6 +1150,48 @@ test("deactivates Sticky Notes when another canvas tool becomes active", () => {
   assert.match(
     source,
     /const selectCanvasShape = useCallback[\s\S]*?deactivateStickyTool\(\);/,
+  );
+});
+
+test("shares the compact selection toolbar with basic shapes", () => {
+  const playgroundSource = readFileSync(
+    new URL("./components/ProjectPlaygroundPage.tsx", import.meta.url),
+    "utf8",
+  );
+  const toolbarSource = readFileSync(
+    new URL("./components/ProjectStickyNoteToolbar.tsx", import.meta.url),
+    "utf8",
+  );
+  const css = readCss("./styles.css");
+
+  assert.match(toolbarSource, /export function ProjectSelectionToolbar/);
+  assert.match(toolbarSource, /<ProjectSelectionToolbar style=\{style\}/);
+  assert.match(
+    playgroundSource,
+    /const \[selectedCanvasShape, setSelectedCanvasShape\]/,
+  );
+  assert.match(playgroundSource, /canvasShapeReferenceForElement/);
+  assert.match(
+    playgroundSource,
+    /<ProjectSelectionToolbar[\s\S]*project-shape-object-toolbar/,
+  );
+  assert.match(
+    playgroundSource,
+    /aria-label=\{`Shape, \$\{selectedShapeOption\.label\.toLowerCase\(\)\}`\}/,
+  );
+  assert.match(playgroundSource, /aria-label="Change color"/);
+  assert.match(playgroundSource, /aria-label="Line style"/);
+  assert.match(playgroundSource, /Fill[\s\S]*Transparent[\s\S]*No fill/);
+  assert.match(playgroundSource, /Solid[\s\S]*Dashed[\s\S]*None/);
+  assert.match(playgroundSource, /updateSelectedCanvasShape/);
+  assert.match(playgroundSource, /project-playground__canvas--shape-selected/);
+  assert.match(
+    css,
+    /\.project-shape-object-toolbar__shape-trigger[\s\S]*width:\s*56px/,
+  );
+  assert.match(
+    css,
+    /\.project-playground__canvas--shape-selected[\s\S]*\.selected-shape-actions[\s\S]*display:\s*none !important/,
   );
 });
 

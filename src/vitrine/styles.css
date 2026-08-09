@@ -8338,9 +8338,9 @@ body {
   z-index: 655;
   top: var(--project-object-toolbar-top, 76px);
   left: clamp(
-    241px,
+    var(--project-object-toolbar-half-width, 241px),
     var(--project-object-toolbar-anchor-x, 50%),
-    calc(100vw - 241px)
+    calc(100vw - var(--project-object-toolbar-half-width, 241px))
   );
   width: max-content;
   max-width: calc(100vw - 24px);
@@ -8419,8 +8419,14 @@ body {
   width: 56px !important;
   min-width: 56px !important;
   justify-content: space-between !important;
-  padding: 0 8px !important;
+  padding: 0 6px !important;
   font-size: 14px !important;
+}
+
+.project-object-toolbar__typeface-trigger > span:first-child {
+  flex: 0 0 auto;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .project-object-toolbar__size-trigger {
@@ -8543,6 +8549,146 @@ body {
   background: #9747ff !important;
 }
 
+.project-shape-object-toolbar__shape-trigger,
+.project-shape-object-toolbar__line-trigger {
+  width: 56px;
+  min-width: 56px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  appearance: none;
+  padding: 0;
+  border-radius: 5px !important;
+  cursor: pointer;
+}
+
+.project-shape-object-toolbar__shape-trigger:hover,
+.project-shape-object-toolbar__line-trigger:hover {
+  background: rgb(255 255 255 / 12%) !important;
+}
+
+.project-shape-object-toolbar__shape-trigger .project-canvas-shape-source-icon,
+.project-shape-object-toolbar__line-trigger > img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.project-shape-object-toolbar__shape-trigger > svg,
+.project-shape-object-toolbar__line-trigger > svg {
+  width: 12px;
+  height: 12px;
+}
+
+.project-shape-object-toolbar__panel {
+  position: absolute;
+  z-index: 656;
+  top: 48px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 13px;
+  color: #fff;
+  background: #1e1e1e;
+  box-shadow:
+    0 0 0.5px rgb(0 0 0 / 18%),
+    0 10px 16px rgb(0 0 0 / 16%),
+    0 2px 5px rgb(0 0 0 / 20%);
+}
+
+.project-shape-object-toolbar__shape-panel {
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 40px);
+  gap: 4px;
+  padding: 6px;
+}
+
+.project-shape-object-toolbar__shape-panel button {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  appearance: none;
+  padding: 0;
+  border-radius: 7px !important;
+  cursor: pointer;
+}
+
+.project-shape-object-toolbar__shape-panel button:hover {
+  background: rgb(255 255 255 / 12%) !important;
+}
+
+.project-shape-object-toolbar__shape-panel button[aria-pressed="true"],
+.project-shape-object-toolbar__modes button[aria-checked="true"] {
+  background: #9747ff !important;
+}
+
+.project-shape-object-toolbar__shape-panel .project-canvas-shape-source-icon {
+  width: 24px;
+  height: 24px;
+  filter: brightness(0) invert(1);
+}
+
+.project-shape-object-toolbar__color-panel,
+.project-shape-object-toolbar__line-panel {
+  left: 0;
+  width: 368px;
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+}
+
+.project-shape-object-toolbar__line-panel {
+  right: 0;
+  left: auto;
+}
+
+.project-shape-object-toolbar__modes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.project-shape-object-toolbar__modes button {
+  min-height: 34px;
+  appearance: none;
+  padding: 0 10px;
+  border-radius: 7px !important;
+  color: #fff !important;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.project-shape-object-toolbar__modes button:hover {
+  background: rgb(255 255 255 / 12%) !important;
+}
+
+.project-shape-object-toolbar__swatches {
+  display: grid;
+  grid-template-columns: repeat(8, 30px);
+  gap: 8px;
+}
+
+.project-shape-object-toolbar__swatches button {
+  width: 30px;
+  height: 30px;
+  appearance: none;
+  padding: 0;
+  border: 2px solid rgb(255 255 255 / 22%) !important;
+  border-radius: 999px !important;
+  background: var(--shape-color) !important;
+  cursor: pointer;
+}
+
+.project-shape-object-toolbar__swatches button[aria-pressed="true"] {
+  box-shadow:
+    0 0 0 2px #1e1e1e,
+    0 0 0 4px #fff !important;
+}
+
 @media (max-width: 520px) {
   .project-object-toolbar {
     left: 12px;
@@ -8654,6 +8800,15 @@ body {
   .excalidraw
   .excalidraw-hyperlinkContainer,
 .project-playground__canvas--sticky-selected
+  .excalidraw
+  .selected-shape-actions {
+  display: none !important;
+}
+
+.project-playground__canvas--shape-selected
+  .excalidraw
+  .excalidraw-hyperlinkContainer,
+.project-playground__canvas--shape-selected
   .excalidraw
   .selected-shape-actions {
   display: none !important;

@@ -8,7 +8,7 @@ import {
   ListUnorderedIcon,
   UserIcon,
 } from "@storybook/icons";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
 import { AstryxDropdown, AstryxDropdownItem } from "./AstryxDropdown.tsx";
 import {
@@ -211,6 +211,31 @@ function projectObjectFontSizeLabel(fontSize: ProjectStickyNoteFontSize) {
   return "Large";
 }
 
+export function ProjectSelectionToolbar({
+  children,
+  style,
+  className,
+  ariaLabel = "Selection Properties Menu",
+}: {
+  children: ReactNode;
+  style?: CSSProperties;
+  className?: string;
+  ariaLabel?: string;
+}) {
+  return (
+    <div
+      className={`project-object-toolbar${className ? ` ${className}` : ""}`}
+      style={style}
+      role="toolbar"
+      aria-label={ariaLabel}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      {children}
+    </div>
+  );
+}
+
 /*
  * FigJam uses one dark contextual surface for selected objects and changes
  * only the controls the object supports. Sticky notes and plain text share
@@ -267,14 +292,7 @@ export function ProjectObjectToolbar({
   const sizeLabel = projectObjectFontSizeLabel(format.fontSize);
 
   return (
-    <div
-      className="project-object-toolbar"
-      style={style}
-      role="toolbar"
-      aria-label={ariaLabel}
-      onPointerDown={(event) => event.stopPropagation()}
-      onClick={(event) => event.stopPropagation()}
-    >
+    <ProjectSelectionToolbar style={style} ariaLabel={ariaLabel}>
       <div className="project-object-toolbar__control project-object-toolbar__color-control">
         <button
           type="button"
@@ -385,9 +403,7 @@ export function ProjectObjectToolbar({
         className="project-object-toolbar__action project-object-toolbar__strikethrough"
         aria-label="Strikethrough"
         aria-pressed={format.strikethrough}
-        onClick={() =>
-          updateFormat({ strikethrough: !format.strikethrough })
-        }
+        onClick={() => updateFormat({ strikethrough: !format.strikethrough })}
       >
         <span aria-hidden="true">S</span>
       </button>
@@ -398,9 +414,7 @@ export function ProjectObjectToolbar({
           aria-label={format.link ? "Edit link" : "Create link"}
           aria-expanded={openPanel === "link"}
           onClick={() =>
-            setOpenPanel((current) =>
-              current === "link" ? undefined : "link",
-            )
+            setOpenPanel((current) => (current === "link" ? undefined : "link"))
           }
         >
           <LinkIcon />
@@ -454,9 +468,7 @@ export function ProjectObjectToolbar({
         className="project-object-toolbar__action"
         aria-label="Bulleted list"
         aria-pressed={format.bulletedList}
-        onClick={() =>
-          updateFormat({ bulletedList: !format.bulletedList })
-        }
+        onClick={() => updateFormat({ bulletedList: !format.bulletedList })}
       >
         <ListUnorderedIcon />
       </button>
@@ -479,6 +491,6 @@ export function ProjectObjectToolbar({
           </button>
         </>
       ) : null}
-    </div>
+    </ProjectSelectionToolbar>
   );
 }
