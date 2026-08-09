@@ -16,7 +16,16 @@ import {
   TextInput,
   type IconName,
 } from "@astryxdesign/core";
-import { ChevronSmallDownIcon, FaceHappyIcon } from "@storybook/icons";
+import {
+  ChevronSmallDownIcon,
+  EditIcon,
+  EyeCloseIcon,
+  EyeIcon,
+  FaceHappyIcon,
+  GridIcon,
+  LockIcon,
+  UnlockIcon,
+} from "@storybook/icons";
 import {
   CaptureUpdateAction,
   convertToExcalidrawElements,
@@ -170,6 +179,9 @@ const expandedCanvasDocumentHeight = 1_240;
 const canvasDocumentViewportTopSafeArea = 72;
 const researchFrameWidth = 960;
 const researchFrameHeight = 640;
+const defaultSectionSize = 420;
+const defaultSectionFill = "#ffffff";
+const defaultSectionStroke = "#757575";
 const canvasCollaborationColors = [
   { background: "#5b67f1", stroke: "#3f46bc" },
   { background: "#0f9f6e", stroke: "#087454" },
@@ -464,6 +476,33 @@ const canvasMarkerColors: readonly CanvasMarkerColor[] = [
 ];
 
 const canvasShapeColors = canvasMarkerColors;
+
+/* FigJam's exact Section palette, measured from the live color selector. */
+const canvasSectionColors: readonly CanvasMarkerColor[] = [
+  { label: "Black", value: "#1e1e1e" },
+  { label: "Dark gray", value: "#757575" },
+  { label: "Red", value: "#f24822" },
+  { label: "Orange", value: "#ff9e42" },
+  { label: "Yellow", value: "#ffc943" },
+  { label: "Green", value: "#66d575" },
+  { label: "Teal", value: "#5ad8cc" },
+  { label: "Blue", value: "#3dadff" },
+  { label: "Violet", value: "#874fff" },
+  { label: "Pink", value: "#f849c1" },
+  { label: "White", value: defaultSectionFill },
+  { label: "Gray", value: "#b3b3b3" },
+  { label: "Light gray", value: "#d9d9d9" },
+  { label: "Light red", value: "#ffc7c2" },
+  { label: "Light orange", value: "#ffe0c2" },
+  { label: "Light yellow", value: "#ffecbd" },
+  { label: "Light green", value: "#cdf4d3" },
+  { label: "Light teal", value: "#c6faf6" },
+  { label: "Light blue", value: "#c2e5ff" },
+  { label: "Light violet", value: "#dcccff" },
+  { label: "Light pink", value: "#ffc2ec" },
+];
+
+type CanvasSectionLineStyle = "solid" | "dashed" | "none";
 
 /* The object toolbar uses the same exact source colours as the Canvas tools,
    so a text object's swatch and its rendered ink never drift apart. */
@@ -1125,6 +1164,54 @@ interface AstryxResearchFrameReference extends ProjectResearchFrameItem {
   y: number;
   width: number;
   height: number;
+  fillColor: string;
+  strokeColor: string;
+  strokeStyle: CanvasSectionLineStyle;
+  hidden: boolean;
+  locked: boolean;
+  backdropElementId?: string;
+}
+
+function sectionBackdropReference(
+  element: ExcalidrawElement,
+): { parentFrameId?: string } | undefined {
+  const reference = element.customData?.astryxReference as
+    | { kind?: string; parentFrameId?: string }
+    | undefined;
+  return reference?.kind === "section-backdrop" ? reference : undefined;
+}
+
+function createSectionBackdrop(
+  frame: ExcalidrawElement,
+  {
+    fillColor = defaultSectionFill,
+    hidden = false,
+  }: { fillColor?: string; hidden?: boolean } = {},
+): ExcalidrawElement {
+  const [backdrop] = convertToExcalidrawElements([
+    {
+      type: "rectangle",
+      x: frame.x,
+      y: frame.y,
+      width: Math.max(1, frame.width),
+      height: Math.max(1, frame.height),
+      strokeColor: hidden ? "#b3b3b3" : "transparent",
+      backgroundColor: hidden ? "#757575" : fillColor,
+      fillStyle: hidden ? "hachure" : "solid",
+      roughness: 0,
+      opacity: hidden ? 32 : 100,
+      locked: true,
+      frameId: frame.id,
+      groupIds: [frame.id],
+      customData: {
+        astryxReference: {
+          kind: "section-backdrop",
+          parentFrameId: frame.id,
+        },
+      },
+    } as ElementSkeleton,
+  ]);
+  return backdrop;
 }
 
 function researchFrameReferenceForElement(
@@ -1136,12 +1223,21 @@ function researchFrameReferenceForElement(
     | {
         kind?: string;
         frameType?: ProjectResearchFrameType;
+        fillColor?: string;
+        strokeColor?: string;
+        strokeStyle?: CanvasSectionLineStyle;
+        hidden?: boolean;
       }
     | undefined;
   const type =
     reference?.kind === "research-frame" && reference.frameType
       ? reference.frameType
       : "custom";
+  const backdrop = allElements.find(
+    (candidate) =>
+      !candidate.isDeleted &&
+      sectionBackdropReference(candidate)?.parentFrameId === element.id,
+  );
   return {
     elementId: element.id,
     type,
@@ -1150,12 +1246,21 @@ function researchFrameReferenceForElement(
       (candidate) =>
         !candidate.isDeleted &&
         candidate.frameId === element.id &&
-        candidate.type !== "text",
+        candidate.type !== "text" &&
+        !sectionBackdropReference(candidate),
     ).length,
     x: element.x,
     y: element.y,
     width: element.width,
     height: element.height,
+    fillColor:
+      reference?.fillColor ?? backdrop?.backgroundColor ?? defaultSectionFill,
+    strokeColor:
+      reference?.strokeColor ?? element.strokeColor ?? defaultSectionStroke,
+    strokeStyle: reference?.strokeStyle ?? element.strokeStyle ?? "solid",
+    hidden: reference?.hidden === true,
+    locked: element.locked,
+    backdropElementId: backdrop?.id,
   };
 }
 
@@ -1175,7 +1280,13 @@ function researchFrameReferencesEqual(
         frame.x === other.x &&
         frame.y === other.y &&
         frame.width === other.width &&
-        frame.height === other.height
+        frame.height === other.height &&
+        frame.fillColor === other.fillColor &&
+        frame.strokeColor === other.strokeColor &&
+        frame.strokeStyle === other.strokeStyle &&
+        frame.hidden === other.hidden &&
+        frame.locked === other.locked &&
+        frame.backdropElementId === other.backdropElementId
       );
     })
   );
@@ -1745,6 +1856,7 @@ function canvasShapeReferenceForElement(
   )
     return undefined;
   if (stickyNoteReferenceForElement(element)) return undefined;
+  if (sectionBackdropReference(element)) return undefined;
   const customData = element.customData as Record<string, unknown> | undefined;
   if (customData?.astryxReference) return undefined;
   const shape = element as ExcalidrawElement & {
@@ -2011,6 +2123,12 @@ export function ProjectPlayground({
   >([]);
   const [selectedResearchFrame, setSelectedResearchFrame] =
     useState<AstryxResearchFrameReference>();
+  const [selectedFramePanel, setSelectedFramePanel] = useState<
+    "color" | "line" | "rename"
+  >();
+  const [selectedFrameNameDraft, setSelectedFrameNameDraft] = useState("");
+  const researchFrameStartIdsRef = useRef<Set<string>>(new Set());
+  const orphanSectionCleanupScheduledRef = useRef(false);
   const [toolsCatalogOpen, setToolsCatalogOpen] = useState(false);
   const [toolsCatalogQuery, setToolsCatalogQuery] = useState("");
   const [canvasFindOpen, setCanvasFindOpen] = useState(false);
@@ -2177,9 +2295,10 @@ export function ProjectPlayground({
         socketId: collaborator.clientId as SocketId,
         username: collaborator.name,
         color: canvasCollaboratorColor(collaborator.name),
-        pointer: canvasRemoteCursorsVisible && cursor?.pointer
-          ? { ...cursor.pointer, tool: "pointer", renderCursor: true }
-          : undefined,
+        pointer:
+          canvasRemoteCursorsVisible && cursor?.pointer
+            ? { ...cursor.pointer, tool: "pointer", renderCursor: true }
+            : undefined,
         button: cursor?.button,
         selectedElementIds: canvasRemoteCursorsVisible
           ? Object.fromEntries(
@@ -2580,6 +2699,43 @@ export function ProjectPlayground({
       setResearchFrames((current) =>
         researchFrameReferencesEqual(current, frames) ? current : frames,
       );
+      const liveFrameIds = new Set(frames.map((frame) => frame.elementId));
+      const hasOrphanSectionBackdrop = elements.some((element) => {
+        const reference = sectionBackdropReference(element);
+        return (
+          !element.isDeleted &&
+          reference?.parentFrameId &&
+          !liveFrameIds.has(reference.parentFrameId)
+        );
+      });
+      if (
+        hasOrphanSectionBackdrop &&
+        !orphanSectionCleanupScheduledRef.current
+      ) {
+        orphanSectionCleanupScheduledRef.current = true;
+        window.requestAnimationFrame(() => {
+          orphanSectionCleanupScheduledRef.current = false;
+          const editor = editorRef.current;
+          if (!editor) return;
+          const currentElements = editor.getSceneElements();
+          const currentFrameIds = new Set(
+            currentElements
+              .filter(
+                (element) => !element.isDeleted && element.type === "frame",
+              )
+              .map((element) => element.id),
+          );
+          const nextElements = currentElements.map((element) => {
+            const reference = sectionBackdropReference(element);
+            return !element.isDeleted &&
+              reference?.parentFrameId &&
+              !currentFrameIds.has(reference.parentFrameId)
+              ? withCanvasElementUpdate(element, { isDeleted: true })
+              : element;
+          });
+          editor.updateScene({ elements: nextElements });
+        });
+      }
       const selectedFrames = frames.filter(
         (frame) => appState.selectedElementIds[frame.elementId],
       );
@@ -2588,9 +2744,9 @@ export function ProjectPlayground({
       setSelectedResearchFrame((current) => {
         if (!current && !selectedFrame) return current;
         if (
-          current?.elementId === selectedFrame?.elementId &&
-          current?.title === selectedFrame?.title &&
-          current?.itemCount === selectedFrame?.itemCount
+          current &&
+          selectedFrame &&
+          researchFrameReferencesEqual([current], [selectedFrame])
         )
           return current;
         return selectedFrame;
@@ -3169,8 +3325,19 @@ export function ProjectPlayground({
       );
     if (!frame) return;
     editor.setActiveTool({ type: "selection" });
+    const backdrop = editor
+      .getSceneElements()
+      .find(
+        (element) =>
+          sectionBackdropReference(element)?.parentFrameId === frame.id,
+      );
     editor.updateScene({
-      appState: { selectedElementIds: { [frame.id]: true } },
+      appState: {
+        selectedElementIds: {
+          ...(backdrop ? { [backdrop.id]: true } : {}),
+          [frame.id]: true,
+        },
+      },
     });
     editor.scrollToContent(frame, { animate: true, fitToViewport: true });
     setSelectedResearchFrame(
@@ -3207,21 +3374,38 @@ export function ProjectPlayground({
           width: researchFrameWidth,
           height: researchFrameHeight,
           name: preset.title,
+          groupIds: [],
           customData: {
             astryxReference: {
               kind: "research-frame",
               frameType: preset.id,
+              fillColor: defaultSectionFill,
+              strokeColor: defaultSectionStroke,
+              strokeStyle: "solid",
+              hidden: false,
               createdAt: new Date().toISOString(),
             },
           },
         } as ElementSkeleton,
       ]);
+      const backdrop = createSectionBackdrop(frame);
+      const groupedFrame = withCanvasElementUpdate(frame, {
+        groupIds: [frame.id],
+      } as Partial<ExcalidrawElement>);
       editor.setActiveTool({ type: "selection" });
       editor.updateScene({
-        elements: [...sceneElements, frame],
-        appState: { selectedElementIds: { [frame.id]: true } },
+        elements: [backdrop, ...sceneElements, groupedFrame],
+        appState: {
+          selectedElementIds: {
+            [backdrop.id]: true,
+            [groupedFrame.id]: true,
+          },
+        },
       });
-      editor.scrollToContent(frame, { animate: true, fitToViewport: true });
+      editor.scrollToContent(groupedFrame, {
+        animate: true,
+        fitToViewport: true,
+      });
       setResearchFramesOpen(false);
     },
     [],
@@ -3230,6 +3414,12 @@ export function ProjectPlayground({
   const drawResearchFrame = useCallback(() => {
     const editor = editorRef.current;
     if (!editor) return;
+    researchFrameStartIdsRef.current = new Set(
+      editor
+        .getSceneElements()
+        .filter((element) => !element.isDeleted && element.type === "frame")
+        .map((element) => element.id),
+    );
     setResearchFramesOpen(false);
     setResearchFrameDrawing(true);
     setStickyPickerOpen(false);
@@ -3246,6 +3436,250 @@ export function ProjectPlayground({
     editor.setActiveTool({ type: "frame" });
     editor.setCursor("crosshair");
   }, [deactivateStampTool, deactivateTableTool]);
+
+  const finalizeResearchFrame = useCallback(
+    (origin: { x: number; y: number }) => {
+      window.requestAnimationFrame(() => {
+        const editor = editorRef.current;
+        if (!editor) return;
+        const sceneElements = editor.getSceneElements();
+        let frame = [...sceneElements]
+          .reverse()
+          .find(
+            (element) =>
+              !element.isDeleted &&
+              element.type === "frame" &&
+              !researchFrameStartIdsRef.current.has(element.id),
+          );
+        let nextElements = [...sceneElements];
+
+        /* FigJam treats a click as a useful Section, while Excalidraw discards
+           the zero-size frame. Create the same practical 420px default around
+           the click, but preserve a deliberate drag's measured dimensions. */
+        if (!frame || frame.width < 24 || frame.height < 24) {
+          if (frame) {
+            nextElements = nextElements.filter(
+              (element) => element.id !== frame?.id,
+            );
+          }
+          [frame] = convertToExcalidrawElements([
+            {
+              type: "frame",
+              children: [],
+              x: origin.x - defaultSectionSize / 2,
+              y: origin.y - defaultSectionSize / 2,
+              width: defaultSectionSize,
+              height: defaultSectionSize,
+            } as ElementSkeleton,
+          ]);
+        }
+
+        const sectionNumber =
+          nextElements.filter(
+            (element) => !element.isDeleted && element.type === "frame",
+          ).length +
+          (nextElements.some((element) => element.id === frame?.id) ? 0 : 1);
+        const title = `Section ${sectionNumber}`;
+        const customData = frame.customData as
+          | Record<string, unknown>
+          | undefined;
+        const normalizedFrame = withCanvasElementUpdate(frame, {
+          name: title,
+          groupIds: [frame.id],
+          strokeColor: defaultSectionStroke,
+          strokeStyle: "solid",
+          roughness: 0,
+          customData: {
+            ...customData,
+            astryxReference: {
+              kind: "research-frame",
+              frameType: "custom",
+              fillColor: defaultSectionFill,
+              strokeColor: defaultSectionStroke,
+              strokeStyle: "solid",
+              hidden: false,
+              createdAt: new Date().toISOString(),
+            },
+          },
+        } as Partial<ExcalidrawElement>);
+        const backdrop = createSectionBackdrop(normalizedFrame);
+        nextElements = nextElements.filter(
+          (element) =>
+            element.id !== frame?.id &&
+            sectionBackdropReference(element)?.parentFrameId !== frame?.id,
+        );
+        editor.setActiveTool({ type: "selection" });
+        editor.resetCursor();
+        editor.updateScene({
+          elements: [backdrop, ...nextElements, normalizedFrame],
+          appState: {
+            selectedElementIds: {
+              [backdrop.id]: true,
+              [normalizedFrame.id]: true,
+            },
+          },
+        });
+        setResearchFrameDrawing(false);
+        setSelectedResearchFrame(
+          researchFrameReferenceForElement(normalizedFrame, [
+            backdrop,
+            ...nextElements,
+            normalizedFrame,
+          ]),
+        );
+      });
+    },
+    [],
+  );
+
+  const updateSelectedResearchFrame = useCallback(
+    (patch: {
+      title?: string;
+      fillColor?: string;
+      strokeColor?: string;
+      strokeStyle?: CanvasSectionLineStyle;
+      hidden?: boolean;
+      locked?: boolean;
+    }) => {
+      const editor = editorRef.current;
+      const selected = selectedResearchFrame;
+      if (!editor || !selected) return;
+      const sceneElements = editor.getSceneElements();
+      const frame = sceneElements.find(
+        (element) => element.id === selected.elementId,
+      );
+      if (!frame) return;
+
+      const fillColor = patch.fillColor ?? selected.fillColor;
+      const strokeColor = patch.strokeColor ?? selected.strokeColor;
+      const strokeStyle = patch.strokeStyle ?? selected.strokeStyle;
+      const hidden = patch.hidden ?? selected.hidden;
+      const locked = patch.locked ?? selected.locked;
+      let foundBackdrop = false;
+      const elements = sceneElements.map((element) => {
+        if (element.id === frame.id) {
+          const customData = element.customData as
+            | Record<string, unknown>
+            | undefined;
+          const reference = customData?.astryxReference as
+            | Record<string, unknown>
+            | undefined;
+          return withCanvasElementUpdate(element, {
+            ...(patch.title !== undefined ? { name: patch.title } : {}),
+            strokeColor: strokeStyle === "none" ? "transparent" : strokeColor,
+            strokeStyle: strokeStyle === "none" ? "solid" : strokeStyle,
+            locked,
+            customData: {
+              ...customData,
+              astryxReference: {
+                ...reference,
+                kind: "research-frame",
+                frameType: reference?.frameType ?? "custom",
+                fillColor,
+                strokeColor,
+                strokeStyle,
+                hidden,
+              },
+            },
+          } as Partial<ExcalidrawElement>);
+        }
+        if (sectionBackdropReference(element)?.parentFrameId === frame.id) {
+          foundBackdrop = true;
+          return withCanvasElementUpdate(element, {
+            x: frame.x,
+            y: frame.y,
+            width: frame.width,
+            height: frame.height,
+            strokeColor: hidden ? "#b3b3b3" : "transparent",
+            backgroundColor: hidden ? "#757575" : fillColor,
+            fillStyle: hidden ? "hachure" : "solid",
+            opacity: hidden ? 32 : 100,
+            locked: true,
+          } as Partial<ExcalidrawElement>);
+        }
+        if (element.frameId === frame.id) {
+          const customData = element.customData as
+            | Record<string, unknown>
+            | undefined;
+          const storedOpacity = customData?.astryxSectionVisibleOpacity;
+          if (hidden) {
+            return withCanvasElementUpdate(element, {
+              opacity: 0,
+              customData: {
+                ...customData,
+                astryxSectionVisibleOpacity: element.opacity,
+              },
+            } as Partial<ExcalidrawElement>);
+          }
+          if (typeof storedOpacity === "number") {
+            return withCanvasElementUpdate(element, {
+              opacity: storedOpacity,
+              customData: {
+                ...customData,
+                astryxSectionVisibleOpacity: undefined,
+              },
+            } as Partial<ExcalidrawElement>);
+          }
+        }
+        return element;
+      });
+      const nextElements = foundBackdrop
+        ? elements
+        : [createSectionBackdrop(frame, { fillColor, hidden }), ...elements];
+      editor.updateScene({
+        elements: nextElements,
+        appState: {
+          selectedElementIds: locked
+            ? {}
+            : {
+                ...(selected.backdropElementId
+                  ? { [selected.backdropElementId]: true }
+                  : {}),
+                [frame.id]: true,
+              },
+        },
+      });
+      if (locked) setSelectedResearchFrame(undefined);
+    },
+    [selectedResearchFrame],
+  );
+
+  /* A Section is one object even though its persistent fill is a locked canvas
+     child. Delete both parts atomically so Excalidraw never exposes the hidden
+     backdrop as a standalone rectangle after the frame is removed. */
+  useEffect(() => {
+    const selected = selectedResearchFrame;
+    if (!selected) return;
+    const deleteSelectedSection = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        (event.key !== "Delete" && event.key !== "Backspace") ||
+        target?.closest("input, textarea, [contenteditable='true']")
+      )
+        return;
+      const editor = editorRef.current;
+      if (!editor) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const elements = editor
+        .getSceneElements()
+        .map((element) =>
+          element.id === selected.elementId ||
+          sectionBackdropReference(element)?.parentFrameId ===
+            selected.elementId
+            ? withCanvasElementUpdate(element, { isDeleted: true })
+            : element,
+        );
+      editor.updateScene({
+        elements,
+        appState: { selectedElementIds: {} },
+      });
+      setSelectedResearchFrame(undefined);
+    };
+    window.addEventListener("keydown", deleteSelectedSection, true);
+    return () =>
+      window.removeEventListener("keydown", deleteSelectedSection, true);
+  }, [selectedResearchFrame]);
 
   const stopStickyPlacement = useCallback(() => {
     deactivateStickyTool();
@@ -4078,6 +4512,10 @@ export function ProjectPlayground({
       // selection handler restore the pre-click scene and discard the new item.
       // The visible placement state remains the source of truth because custom
       // tools may be normalized back to selection before this callback runs.
+      if (_activeTool.type === "frame" || researchFrameDrawing) {
+        finalizeResearchFrame(pointerDownState.origin);
+        return;
+      }
       if (shapePlacement) {
         const { x, y } = pointerDownState.origin;
         insertCanvasCustomShapeAt(x, y, shapePlacement);
@@ -4126,11 +4564,13 @@ export function ProjectPlayground({
     [
       documentPlacement,
       commentPlacement,
+      finalizeResearchFrame,
       insertCanvasCustomShapeAt,
       insertCanvasDocumentAt,
       insertStickyNotesAt,
       shapePlacement,
       stickyPlacement,
+      researchFrameDrawing,
       stopDocumentPlacement,
       stopCommentPlacement,
       stopStickyPlacement,
@@ -4376,9 +4816,35 @@ export function ProjectPlayground({
     } as CSSProperties;
   }, [canvasViewport, selectedCanvasShape]);
 
+  const sectionToolbarStyle = useMemo(() => {
+    if (!selectedResearchFrame) return undefined;
+    const { scrollX, scrollY, zoom } = canvasViewport;
+    const centreX =
+      (selectedResearchFrame.x + selectedResearchFrame.width / 2 + scrollX) *
+      zoom;
+    const frameTop = (selectedResearchFrame.y + scrollY) * zoom;
+    const frameBottom =
+      (selectedResearchFrame.y + selectedResearchFrame.height + scrollY) * zoom;
+    const availableHeight = canvasRootRef.current?.clientHeight ?? 900;
+    const toolbarTop =
+      frameBottom + 38 < availableHeight - 122
+        ? frameBottom + 38
+        : Math.max(76, frameTop - 64);
+    return {
+      "--project-object-toolbar-anchor-x": `${centreX}px`,
+      "--project-object-toolbar-top": `${toolbarTop}px`,
+      "--project-object-toolbar-half-width": "156px",
+    } as CSSProperties;
+  }, [canvasViewport, selectedResearchFrame]);
+
   useEffect(() => {
     setSelectedShapePanel(undefined);
   }, [selectedCanvasShape?.elementId]);
+
+  useEffect(() => {
+    setSelectedFramePanel(undefined);
+    setSelectedFrameNameDraft(selectedResearchFrame?.title ?? "");
+  }, [selectedResearchFrame?.elementId, selectedResearchFrame?.title]);
 
   const updateSelectedCanvasShape = useCallback(
     (patch: {
@@ -4695,11 +5161,13 @@ export function ProjectPlayground({
     if (selectedElements.length === 0) return;
     const nextLocked = !selectedElements.every((element) => element.locked);
     editor.updateScene({
-      elements: editor.getSceneElements().map((element) =>
-        selectedIds.has(element.id)
-          ? withCanvasElementUpdate(element, { locked: nextLocked })
-          : element,
-      ),
+      elements: editor
+        .getSceneElements()
+        .map((element) =>
+          selectedIds.has(element.id)
+            ? withCanvasElementUpdate(element, { locked: nextLocked })
+            : element,
+        ),
       appState: { selectedElementIds: appState.selectedElementIds },
       captureUpdate: CaptureUpdateAction.IMMEDIATELY,
     });
@@ -4720,9 +5188,7 @@ export function ProjectPlayground({
         axis === "horizontal"
           ? (Math.min(...selectedElements.map((element) => element.x)) +
               Math.max(
-                ...selectedElements.map(
-                  (element) => element.x + element.width,
-                ),
+                ...selectedElements.map((element) => element.x + element.width),
               )) /
             2
           : (Math.min(...selectedElements.map((element) => element.y)) +
@@ -5655,7 +6121,9 @@ export function ProjectPlayground({
                           className="project-canvas-tools-catalog__state"
                           aria-hidden="true"
                         >
-                          {item.checked ? <Icon icon="check" size="sm" /> : null}
+                          {item.checked ? (
+                            <Icon icon="check" size="sm" />
+                          ) : null}
                         </span>
                         <span className="project-canvas-tools-catalog__copy">
                           <strong>{item.title}</strong>
@@ -6444,6 +6912,235 @@ export function ProjectPlayground({
                 </div>
               ) : null}
             </div>
+          </ProjectSelectionToolbar>
+        ) : null}
+        {selectedResearchFrame &&
+        !selectedStickyNote &&
+        !selectedCanvasText &&
+        !selectedCanvasShape &&
+        !canvasReadOnly ? (
+          <ProjectSelectionToolbar
+            style={sectionToolbarStyle}
+            className="project-section-object-toolbar"
+          >
+            <div className="project-object-toolbar__control project-section-object-toolbar__color-control">
+              <button
+                type="button"
+                className="project-object-toolbar__action project-section-object-toolbar__color-trigger"
+                aria-label={
+                  selectedResearchFrame.hidden
+                    ? "Can't edit while hidden"
+                    : "Change color"
+                }
+                aria-expanded={selectedFramePanel === "color"}
+                disabled={selectedResearchFrame.hidden}
+                onClick={() =>
+                  setSelectedFramePanel((panel) =>
+                    panel === "color" ? undefined : "color",
+                  )
+                }
+              >
+                <span
+                  className="project-section-object-toolbar__color-swatch"
+                  style={
+                    {
+                      "--section-color": selectedResearchFrame.fillColor,
+                    } as CSSProperties
+                  }
+                />
+                <ChevronSmallDownIcon aria-hidden="true" />
+              </button>
+              {selectedFramePanel === "color" ? (
+                <div
+                  className="project-section-object-toolbar__panel project-section-object-toolbar__palette"
+                  role="dialog"
+                  aria-label="Section color"
+                >
+                  {canvasSectionColors.map((color) => (
+                    <button
+                      key={color.value}
+                      type="button"
+                      aria-label={color.label}
+                      aria-pressed={
+                        selectedResearchFrame.fillColor === color.value
+                      }
+                      style={
+                        { "--section-color": color.value } as CSSProperties
+                      }
+                      onClick={() => {
+                        updateSelectedResearchFrame({
+                          fillColor: color.value,
+                        });
+                        setSelectedFramePanel(undefined);
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+            <div className="project-object-toolbar__control project-section-object-toolbar__line-control">
+              <button
+                type="button"
+                className="project-object-toolbar__action project-section-object-toolbar__line-trigger"
+                aria-label="Line style"
+                aria-expanded={selectedFramePanel === "line"}
+                onClick={() =>
+                  setSelectedFramePanel((panel) =>
+                    panel === "line" ? undefined : "line",
+                  )
+                }
+              >
+                <span
+                  className="project-section-object-toolbar__line-sample"
+                  data-style={selectedResearchFrame.strokeStyle}
+                  style={
+                    {
+                      "--section-stroke": selectedResearchFrame.strokeColor,
+                    } as CSSProperties
+                  }
+                />
+                <ChevronSmallDownIcon aria-hidden="true" />
+              </button>
+              {selectedFramePanel === "line" ? (
+                <div
+                  className="project-section-object-toolbar__panel project-section-object-toolbar__line-panel"
+                  role="dialog"
+                  aria-label="Section line style"
+                >
+                  <div
+                    className="project-section-object-toolbar__line-modes"
+                    role="radiogroup"
+                    aria-label="Stroke style"
+                  >
+                    {(["solid", "dashed", "none"] as const).map((style) => (
+                      <button
+                        key={style}
+                        type="button"
+                        role="radio"
+                        aria-checked={
+                          selectedResearchFrame.strokeStyle === style
+                        }
+                        onClick={() =>
+                          updateSelectedResearchFrame({ strokeStyle: style })
+                        }
+                      >
+                        {style[0].toUpperCase() + style.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="project-section-object-toolbar__palette">
+                    {canvasSectionColors.map((color) => (
+                      <button
+                        key={color.value}
+                        type="button"
+                        aria-label={`${color.label} line`}
+                        aria-pressed={
+                          selectedResearchFrame.strokeColor === color.value
+                        }
+                        style={
+                          { "--section-color": color.value } as CSSProperties
+                        }
+                        onClick={() =>
+                          updateSelectedResearchFrame({
+                            strokeColor: color.value,
+                            strokeStyle:
+                              selectedResearchFrame.strokeStyle === "none"
+                                ? "solid"
+                                : selectedResearchFrame.strokeStyle,
+                          })
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+            <span
+              className="project-object-toolbar__divider"
+              aria-hidden="true"
+            />
+            <div className="project-object-toolbar__control project-section-object-toolbar__rename-control">
+              <button
+                type="button"
+                className="project-object-toolbar__action"
+                aria-label="Rename section"
+                aria-expanded={selectedFramePanel === "rename"}
+                onClick={() =>
+                  setSelectedFramePanel((panel) =>
+                    panel === "rename" ? undefined : "rename",
+                  )
+                }
+              >
+                <EditIcon aria-hidden="true" />
+              </button>
+              {selectedFramePanel === "rename" ? (
+                <form
+                  className="project-section-object-toolbar__panel project-section-object-toolbar__rename-panel"
+                  aria-label="Rename section"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const title = selectedFrameNameDraft.trim();
+                    if (title) updateSelectedResearchFrame({ title });
+                    setSelectedFramePanel(undefined);
+                  }}
+                >
+                  <TextInput
+                    label="Section name"
+                    value={selectedFrameNameDraft}
+                    onChange={setSelectedFrameNameDraft}
+                    autoFocus
+                  />
+                  <button type="submit">Apply</button>
+                </form>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              className="project-object-toolbar__action"
+              aria-label={
+                selectedResearchFrame.hidden ? "Show section" : "Hide section"
+              }
+              aria-pressed={selectedResearchFrame.hidden}
+              onClick={() =>
+                updateSelectedResearchFrame({
+                  hidden: !selectedResearchFrame.hidden,
+                })
+              }
+            >
+              {selectedResearchFrame.hidden ? (
+                <EyeIcon aria-hidden="true" />
+              ) : (
+                <EyeCloseIcon aria-hidden="true" />
+              )}
+            </button>
+            <button
+              type="button"
+              className="project-object-toolbar__action"
+              aria-label={
+                selectedResearchFrame.locked ? "Unlock section" : "Lock section"
+              }
+              aria-pressed={selectedResearchFrame.locked}
+              onClick={() =>
+                updateSelectedResearchFrame({
+                  locked: !selectedResearchFrame.locked,
+                })
+              }
+            >
+              {selectedResearchFrame.locked ? (
+                <UnlockIcon aria-hidden="true" />
+              ) : (
+                <LockIcon aria-hidden="true" />
+              )}
+            </button>
+            <button
+              type="button"
+              className="project-object-toolbar__action"
+              aria-label="Section templates"
+              aria-expanded={researchFramesOpen}
+              onClick={() => setResearchFramesOpen((open) => !open)}
+            >
+              <GridIcon aria-hidden="true" />
+            </button>
           </ProjectSelectionToolbar>
         ) : null}
         {stickyNotes.map((note) => (

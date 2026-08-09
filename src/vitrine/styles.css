@@ -9046,6 +9046,156 @@ body {
     0 0 0 4px #fff !important;
 }
 
+/* Section uses the same compact object-toolbar shell as Sticky notes. Its
+   option panels mirror FigJam's dense palettes instead of exposing the native
+   Excalidraw inspector. */
+.project-section-object-toolbar__color-trigger,
+.project-section-object-toolbar__line-trigger {
+  width: 52px;
+  min-width: 52px;
+  gap: 6px;
+}
+
+.project-section-object-toolbar__color-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.44;
+}
+
+.project-section-object-toolbar__color-swatch {
+  width: 20px;
+  height: 20px;
+  box-sizing: border-box;
+  border: 1px solid rgb(255 255 255 / 34%);
+  border-radius: 4px;
+  background: var(--section-color);
+}
+
+.project-section-object-toolbar__color-trigger > svg,
+.project-section-object-toolbar__line-trigger > svg {
+  width: 12px;
+  height: 12px;
+}
+
+.project-section-object-toolbar__line-sample {
+  width: 22px;
+  height: 0;
+  border-top: 2px solid var(--section-stroke);
+}
+
+.project-section-object-toolbar__line-sample[data-style="dashed"] {
+  border-top-style: dashed;
+}
+
+.project-section-object-toolbar__line-sample[data-style="none"] {
+  border-top-color: transparent;
+}
+
+.project-section-object-toolbar__panel {
+  position: absolute;
+  z-index: 656;
+  top: 48px;
+  box-sizing: border-box;
+  border: 1px solid rgb(15 23 42 / 10%);
+  border-radius: 13px;
+  color: #1e1e1e;
+  background: #fff;
+  box-shadow:
+    0 0 0.5px rgb(0 0 0 / 18%),
+    0 3px 8px rgb(0 0 0 / 10%),
+    0 1px 3px rgb(0 0 0 / 10%);
+}
+
+.project-section-object-toolbar__palette {
+  left: 0;
+  width: 238px;
+  display: grid;
+  grid-template-columns: repeat(5, 34px);
+  gap: 8px;
+  padding: 12px;
+}
+
+.project-section-object-toolbar__palette button {
+  width: 34px;
+  height: 34px;
+  appearance: none;
+  padding: 0;
+  border: 1px solid rgb(30 30 30 / 18%) !important;
+  border-radius: 7px !important;
+  background: var(--section-color) !important;
+  cursor: pointer;
+}
+
+.project-section-object-toolbar__palette button[aria-pressed="true"] {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px #0d99ff !important;
+}
+
+.project-section-object-toolbar__line-panel {
+  left: 0;
+  width: 238px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.project-section-object-toolbar__line-panel
+  .project-section-object-toolbar__palette {
+  position: static;
+  width: auto;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
+
+.project-section-object-toolbar__line-modes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.project-section-object-toolbar__line-modes button {
+  min-height: 32px;
+  padding: 0 8px;
+  border-radius: 7px !important;
+  color: #1e1e1e !important;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.project-section-object-toolbar__line-modes button:hover {
+  background: #f2f2f2 !important;
+}
+
+.project-section-object-toolbar__line-modes button[aria-checked="true"] {
+  color: #fff !important;
+  background: #9747ff !important;
+}
+
+.project-section-object-toolbar__rename-panel {
+  right: -78px;
+  width: 276px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+  padding: 10px;
+}
+
+.project-section-object-toolbar__rename-panel .astryx-input-container {
+  min-width: 0;
+}
+
+.project-section-object-toolbar__rename-panel button[type="submit"] {
+  height: 32px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 7px !important;
+  color: #fff !important;
+  background: #9747ff !important;
+  cursor: pointer;
+}
+
 @media (max-width: 520px) {
   .project-object-toolbar {
     left: 12px;
@@ -9166,6 +9316,15 @@ body {
   .excalidraw
   .excalidraw-hyperlinkContainer,
 .project-playground__canvas--shape-selected
+  .excalidraw
+  .selected-shape-actions {
+  display: none !important;
+}
+
+.project-playground__canvas--frame-selected
+  .excalidraw
+  .excalidraw-hyperlinkContainer,
+.project-playground__canvas--frame-selected
   .excalidraw
   .selected-shape-actions {
   display: none !important;

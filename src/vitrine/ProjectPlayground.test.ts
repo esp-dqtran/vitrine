@@ -992,6 +992,11 @@ test("offers native research frames for organizing and navigating designer work"
     new URL("./components/ProjectResearchFramePicker.tsx", import.meta.url),
     "utf8",
   );
+  const playgroundSource = readFileSync(
+    new URL("./components/ProjectPlaygroundPage.tsx", import.meta.url),
+    "utf8",
+  );
+  const css = readFileSync(new URL("./styles.css", import.meta.url), "utf8");
 
   assert.match(source, /Research question/);
   assert.match(source, /Evidence/);
@@ -1005,6 +1010,21 @@ test("offers native research frames for organizing and navigating designer work"
   assert.match(source, /label="Previous"/);
   assert.match(source, /label="Next"/);
   assert.match(source, /onFocus\(frames\[nextIndex\]\.elementId\)/);
+  assert.match(playgroundSource, /const defaultSectionSize = 420/);
+  assert.match(playgroundSource, /const finalizeResearchFrame = useCallback/);
+  assert.match(playgroundSource, /const title = `Section \$\{sectionNumber\}`/);
+  assert.match(playgroundSource, /createSectionBackdrop\(normalizedFrame\)/);
+  assert.match(playgroundSource, /groupIds: \[frame\.id\]/);
+  assert.match(playgroundSource, /className="project-section-object-toolbar"/);
+  assert.match(playgroundSource, /aria-label="Rename section"/);
+  assert.match(playgroundSource, /aria-label="Section templates"/);
+  assert.match(playgroundSource, /hasOrphanSectionBackdrop/);
+  assert.match(playgroundSource, /const deleteSelectedSection =/);
+  assert.match(
+    css,
+    /project-playground__canvas--frame-selected[\s\S]*?selected-shape-actions[\s\S]*?display:\s*none !important/s,
+  );
+  assert.match(css, /\.project-section-object-toolbar__panel\s*\{/);
 });
 
 test("gives a selected sticky note its own formatting toolbar", () => {
