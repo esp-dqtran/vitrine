@@ -1,14 +1,23 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { Button, Icon, IconButton, TextArea, TextInput } from "@astryxdesign/core";
+import {
+  Button,
+  Icon,
+  IconButton,
+  TextArea,
+  TextInput,
+} from "@astryxdesign/core";
 
 import type { DesignerCanvasCommentThread } from "../../designerCanvas.ts";
+import figjamCommentToolIcon from "../assets/figjam-comment-tool.svg";
 
 export function ProjectCanvasCommentGlyph() {
   return (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <path d="M5 4.75h14v10.5H9.25L5 19.25V4.75Z" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
-      <path d="M8 8.25h8M8 11.5h5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    </svg>
+    <img
+      className="project-canvas-comment-glyph"
+      src={figjamCommentToolIcon}
+      alt=""
+      aria-hidden="true"
+    />
   );
 }
 
@@ -84,7 +93,9 @@ export function ProjectCanvasCommentInbox({
         <button
           type="button"
           className="project-canvas-comment-inbox__icon-button"
-          aria-label={showResolved ? "Hide resolved comments" : "Show resolved comments"}
+          aria-label={
+            showResolved ? "Hide resolved comments" : "Show resolved comments"
+          }
           aria-pressed={showResolved}
           onClick={() => setShowResolved((current) => !current)}
         >
@@ -101,7 +112,10 @@ export function ProjectCanvasCommentInbox({
             <Icon icon="moreHorizontal" size="sm" />
           </button>
           {menuOpen ? (
-            <span className="project-canvas-comment-inbox__menu-popover" role="menu">
+            <span
+              className="project-canvas-comment-inbox__menu-popover"
+              role="menu"
+            >
               <button
                 type="button"
                 role="menuitemcheckbox"
@@ -111,7 +125,9 @@ export function ProjectCanvasCommentInbox({
                   setMenuOpen(false);
                 }}
               >
-                {showResolved ? "Hide resolved comments" : "Show resolved comments"}
+                {showResolved
+                  ? "Hide resolved comments"
+                  : "Show resolved comments"}
               </button>
               <button type="button" role="menuitem" onClick={onClose}>
                 Close comments
@@ -133,7 +149,8 @@ export function ProjectCanvasCommentInbox({
         {visibleThreads.length ? (
           <div className="project-canvas-comment-inbox__threads">
             {visibleThreads.map((thread) => {
-              const latestMessage = thread.messages.at(-1) ?? thread.messages[0];
+              const latestMessage =
+                thread.messages.at(-1) ?? thread.messages[0];
               return (
                 <button
                   key={thread.id}
@@ -141,8 +158,12 @@ export function ProjectCanvasCommentInbox({
                   className="project-canvas-comment-inbox__thread"
                   onClick={() => onSelectThread(thread.id)}
                 >
-                  <span className="project-canvas-comment-inbox__avatar" aria-hidden="true">
-                    {latestMessage?.authorName.trim().charAt(0).toUpperCase() || "?"}
+                  <span
+                    className="project-canvas-comment-inbox__avatar"
+                    aria-hidden="true"
+                  >
+                    {latestMessage?.authorName.trim().charAt(0).toUpperCase() ||
+                      "?"}
                   </span>
                   <span>
                     <strong>{latestMessage?.authorName || "Comment"}</strong>
@@ -159,7 +180,7 @@ export function ProjectCanvasCommentInbox({
             <p>
               {normalizedQuery
                 ? "No comments match your search."
-                : "Give feedback, ask a question, or leave a note. Click anywhere on the canvas to add a comment."}
+                : "Give feedback, ask a question, or just leave a note of appreciation. Click anywhere in the file to leave a comment."}
             </p>
           </div>
         )}
@@ -171,6 +192,7 @@ export function ProjectCanvasCommentInbox({
 export function ProjectCanvasCommentPanel({
   thread,
   draft,
+  style,
   onDraftChange,
   onSubmit,
   onResolve,
@@ -179,6 +201,7 @@ export function ProjectCanvasCommentPanel({
 }: {
   thread?: DesignerCanvasCommentThread;
   draft: string;
+  style?: CSSProperties;
   onDraftChange(value: string): void;
   onSubmit(value: string): void;
   onResolve(): void;
@@ -203,12 +226,64 @@ export function ProjectCanvasCommentPanel({
     setConfirmingDelete(false);
     onDelete();
   };
+  if (!thread) {
+    return (
+      <aside
+        className="project-canvas-comments project-canvas-comments--composer"
+        aria-label="New comment"
+        style={style}
+      >
+        <span
+          className="project-canvas-comments__composer-pin"
+          aria-hidden="true"
+        >
+          <ProjectCanvasCommentGlyph />
+        </span>
+        <textarea
+          autoFocus
+          aria-label="Add a comment"
+          placeholder="Add a comment"
+          rows={1}
+          value={draft}
+          onChange={(event) => onDraftChange(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              onClose();
+            } else if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              submit();
+            }
+          }}
+        />
+        <button
+          type="button"
+          className="project-canvas-comments__composer-send"
+          aria-label="Send"
+          disabled={!draft.trim()}
+          onClick={submit}
+        >
+          <Icon icon="arrowUp" size="sm" />
+        </button>
+      </aside>
+    );
+  }
   return (
-    <aside className="project-canvas-comments" aria-label={thread ? "Comment thread" : "New comment"}>
+    <aside
+      className="project-canvas-comments"
+      aria-label={thread ? "Comment thread" : "New comment"}
+      style={style}
+    >
       <header>
         <div>
           <span>Canvas comment</span>
-          <strong>{thread ? (thread.resolved ? "Resolved" : "Discussion") : "New thread"}</strong>
+          <strong>
+            {thread
+              ? thread.resolved
+                ? "Resolved"
+                : "Discussion"
+              : "New thread"}
+          </strong>
         </div>
         <IconButton
           label="Close comments"
@@ -241,7 +316,9 @@ export function ProjectCanvasCommentPanel({
       <footer data-confirming-delete={confirmingDelete || undefined}>
         {thread && confirmingDelete ? (
           <>
-            <span className="project-canvas-comments__delete-prompt">Delete this thread?</span>
+            <span className="project-canvas-comments__delete-prompt">
+              Delete this thread?
+            </span>
             <div className="project-canvas-comments__delete-actions">
               <Button
                 label="Cancel"
@@ -274,7 +351,9 @@ export function ProjectCanvasCommentPanel({
                   clickAction={onResolve}
                 />
               </div>
-            ) : <span />}
+            ) : (
+              <span />
+            )}
             <Button
               label={thread ? "Reply" : "Comment"}
               variant="primary"

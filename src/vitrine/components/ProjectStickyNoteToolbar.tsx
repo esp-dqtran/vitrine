@@ -1,11 +1,14 @@
 import { Button, Icon, TextInput } from "@astryxdesign/core";
 import {
+  AlignLeftIcon,
+  AlignRightIcon,
   BoldIcon,
   BookmarkIcon,
   CommentIcon,
   HeartIcon,
   LinkIcon,
   ListUnorderedIcon,
+  MenuIcon,
   UserIcon,
 } from "@storybook/icons";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
@@ -246,9 +249,12 @@ export function ProjectObjectToolbar({
   format,
   style,
   collaboration,
+  children,
   ariaLabel = "Selection Properties Menu",
   objectLabel = "Object",
+  colorAriaLabel,
   colorOptions = projectStickyNoteColors,
+  showLink = true,
   onColorChange,
   onFormatChange,
   onCollaborationChange,
@@ -257,15 +263,18 @@ export function ProjectObjectToolbar({
   format: ProjectStickyNoteFormat;
   style?: CSSProperties;
   collaboration?: ProjectStickyNoteCollaboration;
+  children?: ReactNode;
   ariaLabel?: string;
   objectLabel?: string;
+  colorAriaLabel?: string;
   colorOptions?: readonly ProjectStickyNoteColor[];
+  showLink?: boolean;
   onColorChange(color: ProjectStickyNoteColor): void;
   onFormatChange(format: ProjectStickyNoteFormat): void;
   onCollaborationChange?(collaboration: ProjectStickyNoteCollaboration): void;
 }) {
   const [openPanel, setOpenPanel] = useState<
-    "font" | "size" | "color" | "link"
+    "font" | "size" | "color" | "link" | "align"
   >();
   const [linkDraft, setLinkDraft] = useState(format.link);
 
@@ -297,7 +306,9 @@ export function ProjectObjectToolbar({
         <button
           type="button"
           className="project-object-toolbar__color-trigger"
-          aria-label={`Change ${objectLabel.toLowerCase()} color`}
+          aria-label={
+            colorAriaLabel ?? `Change ${objectLabel.toLowerCase()} color`
+          }
           aria-expanded={openPanel === "color"}
           onClick={() =>
             setOpenPanel((current) =>
@@ -407,62 +418,66 @@ export function ProjectObjectToolbar({
       >
         <span aria-hidden="true">S</span>
       </button>
-      <div className="project-object-toolbar__control project-object-toolbar__link-control">
-        <button
-          type="button"
-          className="project-object-toolbar__action"
-          aria-label={format.link ? "Edit link" : "Create link"}
-          aria-expanded={openPanel === "link"}
-          onClick={() =>
-            setOpenPanel((current) => (current === "link" ? undefined : "link"))
-          }
-        >
-          <LinkIcon />
-        </button>
-        {openPanel === "link" ? (
-          <div
-            className="project-object-toolbar__panel project-object-toolbar__link-panel"
-            role="dialog"
-            aria-label={`${objectLabel} link`}
+      {showLink ? (
+        <div className="project-object-toolbar__control project-object-toolbar__link-control">
+          <button
+            type="button"
+            className="project-object-toolbar__action"
+            aria-label={format.link ? "Edit link" : "Create link"}
+            aria-expanded={openPanel === "link"}
+            onClick={() =>
+              setOpenPanel((current) =>
+                current === "link" ? undefined : "link",
+              )
+            }
           >
-            <TextInput
-              label={`${objectLabel} link`}
-              isLabelHidden
-              value={linkDraft}
-              onChange={setLinkDraft}
-              placeholder="Paste a URL…"
-              width="100%"
-              size="sm"
-            />
-            <div className="project-object-toolbar__link-actions">
-              {format.link ? (
+            <LinkIcon />
+          </button>
+          {openPanel === "link" ? (
+            <div
+              className="project-object-toolbar__panel project-object-toolbar__link-panel"
+              role="dialog"
+              aria-label={`${objectLabel} link`}
+            >
+              <TextInput
+                label={`${objectLabel} link`}
+                isLabelHidden
+                value={linkDraft}
+                onChange={setLinkDraft}
+                placeholder="Paste a URL…"
+                width="100%"
+                size="sm"
+              />
+              <div className="project-object-toolbar__link-actions">
+                {format.link ? (
+                  <Button
+                    label="Remove"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setLinkDraft("");
+                      updateFormat({ link: "" });
+                      closePanel();
+                    }}
+                  />
+                ) : null}
                 <Button
-                  label="Remove"
-                  variant="ghost"
+                  label="Apply"
+                  variant="primary"
                   size="sm"
+                  isDisabled={!linkDraft.trim()}
                   onClick={() => {
-                    setLinkDraft("");
-                    updateFormat({ link: "" });
+                    const link = normalizedStickyNoteLink(linkDraft);
+                    setLinkDraft(link);
+                    updateFormat({ link });
                     closePanel();
                   }}
                 />
-              ) : null}
-              <Button
-                label="Apply"
-                variant="primary"
-                size="sm"
-                isDisabled={!linkDraft.trim()}
-                onClick={() => {
-                  const link = normalizedStickyNoteLink(linkDraft);
-                  setLinkDraft(link);
-                  updateFormat({ link });
-                  closePanel();
-                }}
-              />
+              </div>
             </div>
-          </div>
-        ) : null}
-      </div>
+          ) : null}
+        </div>
+      ) : null}
       <button
         type="button"
         className="project-object-toolbar__action"
@@ -472,6 +487,58 @@ export function ProjectObjectToolbar({
       >
         <ListUnorderedIcon />
       </button>
+      <div className="project-object-toolbar__control project-object-toolbar__align-control">
+        <button
+          type="button"
+          className="project-object-toolbar__action project-object-toolbar__align-trigger"
+          aria-label={`Text alignment, text align ${format.textAlign}`}
+          aria-expanded={openPanel === "align"}
+          onClick={() =>
+            setOpenPanel((current) =>
+              current === "align" ? undefined : "align",
+            )
+          }
+        >
+          {format.textAlign === "left" ? (
+            <AlignLeftIcon />
+          ) : format.textAlign === "right" ? (
+            <AlignRightIcon />
+          ) : (
+            <MenuIcon />
+          )}
+          <Icon icon="chevronDown" size="xsm" aria-hidden="true" />
+        </button>
+        {openPanel === "align" ? (
+          <div
+            className="project-object-toolbar__panel project-object-toolbar__align-panel"
+            role="menu"
+            aria-label="Text alignment"
+          >
+            {(
+              [
+                ["left", "Left", AlignLeftIcon],
+                ["center", "Center", MenuIcon],
+                ["right", "Right", AlignRightIcon],
+              ] as const
+            ).map(([value, label, AlignmentIcon]) => (
+              <button
+                key={value}
+                type="button"
+                role="menuitemradio"
+                aria-checked={format.textAlign === value}
+                onClick={() => {
+                  updateFormat({ textAlign: value });
+                  closePanel();
+                }}
+              >
+                <AlignmentIcon />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      {children}
       {collaboration && onCollaborationChange ? (
         <>
           <span

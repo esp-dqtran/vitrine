@@ -17,6 +17,10 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     new URL("./components/ProjectPlaygroundPage.tsx", import.meta.url),
     "utf8",
   );
+  const commentsSource = readFileSync(
+    new URL("./components/ProjectCanvasComments.tsx", import.meta.url),
+    "utf8",
+  );
   const css = readCss("./styles.css");
 
   assert.match(
@@ -307,7 +311,20 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /const cellHeight = 54/);
   assert.match(source, /canvasTableReferenceForSelection/);
   assert.match(source, /canvasTableWithSelectedCells/);
+  assert.match(source, /function canvasTableCellAtScenePoint\(/);
   assert.match(source, /canvasTableCellSelectionRef/);
+  assert.match(
+    source,
+    /const handleCanvasToolPointerDownCapture = useCallback\([\s\S]*?const sceneX =[\s\S]*?const sceneY =[\s\S]*?canvasTableCellAtScenePoint\([\s\S]*?event\.detail <= 1[\s\S]*?event\.stopPropagation\(\)[\s\S]*?canvasTableCellSelectionRef\.current = \{[\s\S]*?setSelectedCanvasTable\(nextTable\)/,
+  );
+  assert.match(
+    source,
+    /const handleCanvasPlacementPointerUp = useCallback\([\s\S]*?canvasTableCellSelectionRef\.current[\s\S]*?event\.detail <= 1[\s\S]*?event\.stopPropagation\(\)[\s\S]*?selectedElementIds: \{\},[\s\S]*?selectedGroupIds: \{\}/,
+  );
+  assert.match(
+    source,
+    /savedCellSelection &&[\s\S]*?Object\.keys\(appState\.selectedElementIds\)\.length > 0[\s\S]*?window\.requestAnimationFrame\([\s\S]*?selectedElementIds: \{\},[\s\S]*?selectedGroupIds: \{\}/,
+  );
   assert.match(
     source,
     /const selectCanvasTableCells = useCallback\([\s\S]*?canvasTableCellSelectionRef\.current = \{[\s\S]*?setSelectedCanvasTable\(nextTable\);[\s\S]*?selectedElementIds: \{\},[\s\S]*?selectedGroupIds: \{\},[\s\S]*?editingGroupId: null/,
@@ -360,6 +377,14 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     css,
     /\.project-canvas-table-controls__cell-selections span[\s\S]*?border: 2px solid #0d99ff/,
   );
+  assert.match(
+    css,
+    /\.project-canvas-table-controls__add-column,[\s\S]*?\.project-canvas-table-controls__add-row[\s\S]*?opacity: 0;[\s\S]*?transition: opacity 120ms ease/,
+  );
+  assert.match(
+    css,
+    /\.project-canvas-table-controls__add-column:hover,[\s\S]*?\.project-canvas-table-controls__add-row:focus-visible[\s\S]*?opacity: 1/,
+  );
   assert.match(source, /className="project-canvas-tools-catalog"/);
   assert.match(source, /placeholder="Search"/);
   assert.match(source, /placeholder="Let’s find the perfect thing"/);
@@ -369,22 +394,64 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   );
   assert.match(
     source,
+    /import figjamStampWheel from .*figjam-stamp-wheel\.svg/,
+  );
+  assert.match(
+    source,
+    /className="project-canvas-stamp-menu__surface"[\s\S]*?src=\{figjamStampWheel\}/,
+  );
+  assert.doesNotMatch(source, /FaceHappyIcon/);
+  assert.match(source, /className="project-canvas-stamp-preview"/);
+  assert.match(
+    source,
+    /stamp\.id === "profile"[\s\S]*?createCanvasProfileStampElements/,
+  );
+  assert.match(
+    source,
+    /className="project-canvas-stamp-menu__profile"[\s\S]*?canvasCollaboratorInitials\(userName\)/,
+  );
+  assert.match(
+    css,
+    /\.project-canvas-stamp-preview\s*\{[\s\S]*?width: 40px;[\s\S]*?pointer-events: none;/,
+  );
+  assert.match(
+    css,
+    /\.project-playground__canvas--stamp-placement[\s\S]*?toolbar-selection[\s\S]*?background: transparent !important/,
+  );
+  assert.match(
+    css,
+    /\.layer-ui__wrapper:has\(\.project-canvas-stamp-menu\)[\s\S]*?z-index: 700 !important/,
+  );
+  assert.match(
+    commentsSource,
+    /import figjamCommentToolIcon from .*figjam-comment-tool\.svg/,
+  );
+  assert.match(
+    commentsSource,
+    /just leave a note of appreciation\. Click anywhere in the file to leave a comment\./,
+  );
+  assert.match(css, /\.project-canvas-comment-inbox\s*\{[\s\S]*?width: 240px;/);
+  assert.match(
+    commentsSource,
+    /className="project-canvas-comments project-canvas-comments--composer"/,
+  );
+  assert.match(commentsSource, /aria-label="Add a comment"/);
+  assert.match(
+    css,
+    /\.project-canvas-comments--composer\s*\{[\s\S]*?width: 300px;[\s\S]*?height: 44px;/,
+  );
+  assert.match(
+    source,
     /const canvasWidgetsTabs:[\s\S]*?All[\s\S]*?Stickers[\s\S]*?Templates[\s\S]*?Widgets[\s\S]*?Plugins[\s\S]*?More/,
   );
   assert.match(source, /const canvasActionSections = \[/);
-  assert.match(source, /title: "Select all"/);
-  assert.match(source, /title: "Find and replace…"/);
   assert.match(source, /aria-label="Find and replace"/);
   assert.match(source, /onClick={replaceAllCanvasTextMatches}/);
   assert.match(source, /editor\.scrollToContent\(match,/);
-  assert.match(source, /title: "Undo"/);
-  assert.match(source, /"Unlock selection"[\s\S]*"Lock selection"/);
+  assert.match(source, /"Unlock selection"[\s\S]*"Lock\/Unlock selection"/);
   assert.match(source, /title: "Align horizontal centers"/);
   assert.match(source, /title: "Align vertical centers"/);
-  assert.match(source, /title: "Keyboard shortcuts"/);
-  assert.match(source, /title: "Minimize UI"/);
-  assert.match(source, /title: "Show\/Hide UI"/);
-  assert.match(source, /title: "Multiplayer cursors"/);
+  assert.doesNotMatch(source, /title: "Common settings"/);
   assert.match(source, /captureUpdate: CaptureUpdateAction\.IMMEDIATELY/);
   assert.match(source, /captureUpdate: CaptureUpdateAction\.NEVER/);
   assert.match(source, /activateCanvasTool\("sticky"\)/);
@@ -783,11 +850,15 @@ test("gives the infinite canvas the full available viewport", () => {
   );
   assert.match(
     css,
-    /\.project-screen-library\s*\{[^}]*position:\s*absolute;[^}]*top:\s*136px;[^}]*left:\s*64px;[^}]*width:\s*min\(420px,/s,
+    /\.project-screen-library\s*\{[^}]*position:\s*absolute;[^}]*top:\s*136px;[^}]*left:\s*64px;[^}]*width:\s*min\(640px,/s,
   );
   assert.match(
     css,
     /\.project-screen-library__grid\s*\{[^}]*grid-template-columns:\s*repeat\(2,/s,
+  );
+  assert.match(
+    css,
+    /\.project-screen-library__grid--inspiration\s*\{[^}]*grid-template-columns:\s*repeat\(2,/s,
   );
   assert.match(
     css,
@@ -1634,6 +1705,14 @@ test("keeps every canvas panel's ink on the theme, not on light-mode hexes", () 
   assert.match(
     css,
     /\.project-sticky-note-picker\s*\{[^}]*background:\s*rgb\(255 255 255 \/ 98%\)/s,
+  );
+  assert.match(
+    css,
+    /\.project-playground--canvas-first\s*\{[^}]*--project-canvas-text:\s*#1e1e1e;[^}]*--project-canvas-surface:\s*#fff;[^}]*--project-canvas-surface-translucent-strong:\s*rgb\(255 255 255 \/ 98%\);/s,
+  );
+  assert.match(
+    css,
+    /\.project-canvas-document-editor__toolbar\s*\{[^}]*color:\s*#fff;[^}]*background:\s*#1e1e1e;/s,
   );
 });
 

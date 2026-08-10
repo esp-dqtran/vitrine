@@ -22,7 +22,6 @@ import {
   EditIcon,
   EyeCloseIcon,
   EyeIcon,
-  FaceHappyIcon,
   GridIcon,
   LockIcon,
   MergeIcon,
@@ -154,6 +153,7 @@ import figjamMindMapIcon from "../assets/figjam-mind-map.svg";
 import figjamSectionToolIcon from "../assets/figjam-section-tool.svg";
 import figjamTableToolIcon from "../assets/figjam-table-tool.svg";
 import figjamStampToolIcon from "../assets/figjam-stamp-tool.svg";
+import figjamStampWheel from "../assets/figjam-stamp-wheel.svg";
 import figjamActionsToolIcon from "../assets/figjam-actions-tool.svg";
 import figjamWidgetsToolIcon from "../assets/figjam-widgets-tool.svg";
 import figjamStampThumbsUp from "../assets/figjam-stamp-thumbs-up.png";
@@ -648,6 +648,21 @@ const canvasWidgetsLauncherItems: readonly CanvasWidgetsLauncherItem[] = [
   },
 ];
 
+const canvasWidgetsLauncherGroups = [
+  {
+    id: "brainstorm",
+    title: "Brainstorm together",
+    description: "Find inspiration, organize ideas, and react together.",
+    itemIds: ["stamps", "templates", "research-frames"],
+  },
+  {
+    id: "work-together",
+    title: "Work together",
+    description: "Discuss references and turn research into clear direction.",
+    itemIds: ["comments", "catalog", "document"],
+  },
+] as const;
+
 const projectCanvasToolIcons: Record<
   Exclude<ProjectCanvasTool, "sticky" | "comments">,
   IconName
@@ -959,7 +974,7 @@ function createCanvasStampElement({
   fileId: FileId;
   stamp: CanvasStampOption;
 }): ExcalidrawElement {
-  const size = 88;
+  const size = 40;
   const [image] = convertToExcalidrawElements([
     {
       type: "image",
@@ -979,6 +994,48 @@ function createCanvasStampElement({
     } as ElementSkeleton,
   ]);
   return image as ExcalidrawElement;
+}
+
+function createCanvasProfileStampElements({
+  x,
+  y,
+  userName,
+}: {
+  x: number;
+  y: number;
+  userName: string;
+}): ExcalidrawElement[] {
+  const size = 40;
+  const color = canvasCollaboratorColor(userName).background;
+  return convertToExcalidrawElements([
+    {
+      type: "ellipse",
+      x: x - size / 2,
+      y: y - size / 2,
+      width: size,
+      height: size,
+      strokeColor: "#ffffff",
+      backgroundColor: color,
+      fillStyle: "solid",
+      strokeWidth: 3,
+      roughness: 0,
+      label: {
+        text: canvasCollaboratorInitials(userName).slice(0, 1),
+        fontSize: 16,
+        fontFamily: 2,
+        textAlign: "center",
+        verticalAlign: "middle",
+        strokeColor: "#ffffff",
+      },
+      customData: {
+        astryxReference: {
+          kind: "stamp",
+          stampId: "profile",
+          label: "Profile",
+        },
+      },
+    } as ElementSkeleton,
+  ]) as ExcalidrawElement[];
 }
 
 function createStickyNoteElements({
@@ -1256,6 +1313,20 @@ function canvasTableWithSelectedCells(
     color: firstSelectedCell?.color ?? table.color,
     format: firstSelectedCell?.format ?? table.format,
   };
+}
+
+function canvasTableCellAtScenePoint(
+  table: CanvasTableReference,
+  sceneX: number,
+  sceneY: number,
+): CanvasTableCellReference | undefined {
+  return table.cells.find(
+    (cell) =>
+      sceneX >= cell.x &&
+      sceneX <= cell.x + cell.width &&
+      sceneY >= cell.y &&
+      sceneY <= cell.y + cell.height,
+  );
 }
 
 function canvasTableReferencesEqual(
@@ -2375,6 +2446,10 @@ export function ProjectPlayground({
     defaultCanvasStamp.id,
   );
   const [stampPlacement, setStampPlacement] = useState<CanvasStampOption>();
+  const [stampPreviewPoint, setStampPreviewPoint] = useState<{
+    x: number;
+    y: number;
+  }>();
   const [widgetsLauncherOpen, setWidgetsLauncherOpen] = useState(false);
   const [widgetsLauncherQuery, setWidgetsLauncherQuery] = useState("");
   const [widgetsLauncherTab, setWidgetsLauncherTab] =
@@ -2594,9 +2669,19 @@ export function ProjectPlayground({
 
   const handleCanvasPointerUpdate = useCallback(
     ({ pointer, button }: CanvasPointerUpdate) => {
+      const editor = editorRef.current;
+      const appState = editor?.getAppState();
       const selectedElementIds = Object.keys(
-        editorRef.current?.getAppState().selectedElementIds ?? {},
+        appState?.selectedElementIds ?? {},
       );
+      if (stampPlacementRef.current && appState) {
+        setStampPreviewPoint({
+          x: (pointer.x + appState.scrollX) * appState.zoom.value,
+          y: (pointer.y + appState.scrollY) * appState.zoom.value,
+        });
+      } else {
+        setStampPreviewPoint(undefined);
+      }
       collaborationRef.current?.publishCursor({
         pointer: { x: pointer.x, y: pointer.y },
         button,
@@ -2882,6 +2967,7 @@ export function ProjectPlayground({
   const deactivateStampTool = useCallback(() => {
     stampPlacementRef.current = undefined;
     setStampPlacement(undefined);
+    setStampPreviewPoint(undefined);
     setStampPickerOpen(false);
   }, []);
 
@@ -2891,7 +2977,37 @@ export function ProjectPlayground({
       const nativeTool = target
         .closest("label")
         ?.querySelector('input[data-testid^="toolbar-"]');
-      if (target.closest(".excalidraw__canvas") || nativeTool) {
+      const canvasPointer = target.closest(".excalidraw__canvas");
+      if (canvasPointer && selectedCanvasTable && canvasRootRef.current) {
+        const bounds = canvasRootRef.current.getBoundingClientRect();
+        const sceneX =
+          (event.clientX - bounds.left) / canvasViewport.zoom -
+          canvasViewport.scrollX;
+        const sceneY =
+          (event.clientY - bounds.top) / canvasViewport.zoom -
+          canvasViewport.scrollY;
+        const pointedCell = canvasTableCellAtScenePoint(
+          selectedCanvasTable,
+          sceneX,
+          sceneY,
+        );
+        if (pointedCell) {
+          if (event.detail <= 1) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          const nextTable = canvasTableWithSelectedCells(selectedCanvasTable, [
+            pointedCell.elementId,
+          ]);
+          canvasTableCellSelectionRef.current = {
+            tableId: selectedCanvasTable.tableId,
+            cellIds: nextTable.selectedCellIds,
+          };
+          setSelectedCanvasTable(nextTable);
+        } else {
+          canvasTableCellSelectionRef.current = undefined;
+        }
+      } else if (canvasPointer || nativeTool) {
         canvasTableCellSelectionRef.current = undefined;
       }
       if (nativeTool) {
@@ -2902,7 +3018,13 @@ export function ProjectPlayground({
         setWidgetsLauncherOpen(false);
       }
     },
-    [deactivateStickyTool, deactivateTableTool, deactivateStampTool],
+    [
+      canvasViewport,
+      deactivateStickyTool,
+      deactivateTableTool,
+      deactivateStampTool,
+      selectedCanvasTable,
+    ],
   );
 
   const handleCanvasChange = useCallback(
@@ -2958,6 +3080,22 @@ export function ProjectPlayground({
         : detectedCanvasTable;
       if (savedCellSelection && !nextSelectedCanvasTable) {
         canvasTableCellSelectionRef.current = undefined;
+      }
+      if (
+        savedCellSelection &&
+        nextSelectedCanvasTable &&
+        Object.keys(appState.selectedElementIds).length > 0
+      ) {
+        window.requestAnimationFrame(() => {
+          editorRef.current?.updateScene({
+            appState: {
+              selectedElementIds: {},
+              selectedGroupIds: {},
+              editingGroupId: null,
+            },
+            captureUpdate: CaptureUpdateAction.NEVER,
+          });
+        });
       }
       setSelectedCanvasTable((current) =>
         canvasTableReferencesEqual(current, nextSelectedCanvasTable)
@@ -4143,9 +4281,22 @@ export function ProjectPlayground({
   }, []);
 
   const insertCanvasStampAt = useCallback(
-    async (x: number, y: number, stamp: CanvasStampOption) => {
+    async (
+      x: number,
+      y: number,
+      stamp: CanvasStampOption,
+      selectedElementIds: AppState["selectedElementIds"],
+    ) => {
       const editor = editorRef.current;
       if (!editor) return;
+      if (stamp.id === "profile") {
+        const created = createCanvasProfileStampElements({ x, y, userName });
+        editor.updateScene({
+          elements: [...editor.getSceneElements(), ...created],
+          appState: { selectedElementIds },
+        });
+        return;
+      }
       try {
         const response = await fetch(stamp.asset);
         if (!response.ok)
@@ -4162,22 +4313,38 @@ export function ProjectPlayground({
         editor.addFiles([file]);
         editor.updateScene({
           elements: [...editor.getSceneElements(), image],
-          appState: { selectedElementIds: { [image.id]: true } },
+          appState: { selectedElementIds },
         });
       } catch (error) {
         showToast(`Could not add ${stamp.label.toLowerCase()} stamp.`);
         console.error(error);
       }
     },
-    [showToast],
+    [showToast, userName],
   );
 
   const handleCanvasPlacementPointerUp = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
       const stamp = stampPlacementRef.current;
-      if ((!tablePlacementRef.current && !stamp) || event.button !== 0) return;
       const target = event.target as HTMLElement;
-      if (!target.closest(".excalidraw__canvas")) return;
+      if (event.button !== 0 || !target.closest(".excalidraw__canvas")) return;
+      if (!tablePlacementRef.current && !stamp) {
+        if (canvasTableCellSelectionRef.current) {
+          if (event.detail <= 1) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          editorRef.current?.updateScene({
+            appState: {
+              selectedElementIds: {},
+              selectedGroupIds: {},
+              editingGroupId: null,
+            },
+            captureUpdate: CaptureUpdateAction.NEVER,
+          });
+        }
+        return;
+      }
 
       const editor = editorRef.current;
       const root = canvasRootRef.current;
@@ -4201,7 +4368,12 @@ export function ProjectPlayground({
         }
         const currentStamp = stampPlacementRef.current;
         if (currentStamp)
-          void insertCanvasStampAt(placement.x, placement.y, currentStamp);
+          void insertCanvasStampAt(
+            placement.x,
+            placement.y,
+            currentStamp,
+            appState.selectedElementIds,
+          );
       });
     },
     [insertCanvasStampAt, insertCanvasTableAt, stopTablePlacement],
@@ -6010,6 +6182,24 @@ export function ProjectPlayground({
     [canvasViewport],
   );
 
+  const commentComposerStyle = useMemo(() => {
+    if (!commentDraftAnchor) return undefined;
+    const anchorX =
+      (commentDraftAnchor.x + canvasViewport.scrollX) * canvasViewport.zoom;
+    const anchorY =
+      (commentDraftAnchor.y + canvasViewport.scrollY) * canvasViewport.zoom;
+    const canvasWidth = canvasRootRef.current?.clientWidth ?? 1280;
+    const canvasHeight = canvasRootRef.current?.clientHeight ?? 720;
+    const left = Math.min(Math.max(60, anchorX + 48), canvasWidth - 312);
+    const top = Math.min(Math.max(68, anchorY - 37), canvasHeight - 58);
+    return {
+      "--project-comment-composer-left": `${left}px`,
+      "--project-comment-composer-top": `${top}px`,
+      "--project-comment-composer-pin-left": `${anchorX - left}px`,
+      "--project-comment-composer-pin-top": `${anchorY - top - 32}px`,
+    } as CSSProperties;
+  }, [canvasViewport, commentDraftAnchor]);
+
   const saveStatusLabel =
     saveErrorMessage && (saveState === "offline" || saveState === "unavailable")
       ? `${saveLabels[saveState]}: ${saveErrorMessage}`
@@ -6024,98 +6214,36 @@ export function ProjectPlayground({
     selectedCanvasElementsForActions.every((element) => element.locked);
   const canvasActionSections = [
     {
-      title: selectedCanvasElementIds.length > 0 ? "Selection" : "Suggestions",
-      items:
-        selectedCanvasElementIds.length > 0
-          ? [
-              {
-                id: "lock",
-                title: selectedCanvasElementsLocked
-                  ? "Unlock selection"
-                  : "Lock selection",
-                shortcut: "⇧⌘L",
-                disabled: false,
-                checked: undefined,
-                onClick: toggleSelectedCanvasElementsLocked,
-              },
-              {
-                id: "align-horizontal",
-                title: "Align horizontal centers",
-                shortcut: "⌥H",
-                disabled: selectedCanvasElementIds.length < 2,
-                checked: undefined,
-                onClick: () => alignSelectedCanvasElements("horizontal"),
-              },
-              {
-                id: "align-vertical",
-                title: "Align vertical centers",
-                shortcut: "⌥V",
-                disabled: selectedCanvasElementIds.length < 2,
-                checked: undefined,
-                onClick: () => alignSelectedCanvasElements("vertical"),
-              },
-            ]
-          : [
-              {
-                id: "find-replace",
-                title: "Find and replace…",
-                shortcut: "⌘F",
-                disabled: false,
-                checked: undefined,
-                onClick: openCanvasFind,
-              },
-              {
-                id: "select-all",
-                title: "Select all",
-                shortcut: "⌘A",
-                disabled: false,
-                checked: undefined,
-                onClick: selectAllCanvasElements,
-              },
-              {
-                id: "undo",
-                title: "Undo",
-                shortcut: "⌘Z",
-                disabled: false,
-                checked: undefined,
-                onClick: undoCanvasAction,
-              },
-            ],
-    },
-    {
-      title: "Common settings",
+      title: "",
       items: [
         {
-          id: "minimize-ui",
-          title: "Minimize UI",
-          shortcut: "⇧⌘\\",
-          disabled: false,
-          checked: canvasUiMinimized,
-          onClick: () => setCanvasUiMinimized((minimized) => !minimized),
-        },
-        {
-          id: "show-ui",
-          title: "Show/Hide UI",
-          shortcut: "⌘\\",
-          disabled: false,
-          checked: canvasChromeVisible,
-          onClick: () => setCanvasChromeVisible((visible) => !visible),
-        },
-        {
-          id: "multiplayer-cursors",
-          title: "Multiplayer cursors",
-          shortcut: "⌥⌘\\",
-          disabled: false,
-          checked: canvasRemoteCursorsVisible,
-          onClick: () => setCanvasRemoteCursorsVisible((visible) => !visible),
-        },
-        {
-          id: "keyboard-shortcuts",
-          title: "Keyboard shortcuts",
-          shortcut: "?",
-          disabled: false,
+          id: "lock",
+          title: selectedCanvasElementsLocked
+            ? "Unlock selection"
+            : "Lock/Unlock selection",
+          shortcut: "⇧⌘L",
+          disabled: selectedCanvasElementIds.length === 0,
           checked: undefined,
-          onClick: openCanvasKeyboardShortcuts,
+          icon: <LockIcon />,
+          onClick: toggleSelectedCanvasElementsLocked,
+        },
+        {
+          id: "align-horizontal",
+          title: "Align horizontal centers",
+          shortcut: "⌥H",
+          disabled: selectedCanvasElementIds.length < 2,
+          checked: undefined,
+          icon: <DragIcon />,
+          onClick: () => alignSelectedCanvasElements("horizontal"),
+        },
+        {
+          id: "align-vertical",
+          title: "Align vertical centers",
+          shortcut: "⌥V",
+          disabled: selectedCanvasElementIds.length < 2,
+          checked: undefined,
+          icon: <DragIcon />,
+          onClick: () => alignSelectedCanvasElements("vertical"),
         },
       ],
     },
@@ -6154,6 +6282,16 @@ export function ProjectPlayground({
           .toLowerCase()
           .includes(normalizedWidgetsLauncherQuery)),
   );
+  const filteredWidgetsLauncherGroups = canvasWidgetsLauncherGroups
+    .map((group) => ({
+      ...group,
+      items: group.itemIds
+        .map((itemId) =>
+          filteredWidgetsLauncherItems.find((item) => item.id === itemId),
+        )
+        .filter((item): item is CanvasWidgetsLauncherItem => Boolean(item)),
+    }))
+    .filter((group) => group.items.length > 0);
   const canvasToolPanelOpen =
     toolsCatalogOpen ||
     canvasFindOpen ||
@@ -6454,6 +6592,32 @@ export function ProjectPlayground({
               tools: { image: true },
             }}
           />
+          {stampPlacement && stampPreviewPoint ? (
+            stampPlacement.id === "profile" ? (
+              <span
+                className="project-canvas-stamp-preview project-canvas-stamp-preview--profile"
+                aria-hidden="true"
+                style={{
+                  left: stampPreviewPoint.x,
+                  top: stampPreviewPoint.y,
+                  backgroundColor: canvasCollaboratorColor(userName).background,
+                }}
+              >
+                {canvasCollaboratorInitials(userName).slice(0, 1)}
+              </span>
+            ) : (
+              <img
+                className="project-canvas-stamp-preview"
+                src={stampPlacement.asset}
+                alt=""
+                aria-hidden="true"
+                style={{
+                  left: stampPreviewPoint.x,
+                  top: stampPreviewPoint.y,
+                }}
+              />
+            )
+          ) : null}
         </div>
         {canvasToolbarHost &&
           createPortal(
@@ -6548,8 +6712,10 @@ export function ProjectPlayground({
                       role="toolbar"
                       aria-label="Stamp options"
                     >
-                      <span
+                      <img
                         className="project-canvas-stamp-menu__surface"
+                        src={figjamStampWheel}
+                        alt=""
                         aria-hidden="true"
                       />
                       {canvasStampOptions.map((stamp, index) => (
@@ -6566,7 +6732,20 @@ export function ProjectPlayground({
                           }
                           onClick={() => selectCanvasStamp(stamp)}
                         >
-                          <img src={stamp.asset} alt="" aria-hidden="true" />
+                          {stamp.id === "profile" ? (
+                            <span
+                              className="project-canvas-stamp-menu__profile"
+                              aria-hidden="true"
+                              style={{
+                                backgroundColor:
+                                  canvasCollaboratorColor(userName).background,
+                              }}
+                            >
+                              {canvasCollaboratorInitials(userName).slice(0, 1)}
+                            </span>
+                          ) : (
+                            <img src={stamp.asset} alt="" aria-hidden="true" />
+                          )}
                         </button>
                       ))}
                       <button
@@ -6577,9 +6756,7 @@ export function ProjectPlayground({
                           toggleWidgetsLauncher();
                           setWidgetsLauncherTab("stickers");
                         }}
-                      >
-                        <FaceHappyIcon size={34} />
-                      </button>
+                      ></button>
                     </div>
                   ) : null}
                 </span>
@@ -6698,6 +6875,7 @@ export function ProjectPlayground({
           <ProjectCanvasCommentPanel
             thread={selectedComment}
             draft={commentDraft}
+            style={commentDraftAnchor ? commentComposerStyle : undefined}
             onDraftChange={setCommentDraft}
             onSubmit={submitCanvasComment}
             onResolve={toggleSelectedCommentResolved}
@@ -6799,7 +6977,7 @@ export function ProjectPlayground({
                   key={section.title}
                   className="project-canvas-tools-catalog__section"
                 >
-                  <h3>{section.title}</h3>
+                  {section.title ? <h3>{section.title}</h3> : null}
                   <div className="project-canvas-tools-catalog__list">
                     {section.items.map((item) => (
                       <button
@@ -6817,7 +6995,9 @@ export function ProjectPlayground({
                         >
                           {item.checked ? (
                             <Icon icon="check" size="sm" />
-                          ) : null}
+                          ) : (
+                            item.icon
+                          )}
                         </span>
                         <span className="project-canvas-tools-catalog__copy">
                           <strong>{item.title}</strong>
@@ -6888,30 +7068,40 @@ export function ProjectPlayground({
                   ?.label ?? "All"
               }
             >
-              {filteredWidgetsLauncherItems.length ? (
-                <div className="project-canvas-widgets-launcher__grid">
-                  {filteredWidgetsLauncherItems.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className="project-canvas-widgets-launcher__card"
-                      onClick={() => openWidgetsTool(item.tool)}
+              {filteredWidgetsLauncherGroups.length ? (
+                <div className="project-canvas-widgets-launcher__sections">
+                  {filteredWidgetsLauncherGroups.map((group) => (
+                    <section
+                      key={group.id}
+                      className="project-canvas-widgets-launcher__section"
                     >
-                      <span
-                        className="project-canvas-widgets-launcher__preview"
-                        aria-hidden="true"
-                      >
-                        {item.tool === "stamp" ? (
-                          <img src={figjamStampStar} alt="" />
-                        ) : (
-                          <ProjectCanvasToolGlyph tool={item.tool} />
-                        )}
-                      </span>
-                      <span>
-                        <strong>{item.title}</strong>
-                        <small>{item.description}</small>
-                      </span>
-                    </button>
+                      <header>
+                        <h2>{group.title}</h2>
+                        <p>{group.description}</p>
+                      </header>
+                      <div className="project-canvas-widgets-launcher__grid">
+                        {group.items.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            className="project-canvas-widgets-launcher__card"
+                            onClick={() => openWidgetsTool(item.tool)}
+                          >
+                            <span
+                              className="project-canvas-widgets-launcher__preview"
+                              aria-hidden="true"
+                            >
+                              {item.tool === "stamp" ? (
+                                <img src={figjamStampStar} alt="" />
+                              ) : (
+                                <ProjectCanvasToolGlyph tool={item.tool} />
+                              )}
+                            </span>
+                            <strong>{item.title}</strong>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
                   ))}
                 </div>
               ) : (
