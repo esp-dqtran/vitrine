@@ -18,6 +18,8 @@ import {
 } from "@astryxdesign/core";
 import {
   ChevronSmallDownIcon,
+  CogIcon,
+  CommandIcon,
   DragIcon,
   EditIcon,
   EyeCloseIcon,
@@ -26,6 +28,9 @@ import {
   LockIcon,
   MergeIcon,
   PlusIcon,
+  PointerDefaultIcon,
+  SearchIcon,
+  UndoIcon,
   UnlockIcon,
 } from "@storybook/icons";
 import {
@@ -420,15 +425,6 @@ const canvasShapeOptions: readonly CanvasShapeOption[] = [
     roundness: "sharp",
   },
   {
-    id: "rounded-rectangle",
-    tool: "rectangle",
-    label: "Rounded rectangle",
-    group: "Basic",
-    icon: figjamRoundedRectangleIcon,
-    glyphFill: "rounded-rectangle",
-    roundness: "round",
-  },
-  {
     id: "triangle",
     customShape: "triangle",
     label: "Triangle",
@@ -441,6 +437,15 @@ const canvasShapeOptions: readonly CanvasShapeOption[] = [
     label: "Down triangle",
     group: "Basic",
     icon: figjamDownTriangleIcon,
+  },
+  {
+    id: "rounded-rectangle",
+    tool: "rectangle",
+    label: "Rounded rectangle",
+    group: "Basic",
+    icon: figjamRoundedRectangleIcon,
+    glyphFill: "rounded-rectangle",
+    roundness: "round",
   },
   {
     id: "cylinder",
@@ -479,8 +484,6 @@ const canvasMarkerColors: readonly CanvasMarkerColor[] = [
   { label: "White", value: "#ffffff" },
 ];
 
-const canvasShapeColors = canvasMarkerColors;
-
 /* FigJam's exact Section palette, measured from the live color selector. */
 const canvasSectionColors: readonly CanvasMarkerColor[] = [
   { label: "Black", value: "#1e1e1e" },
@@ -505,6 +508,10 @@ const canvasSectionColors: readonly CanvasMarkerColor[] = [
   { label: "Light violet", value: "#dcccff" },
   { label: "Light pink", value: "#ffc2ec" },
 ];
+
+/* Shapes use FigJam's complete 21-color palette. White is the default fill,
+   while the array retains FigJam's visual order inside the picker. */
+const canvasShapeColors = canvasSectionColors;
 
 function canvasTableTextColor(fill: string): string {
   const value = fill.replace("#", "");
@@ -715,9 +722,9 @@ function CanvasShapeGlyph({
 function CanvasShapesCollageGlyph({ color }: { color: string }) {
   return (
     <span className="project-canvas-shapes-collage" aria-hidden="true">
-      <img
-        src={canvasShapePreviewOptions.rectangle.icon}
-        alt=""
+      <ShapeLibraryGlyph
+        shape={canvasShapePreviewOptions.rectangle}
+        color={color}
         className="project-canvas-shapes-collage__rectangle"
       />
       <CanvasShapeGlyph
@@ -725,21 +732,45 @@ function CanvasShapesCollageGlyph({ color }: { color: string }) {
         color={color}
         className="project-canvas-shapes-collage__connector"
       />
-      <img
-        src={canvasShapePreviewOptions.ellipse.icon}
-        alt=""
+      <ShapeLibraryGlyph
+        shape={canvasShapePreviewOptions.ellipse}
+        color={color}
         className="project-canvas-shapes-collage__ellipse"
       />
     </span>
   );
 }
 
-function ShapeLibraryGlyph({ shape }: { shape: CanvasShapeOption }) {
+function ShapeLibraryGlyph({
+  shape,
+  color,
+  className,
+}: {
+  shape: CanvasShapeOption;
+  color?: string;
+  className?: string;
+}) {
+  if (color) {
+    return (
+      <span
+        className={`project-canvas-shape-source-icon project-canvas-shape-source-icon--colored${className ? ` ${className}` : ""}`}
+        style={
+          {
+            "--project-canvas-shape-source": `url("${shape.icon}")`,
+            "--project-canvas-shape-source-color": color,
+          } as CSSProperties
+        }
+        aria-hidden="true"
+      >
+        <img src={shape.icon} alt="" />
+      </span>
+    );
+  }
   return (
     <img
       src={shape.icon}
       alt=""
-      className="project-canvas-shape-source-icon"
+      className={`project-canvas-shape-source-icon${className ? ` ${className}` : ""}`}
       aria-hidden="true"
     />
   );
@@ -2496,7 +2527,7 @@ export function ProjectPlayground({
   const [activeShapeOptionId, setActiveShapeOptionId] =
     useState<CanvasShapeOptionId>("rectangle");
   const [shapePlacement, setShapePlacement] = useState<CanvasShapeOption>();
-  const [shapeColor, setShapeColor] = useState(canvasShapeColors[0].value);
+  const [shapeColor, setShapeColor] = useState(defaultSectionFill);
   const [shapeColorPickerOpen, setShapeColorPickerOpen] = useState(false);
   const [stickyPickerOpen, setStickyPickerOpen] = useState(false);
   const [stickyToolColor, setStickyToolColor] = useState(
@@ -3020,6 +3051,20 @@ export function ProjectPlayground({
         setStickyDraft(undefined);
         deactivateTableTool();
         deactivateStampTool();
+        setShapePickerOpen(false);
+        setShapeLibraryOpen(false);
+        setShapeColorPickerOpen(false);
+        setShapePlacement(undefined);
+        setMarkerDrawing(false);
+        setResearchFrameDrawing(false);
+        documentPlacementRef.current = false;
+        setDocumentPlacement(false);
+        setCommentPlacement(false);
+        setResearchFramesOpen(false);
+        setScreensOpen(false);
+        setTemplatesOpen(false);
+        setReferencesOpen(false);
+        setToolsCatalogOpen(false);
         setWidgetsLauncherOpen(false);
       }
     },
@@ -4579,9 +4624,17 @@ export function ProjectPlayground({
     (shape: CanvasShapeOption) => {
       setActiveShapeOptionId(shape.id);
       const editor = editorRef.current;
+      const isFilledShape =
+        shape.tool === "rectangle" ||
+        shape.tool === "ellipse" ||
+        shape.tool === "diamond";
       editor?.updateScene({
         appState: {
-          currentItemStrokeColor: shapeColor,
+          currentItemStrokeColor: isFilledShape ? "#757575" : shapeColor,
+          currentItemBackgroundColor: isFilledShape
+            ? shapeColor
+            : "transparent",
+          currentItemFillStyle: "solid",
           currentItemStrokeWidth: 2,
           currentItemRoughness: 0,
           currentItemRoundness: shape.roundness ?? "sharp",
@@ -4613,17 +4666,29 @@ export function ProjectPlayground({
     [deactivateStickyTool, deactivateTableTool, shapeColor],
   );
 
-  const selectCanvasShapeColor = useCallback((color: string) => {
-    setShapeColor(color);
-    setShapeColorPickerOpen(false);
-    editorRef.current?.updateScene({
-      appState: {
-        currentItemStrokeColor: color,
-        currentItemStrokeWidth: 2,
-        currentItemRoughness: 0,
-      },
-    });
-  }, []);
+  const selectCanvasShapeColor = useCallback(
+    (color: string) => {
+      setShapeColor(color);
+      setShapeColorPickerOpen(false);
+      const activeShape = canvasShapeOptions.find(
+        (shape) => shape.id === activeShapeOptionId,
+      );
+      const isFilledShape =
+        activeShape?.tool === "rectangle" ||
+        activeShape?.tool === "ellipse" ||
+        activeShape?.tool === "diamond";
+      editorRef.current?.updateScene({
+        appState: {
+          currentItemStrokeColor: isFilledShape ? "#757575" : color,
+          currentItemBackgroundColor: isFilledShape ? color : "transparent",
+          currentItemFillStyle: "solid",
+          currentItemStrokeWidth: 2,
+          currentItemRoughness: 0,
+        },
+      });
+    },
+    [activeShapeOptionId],
+  );
 
   const selectMarkerMode = useCallback(
     (mode: CanvasMarkerMode) => {
@@ -6038,87 +6103,6 @@ export function ProjectPlayground({
     setToolsCatalogOpen(false);
   }, []);
 
-  const toggleSelectedCanvasElementsLocked = useCallback(() => {
-    const editor = editorRef.current;
-    if (!editor) return;
-    const appState = editor.getAppState();
-    const selectedIds = new Set(Object.keys(appState.selectedElementIds));
-    const selectedElements = editor
-      .getSceneElements()
-      .filter((element) => !element.isDeleted && selectedIds.has(element.id));
-    if (selectedElements.length === 0) return;
-    const nextLocked = !selectedElements.every((element) => element.locked);
-    editor.updateScene({
-      elements: editor
-        .getSceneElements()
-        .map((element) =>
-          selectedIds.has(element.id)
-            ? withCanvasElementUpdate(element, { locked: nextLocked })
-            : element,
-        ),
-      appState: { selectedElementIds: appState.selectedElementIds },
-      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
-    });
-    setToolsCatalogOpen(false);
-  }, []);
-
-  const alignSelectedCanvasElements = useCallback(
-    (axis: "horizontal" | "vertical") => {
-      const editor = editorRef.current;
-      if (!editor) return;
-      const appState = editor.getAppState();
-      const selectedIds = new Set(Object.keys(appState.selectedElementIds));
-      const selectedElements = editor
-        .getSceneElements()
-        .filter((element) => !element.isDeleted && selectedIds.has(element.id));
-      if (selectedElements.length < 2) return;
-      const targetCenter =
-        axis === "horizontal"
-          ? (Math.min(...selectedElements.map((element) => element.x)) +
-              Math.max(
-                ...selectedElements.map((element) => element.x + element.width),
-              )) /
-            2
-          : (Math.min(...selectedElements.map((element) => element.y)) +
-              Math.max(
-                ...selectedElements.map(
-                  (element) => element.y + element.height,
-                ),
-              )) /
-            2;
-      const offsets = new Map(
-        selectedElements.map((element) => [
-          element.id,
-          axis === "horizontal"
-            ? { x: targetCenter - element.width / 2 - element.x, y: 0 }
-            : { x: 0, y: targetCenter - element.height / 2 - element.y },
-        ]),
-      );
-      const elements = editor.getSceneElements().map((element) => {
-        const ownOffset = offsets.get(element.id);
-        const containerOffset = (
-          element as ExcalidrawElement & { containerId?: string | null }
-        ).containerId;
-        const offset =
-          ownOffset ??
-          (containerOffset ? offsets.get(containerOffset) : undefined);
-        return offset
-          ? withCanvasElementUpdate(element, {
-              x: element.x + offset.x,
-              y: element.y + offset.y,
-            })
-          : element;
-      });
-      editor.updateScene({
-        elements,
-        appState: { selectedElementIds: appState.selectedElementIds },
-        captureUpdate: CaptureUpdateAction.IMMEDIATELY,
-      });
-      setToolsCatalogOpen(false);
-    },
-    [],
-  );
-
   const undoCanvasAction = useCallback(() => {
     canvasRootRef.current
       ?.querySelector<HTMLButtonElement>('button[aria-label="Undo"]')
@@ -6231,45 +6215,95 @@ export function ProjectPlayground({
       ? `${saveLabels[saveState]}: ${saveErrorMessage}`
       : saveLabels[saveState];
   const normalizedToolsCatalogQuery = toolsCatalogQuery.trim().toLowerCase();
-  const selectedCanvasElementsForActions =
-    editorRef.current
-      ?.getSceneElements()
-      .filter((element) => selectedCanvasElementIds.includes(element.id)) ?? [];
-  const selectedCanvasElementsLocked =
-    selectedCanvasElementsForActions.length > 0 &&
-    selectedCanvasElementsForActions.every((element) => element.locked);
   const canvasActionSections = [
     {
-      title: "",
+      title: "Suggestions",
       items: [
         {
-          id: "lock",
-          title: selectedCanvasElementsLocked
-            ? "Unlock selection"
-            : "Lock/Unlock selection",
-          shortcut: "⇧⌘L",
-          disabled: selectedCanvasElementIds.length === 0,
+          id: "find-replace",
+          title: "Find and replace…",
+          shortcut: "",
+          disabled: false,
           checked: undefined,
-          icon: <LockIcon />,
-          onClick: toggleSelectedCanvasElementsLocked,
+          icon: <SearchIcon />,
+          onClick: openCanvasFind,
         },
         {
-          id: "align-horizontal",
-          title: "Align horizontal centers",
-          shortcut: "⌥H",
-          disabled: selectedCanvasElementIds.length < 2,
+          id: "select-all",
+          title: "Select all",
+          shortcut: "⌘A",
+          disabled: false,
           checked: undefined,
           icon: <DragIcon />,
-          onClick: () => alignSelectedCanvasElements("horizontal"),
+          onClick: selectAllCanvasElements,
         },
         {
-          id: "align-vertical",
-          title: "Align vertical centers",
-          shortcut: "⌥V",
-          disabled: selectedCanvasElementIds.length < 2,
+          id: "undo",
+          title: "Undo",
+          shortcut: "⌘Z",
+          disabled: false,
           checked: undefined,
-          icon: <DragIcon />,
-          onClick: () => alignSelectedCanvasElements("vertical"),
+          icon: <UndoIcon />,
+          onClick: undoCanvasAction,
+        },
+      ],
+    },
+    {
+      title: "Common settings",
+      items: [
+        {
+          id: "minimize-ui",
+          title: "Minimize UI",
+          shortcut: "⇧⌘\\",
+          disabled: false,
+          checked: canvasUiMinimized,
+          icon: <CommandIcon />,
+          onClick: () => {
+            setCanvasUiMinimized((minimized) => !minimized);
+            setToolsCatalogOpen(false);
+          },
+        },
+        {
+          id: "show-hide-ui",
+          title: "Show/Hide UI",
+          shortcut: "⌘\\",
+          disabled: false,
+          checked: canvasChromeVisible,
+          icon: canvasChromeVisible ? <EyeIcon /> : <EyeCloseIcon />,
+          onClick: () => {
+            setCanvasChromeVisible((visible) => !visible);
+            setToolsCatalogOpen(false);
+          },
+        },
+        {
+          id: "multiplayer-cursors",
+          title: "Multiplayer cursors",
+          shortcut: "⌥⌘\\",
+          disabled: false,
+          checked: canvasRemoteCursorsVisible,
+          icon: <PointerDefaultIcon />,
+          onClick: () => {
+            setCanvasRemoteCursorsVisible((visible) => !visible);
+            setToolsCatalogOpen(false);
+          },
+        },
+        {
+          id: "keyboard-shortcuts",
+          title: "Keyboard shortcuts",
+          shortcut: "⌃⇧?",
+          disabled: false,
+          checked: undefined,
+          icon: <CommandIcon />,
+          onClick: openCanvasKeyboardShortcuts,
+        },
+        {
+          id: "account-settings",
+          title: "Account settings",
+          shortcut: "",
+          disabled: false,
+          checked: undefined,
+          icon: <CogIcon />,
+          onClick: () => navigate({ name: "settings-billing" }),
         },
       ],
     },
@@ -6782,7 +6816,13 @@ export function ProjectPlayground({
                           toggleWidgetsLauncher();
                           setWidgetsLauncherTab("stickers");
                         }}
-                      ></button>
+                      >
+                        <span aria-hidden="true">
+                          <img src={figjamStampThumbsUp} alt="" />
+                          <img src={figjamStampStar} alt="" />
+                          <img src={figjamStampHeart} alt="" />
+                        </span>
+                      </button>
                     </div>
                   ) : null}
                 </span>
@@ -7057,7 +7097,7 @@ export function ProjectPlayground({
                 isLabelHidden
                 value={widgetsLauncherQuery}
                 onChange={setWidgetsLauncherQuery}
-                placeholder="Let’s find the perfect thing"
+                placeholder="Search for the missing piece"
                 width="100%"
                 autoFocus
               />
@@ -7209,7 +7249,7 @@ export function ProjectPlayground({
                     title={shape.label}
                     onClick={() => selectCanvasShape(shape)}
                   >
-                    <ShapeLibraryGlyph shape={shape} />
+                    <ShapeLibraryGlyph shape={shape} color={shapeColor} />
                   </button>
                 ))}
               </div>
@@ -7280,7 +7320,7 @@ export function ProjectPlayground({
                         title={shape.label}
                         onClick={() => selectCanvasShape(shape)}
                       >
-                        <ShapeLibraryGlyph shape={shape} />
+                        <ShapeLibraryGlyph shape={shape} color={shapeColor} />
                       </button>
                     ))}
                   </div>
@@ -7716,7 +7756,10 @@ export function ProjectPlayground({
                   )
                 }
               >
-                <ShapeLibraryGlyph shape={selectedShapeOption} />
+                <ShapeLibraryGlyph
+                  shape={selectedShapeOption}
+                  color={selectedShapeDisplayColor}
+                />
                 <ChevronSmallDownIcon aria-hidden="true" />
               </button>
               {selectedShapePanel === "shape" ? (
@@ -7746,7 +7789,10 @@ export function ProjectPlayground({
                           setSelectedShapePanel(undefined);
                         }}
                       >
-                        <ShapeLibraryGlyph shape={shape} />
+                        <ShapeLibraryGlyph
+                          shape={shape}
+                          color={selectedShapeDisplayColor}
+                        />
                       </button>
                     ))}
                 </div>

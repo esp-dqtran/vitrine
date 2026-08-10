@@ -138,21 +138,21 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     /aria-label=\{\s*shapePickerOpen\s*\? "Close shapes and connectors"\s*: "Shapes and connectors"\s*\}/,
   );
   assert.match(source, /const canvasShapeOptions/);
-  assert.match(source, /const canvasShapeColors = canvasMarkerColors/);
+  assert.match(source, /const canvasShapeColors = canvasSectionColors/);
+  assert.match(source, /useState\(defaultSectionFill\)/);
   assert.match(source, /<CanvasShapesCollageGlyph color=\{shapeColor\} \/>/);
   assert.match(source, /function CanvasShapesCollageGlyph/);
   const shapesCollageSource =
     /function CanvasShapesCollageGlyph[\s\S]*?\n}\n\nfunction/.exec(
       source,
     )?.[0] ?? "";
-  assert.doesNotMatch(shapesCollageSource, /fill="rectangle"|fill="ellipse"/);
   assert.match(
     shapesCollageSource,
-    /<img\s+src=\{canvasShapePreviewOptions\.rectangle\.icon\}/,
+    /<ShapeLibraryGlyph[\s\S]*?shape=\{canvasShapePreviewOptions\.rectangle\}[\s\S]*?color=\{color\}/,
   );
   assert.match(
     shapesCollageSource,
-    /<img\s+src=\{canvasShapePreviewOptions\.ellipse\.icon\}/,
+    /<ShapeLibraryGlyph[\s\S]*?shape=\{canvasShapePreviewOptions\.ellipse\}[\s\S]*?color=\{color\}/,
   );
   assert.match(
     source,
@@ -205,7 +205,14 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     /--project-canvas-shape-icon-color": color \?\? "#1e1e1e"/,
   );
   assert.match(source, /editor\?\.setActiveTool\(\{ type: shape\.tool \}\)/);
-  assert.match(source, /currentItemStrokeColor: shapeColor/);
+  assert.match(
+    source,
+    /currentItemStrokeColor: isFilledShape \? "#757575" : shapeColor/,
+  );
+  assert.match(
+    source,
+    /currentItemBackgroundColor: isFilledShape[\s\S]*?\? shapeColor[\s\S]*?: "transparent"/,
+  );
   assert.match(source, /currentItemArrowType: shape\.arrowType \?\? "sharp"/);
   assert.match(source, /currentItemRoundness: shape\.roundness \?\? "sharp"/);
   assert.match(source, /label: "Bent connector"/);
@@ -214,10 +221,21 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /label: "Circle"/);
   assert.match(
     source,
-    /function ShapeLibraryGlyph\(\{ shape \}: \{ shape: CanvasShapeOption \}\)[\s\S]*?<img\s+src=\{shape\.icon\}/,
+    /function ShapeLibraryGlyph\([\s\S]*?--project-canvas-shape-source-color": color[\s\S]*?<img src=\{shape\.icon\}/,
   );
   assert.match(source, /<CanvasShapesCollageGlyph color=\{shapeColor\} \/>/);
-  assert.match(source, /<ShapeLibraryGlyph\s+shape=\{shape\}\s+\/>/);
+  assert.match(
+    source,
+    /<ShapeLibraryGlyph shape=\{shape\} color=\{shapeColor\} \/>/,
+  );
+  assert.match(
+    source,
+    /label: "Triangle"[\s\S]*?label: "Down triangle"[\s\S]*?label: "Rounded rectangle"/,
+  );
+  assert.match(
+    css,
+    /\.project-canvas-shape-source-icon--colored\s*\{[^}]*mask:\s*var\(--project-canvas-shape-source\)/s,
+  );
   assert.match(
     css,
     /\.project-canvas-shape-source-icon\s*\{[^}]*width:\s*20px;[^}]*height:\s*20px;/s,
@@ -387,7 +405,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   );
   assert.match(source, /className="project-canvas-tools-catalog"/);
   assert.match(source, /placeholder="Search"/);
-  assert.match(source, /placeholder="Let’s find the perfect thing"/);
+  assert.match(source, /placeholder="Search for the missing piece"/);
   assert.match(
     source,
     /const canvasStampOptions:[\s\S]*?Thumbs up[\s\S]*?\+1[\s\S]*?Star[\s\S]*?Question[\s\S]*?Thumbs down[\s\S]*?Dot[\s\S]*?Profile[\s\S]*?Heart/,
@@ -399,6 +417,10 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(
     source,
     /className="project-canvas-stamp-menu__surface"[\s\S]*?src=\{figjamStampWheel\}/,
+  );
+  assert.match(
+    source,
+    /className="project-canvas-stamp-menu__emoji"[\s\S]*?figjamStampThumbsUp[\s\S]*?figjamStampStar[\s\S]*?figjamStampHeart/,
   );
   assert.doesNotMatch(source, /FaceHappyIcon/);
   assert.match(source, /className="project-canvas-stamp-preview"/);
@@ -445,13 +467,21 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     /const canvasWidgetsTabs:[\s\S]*?All[\s\S]*?Stickers[\s\S]*?Templates[\s\S]*?Widgets[\s\S]*?Plugins[\s\S]*?More/,
   );
   assert.match(source, /const canvasActionSections = \[/);
+  assert.match(
+    source,
+    /title: "Suggestions"[\s\S]*?title: "Find and replace…"[\s\S]*?title: "Select all"[\s\S]*?title: "Undo"/,
+  );
+  assert.match(
+    source,
+    /title: "Common settings"[\s\S]*?title: "Minimize UI"[\s\S]*?title: "Show\/Hide UI"[\s\S]*?title: "Multiplayer cursors"[\s\S]*?title: "Keyboard shortcuts"[\s\S]*?title: "Account settings"/,
+  );
+  assert.match(source, /onClick: openCanvasFind/);
+  assert.match(source, /onClick: selectAllCanvasElements/);
+  assert.match(source, /onClick: undoCanvasAction/);
+  assert.match(source, /onClick: openCanvasKeyboardShortcuts/);
   assert.match(source, /aria-label="Find and replace"/);
   assert.match(source, /onClick={replaceAllCanvasTextMatches}/);
   assert.match(source, /editor\.scrollToContent\(match,/);
-  assert.match(source, /"Unlock selection"[\s\S]*"Lock\/Unlock selection"/);
-  assert.match(source, /title: "Align horizontal centers"/);
-  assert.match(source, /title: "Align vertical centers"/);
-  assert.doesNotMatch(source, /title: "Common settings"/);
   assert.match(source, /captureUpdate: CaptureUpdateAction\.IMMEDIATELY/);
   assert.match(source, /captureUpdate: CaptureUpdateAction\.NEVER/);
   assert.match(source, /activateCanvasTool\("sticky"\)/);
@@ -797,7 +827,7 @@ test("gives the infinite canvas the full available viewport", () => {
   );
   assert.match(
     css,
-    /\.project-canvas-tools-catalog\s*\{[^}]*position:\s*absolute;[^}]*bottom:\s*76px;[^}]*left:\s*50%;[^}]*width:\s*min\(588px,/s,
+    /\.project-canvas-tools-catalog\s*\{[^}]*position:\s*absolute;[^}]*bottom:\s*calc\(var\(--project-canvas-toolbelt-bottom, 64px\) \+ 60px\);[^}]*left:\s*50%;[^}]*width:\s*min\(588px,/s,
   );
   // \s+ between the compounds, not a literal space: the formatter wraps long
   // selectors across lines, which is not a change to what they select.
@@ -1301,6 +1331,7 @@ test("deactivates Sticky Notes when another canvas tool becomes active", () => {
     new URL("./components/ProjectPlaygroundPage.tsx", import.meta.url),
     "utf8",
   );
+  const css = readCss("./styles.css");
 
   assert.match(source, /const deactivateStickyTool = useCallback/);
   assert.match(source, /stickyPlacementRef\.current = undefined;/);
@@ -1312,7 +1343,7 @@ test("deactivates Sticky Notes when another canvas tool becomes active", () => {
   );
   assert.match(
     source,
-    /handleCanvasToolPointerDownCapture[\s\S]*deactivateStickyTool\(\);[\s\S]*setStickyDraft\(undefined\);/,
+    /handleCanvasToolPointerDownCapture[\s\S]*deactivateStickyTool\(\);[\s\S]*setStickyDraft\(undefined\);[\s\S]*setShapePickerOpen\(false\);[\s\S]*setShapeLibraryOpen\(false\);[\s\S]*setShapeColorPickerOpen\(false\);[\s\S]*setShapePlacement\(undefined\);[\s\S]*setMarkerDrawing\(false\);[\s\S]*setResearchFrameDrawing\(false\);[\s\S]*documentPlacementRef\.current = false;[\s\S]*setDocumentPlacement\(false\);[\s\S]*setCommentPlacement\(false\);[\s\S]*setToolsCatalogOpen\(false\);[\s\S]*setWidgetsLauncherOpen\(false\);/,
   );
   assert.match(
     source,
@@ -1321,6 +1352,14 @@ test("deactivates Sticky Notes when another canvas tool becomes active", () => {
   assert.match(
     source,
     /const selectCanvasShape = useCallback[\s\S]*?deactivateStickyTool\(\);/,
+  );
+  assert.match(
+    css,
+    /\.project-canvas-tools-catalog\s*\{[\s\S]*?bottom:\s*calc\(var\(--project-canvas-toolbelt-bottom, 64px\) \+ 60px\)/,
+  );
+  assert.match(
+    css,
+    /\.project-canvas-widgets-launcher\s*\{[\s\S]*?bottom:\s*calc\(var\(--project-canvas-toolbelt-bottom, 64px\) \+ 60px\)/,
   );
 });
 

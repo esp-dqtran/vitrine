@@ -6445,6 +6445,27 @@ body {
   background: #fff;
 }
 
+.project-canvas-stamp-menu__emoji > span {
+  width: 58px;
+  display: grid;
+  grid-template-columns: repeat(3, 26px);
+  align-items: center;
+  justify-content: center;
+}
+
+.project-canvas-stamp-menu__emoji img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.project-canvas-stamp-menu__emoji img:nth-child(2) {
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  margin: 0 -5px;
+}
+
 .project-canvas-stamp-preview {
   position: absolute;
   z-index: 650;
@@ -6518,6 +6539,7 @@ body {
 }
 
 .project-canvas-shapes-collage > .project-canvas-shape-glyph,
+.project-canvas-shapes-collage > .project-canvas-shape-source-icon,
 .project-canvas-shapes-collage > img {
   position: absolute;
   display: block;
@@ -6906,6 +6928,21 @@ body {
   height: 20px;
 }
 
+.project-canvas-shape-source-icon--colored {
+  overflow: hidden;
+  background: var(--project-canvas-shape-source-color, #fff);
+  mask: var(--project-canvas-shape-source) center / contain no-repeat;
+  -webkit-mask: var(--project-canvas-shape-source) center / contain no-repeat;
+  transition: background-color 160ms ease;
+}
+
+.project-canvas-shape-source-icon--colored > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: multiply;
+}
+
 .project-canvas-shape-glyph::before {
   content: "";
   position: absolute;
@@ -7058,7 +7095,7 @@ body {
   --project-canvas-border: rgb(17 24 39 / 12%);
   position: absolute;
   z-index: 80;
-  bottom: 76px;
+  bottom: calc(var(--project-canvas-toolbelt-bottom, 64px) + 60px);
   left: 50%;
   width: min(588px, calc(100% - 32px));
   min-height: 284px;
@@ -7360,7 +7397,7 @@ body {
   position: absolute;
   z-index: 82;
   right: max(16px, calc(50% - 520px));
-  bottom: 72px;
+  bottom: calc(var(--project-canvas-toolbelt-bottom, 64px) + 60px);
   width: min(480px, calc(100% - 32px));
   height: min(573px, calc(100% - 112px));
   display: grid;
