@@ -25,7 +25,13 @@ export const projectStickyNoteColors: readonly ProjectStickyNoteColor[] = [
 
 export const defaultProjectStickyNoteColor = projectStickyNoteColors[4];
 
-export function StickyNoteGlyph({ color }: { color?: ProjectStickyNoteColor }) {
+export function StickyNoteGlyph({
+  color,
+  className,
+}: {
+  color?: ProjectStickyNoteColor;
+  className?: string;
+}) {
   const src = color
     ? `data:image/svg+xml,${encodeURIComponent(
       figjamStickyNoteToolSource.replaceAll("rgb(255 175 163)", color.fill),
@@ -39,7 +45,32 @@ export function StickyNoteGlyph({ color }: { color?: ProjectStickyNoteColor }) {
       height="20"
       alt=""
       aria-hidden="true"
+      className={className}
     />
+  );
+}
+
+/** FigJam-style stack preview used by the placement trigger. */
+export function StickyNotesCollageGlyph({
+  color,
+}: {
+  color?: ProjectStickyNoteColor;
+}) {
+  return (
+    <span className="project-sticky-notes-collage" aria-hidden="true">
+      <StickyNoteGlyph
+        color={color}
+        className="project-sticky-notes-collage__note project-sticky-notes-collage__note--back"
+      />
+      <StickyNoteGlyph
+        color={color}
+        className="project-sticky-notes-collage__note project-sticky-notes-collage__note--middle"
+      />
+      <StickyNoteGlyph
+        color={color}
+        className="project-sticky-notes-collage__note project-sticky-notes-collage__note--front"
+      />
+    </span>
   );
 }
 

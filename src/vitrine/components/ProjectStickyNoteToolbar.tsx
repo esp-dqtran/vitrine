@@ -1,11 +1,7 @@
-import { Button, Icon, TextInput } from "@astryxdesign/core";
+import { Icon } from "@astryxdesign/core";
 import {
   AlignLeftIcon,
   AlignRightIcon,
-  BoldIcon,
-  BookmarkIcon,
-  CommentIcon,
-  HeartIcon,
   LinkIcon,
   ListUnorderedIcon,
   MenuIcon,
@@ -15,12 +11,20 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
 import { AstryxDropdown, AstryxDropdownItem } from "./AstryxDropdown.tsx";
 import {
+  CanvasObjectToolbar,
+  CanvasObjectToolbarDivider,
+} from "./CanvasObjectToolbar.tsx";
+import {
   projectStickyNoteColors,
   type ProjectStickyNoteColor,
 } from "./ProjectStickyNotePicker.tsx";
 
-export type ProjectStickyNoteFont = "sans" | "sketch";
-export type ProjectStickyNoteFontSize = 16 | 20 | 28;
+export type ProjectStickyNoteFont =
+  | "simple"
+  | "bookish"
+  | "technical"
+  | "cute";
+export type ProjectStickyNoteFontSize = number;
 export type ProjectStickyNoteTextAlign = "left" | "center" | "right";
 
 export interface ProjectStickyNoteFormat {
@@ -57,7 +61,8 @@ export interface ProjectStickyNoteCollaboration {
 
 export function defaultProjectStickyNoteCollaboration(): ProjectStickyNoteCollaboration {
   return {
-    showAuthor: false,
+    // FigJam keeps the author visible on a freshly created Sticky Note.
+    showAuthor: true,
     author: "You",
     tags: [],
     reactions: [],
@@ -80,7 +85,10 @@ export function normalizeProjectStickyNoteCollaboration(
     projectStickyNoteReactionIds,
   );
   return {
-    showAuthor: value?.showAuthor === true,
+    showAuthor:
+      typeof value?.showAuthor === "boolean"
+        ? value.showAuthor
+        : defaults.showAuthor,
     author:
       typeof value?.author === "string" && value.author.trim()
         ? value.author.trim().slice(0, 80)
@@ -142,12 +150,7 @@ export function ProjectStickyNoteMetadata({
   collaboration: ProjectStickyNoteCollaboration;
   style?: CSSProperties;
 }) {
-  const hasMetadata =
-    collaboration.showAuthor ||
-    collaboration.tags.length > 0 ||
-    collaboration.reactions.length > 0 ||
-    collaboration.comments.length > 0;
-  if (!hasMetadata) return null;
+  if (!collaboration.showAuthor) return null;
 
   return (
     <div
@@ -155,39 +158,13 @@ export function ProjectStickyNoteMetadata({
       style={style}
       aria-label="Sticky note collaboration"
     >
-      {collaboration.showAuthor ? (
-        <span title={`Author: ${collaboration.author}`}>
-          <UserIcon />
-          {collaboration.author}
-        </span>
-      ) : null}
-      {collaboration.tags.slice(0, 2).map((tag) => (
-        <span key={tag} title={`Tag: ${tag}`}>
-          <BookmarkIcon />
-          {tag}
-        </span>
-      ))}
-      {collaboration.tags.length > 2 ? (
-        <span>+{collaboration.tags.length - 2}</span>
-      ) : null}
-      {collaboration.reactions.length ? (
-        <span title={`${collaboration.reactions.length} reactions`}>
-          <HeartIcon />
-          {collaboration.reactions.length}
-        </span>
-      ) : null}
-      {collaboration.comments.length ? (
-        <span title={`${collaboration.comments.length} comments`}>
-          <CommentIcon />
-          {collaboration.comments.length}
-        </span>
-      ) : null}
+      <span title={`Author: ${collaboration.author}`}>{collaboration.author}</span>
     </div>
   );
 }
 
 export const defaultProjectStickyNoteFormat: ProjectStickyNoteFormat = {
-  font: "sans",
+  font: "simple",
   fontSize: 16,
   textAlign: "left",
   bold: false,
@@ -198,9 +175,64 @@ export const defaultProjectStickyNoteFormat: ProjectStickyNoteFormat = {
 };
 
 export const projectStickyNoteFontFamilies = {
-  sans: 2,
-  sketch: 1,
+  simple: 6,
+  bookish: 7,
+  technical: 3,
+  cute: 5,
 } as const;
+
+/**
+ * Excalidraw persists Sticky Note text but does not natively support the two
+ * rich-text treatments FigJam exposes. The canvas uses this predicate to
+ * switch to its matching DOM text layer only when either treatment is active.
+ */
+export function stickyNoteUsesRichTextOverlay(
+  format: Pick<ProjectStickyNoteFormat, "bold" | "strikethrough">,
+) {
+  return format.bold || format.strikethrough;
+}
+
+const projectStickyNoteFontSizes = [16, 20, 28, 36, 48] as const;
+
+export function normalizeProjectStickyNoteFormat(
+  value?: Partial<ProjectStickyNoteFormat> & { font?: string },
+): ProjectStickyNoteFormat {
+  const font =
+    value?.font === "bookish" ||
+    value?.font === "technical" ||
+    value?.font === "cute"
+      ? value.font
+      : value?.font === "scribbled" || value?.font === "sketch"
+        ? "cute"
+        : "simple";
+  const fontSize = Number.isFinite(value?.fontSize)
+    ? Math.min(96, Math.max(8, Math.round(value.fontSize!)))
+    : defaultProjectStickyNoteFormat.fontSize;
+
+  return {
+    ...defaultProjectStickyNoteFormat,
+    ...value,
+    font,
+    fontSize,
+    textAlign:
+      value?.textAlign === "center" || value?.textAlign === "right"
+        ? value.textAlign
+        : "left",
+    bold: value?.bold === true,
+    strikethrough: value?.strikethrough === true,
+    bulletedList: value?.bulletedList === true,
+    link: typeof value?.link === "string" ? value.link : "",
+    locked: value?.locked === true,
+  };
+}
+
+export function projectStickyNoteFontForFamily(fontFamily: number): ProjectStickyNoteFont {
+  return (
+    (Object.entries(projectStickyNoteFontFamilies).find(
+      ([, family]) => family === fontFamily,
+    )?.[0] as ProjectStickyNoteFont | undefined) ?? "simple"
+  );
+}
 
 function normalizedStickyNoteLink(value: string): string {
   const trimmed = value.trim();
@@ -211,7 +243,10 @@ function normalizedStickyNoteLink(value: string): string {
 function projectObjectFontSizeLabel(fontSize: ProjectStickyNoteFontSize) {
   if (fontSize === 16) return "Small";
   if (fontSize === 20) return "Medium";
-  return "Large";
+  if (fontSize === 28) return "Large";
+  if (fontSize === 36) return "Extra large";
+  if (fontSize === 48) return "Huge";
+  return `${fontSize}px`;
 }
 
 export function ProjectSelectionToolbar({
@@ -226,15 +261,89 @@ export function ProjectSelectionToolbar({
   ariaLabel?: string;
 }) {
   return (
-    <div
-      className={`project-object-toolbar${className ? ` ${className}` : ""}`}
+    <CanvasObjectToolbar
+      className={className}
       style={style}
-      role="toolbar"
-      aria-label={ariaLabel}
-      onPointerDown={(event) => event.stopPropagation()}
-      onClick={(event) => event.stopPropagation()}
+      ariaLabel={ariaLabel}
     >
       {children}
+    </CanvasObjectToolbar>
+  );
+}
+
+/**
+ * Shared colour control for contextual canvas toolbars.  It is controlled by
+ * its owner so opening it can close any other object-specific panel.
+ */
+export function ProjectObjectToolbarColorPicker({
+  color,
+  colorOptions,
+  ariaLabel,
+  panelLabel,
+  open,
+  onOpenChange,
+  onColorChange,
+  className,
+  panelClassName,
+}: {
+  color: string;
+  colorOptions: readonly ProjectStickyNoteColor[];
+  ariaLabel: string;
+  panelLabel: string;
+  open: boolean;
+  onOpenChange(open: boolean): void;
+  onColorChange(color: ProjectStickyNoteColor): void;
+  className?: string;
+  panelClassName?: string;
+}) {
+  return (
+    <div
+      className={`project-object-toolbar__control project-object-toolbar__color-control${
+        className ? ` ${className}` : ""
+      }`}
+    >
+      <button
+        type="button"
+        className="project-object-toolbar__color-trigger"
+        aria-label={ariaLabel}
+        aria-expanded={open}
+        onClick={() => onOpenChange(!open)}
+      >
+        <span
+          className="project-object-toolbar__color-dot"
+          style={{ "--object-color": color } as CSSProperties}
+        />
+        <Icon icon="chevronDown" size="xsm" aria-hidden="true" />
+      </button>
+      {open ? (
+        <div
+          className={`project-object-toolbar__panel project-object-toolbar__color-panel${
+            panelClassName ? ` ${panelClassName}` : ""
+          }`}
+          role="dialog"
+          aria-label={panelLabel}
+        >
+          {colorOptions.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              className="project-object-toolbar__color-swatch"
+              aria-label={`Use ${option.name}`}
+              aria-pressed={color.toLowerCase() === option.fill.toLowerCase()}
+              style={
+                {
+                  "--object-color": option.fill,
+                  "--object-stroke": option.stroke,
+                } as CSSProperties
+              }
+              onClick={() => {
+                onColorChange(option);
+                onOpenChange(false);
+              }}
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -255,6 +364,8 @@ export function ProjectObjectToolbar({
   colorAriaLabel,
   colorOptions = projectStickyNoteColors,
   showLink = true,
+  showTextAlignment = true,
+  showTextStyling = false,
   onColorChange,
   onFormatChange,
   onCollaborationChange,
@@ -269,6 +380,8 @@ export function ProjectObjectToolbar({
   colorAriaLabel?: string;
   colorOptions?: readonly ProjectStickyNoteColor[];
   showLink?: boolean;
+  showTextAlignment?: boolean;
+  showTextStyling?: boolean;
   onColorChange(color: ProjectStickyNoteColor): void;
   onFormatChange(format: ProjectStickyNoteFormat): void;
   onCollaborationChange?(collaboration: ProjectStickyNoteCollaboration): void;
@@ -297,60 +410,23 @@ export function ProjectObjectToolbar({
   };
 
   const closePanel = () => setOpenPanel(undefined);
-  const typefaceLabel = format.font === "sans" ? "simple" : "handwritten";
+  const typefaceLabel = format.font;
   const sizeLabel = projectObjectFontSizeLabel(format.fontSize);
 
   return (
     <ProjectSelectionToolbar style={style} ariaLabel={ariaLabel}>
-      <div className="project-object-toolbar__control project-object-toolbar__color-control">
-        <button
-          type="button"
-          className="project-object-toolbar__color-trigger"
-          aria-label={
-            colorAriaLabel ?? `Change ${objectLabel.toLowerCase()} color`
-          }
-          aria-expanded={openPanel === "color"}
-          onClick={() =>
-            setOpenPanel((current) =>
-              current === "color" ? undefined : "color",
-            )
-          }
-        >
-          <span
-            className="project-object-toolbar__color-dot"
-            style={{ "--object-color": color.fill } as CSSProperties}
-          />
-          <Icon icon="chevronDown" size="xsm" aria-hidden="true" />
-        </button>
-        {openPanel === "color" ? (
-          <div
-            className="project-object-toolbar__panel project-object-toolbar__color-panel"
-            role="dialog"
-            aria-label={`${objectLabel} colors`}
-          >
-            {colorOptions.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                className="project-object-toolbar__color-swatch"
-                aria-label={`Use ${option.name}`}
-                aria-pressed={color.id === option.id}
-                style={
-                  {
-                    "--object-color": option.fill,
-                    "--object-stroke": option.stroke,
-                  } as CSSProperties
-                }
-                onClick={() => {
-                  onColorChange(option);
-                  closePanel();
-                }}
-              />
-            ))}
-          </div>
-        ) : null}
-      </div>
-      <span className="project-object-toolbar__divider" aria-hidden="true" />
+      <ProjectObjectToolbarColorPicker
+        color={color.fill}
+        colorOptions={colorOptions}
+        ariaLabel={
+          colorAriaLabel ?? `Change ${objectLabel.toLowerCase()} color`
+        }
+        panelLabel={`${objectLabel} colors`}
+        open={openPanel === "color"}
+        onOpenChange={(open) => setOpenPanel(open ? "color" : undefined)}
+        onColorChange={onColorChange}
+      />
+      <CanvasObjectToolbarDivider />
       <AstryxDropdown
         label="Aa"
         ariaLabel={`Typeface, ${typefaceLabel}`}
@@ -360,24 +436,26 @@ export function ProjectObjectToolbar({
         menuWidth={160}
         onOpenChange={(open) => setOpenPanel(open ? "font" : undefined)}
       >
-        <AstryxDropdownItem
-          label="Simple"
-          selected={format.font === "sans"}
-          onSelect={() => {
-            updateFormat({ font: "sans" });
-            closePanel();
-          }}
-        />
-        <AstryxDropdownItem
-          label="Handwritten"
-          selected={format.font === "sketch"}
-          onSelect={() => {
-            updateFormat({ font: "sketch" });
-            closePanel();
-          }}
-        />
+        {(
+          [
+            ["simple", "Simple"],
+            ["bookish", "Bookish"],
+            ["technical", "Technical"],
+            ["cute", "Cute"],
+          ] as const
+        ).map(([font, label]) => (
+          <AstryxDropdownItem
+            key={font}
+            label={label}
+            selected={format.font === font}
+            onSelect={() => {
+              updateFormat({ font });
+              closePanel();
+            }}
+          />
+        ))}
       </AstryxDropdown>
-      <span className="project-object-toolbar__divider" aria-hidden="true" />
+      <CanvasObjectToolbarDivider />
       <AstryxDropdown
         label={sizeLabel}
         ariaLabel={`Font size, ${sizeLabel.toLowerCase()}`}
@@ -387,7 +465,7 @@ export function ProjectObjectToolbar({
         menuWidth={144}
         onOpenChange={(open) => setOpenPanel(open ? "size" : undefined)}
       >
-        {([16, 20, 28] as const).map((fontSize) => (
+        {projectStickyNoteFontSizes.map((fontSize) => (
           <AstryxDropdownItem
             key={fontSize}
             label={projectObjectFontSizeLabel(fontSize)}
@@ -398,26 +476,48 @@ export function ProjectObjectToolbar({
             }}
           />
         ))}
+        <div className="project-object-toolbar__custom-size">
+          <label htmlFor="sticky-note-custom-size">Custom</label>
+          <input
+            id="sticky-note-custom-size"
+            type="number"
+            min="8"
+            max="96"
+            value={format.fontSize}
+            onChange={(event) => {
+              const nextSize = Number(event.target.value);
+              if (!Number.isFinite(nextSize)) return;
+              updateFormat({
+                fontSize: Math.min(96, Math.max(8, Math.round(nextSize))),
+              });
+            }}
+          />
+        </div>
       </AstryxDropdown>
-      <span className="project-object-toolbar__divider" aria-hidden="true" />
-      <button
-        type="button"
-        className="project-object-toolbar__action"
-        aria-label="Bold"
-        aria-pressed={format.bold}
-        onClick={() => updateFormat({ bold: !format.bold })}
-      >
-        <BoldIcon />
-      </button>
-      <button
-        type="button"
-        className="project-object-toolbar__action project-object-toolbar__strikethrough"
-        aria-label="Strikethrough"
-        aria-pressed={format.strikethrough}
-        onClick={() => updateFormat({ strikethrough: !format.strikethrough })}
-      >
-        <span aria-hidden="true">S</span>
-      </button>
+      {showTextStyling ? (
+        <>
+          <CanvasObjectToolbarDivider />
+          <button
+            type="button"
+            className="project-object-toolbar__action project-object-toolbar__bold"
+            aria-label="Bold"
+            aria-pressed={format.bold}
+            onClick={() => updateFormat({ bold: !format.bold })}
+          >
+            <strong aria-hidden="true">B</strong>
+          </button>
+          <button
+            type="button"
+            className="project-object-toolbar__action project-object-toolbar__strikethrough"
+            aria-label="Strikethrough"
+            aria-pressed={format.strikethrough}
+            onClick={() => updateFormat({ strikethrough: !format.strikethrough })}
+          >
+            <span aria-hidden="true">S</span>
+          </button>
+          <CanvasObjectToolbarDivider />
+        </>
+      ) : null}
       {showLink ? (
         <div className="project-object-toolbar__control project-object-toolbar__link-control">
           <button
@@ -439,41 +539,33 @@ export function ProjectObjectToolbar({
               role="dialog"
               aria-label={`${objectLabel} link`}
             >
-              <TextInput
-                label={`${objectLabel} link`}
-                isLabelHidden
+              <input
+                type="url"
+                autoFocus
+                aria-label="Type or paste URL"
                 value={linkDraft}
-                onChange={setLinkDraft}
-                placeholder="Paste a URL…"
-                width="100%"
-                size="sm"
-              />
-              <div className="project-object-toolbar__link-actions">
-                {format.link ? (
-                  <Button
-                    label="Remove"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setLinkDraft("");
-                      updateFormat({ link: "" });
-                      closePanel();
-                    }}
-                  />
-                ) : null}
-                <Button
-                  label="Apply"
-                  variant="primary"
-                  size="sm"
-                  isDisabled={!linkDraft.trim()}
-                  onClick={() => {
+                onChange={(event) => setLinkDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    event.nativeEvent.stopImmediatePropagation();
+                    setLinkDraft(format.link);
+                    closePanel();
+                    return;
+                  }
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    event.nativeEvent.stopImmediatePropagation();
                     const link = normalizedStickyNoteLink(linkDraft);
                     setLinkDraft(link);
                     updateFormat({ link });
                     closePanel();
-                  }}
-                />
-              </div>
+                  }
+                }}
+                placeholder="Type or paste URL"
+              />
             </div>
           ) : null}
         </div>
@@ -487,76 +579,72 @@ export function ProjectObjectToolbar({
       >
         <ListUnorderedIcon />
       </button>
-      <div className="project-object-toolbar__control project-object-toolbar__align-control">
-        <button
-          type="button"
-          className="project-object-toolbar__action project-object-toolbar__align-trigger"
-          aria-label={`Text alignment, text align ${format.textAlign}`}
-          aria-expanded={openPanel === "align"}
-          onClick={() =>
-            setOpenPanel((current) =>
-              current === "align" ? undefined : "align",
-            )
-          }
-        >
-          {format.textAlign === "left" ? (
-            <AlignLeftIcon />
-          ) : format.textAlign === "right" ? (
-            <AlignRightIcon />
-          ) : (
-            <MenuIcon />
-          )}
-          <Icon icon="chevronDown" size="xsm" aria-hidden="true" />
-        </button>
-        {openPanel === "align" ? (
-          <div
-            className="project-object-toolbar__panel project-object-toolbar__align-panel"
-            role="menu"
-            aria-label="Text alignment"
-          >
-            {(
-              [
-                ["left", "Left", AlignLeftIcon],
-                ["center", "Center", MenuIcon],
-                ["right", "Right", AlignRightIcon],
-              ] as const
-            ).map(([value, label, AlignmentIcon]) => (
-              <button
-                key={value}
-                type="button"
-                role="menuitemradio"
-                aria-checked={format.textAlign === value}
-                onClick={() => {
-                  updateFormat({ textAlign: value });
-                  closePanel();
-                }}
-              >
-                <AlignmentIcon />
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
-        ) : null}
-      </div>
-      {children}
-      {collaboration && onCollaborationChange ? (
-        <>
-          <span
-            className="project-object-toolbar__divider"
-            aria-hidden="true"
-          />
+      {showTextAlignment ? (
+        <div className="project-object-toolbar__control project-object-toolbar__align-control">
           <button
             type="button"
-            className="project-object-toolbar__action project-object-toolbar__author"
-            aria-label="Show/hide author"
-            aria-pressed={collaboration.showAuthor}
+            className="project-object-toolbar__action project-object-toolbar__align-trigger"
+            aria-label={`Text alignment, text align ${format.textAlign}`}
+            aria-expanded={openPanel === "align"}
             onClick={() =>
-              updateCollaboration({ showAuthor: !collaboration.showAuthor })
+              setOpenPanel((current) =>
+                current === "align" ? undefined : "align",
+              )
             }
           >
-            <UserIcon />
+            {format.textAlign === "left" ? (
+              <AlignLeftIcon />
+            ) : format.textAlign === "right" ? (
+              <AlignRightIcon />
+            ) : (
+              <MenuIcon />
+            )}
+            <Icon icon="chevronDown" size="xsm" aria-hidden="true" />
           </button>
-        </>
+          {openPanel === "align" ? (
+            <div
+              className="project-object-toolbar__panel project-object-toolbar__align-panel"
+              role="menu"
+              aria-label="Text alignment"
+            >
+              {(
+                [
+                  ["left", "Left", AlignLeftIcon],
+                  ["center", "Center", MenuIcon],
+                  ["right", "Right", AlignRightIcon],
+                ] as const
+              ).map(([value, label, AlignmentIcon]) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={format.textAlign === value}
+                  onClick={() => {
+                    updateFormat({ textAlign: value });
+                    closePanel();
+                  }}
+                >
+                  <AlignmentIcon />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+      {children}
+      {collaboration && onCollaborationChange ? (
+        <button
+          type="button"
+          className="project-object-toolbar__action project-object-toolbar__author"
+          aria-label="Show/hide author"
+          aria-pressed={collaboration.showAuthor}
+          onClick={() =>
+            updateCollaboration({ showAuthor: !collaboration.showAuthor })
+          }
+        >
+          <UserIcon />
+        </button>
       ) : null}
     </ProjectSelectionToolbar>
   );

@@ -3,6 +3,9 @@
 @import "./uiFoundation.css";
 
 :root {
+  /* Contextual canvas controls are portalled beside the editor. Keep their
+     shared toolbelt inset available outside the canvas subtree as well. */
+  --project-canvas-toolbelt-bottom: 20px;
   --color-border-subtle: var(--vitrine-color-border);
   --color-background-raised: var(--vitrine-color-surface);
   --color-text-danger: var(--vitrine-color-status-error);
@@ -1283,6 +1286,7 @@ button[data-variant="primary"]:active:not(:disabled) {
 }
 .ds-sample-card {
   display: grid;
+  align-content: start;
   gap: 8px;
   width: min(100%, 330px);
   color: var(--ds-bg);
@@ -5464,12 +5468,13 @@ body {
 
 .project-canvas-header__identity {
   height: 48px;
-  width: 200px;
+  width: auto;
+  max-width: 200px;
   min-width: 0;
-  flex: 0 1 200px;
+  flex: 0 1 auto;
   display: flex;
   align-items: center;
-  padding: 0 12px;
+  padding: 0 10px;
   text-align: left;
 }
 
@@ -5735,6 +5740,10 @@ body {
 }
 
 .project-playground__canvas {
+  /* The secondary toolbars are siblings of Excalidraw, so this needs to live
+     on the canvas rather than the editor itself. That gives every toolbar the
+     same 20px board inset and keeps the two rows 8px apart. */
+  --project-canvas-toolbelt-bottom: 20px;
   position: relative;
   width: 100%;
   height: 100%;
@@ -5748,7 +5757,6 @@ body {
 .project-playground__canvas .excalidraw {
   /* Native and Vitrines actions share one compact FigJam-style toolbelt. */
   --project-canvas-tool-size: 40px;
-  --project-canvas-toolbelt-bottom: 64px;
   --project-canvas-tool-gap: 2px;
   --project-canvas-tool-radius: 10px;
   --project-canvas-tool-hover: var(
@@ -5762,8 +5770,84 @@ body {
     var(--color-accent) 22%,
     transparent
   );
+  /* Excalidraw still owns object selection and resize hit targets, but its
+     canvas-drawn frame is transparent. The single visible focus treatment is
+     the shared FigJam-style container below, including for free lines. */
+  --color-selection: #0d99ff00;
   color: var(--project-canvas-text, #202124);
   background: var(--project-canvas-bg, #f7f8fa);
+}
+
+/* A non-interactive FigJam-style focus frame sits above Excalidraw's native
+   selection geometry. Native resize hit targets remain available underneath. */
+.project-canvas-focus-container {
+  position: absolute;
+  z-index: 8;
+  box-sizing: border-box;
+  border: 2px solid #0d99ff;
+  pointer-events: none;
+}
+
+.project-canvas-focus-container__corner,
+.project-canvas-focus-container__edge {
+  position: absolute;
+  display: block;
+  box-sizing: border-box;
+  background: #fff;
+  border: 2px solid #0d99ff;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 82%);
+}
+
+.project-canvas-focus-container__corner {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.project-canvas-focus-container__edge {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.project-canvas-focus-container__corner--top-left {
+  top: -7px;
+  left: -7px;
+}
+
+.project-canvas-focus-container__corner--top-right {
+  top: -7px;
+  right: -7px;
+}
+
+.project-canvas-focus-container__corner--bottom-right {
+  right: -7px;
+  bottom: -7px;
+}
+
+.project-canvas-focus-container__corner--bottom-left {
+  bottom: -7px;
+  left: -7px;
+}
+
+.project-canvas-focus-container__edge--top {
+  top: -6px;
+  left: calc(50% - 5px);
+}
+
+.project-canvas-focus-container__edge--right {
+  top: calc(50% - 5px);
+  right: -6px;
+}
+
+.project-canvas-focus-container__edge--bottom {
+  bottom: -6px;
+  left: calc(50% - 5px);
+}
+
+.project-canvas-focus-container__edge--left {
+  top: calc(50% - 5px);
+  left: -6px;
 }
 
 .project-playground__canvas .excalidraw .App-menu_top {
@@ -6000,35 +6084,6 @@ body {
   background: #e5e7eb;
 }
 
-/* Shapes live in the FigJam-style custom group. Keep the native Text tool
-   visually separate when the two groups meet, so the next creation mode is
-   easy to scan rather than reading as another shape. */
-.project-playground__canvas
-  .excalidraw
-  .App-toolbar
-  label:has(input[data-testid="toolbar-text"]) {
-  position: relative;
-  margin-left: 10px;
-}
-
-.project-playground__canvas
-  .excalidraw
-  .App-toolbar
-  label:has(input[data-testid="toolbar-text"])::before {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -7px;
-  width: 1px;
-  height: 40px;
-  margin: auto;
-  content: "";
-  background: var(
-    --default-border-color,
-    var(--project-canvas-border, rgb(17 24 39 / 10%))
-  );
-}
-
 /* Use the supplied FigJam Text mark instead of Excalidraw's generic “A”. */
 .project-playground__canvas
   .excalidraw
@@ -6036,6 +6091,16 @@ body {
   label:has(input[data-testid="toolbar-text"])
   .ToolIcon__icon {
   position: relative;
+  display: grid;
+  place-items: center;
+}
+
+/* Text starts the next toolbar group after Catalog, Sticky Notes, and Shapes. */
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-text"]) {
+  order: 0;
 }
 
 .project-playground__canvas
@@ -6044,6 +6109,8 @@ body {
   label:has(input[data-testid="toolbar-text"])
   .ToolIcon__icon
   svg {
+  position: absolute;
+  inset: 0;
   opacity: 0;
 }
 
@@ -6052,6 +6119,8 @@ body {
   .App-toolbar
   label:has(input[data-testid="toolbar-text"])
   .ToolIcon__icon::after {
+  display: block;
+  grid-area: 1 / 1;
   width: 24px;
   height: 24px;
   content: "";
@@ -6144,13 +6213,25 @@ body {
   overflow: visible;
 }
 
+.project-playground__sticky-tools-divider {
+  width: 1px;
+  height: 40px;
+  flex: 0 0 1px;
+  margin: 0 6px;
+  background: #e5e7eb;
+}
+
 /* Excalidraw makes this horizontal row vertically clipped for its own overflow
    controls. The FigJam collage intentionally peeks above and below its 40px
    trigger, so allow only the row containing it to render the full 64×80 layer. */
 .project-playground__canvas
   .excalidraw
   .App-toolbar
-  > .Stack.Stack_horizontal:has(.project-canvas-shapes-collage) {
+  > .Stack.Stack_horizontal:has(.project-canvas-shapes-collage),
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  > .Stack.Stack_horizontal:has(.project-canvas-catalog-apps-collage) {
   overflow: visible;
 }
 
@@ -6160,24 +6241,13 @@ body {
 
 .project-playground__section-tool {
   order: 1;
-  gap: 0;
+  padding: 0;
 }
 
 .project-playground__creation-tools {
   order: 2;
   gap: var(--project-canvas-tool-gap, 2px);
   padding: 0;
-}
-
-.project-playground__section-tool-divider {
-  width: 1px;
-  height: 40px;
-  align-self: center;
-  margin: 0 6px;
-  background: var(
-    --default-border-color,
-    var(--project-canvas-border, rgb(17 24 39 / 10%))
-  );
 }
 
 /* FigJam keeps Section directly after Text. Move lower-priority native actions
@@ -6525,6 +6595,58 @@ body {
     transform 120ms ease;
 }
 
+/* Catalog follows the same FigJam collage treatment as Shapes, but each layer
+   is a real captured app icon. The trigger still performs its normal Catalog
+   action, so visual affordance and behavior remain aligned. */
+.project-playground__screens-trigger--apps {
+  position: relative;
+  width: 64px;
+  flex-basis: 64px;
+  overflow: visible;
+}
+
+.project-canvas-catalog-apps-collage {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  width: 64px;
+  height: 80px;
+  display: block;
+  pointer-events: none;
+}
+
+.project-canvas-catalog-apps-collage img {
+  position: absolute;
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  object-fit: cover;
+  box-shadow:
+    0 1px 2px rgb(17 24 39 / 18%),
+    0 3px 8px rgb(17 24 39 / 12%);
+  transform-origin: 50% 50%;
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.project-canvas-catalog-apps-collage__snapchat {
+  transform: translate(8px, 27px);
+}
+
+.project-canvas-catalog-apps-collage__messenger {
+  transform: translate(33px, 19px);
+}
+
+.project-canvas-catalog-apps-collage__claude {
+  transform: translate(30px, 39px);
+}
+
+.project-playground__screens-trigger--apps[aria-pressed="true"] {
+  color: var(--color-on-surface, var(--project-canvas-text, #202124)) !important;
+  border-radius: 8px 8px 0 0;
+  background: #f5f5f5 !important;
+}
+
 .project-canvas-shapes-collage {
   position: absolute;
   top: -20px;
@@ -6629,6 +6751,53 @@ body {
   width: 30px;
   height: 30px;
   object-fit: contain;
+}
+
+/* Three real sticky-note glyphs, staggered like FigJam's stack preview. */
+.project-playground__sticky-trigger .project-sticky-notes-collage {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: block;
+}
+
+.project-playground__sticky-trigger .project-sticky-notes-collage__note {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  display: block;
+  object-fit: contain;
+  transform-origin: center;
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.project-playground__sticky-trigger .project-sticky-notes-collage__note--back {
+  top: 0;
+  left: 8px;
+  z-index: 1;
+  opacity: 0.52;
+  transform: rotate(8deg);
+}
+
+.project-playground__sticky-trigger .project-sticky-notes-collage__note--middle {
+  top: 3px;
+  left: 4px;
+  z-index: 2;
+  opacity: 0.74;
+  transform: rotate(3deg);
+}
+
+.project-playground__sticky-trigger .project-sticky-notes-collage__note--front {
+  top: 6px;
+  left: 0;
+  z-index: 3;
+}
+
+.project-playground__sticky-trigger:hover
+  .project-sticky-notes-collage__note--back {
+  transform: translate(1px, -1px) rotate(12deg);
 }
 
 /*
@@ -7071,6 +7240,40 @@ body {
     inset 0 0 0 1px rgb(255 255 255 / 42%),
     0 0 0 2px #fff,
     0 0 0 3px #1e1e1e;
+}
+
+/* A native control gives Shapes the same custom-colour escape hatch as
+   FigJam's palette while keeping the chosen value visible on the tool. */
+.project-canvas-shape-library__custom-color {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.project-canvas-shape-library__custom-color input {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  cursor: pointer;
+  border: 1px solid rgb(17 24 39 / 25%);
+  border-radius: 999px;
+  background: transparent;
+}
+
+.project-canvas-shape-library__custom-color input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.project-canvas-shape-library__custom-color input::-webkit-color-swatch {
+  border: 0;
+  border-radius: 999px;
+}
+
+.project-canvas-shape-library__custom-color:focus-within {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 
 .project-canvas-shape-library__empty {
@@ -9100,41 +9303,93 @@ body {
 
 .project-object-toolbar__color-panel {
   left: 0;
-  width: 238px;
-  display: grid;
-  grid-template-columns: repeat(5, 34px);
-  gap: 8px;
-  padding: 12px;
+  top: -54px;
+  width: max-content;
+  display: flex;
+  gap: 5px;
+  padding: 6px;
+  border-color: rgb(255 255 255 / 16%);
+  border-radius: 12px;
+  color: #fff;
+  background: #1e1e1e;
+  box-shadow:
+    0 0 0.5px rgb(0 0 0 / 28%),
+    0 3px 8px rgb(0 0 0 / 22%),
+    0 1px 3px rgb(0 0 0 / 20%);
 }
 
-.project-object-toolbar__color-swatch {
-  width: 34px;
-  height: 34px;
+.project-object-toolbar .project-object-toolbar__color-swatch {
+  width: 22px;
+  height: 22px;
   appearance: none;
   padding: 0;
-  border: 1px solid var(--object-stroke) !important;
-  border-radius: 7px !important;
+  border: 1px solid rgb(0 0 0 / 18%) !important;
+  border-radius: 999px !important;
   background: var(--object-color) !important;
   cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.project-object-toolbar__color-swatch:hover {
+  transform: scale(1.08);
 }
 
 .project-object-toolbar__color-swatch[aria-pressed="true"] {
-  outline: 2px solid #0d99ff;
-  outline-offset: 2px;
+  box-shadow: 0 0 0 2px #1e1e1e, 0 0 0 4px #0d99ff;
 }
 
 .project-object-toolbar__link-panel {
-  right: -104px;
-  width: 300px;
-  display: grid;
-  gap: 10px;
-  padding: 10px;
+  left: -104px;
+  top: 48px;
+  width: 228px;
+  padding: 0;
+  overflow: hidden;
+  border-color: #5b2cb9;
+  border-radius: 7px;
+  color: #fff;
+  background: #1e1e1e;
+  box-shadow:
+    0 0 0 1px rgb(151 71 255 / 64%),
+    0 3px 8px rgb(0 0 0 / 24%);
 }
 
-.project-object-toolbar__link-actions {
+.project-object-toolbar__link-panel input {
+  display: block;
+  width: 100%;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 9px;
+  border: 0;
+  outline: 0;
+  color: #fff;
+  background: transparent;
+  font: 500 13px/1.2 var(--reference-font-family, "Figtree", system-ui, sans-serif);
+}
+
+.project-object-toolbar__link-panel input::placeholder {
+  color: rgb(255 255 255 / 58%);
+}
+
+.project-object-toolbar__custom-size {
   display: flex;
-  justify-content: flex-end;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 2px;
+  color: #525252;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.project-object-toolbar__custom-size input {
+  width: 52px;
+  height: 30px;
+  box-sizing: border-box;
+  border: 1px solid #7e57c2;
+  border-radius: 5px;
+  background: #272727;
+  color: #fff;
+  font: inherit;
+  text-align: center;
 }
 
 .project-object-toolbar__align-trigger {
@@ -9376,6 +9631,63 @@ body {
 .project-shape-object-toolbar__line-trigger > svg {
   width: 12px;
   height: 12px;
+}
+
+/* A selected free line is its own focus container. Its toolbar is pinned to
+   that container's top-left edge rather than floating around the viewport. */
+.project-free-line-object-toolbar {
+  left: var(--project-free-line-toolbar-left) !important;
+  transform: none;
+}
+
+.project-free-line-object-toolbar__tool {
+  width: 40px;
+  min-width: 40px;
+  position: relative;
+  overflow: visible;
+}
+
+.project-free-line-object-toolbar__tool > img {
+  position: absolute;
+  bottom: 0;
+  width: 16px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.project-free-line-object-toolbar__weight > img {
+  width: 22px;
+  height: 22px;
+  display: block;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.72;
+  transition:
+    opacity 150ms ease;
+}
+
+.project-free-line-object-toolbar__weight[aria-pressed="true"]
+  > img {
+  opacity: 1;
+}
+
+/* The free-line palette is the shared object picker, compacted into the same
+   one-row swatch treatment FigJam uses for drawing controls. */
+.project-free-line-object-toolbar .project-free-line-object-toolbar__color-panel {
+  left: auto;
+  right: 0;
+  width: max-content;
+  grid-template-columns: repeat(8, 24px);
+  gap: 8px;
+  padding: 10px;
+}
+
+.project-free-line-object-toolbar .project-object-toolbar__color-swatch {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  min-height: 24px;
+  border-radius: 999px !important;
 }
 
 .project-shape-object-toolbar__panel {
@@ -9646,33 +9958,52 @@ body {
 .project-sticky-note-metadata {
   position: absolute;
   z-index: 8;
-  min-height: 24px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  min-height: 0;
   overflow: hidden;
+  color: rgb(30 30 30 / 58%);
+  font-size: 12px;
+  font-weight: 450;
+  line-height: 1.2;
   pointer-events: none;
   transition: opacity 120ms ease;
 }
 
 .project-sticky-note-metadata > span {
   min-width: 0;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 7px;
+  display: block;
+  padding: 0;
   overflow: hidden;
-  border: 1px solid rgb(15 23 42 / 10%);
-  border-radius: 999px;
-  color: #4a5568;
-  background: var(--project-canvas-surface-translucent, rgb(255 255 255 / 96%));
-  box-shadow: 0 3px 10px rgb(15 23 42 / 9%);
-  font-size: 10px;
-  font-weight: 650;
-  line-height: 1;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.project-sticky-note-placeholder {
+  position: absolute;
+  z-index: 8;
+  color: rgb(30 30 30 / 42%);
+  font-family: var(--reference-font-family, "Figtree", system-ui, sans-serif);
+  font-weight: 450;
+  line-height: 1.35;
+  pointer-events: none;
+}
+
+.project-sticky-note-rich-text {
+  position: absolute;
+  z-index: 8;
+  overflow-wrap: anywhere;
+  color: inherit;
+  font-family: var(
+    --sticky-rich-font-family,
+    var(--reference-font-family, "Figtree", system-ui, sans-serif)
+  );
+  line-height: 1.35;
+  pointer-events: none;
+  white-space: pre-wrap;
 }
 
 .project-sticky-note-metadata svg {
@@ -9754,6 +10085,17 @@ body {
   .excalidraw
   .excalidraw-hyperlinkContainer,
 .project-playground__canvas--shape-selected
+  .excalidraw
+  .selected-shape-actions {
+  display: none !important;
+}
+
+/* Free lines use the shared Vitrines object toolbar. Keep Excalidraw's
+   inspector out of the same selection so there is one source of controls. */
+.project-playground__canvas--free-line-selected
+  .excalidraw
+  .excalidraw-hyperlinkContainer,
+.project-playground__canvas--free-line-selected
   .excalidraw
   .selected-shape-actions {
   display: none !important;
@@ -10781,7 +11123,8 @@ body {
 }
 
 .project-playground__canvas .excalidraw .App-toolbar__divider,
-.project-playground__astryx-tools-divider {
+.project-playground__astryx-tools-divider,
+.project-playground__sticky-tools-divider {
   background: #e5e7eb;
 }
 
@@ -11239,7 +11582,8 @@ body {
   cursor: grabbing;
 }
 
-.project-screen-library__card--screen {
+.project-screen-library__card--screen,
+.project-screen-library__card--flow {
   gap: 0;
   padding: 6px !important;
   border-radius: 13px !important;
@@ -11249,13 +11593,15 @@ body {
     transform var(--vitrine-transition-fast);
 }
 
-.project-screen-library__card--screen:hover {
+.project-screen-library__card--screen:hover,
+.project-screen-library__card--flow:hover {
   border-color: var(--color-outline-primary, #8cabdc) !important;
   box-shadow: 0 8px 24px rgb(0 0 0 / 18%) !important;
   transform: translateY(-1px);
 }
 
-.project-screen-library__card--screen:focus-visible {
+.project-screen-library__card--screen:focus-visible,
+.project-screen-library__card--flow:focus-visible {
   outline: 2px solid var(--color-focus-ring, #5e8ef7);
   outline-offset: 2px;
 }
@@ -11299,6 +11645,67 @@ body {
   aspect-ratio: 8 / 5;
   border-radius: 9px;
   isolation: isolate;
+}
+
+.project-screen-library__preview--flow {
+  height: auto;
+  aspect-ratio: 8 / 5;
+  border-radius: 9px;
+  isolation: isolate;
+}
+
+.project-screen-library__flow-steps {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 2px;
+  background: var(--project-canvas-muted-surface, #f5f6f8);
+}
+
+.project-screen-library__flow-step {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--project-canvas-muted-surface, #f5f6f8);
+}
+
+.project-screen-library__flow-title {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 1;
+  display: grid;
+  max-width: calc(100% - 58px);
+  padding: 5px 8px;
+  overflow: hidden;
+  color: var(--project-canvas-overlay-text, #fff);
+  background: color-mix(in srgb, var(--project-canvas-ink, #101216) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--project-canvas-surface, #fff) 18%, transparent);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 20%);
+  line-height: 1.2;
+  backdrop-filter: blur(10px);
+}
+
+.project-screen-library__flow-title strong,
+.project-screen-library__flow-title small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-screen-library__flow-title strong {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.project-screen-library__flow-title small {
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.84;
 }
 
 .project-screen-library__identity {
@@ -11887,6 +12294,10 @@ body {
 }
 
 @media (max-width: 640px) {
+  :root {
+    --project-canvas-toolbelt-bottom: 72px;
+  }
+
   .research-project-page {
     padding: 20px 16px 48px;
   }
@@ -11954,10 +12365,6 @@ body {
 
   .project-playground__canvas .excalidraw .layer-ui__wrapper__top-right {
     top: 52px;
-  }
-
-  .project-playground__canvas .excalidraw {
-    --project-canvas-toolbelt-bottom: 72px;
   }
 
   .project-playground__canvas .excalidraw .shapes-section {
