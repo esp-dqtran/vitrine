@@ -10982,9 +10982,9 @@ body {
 .project-screen-library {
   position: absolute;
   z-index: 410;
-  top: 136px;
+  top: 76px;
   right: auto;
-  bottom: 12px;
+  bottom: 128px;
   left: 64px;
   width: min(640px, calc(100% - 76px));
   display: flex;
@@ -11003,6 +11003,37 @@ body {
     0 12px 36px rgb(17 24 39 / 16%),
     0 2px 7px var(--project-canvas-border, rgb(17 24 39 / 10%));
   backdrop-filter: blur(20px);
+}
+
+.project-screen-library .astryx-text-input {
+  border-radius: 8px !important;
+  background: var(--project-canvas-muted-surface, #f5f5f5) !important;
+}
+
+.project-screen-library .astryx-segmented-control {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.project-screen-library .astryx-segmented-control::before {
+  background: var(--project-canvas-muted-surface, #f5f5f5) !important;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.project-screen-library .astryx-segmented-control-item {
+  border-radius: 6px !important;
+  color: var(--project-canvas-muted-text, #757575) !important;
+}
+
+.project-screen-library
+  .astryx-segmented-control-item[aria-checked="false"] {
+  color: var(--project-canvas-muted-text, #757575) !important;
+}
+
+.project-screen-library
+  .astryx-segmented-control-item[aria-checked="true"] {
+  color: var(--project-canvas-text, #1e1e1e) !important;
 }
 
 .project-screen-library__header {
@@ -12160,7 +12191,7 @@ body {
   .project-screen-library {
     top: 68px;
     right: 8px;
-    bottom: 8px;
+    bottom: 80px;
     left: 68px;
     width: auto;
   }

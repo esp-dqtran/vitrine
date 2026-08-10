@@ -179,7 +179,8 @@ const canvasDocumentWidth = 760;
 const canvasDocumentHeight = 1_080;
 const expandedCanvasDocumentWidth = 920;
 const expandedCanvasDocumentHeight = 1_240;
-const canvasDocumentViewportTopSafeArea = 72;
+const canvasDocumentViewportTopSafeArea = 124;
+const canvasDocumentViewportSideSafeArea = 16;
 const researchFrameWidth = 960;
 const researchFrameHeight = 640;
 const defaultSectionSize = 420;
@@ -2534,6 +2535,10 @@ export function ProjectPlayground({
     readonly AstryxStickyNoteReference[]
   >([]);
   const [documentPlacement, setDocumentPlacement] = useState(false);
+  const documentPlacementRef = useRef(false);
+  useEffect(() => {
+    documentPlacementRef.current = documentPlacement;
+  }, [documentPlacement]);
   const [canvasDocuments, setCanvasDocuments] = useState<
     readonly AstryxCanvasDocumentReference[]
   >([]);
@@ -4135,6 +4140,7 @@ export function ProjectPlayground({
   }, [deactivateTableTool]);
 
   const stopDocumentPlacement = useCallback(() => {
+    documentPlacementRef.current = false;
     setDocumentPlacement(false);
     const editor = editorRef.current;
     editor?.resetCursor();
@@ -4182,6 +4188,7 @@ export function ProjectPlayground({
 
   const armDocumentPlacement = useCallback(() => {
     stopCommentPlacement();
+    documentPlacementRef.current = true;
     setDocumentPlacement(true);
     setResearchFramesOpen(false);
     setStickyPickerOpen(false);
@@ -4206,7 +4213,8 @@ export function ProjectPlayground({
 
   const insertCanvasDocumentAt = useCallback((x: number, y: number) => {
     const editor = editorRef.current;
-    if (!editor) return;
+    const root = canvasRootRef.current;
+    if (!editor || !root) return;
     const document: ProjectCanvasDocumentData = {
       documentId: crypto.randomUUID(),
       title: "Untitled doc",
@@ -4222,8 +4230,23 @@ export function ProjectPlayground({
       viewportTop +
       canvasDocumentViewportTopSafeArea / zoom +
       canvasDocumentHeight / 2;
+    const viewportLeft = -appState.scrollX + appState.offsetLeft / zoom;
+    const viewportWidth = root.getBoundingClientRect().width / zoom;
+    const minimumCenterX =
+      viewportLeft +
+      canvasDocumentViewportSideSafeArea / zoom +
+      canvasDocumentWidth / 2;
+    const maximumCenterX =
+      viewportLeft +
+      viewportWidth -
+      canvasDocumentViewportSideSafeArea / zoom -
+      canvasDocumentWidth / 2;
+    const documentCenterX =
+      maximumCenterX >= minimumCenterX
+        ? Math.min(Math.max(x, minimumCenterX), maximumCenterX)
+        : viewportLeft + viewportWidth / 2;
     const created = createCanvasDocumentElements({
-      x,
+      x: documentCenterX,
       y: Math.max(y, minimumCenterY),
       document,
     });
@@ -4326,9 +4349,10 @@ export function ProjectPlayground({
   const handleCanvasPlacementPointerUp = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
       const stamp = stampPlacementRef.current;
+      const document = documentPlacementRef.current;
       const target = event.target as HTMLElement;
       if (event.button !== 0 || !target.closest(".excalidraw__canvas")) return;
-      if (!tablePlacementRef.current && !stamp) {
+      if (!tablePlacementRef.current && !stamp && !document) {
         if (canvasTableCellSelectionRef.current) {
           if (event.detail <= 1) {
             event.preventDefault();
@@ -4358,9 +4382,14 @@ export function ProjectPlayground({
       };
 
       // Excalidraw finalizes its own click selection after the DOM pointer-up.
-      // Add the table on the next frame so that reconciliation cannot restore
-      // the pre-click scene over the newly created cells.
+      // Add custom objects on the next frame so reconciliation cannot restore
+      // the pre-click scene over the newly created elements.
       window.requestAnimationFrame(() => {
+        if (documentPlacementRef.current) {
+          insertCanvasDocumentAt(placement.x, placement.y);
+          stopDocumentPlacement();
+          return;
+        }
         if (tablePlacementRef.current) {
           insertCanvasTableAt(placement.x, placement.y);
           stopTablePlacement();
@@ -4376,7 +4405,13 @@ export function ProjectPlayground({
           );
       });
     },
-    [insertCanvasStampAt, insertCanvasTableAt, stopTablePlacement],
+    [
+      insertCanvasDocumentAt,
+      insertCanvasStampAt,
+      insertCanvasTableAt,
+      stopDocumentPlacement,
+      stopTablePlacement,
+    ],
   );
 
   const selectCanvasStamp = useCallback((stamp: CanvasStampOption) => {
@@ -5014,12 +5049,6 @@ export function ProjectPlayground({
         stopCommentPlacement();
         return;
       }
-      if (documentPlacement) {
-        const { x, y } = pointerDownState.origin;
-        insertCanvasDocumentAt(x, y);
-        stopDocumentPlacement();
-        return;
-      }
       if (!stickyPlacement) return;
       const { x, y } = pointerDownState.origin;
       if (stickyPlacement.mode === "stack") {
@@ -5045,16 +5074,13 @@ export function ProjectPlayground({
       setStickyDraft(draft);
     },
     [
-      documentPlacement,
       commentPlacement,
       finalizeResearchFrame,
       insertCanvasCustomShapeAt,
-      insertCanvasDocumentAt,
       insertStickyNotesAt,
       shapePlacement,
       stickyPlacement,
       researchFrameDrawing,
-      stopDocumentPlacement,
       stopCommentPlacement,
       stopStickyPlacement,
     ],

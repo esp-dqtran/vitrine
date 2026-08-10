@@ -501,9 +501,13 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /customType: "astryx-document"/);
   assert.match(
     source,
-    /if \(documentPlacement\) \{[\s\S]*insertCanvasDocumentAt\(x, y\);[\s\S]*stopDocumentPlacement\(\);/,
+    /const documentPlacementRef = useRef\(false\)/,
   );
-  assert.match(source, /const canvasDocumentViewportTopSafeArea = 72/);
+  assert.match(
+    source,
+    /const handleCanvasPlacementPointerUp[\s\S]*documentPlacementRef\.current[\s\S]*window\.requestAnimationFrame\(\(\) => \{[\s\S]*insertCanvasDocumentAt\(placement\.x, placement\.y\);[\s\S]*stopDocumentPlacement\(\);/,
+  );
+  assert.match(source, /const canvasDocumentViewportTopSafeArea = 124/);
   assert.match(
     source,
     /const viewportTop = -appState\.scrollY \+ appState\.offsetTop \/ zoom/,
@@ -512,6 +516,15 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     source,
     /const minimumCenterY =\s*viewportTop[\s\S]*canvasDocumentViewportTopSafeArea \/ zoom[\s\S]*canvasDocumentHeight \/ 2/,
   );
+  assert.match(
+    source,
+    /const maximumCenterX =\s*viewportLeft[\s\S]*viewportWidth[\s\S]*canvasDocumentViewportSideSafeArea \/ zoom[\s\S]*canvasDocumentWidth \/ 2/,
+  );
+  assert.match(
+    source,
+    /const documentCenterX =\s*maximumCenterX >= minimumCenterX[\s\S]*Math\.min\(Math\.max\(x, minimumCenterX\), maximumCenterX\)[\s\S]*viewportLeft \+ viewportWidth \/ 2/,
+  );
+  assert.match(source, /x: documentCenterX/);
   assert.match(source, /y: Math\.max\(y, minimumCenterY\)/);
   assert.match(
     source,
@@ -850,7 +863,7 @@ test("gives the infinite canvas the full available viewport", () => {
   );
   assert.match(
     css,
-    /\.project-screen-library\s*\{[^}]*position:\s*absolute;[^}]*top:\s*136px;[^}]*left:\s*64px;[^}]*width:\s*min\(640px,/s,
+    /\.project-screen-library\s*\{[^}]*position:\s*absolute;[^}]*top:\s*76px;[^}]*bottom:\s*128px;[^}]*left:\s*64px;[^}]*width:\s*min\(640px,/s,
   );
   assert.match(
     css,
@@ -859,6 +872,18 @@ test("gives the infinite canvas the full available viewport", () => {
   assert.match(
     css,
     /\.project-screen-library__grid--inspiration\s*\{[^}]*grid-template-columns:\s*repeat\(2,/s,
+  );
+  assert.match(
+    css,
+    /\.project-screen-library \.astryx-segmented-control\s*\{[^}]*background:\s*transparent !important;[^}]*border-color:\s*transparent !important;/s,
+  );
+  assert.match(
+    css,
+    /\.project-screen-library \.astryx-segmented-control::before\s*\{[^}]*background:\s*var\(--project-canvas-muted-surface,[^)]*\) !important;[^}]*border-radius:\s*6px;/s,
+  );
+  assert.match(
+    css,
+    /\.project-screen-library[\s\S]*?\.astryx-segmented-control-item\[aria-checked="false"\][\s\S]*?color:\s*var\(--project-canvas-muted-text,[^)]*\) !important;/,
   );
   assert.match(
     css,

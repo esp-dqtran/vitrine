@@ -83,6 +83,73 @@ full-view comparison, so an additional crop is not needed.
 
 final result: passed
 
+---
+
+# Design QA — FigJam Toolbar, Catalog, and Document Placement
+
+Source visual truth:
+
+- `.codex-artifacts/toolbar-parity-final-audit/04-figjam-launcher-current.png`
+  — live FigJam launcher above the bottom toolbelt.
+- `.codex-artifacts/toolbar-parity-final-audit/13-figjam-sticky-object-toolbar.png`
+  — live FigJam selected Sticky note and contextual toolbar.
+
+Implementation evidence:
+
+- `.codex-artifacts/toolbar-parity-final-audit/07-vitrines-catalog-tabs-fixed.png`
+  — Vitrines Catalog with the revised compact search and segmented controls.
+- `.codex-artifacts/toolbar-parity-final-audit/18-vitrines-document-edge-safe-final.png`
+  — a newly inserted Document with its contextual toolbar safely below the
+  floating project header.
+- `.codex-artifacts/toolbar-parity-final-audit/14-vitrines-sticky-object-toolbar.png`
+  — selected Vitrines Sticky note using the shared object-toolbar shell.
+- `.codex-artifacts/toolbar-parity-final-audit/15-sticky-toolbar-side-by-side.jpg`
+  and `16-catalog-launcher-side-by-side.jpg` — unscaled, same-viewport source
+  and implementation comparisons.
+
+Viewport and normalization: all captures are 1280 × 720 CSS px at 1× density.
+The combined comparisons are direct 2560 × 720 compositions with no scaling.
+
+## Findings and corrections
+
+1. The Catalog panel previously overlapped the bottom toolbelt. It now stays
+   between the floating header and toolbelt with a 12px bottom gap, matching
+   FigJam's detached panel rhythm.
+2. Catalog search and tab chrome now use the board's light surface tokens,
+   compact 8px/6px radii, muted inactive labels, and a quiet selected segment.
+3. Document insertion was being overwritten during Excalidraw's pointer-up
+   reconciliation. It now uses the durable placement path shared with Table,
+   inserts on the following animation frame, selects the created object, and
+   returns to Select.
+4. Document placement clamps the object beneath the 60px project header. The
+   verified contextual toolbar begins at y=74, leaving a clear 14px gap. A
+   second clamp keeps the 760px object inside the horizontal viewport even
+   when it is placed near the right canvas edge.
+5. The main tool order matches FigJam from Select through Widgets; Vitrines'
+   project-specific Document and Catalog tools follow after a divider.
+6. The selected Sticky note toolbar matches FigJam's compact black shell,
+   circular color control, typography controls, inline actions, and placement
+   above the selected object. Additional Vitrines alignment and author controls
+   remain visible because they are functional object actions.
+
+## Primary interactions tested
+
+- Activated Document, clicked an empty canvas point, confirmed one document was
+  created and selected, opened the Markdown editor, then removed the temporary
+  object.
+- Searched Catalog for `Artlist`, confirmed three filtered Screen results,
+  switched to Flows and back, and placed a full-resolution Screen image.
+- Closed Catalog, confirmed the placed Screen inspector, and removed the
+  temporary image.
+- Activated Sticky notes and then Document; confirmed the Sticky options tray
+  closed and only Document remained active.
+- Selected an existing Sticky note in both FigJam and Vitrines and reviewed the
+  contextual toolbars in one side-by-side image.
+
+No actionable P0, P1, or P2 differences remain in this scoped comparison.
+
+final result: passed
+
 # Design QA — FigJam Section Tool
 
 Source visual truth:
