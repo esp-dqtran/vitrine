@@ -18,12 +18,15 @@ import {
 } from "@astryxdesign/core";
 import {
   ChevronSmallDownIcon,
+  DragIcon,
   EditIcon,
   EyeCloseIcon,
   EyeIcon,
   FaceHappyIcon,
   GridIcon,
   LockIcon,
+  MergeIcon,
+  PlusIcon,
   UnlockIcon,
 } from "@storybook/icons";
 import {
@@ -502,6 +505,25 @@ const canvasSectionColors: readonly CanvasMarkerColor[] = [
   { label: "Light pink", value: "#ffc2ec" },
 ];
 
+function canvasTableTextColor(fill: string): string {
+  const value = fill.replace("#", "");
+  const red = Number.parseInt(value.slice(0, 2), 16);
+  const green = Number.parseInt(value.slice(2, 4), 16);
+  const blue = Number.parseInt(value.slice(4, 6), 16);
+  return red * 0.299 + green * 0.587 + blue * 0.114 < 142
+    ? "#ffffff"
+    : "#1e1e1e";
+}
+
+const canvasTableColors: readonly ProjectStickyNoteColor[] =
+  canvasSectionColors.map(({ label, value }) => ({
+    id: `table-${label.toLowerCase().replaceAll(" ", "-")}`,
+    name: label.toLowerCase(),
+    fill: value,
+    stroke: "#d9d9d9",
+    text: canvasTableTextColor(value),
+  }));
+
 type CanvasSectionLineStyle = "solid" | "dashed" | "none";
 
 /* The object toolbar uses the same exact source colours as the Canvas tools,
@@ -836,36 +858,45 @@ function createCanvasCustomShapeElements({
   }
 }
 
-function createCanvasTableElements({
-  x,
-  y,
-  rows = 3,
-  columns = 3,
+function createCanvasTableCells({
+  left,
+  top,
+  rows,
+  columns,
+  tableId,
+  groupId,
+  startRow = 0,
+  startColumn = 0,
+  cellWidth = 160,
+  cellHeight = 54,
+  color = canvasTableColors[10],
+  format = defaultProjectStickyNoteFormat,
 }: {
-  x: number;
-  y: number;
-  rows?: number;
-  columns?: number;
+  left: number;
+  top: number;
+  rows: number;
+  columns: number;
+  tableId: string;
+  groupId: string;
+  startRow?: number;
+  startColumn?: number;
+  cellWidth?: number;
+  cellHeight?: number;
+  color?: ProjectStickyNoteColor;
+  format?: ProjectStickyNoteFormat;
 }): ExcalidrawElement[] {
-  const cellWidth = 160;
-  const cellHeight = 64;
-  const tableId = crypto.randomUUID();
-  const groupId = crypto.randomUUID();
-  const left = x - (columns * cellWidth) / 2;
-  const top = y - (rows * cellHeight) / 2;
-
   return convertToExcalidrawElements(
     Array.from({ length: rows * columns }, (_, index) => {
-      const row = Math.floor(index / columns);
-      const column = index % columns;
+      const row = startRow + Math.floor(index / columns);
+      const column = startColumn + (index % columns);
       return {
         type: "rectangle",
-        x: left + column * cellWidth,
-        y: top + row * cellHeight,
+        x: left + (column - startColumn) * cellWidth,
+        y: top + (row - startRow) * cellHeight,
         width: cellWidth,
         height: cellHeight,
-        strokeColor: "#757575",
-        backgroundColor: row === 0 ? "#f3f4f6" : "#ffffff",
+        strokeColor: color.stroke,
+        backgroundColor: color.fill,
         fillStyle: "solid",
         strokeWidth: 1,
         roughness: 0,
@@ -875,13 +906,46 @@ function createCanvasTableElements({
           astryxReference: {
             kind: "table-cell",
             tableId,
+            groupId,
             row,
             column,
+            rowSpan: 1,
+            columnSpan: 1,
+            color: color.id,
+            format,
           },
         },
       } as ElementSkeleton;
     }),
   ) as ExcalidrawElement[];
+}
+
+function createCanvasTableElements({
+  x,
+  y,
+  rows = 2,
+  columns = 2,
+}: {
+  x: number;
+  y: number;
+  rows?: number;
+  columns?: number;
+}): ExcalidrawElement[] {
+  const cellWidth = 160;
+  const cellHeight = 54;
+  const tableId = crypto.randomUUID();
+  const groupId = crypto.randomUUID();
+  const left = x - (columns * cellWidth) / 2;
+  const top = y - (rows * cellHeight) / 2;
+
+  return createCanvasTableCells({
+    left,
+    top,
+    rows,
+    columns,
+    tableId,
+    groupId,
+  });
 }
 
 function createCanvasStampElement({
@@ -991,6 +1055,214 @@ interface CanvasTextReference {
   height: number;
   color: ProjectStickyNoteColor;
   format: ProjectStickyNoteFormat;
+}
+
+interface CanvasTableCellReference {
+  elementId: string;
+  textElementId?: string;
+  row: number;
+  column: number;
+  rowSpan: number;
+  columnSpan: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color: ProjectStickyNoteColor;
+  format: ProjectStickyNoteFormat;
+}
+
+interface CanvasTableReference {
+  tableId: string;
+  groupId: string;
+  cells: readonly CanvasTableCellReference[];
+  selectedCellIds: readonly string[];
+  rows: number;
+  columns: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color: ProjectStickyNoteColor;
+  format: ProjectStickyNoteFormat;
+}
+
+function canvasTableCellMetadata(element: ExcalidrawElement) {
+  const customData = element.customData as Record<string, unknown> | undefined;
+  const reference = customData?.astryxReference as
+    | Record<string, unknown>
+    | undefined;
+  if (
+    element.isDeleted ||
+    element.type !== "rectangle" ||
+    reference?.kind !== "table-cell" ||
+    typeof reference.tableId !== "string" ||
+    typeof reference.row !== "number" ||
+    typeof reference.column !== "number"
+  )
+    return undefined;
+  return {
+    tableId: reference.tableId,
+    groupId:
+      typeof reference.groupId === "string"
+        ? reference.groupId
+        : (element.groupIds[0] ?? reference.tableId),
+    row: reference.row,
+    column: reference.column,
+    rowSpan:
+      typeof reference.rowSpan === "number" && reference.rowSpan > 0
+        ? reference.rowSpan
+        : 1,
+    columnSpan:
+      typeof reference.columnSpan === "number" && reference.columnSpan > 0
+        ? reference.columnSpan
+        : 1,
+    colorId: typeof reference.color === "string" ? reference.color : undefined,
+    format: reference.format as Partial<ProjectStickyNoteFormat> | undefined,
+  };
+}
+
+function canvasTableReferenceForSelection(
+  elements: readonly ExcalidrawElement[],
+  appState: AppState,
+): CanvasTableReference | undefined {
+  const selectedIds = new Set(Object.keys(appState.selectedElementIds));
+  if (appState.editingTextElement)
+    selectedIds.add(appState.editingTextElement.id);
+  const selectedTableIds = new Set<string>();
+  const selectedCellIds = new Set<string>();
+
+  for (const element of elements) {
+    if (element.isDeleted || !selectedIds.has(element.id)) continue;
+    const direct = canvasTableCellMetadata(element);
+    if (direct) {
+      selectedTableIds.add(direct.tableId);
+      selectedCellIds.add(element.id);
+      continue;
+    }
+    const containerId = (element as { containerId?: string | null })
+      .containerId;
+    if (!containerId) continue;
+    const container = elements.find(
+      (candidate) => candidate.id === containerId,
+    );
+    if (!container) continue;
+    const metadata = canvasTableCellMetadata(container);
+    if (metadata) {
+      selectedTableIds.add(metadata.tableId);
+      selectedCellIds.add(container.id);
+    }
+  }
+  if (selectedTableIds.size !== 1) return undefined;
+  return canvasTableReferenceForTableId(elements, [...selectedTableIds][0], [
+    ...selectedCellIds,
+  ]);
+}
+
+function canvasTableReferenceForTableId(
+  elements: readonly ExcalidrawElement[],
+  tableId: string,
+  selectedCellIds: readonly string[],
+): CanvasTableReference | undefined {
+  const selectedCellIdSet = new Set(selectedCellIds);
+  const tableCells = elements.flatMap((element) => {
+    const metadata = canvasTableCellMetadata(element);
+    if (!metadata || metadata.tableId !== tableId) return [];
+    return [
+      {
+        element,
+        metadata,
+        textElementId: element.boundElements?.find(
+          (bound) => bound.type === "text",
+        )?.id,
+      },
+    ];
+  });
+  if (tableCells.length === 0) return undefined;
+  const x = Math.min(...tableCells.map(({ element }) => element.x));
+  const y = Math.min(...tableCells.map(({ element }) => element.y));
+  const right = Math.max(
+    ...tableCells.map(({ element }) => element.x + element.width),
+  );
+  const bottom = Math.max(
+    ...tableCells.map(({ element }) => element.y + element.height),
+  );
+  const first = tableCells[0];
+  const tableCellReference = ({
+    element,
+    metadata,
+    textElementId,
+  }: (typeof tableCells)[number]): CanvasTableCellReference => ({
+    elementId: element.id,
+    textElementId,
+    row: metadata.row,
+    column: metadata.column,
+    rowSpan: metadata.rowSpan,
+    columnSpan: metadata.columnSpan,
+    x: element.x,
+    y: element.y,
+    width: element.width,
+    height: element.height,
+    color: canvasTableColors.find(
+      (option) => option.id === metadata.colorId,
+    ) ?? {
+      ...canvasTableColors[10],
+      fill: element.backgroundColor,
+      text: canvasTableTextColor(element.backgroundColor),
+    },
+    format: {
+      ...defaultProjectStickyNoteFormat,
+      ...metadata.format,
+    },
+  });
+  const cells = tableCells.map(tableCellReference);
+  const firstSelectedCell =
+    cells.find((cell) => selectedCellIdSet.has(cell.elementId)) ?? cells[0];
+  return {
+    tableId,
+    groupId: first.metadata.groupId,
+    cells,
+    selectedCellIds: [...selectedCellIdSet],
+    rows: Math.max(
+      ...tableCells.map(({ metadata }) => metadata.row + metadata.rowSpan),
+    ),
+    columns: Math.max(
+      ...tableCells.map(
+        ({ metadata }) => metadata.column + metadata.columnSpan,
+      ),
+    ),
+    x,
+    y,
+    width: right - x,
+    height: bottom - y,
+    color: firstSelectedCell.color,
+    format: firstSelectedCell.format,
+  };
+}
+
+function canvasTableWithSelectedCells(
+  table: CanvasTableReference,
+  cellIds: readonly string[],
+): CanvasTableReference {
+  const validCellIds = [...new Set(cellIds)].filter((id) =>
+    table.cells.some((cell) => cell.elementId === id),
+  );
+  const firstSelectedCell = table.cells.find((cell) =>
+    validCellIds.includes(cell.elementId),
+  );
+  return {
+    ...table,
+    selectedCellIds: validCellIds,
+    color: firstSelectedCell?.color ?? table.color,
+    format: firstSelectedCell?.format ?? table.format,
+  };
+}
+
+function canvasTableReferencesEqual(
+  left?: CanvasTableReference,
+  right?: CanvasTableReference,
+) {
+  return JSON.stringify(left) === JSON.stringify(right);
 }
 
 function canvasTextWithBulletedList(text: string, enabled: boolean): string {
@@ -2171,6 +2443,8 @@ export function ProjectPlayground({
   const [textSelectionActive, setTextSelectionActive] = useState(false);
   const [selectedCanvasText, setSelectedCanvasText] =
     useState<CanvasTextReference>();
+  const [selectedCanvasTable, setSelectedCanvasTable] =
+    useState<CanvasTableReference>();
   const [selectedStickyNote, setSelectedStickyNote] =
     useState<AstryxStickyNoteReference>();
   const [selectedCanvasShape, setSelectedCanvasShape] =
@@ -2216,6 +2490,10 @@ export function ProjectPlayground({
   const stickyInputRef = useRef<HTMLDivElement | null>(null);
   const canvasTextEditingRef = useRef(false);
   const stickyPlacementRef = useRef<StickyPlacement>();
+  const canvasTableCellSelectionRef = useRef<{
+    tableId: string;
+    cellIds: readonly string[];
+  }>();
   const tablePlacementRef = useRef(false);
   const stampPlacementRef = useRef<CanvasStampOption>();
   const canvasCommentsRef = useRef<readonly DesignerCanvasCommentThread[]>([]);
@@ -2613,6 +2891,9 @@ export function ProjectPlayground({
       const nativeTool = target
         .closest("label")
         ?.querySelector('input[data-testid^="toolbar-"]');
+      if (target.closest(".excalidraw__canvas") || nativeTool) {
+        canvasTableCellSelectionRef.current = undefined;
+      }
       if (nativeTool) {
         deactivateStickyTool();
         setStickyDraft(undefined);
@@ -2663,16 +2944,37 @@ export function ProjectPlayground({
           (appState.selectedElementIds[element.id] ||
             appState.editingTextElement?.id === element.id),
       );
+      const detectedCanvasTable = canvasTableReferenceForSelection(
+        elements,
+        appState,
+      );
+      const savedCellSelection = canvasTableCellSelectionRef.current;
+      const nextSelectedCanvasTable = savedCellSelection
+        ? canvasTableReferenceForTableId(
+            elements,
+            savedCellSelection.tableId,
+            savedCellSelection.cellIds,
+          )
+        : detectedCanvasTable;
+      if (savedCellSelection && !nextSelectedCanvasTable) {
+        canvasTableCellSelectionRef.current = undefined;
+      }
+      setSelectedCanvasTable((current) =>
+        canvasTableReferencesEqual(current, nextSelectedCanvasTable)
+          ? current
+          : nextSelectedCanvasTable,
+      );
       /* Text bound to a sticky note belongs to its note's object toolbar. Plain
        text owns the same compact shell, but not the note collaboration UI. */
       const selectedTextContainerId = selectedTextElement
         ? (selectedTextElement as { containerId?: string | null }).containerId
         : undefined;
-      const nextSelectedCanvasText = selectedTextContainerId
-        ? undefined
-        : selectedTextElement
-          ? canvasTextReferenceForElement(selectedTextElement)
-          : undefined;
+      const nextSelectedCanvasText =
+        nextSelectedCanvasTable || selectedTextContainerId
+          ? undefined
+          : selectedTextElement
+            ? canvasTextReferenceForElement(selectedTextElement)
+            : undefined;
       setSelectedCanvasText((current) =>
         canvasTextReferencesEqual(current, nextSelectedCanvasText)
           ? current
@@ -3422,9 +3724,8 @@ export function ProjectPlayground({
     );
     setResearchFramesOpen(false);
     setResearchFrameDrawing(true);
-    setStickyPickerOpen(false);
+    deactivateStickyTool();
     setStickyDraft(undefined);
-    setStickyPlacement(undefined);
     deactivateTableTool();
     deactivateStampTool();
     setWidgetsLauncherOpen(false);
@@ -3435,7 +3736,7 @@ export function ProjectPlayground({
     setReferencesOpen(false);
     editor.setActiveTool({ type: "frame" });
     editor.setCursor("crosshair");
-  }, [deactivateStampTool, deactivateTableTool]);
+  }, [deactivateStampTool, deactivateStickyTool, deactivateTableTool]);
 
   const finalizeResearchFrame = useCallback(
     (origin: { x: number; y: number }) => {
@@ -4029,8 +4330,18 @@ export function ProjectPlayground({
       return;
     }
     stopDocumentPlacement();
-    editorRef.current?.updateScene({ appState: { selectedElementIds: {} } });
+    editorRef.current?.updateScene({
+      appState: {
+        selectedElementIds: {},
+        selectedGroupIds: {},
+        editingGroupId: null,
+      },
+    });
     setSelectedStickyNote(undefined);
+    setSelectedCanvasTable(undefined);
+    setSelectedCanvasText(undefined);
+    setSelectedCanvasShape(undefined);
+    setSelectedResearchFrame(undefined);
     armStickyPlacement(stickyToolColor, "single", true);
   }, [
     armStickyPlacement,
@@ -4803,6 +5114,89 @@ export function ProjectPlayground({
     } as CSSProperties;
   }, [canvasViewport, selectedCanvasText]);
 
+  const selectedCanvasTableCells = useMemo(() => {
+    if (!selectedCanvasTable) return [];
+    const selectedIds = new Set(selectedCanvasTable.selectedCellIds);
+    return selectedCanvasTable.cells.filter((cell) =>
+      selectedIds.has(cell.elementId),
+    );
+  }, [selectedCanvasTable]);
+
+  const selectedCanvasTableHasCellSelection = Boolean(
+    selectedCanvasTable &&
+    selectedCanvasTable.selectedCellIds.length > 0 &&
+    selectedCanvasTable.selectedCellIds.length <
+      selectedCanvasTable.cells.length,
+  );
+
+  const selectedCanvasTableMergeAction = useMemo<
+    "merge" | "unmerge" | undefined
+  >(() => {
+    if (!selectedCanvasTable) return undefined;
+    if (
+      selectedCanvasTableCells.length === 1 &&
+      (selectedCanvasTableCells[0].rowSpan > 1 ||
+        selectedCanvasTableCells[0].columnSpan > 1)
+    )
+      return "unmerge";
+    if (
+      selectedCanvasTableCells.length < 2 ||
+      selectedCanvasTableCells.length === selectedCanvasTable.cells.length ||
+      selectedCanvasTableCells.some(
+        (cell) => cell.rowSpan !== 1 || cell.columnSpan !== 1,
+      )
+    )
+      return undefined;
+    const rows = selectedCanvasTableCells.map((cell) => cell.row);
+    const columns = selectedCanvasTableCells.map((cell) => cell.column);
+    const minRow = Math.min(...rows);
+    const maxRow = Math.max(...rows);
+    const minColumn = Math.min(...columns);
+    const maxColumn = Math.max(...columns);
+    const expectedCellCount =
+      (maxRow - minRow + 1) * (maxColumn - minColumn + 1);
+    return selectedCanvasTableCells.length === expectedCellCount
+      ? "merge"
+      : undefined;
+  }, [selectedCanvasTable, selectedCanvasTableCells]);
+
+  const canvasTableToolbarStyle = useMemo(() => {
+    if (!selectedCanvasTable) return undefined;
+    const { scrollX, scrollY, zoom } = canvasViewport;
+    const centreX =
+      (selectedCanvasTable.x + selectedCanvasTable.width / 2 + scrollX) * zoom;
+    const tableTop = (selectedCanvasTable.y + scrollY) * zoom;
+    const tableBottom =
+      (selectedCanvasTable.y + selectedCanvasTable.height + scrollY) * zoom;
+    return {
+      "--project-object-toolbar-anchor-x": `${centreX}px`,
+      "--project-object-toolbar-top": `${Math.max(
+        76,
+        selectedCanvasTableHasCellSelection ? tableBottom + 38 : tableTop - 80,
+      )}px`,
+      "--project-object-toolbar-half-width": "241px",
+    } as CSSProperties;
+  }, [
+    canvasViewport,
+    selectedCanvasTable,
+    selectedCanvasTableHasCellSelection,
+  ]);
+
+  const canvasTableControlsStyle = useMemo(() => {
+    if (!selectedCanvasTable) return undefined;
+    const { scrollX, scrollY, zoom } = canvasViewport;
+    return {
+      left: `${(selectedCanvasTable.x + scrollX) * zoom}px`,
+      top: `${(selectedCanvasTable.y + scrollY) * zoom}px`,
+      width: `${selectedCanvasTable.width * zoom}px`,
+      height: `${selectedCanvasTable.height * zoom}px`,
+      "--canvas-table-column-width": `${(selectedCanvasTable.width / selectedCanvasTable.columns) * zoom}px`,
+      "--canvas-table-row-height": `${(selectedCanvasTable.height / selectedCanvasTable.rows) * zoom}px`,
+      "--canvas-table-column-count": selectedCanvasTable.columns,
+      "--canvas-table-row-count": selectedCanvasTable.rows,
+    } as CSSProperties;
+  }, [canvasViewport, selectedCanvasTable]);
+
   const canvasShapeToolbarStyle = useMemo(() => {
     if (!selectedCanvasShape) return undefined;
     const { scrollX, scrollY, zoom } = canvasViewport;
@@ -4947,6 +5341,302 @@ export function ProjectPlayground({
     },
     [selectedCanvasText],
   );
+
+  const updateSelectedCanvasTable = useCallback(
+    (patch: {
+      color?: ProjectStickyNoteColor;
+      format?: ProjectStickyNoteFormat;
+    }) => {
+      const editor = editorRef.current;
+      const table = selectedCanvasTable;
+      if (!editor || !table) return;
+      const color = patch.color ?? table.color;
+      const format = patch.format ?? table.format;
+      const selectedCellIds = new Set(
+        table.selectedCellIds.length > 0
+          ? table.selectedCellIds
+          : table.cells.map((cell) => cell.elementId),
+      );
+      const selectedTextIds = new Set(
+        table.cells
+          .filter((cell) => selectedCellIds.has(cell.elementId))
+          .flatMap((cell) => (cell.textElementId ? [cell.textElementId] : [])),
+      );
+      const elements = editor.getSceneElements().map((element) => {
+        if (selectedCellIds.has(element.id)) {
+          const customData = element.customData as
+            | Record<string, unknown>
+            | undefined;
+          const reference = customData?.astryxReference as
+            | Record<string, unknown>
+            | undefined;
+          return withCanvasElementUpdate(element, {
+            backgroundColor: color.fill,
+            strokeColor: color.stroke,
+            customData: {
+              ...customData,
+              astryxReference: {
+                ...reference,
+                color: color.id,
+                format,
+              },
+            },
+          } as Partial<ExcalidrawElement>);
+        }
+        if (!selectedTextIds.has(element.id)) return element;
+        const textElement = element as ExcalidrawElement & {
+          text: string;
+          originalText?: string;
+        };
+        const nextText =
+          format.bulletedList !== table.format.bulletedList
+            ? canvasTextWithBulletedList(textElement.text, format.bulletedList)
+            : textElement.text;
+        return withCanvasElementUpdate(element, {
+          fontSize: format.fontSize,
+          fontFamily: projectStickyNoteFontFamilies[format.font],
+          textAlign: format.textAlign,
+          strokeColor: color.text,
+          link: format.link || null,
+          customData: { ...element.customData, astryxTextFormat: format },
+          ...(nextText !== textElement.text
+            ? { text: nextText, originalText: nextText }
+            : {}),
+        } as Partial<ExcalidrawElement>);
+      });
+      editor.updateScene({
+        elements,
+        appState: {
+          currentItemBackgroundColor: color.fill,
+          currentItemStrokeColor: color.text,
+          currentItemFontSize: format.fontSize,
+          currentItemFontFamily: projectStickyNoteFontFamilies[format.font],
+          currentItemTextAlign: format.textAlign,
+        },
+        captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+      });
+    },
+    [selectedCanvasTable],
+  );
+
+  const selectCanvasTableCells = useCallback(
+    (cellIds: readonly string[]) => {
+      if (!selectedCanvasTable) return;
+      const nextTable = canvasTableWithSelectedCells(
+        selectedCanvasTable,
+        cellIds,
+      );
+      canvasTableCellSelectionRef.current = {
+        tableId: selectedCanvasTable.tableId,
+        cellIds: nextTable.selectedCellIds,
+      };
+      setSelectedCanvasTable(nextTable);
+      editorRef.current?.updateScene({
+        appState: {
+          selectedElementIds: {},
+          selectedGroupIds: {},
+          editingGroupId: null,
+        },
+        captureUpdate: CaptureUpdateAction.NEVER,
+      });
+    },
+    [selectedCanvasTable],
+  );
+
+  const preserveCanvasTableCellSelection = useCallback(
+    (tableId: string, cellIds: readonly string[]) => {
+      canvasTableCellSelectionRef.current = { tableId, cellIds };
+      setSelectedCanvasTable((current) => {
+        if (!current || current.tableId !== tableId) return current;
+        return canvasTableWithSelectedCells(current, cellIds);
+      });
+    },
+    [],
+  );
+
+  const addCanvasTableAxis = useCallback(
+    (axis: "row" | "column") => {
+      const editor = editorRef.current;
+      const table = selectedCanvasTable;
+      if (!editor || !table) return;
+      const created =
+        axis === "row"
+          ? createCanvasTableCells({
+              left: table.x,
+              top: table.y + table.height,
+              rows: 1,
+              columns: table.columns,
+              startRow: table.rows,
+              tableId: table.tableId,
+              groupId: table.groupId,
+              color: table.color,
+              format: table.format,
+            })
+          : createCanvasTableCells({
+              left: table.x + table.width,
+              top: table.y,
+              rows: table.rows,
+              columns: 1,
+              startColumn: table.columns,
+              tableId: table.tableId,
+              groupId: table.groupId,
+              color: table.color,
+              format: table.format,
+            });
+      preserveCanvasTableCellSelection(
+        table.tableId,
+        created.map((element) => element.id),
+      );
+      editor.updateScene({
+        elements: [...editor.getSceneElements(), ...created],
+        appState: {
+          editingGroupId: null,
+          selectedGroupIds: {},
+          selectedElementIds: {},
+        },
+        captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+      });
+    },
+    [preserveCanvasTableCellSelection, selectedCanvasTable],
+  );
+
+  const toggleSelectedCanvasTableMerge = useCallback(() => {
+    const editor = editorRef.current;
+    const table = selectedCanvasTable;
+    const action = selectedCanvasTableMergeAction;
+    if (!editor || !table || !action) return;
+
+    const withTableCellMetadata = (
+      element: ExcalidrawElement,
+      patch: Record<string, unknown>,
+    ) => {
+      const customData = element.customData as
+        | Record<string, unknown>
+        | undefined;
+      const reference = customData?.astryxReference as
+        | Record<string, unknown>
+        | undefined;
+      return {
+        ...customData,
+        astryxReference: { ...reference, ...patch },
+      };
+    };
+
+    if (action === "merge") {
+      const rows = selectedCanvasTableCells.map((cell) => cell.row);
+      const columns = selectedCanvasTableCells.map((cell) => cell.column);
+      const minRow = Math.min(...rows);
+      const maxRow = Math.max(...rows);
+      const minColumn = Math.min(...columns);
+      const maxColumn = Math.max(...columns);
+      const anchor =
+        selectedCanvasTableCells.find(
+          (cell) => cell.row === minRow && cell.column === minColumn,
+        ) ?? selectedCanvasTableCells[0];
+      const left = Math.min(...selectedCanvasTableCells.map((cell) => cell.x));
+      const top = Math.min(...selectedCanvasTableCells.map((cell) => cell.y));
+      const right = Math.max(
+        ...selectedCanvasTableCells.map((cell) => cell.x + cell.width),
+      );
+      const bottom = Math.max(
+        ...selectedCanvasTableCells.map((cell) => cell.y + cell.height),
+      );
+      const removedCellIds = new Set(
+        selectedCanvasTableCells
+          .filter((cell) => cell.elementId !== anchor.elementId)
+          .map((cell) => cell.elementId),
+      );
+      const removedTextIds = new Set(
+        selectedCanvasTableCells.flatMap((cell) =>
+          cell.elementId !== anchor.elementId && cell.textElementId
+            ? [cell.textElementId]
+            : [],
+        ),
+      );
+      const elements = editor.getSceneElements().map((element) => {
+        if (element.id === anchor.elementId) {
+          return withCanvasElementUpdate(element, {
+            x: left,
+            y: top,
+            width: right - left,
+            height: bottom - top,
+            customData: withTableCellMetadata(element, {
+              row: minRow,
+              column: minColumn,
+              rowSpan: maxRow - minRow + 1,
+              columnSpan: maxColumn - minColumn + 1,
+            }),
+          } as Partial<ExcalidrawElement>);
+        }
+        if (removedCellIds.has(element.id) || removedTextIds.has(element.id)) {
+          return withCanvasElementUpdate(element, {
+            isDeleted: true,
+          } as Partial<ExcalidrawElement>);
+        }
+        return element;
+      });
+      preserveCanvasTableCellSelection(table.tableId, [anchor.elementId]);
+      editor.updateScene({
+        elements,
+        appState: {
+          editingGroupId: null,
+          selectedGroupIds: {},
+          selectedElementIds: {},
+        },
+        captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+      });
+      return;
+    }
+
+    const mergedCell = selectedCanvasTableCells[0];
+    const cellWidth = mergedCell.width / mergedCell.columnSpan;
+    const cellHeight = mergedCell.height / mergedCell.rowSpan;
+    const replacements = createCanvasTableCells({
+      left: mergedCell.x,
+      top: mergedCell.y,
+      rows: mergedCell.rowSpan,
+      columns: mergedCell.columnSpan,
+      startRow: mergedCell.row,
+      startColumn: mergedCell.column,
+      cellWidth,
+      cellHeight,
+      tableId: table.tableId,
+      groupId: table.groupId,
+      color: table.color,
+      format: table.format,
+    }).slice(1);
+    const elements = editor.getSceneElements().map((element) =>
+      element.id === mergedCell.elementId
+        ? withCanvasElementUpdate(element, {
+            width: cellWidth,
+            height: cellHeight,
+            customData: withTableCellMetadata(element, {
+              rowSpan: 1,
+              columnSpan: 1,
+            }),
+          } as Partial<ExcalidrawElement>)
+        : element,
+    );
+    const replacementCellIds = [
+      mergedCell.elementId,
+      ...replacements.map((element) => element.id),
+    ];
+    preserveCanvasTableCellSelection(table.tableId, replacementCellIds);
+    editor.updateScene({
+      elements: [...elements, ...replacements],
+      appState: {
+        editingGroupId: null,
+        selectedGroupIds: {},
+        selectedElementIds: {},
+      },
+      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+    });
+  }, [
+    selectedCanvasTable,
+    selectedCanvasTableCells,
+    selectedCanvasTableMergeAction,
+    preserveCanvasTableCellSelection,
+  ]);
 
   const stickyNoteMetadataStyle = useCallback(
     (note: AstryxStickyNoteReference) =>
@@ -5640,7 +6330,7 @@ export function ProjectPlayground({
         <div
           ref={canvasRootRef}
           onPointerDownCapture={handleCanvasToolPointerDownCapture}
-          onPointerUp={handleCanvasPlacementPointerUp}
+          onPointerUpCapture={handleCanvasPlacementPointerUp}
           data-marker-mode={markerDrawing ? markerMode : undefined}
           data-marker-color-transition={markerColorTransition ? "b" : "a"}
           className={`project-playground__canvas${
@@ -5660,6 +6350,10 @@ export function ProjectPlayground({
           }${
             selectedStickyNote
               ? " project-playground__canvas--sticky-selected"
+              : ""
+          }${
+            selectedCanvasTable
+              ? " project-playground__canvas--table-selected"
               : ""
           }${
             selectedCanvasShape
@@ -6612,7 +7306,151 @@ export function ProjectPlayground({
             </div>
           </div>
         )}
-        {selectedStickyNote && !canvasReadOnly && (
+        {selectedCanvasTable && !canvasReadOnly ? (
+          <>
+            <ProjectObjectToolbar
+              color={selectedCanvasTable.color}
+              colorOptions={canvasTableColors}
+              colorAriaLabel="Change color"
+              format={selectedCanvasTable.format}
+              style={canvasTableToolbarStyle}
+              objectLabel="Table"
+              showLink={canvasTextEditing}
+              onColorChange={(color) => updateSelectedCanvasTable({ color })}
+              onFormatChange={(format) => updateSelectedCanvasTable({ format })}
+            >
+              {selectedCanvasTableMergeAction ? (
+                <>
+                  <span
+                    className="project-object-toolbar__divider"
+                    aria-hidden="true"
+                  />
+                  <button
+                    type="button"
+                    className="project-object-toolbar__action"
+                    aria-label={
+                      selectedCanvasTableMergeAction === "merge"
+                        ? "Merge cells"
+                        : "Unmerge cells"
+                    }
+                    onClick={toggleSelectedCanvasTableMerge}
+                  >
+                    <MergeIcon />
+                  </button>
+                </>
+              ) : null}
+            </ProjectObjectToolbar>
+            <div
+              className="project-canvas-table-controls"
+              style={canvasTableControlsStyle}
+              aria-label="Table row and column controls"
+            >
+              {selectedCanvasTableHasCellSelection ? (
+                <div
+                  className="project-canvas-table-controls__cell-selections"
+                  aria-hidden="true"
+                >
+                  {selectedCanvasTable.cells
+                    .filter((cell) =>
+                      selectedCanvasTable.selectedCellIds.includes(
+                        cell.elementId,
+                      ),
+                    )
+                    .map((cell) => (
+                      <span
+                        key={cell.elementId}
+                        style={{
+                          gridColumn: `${cell.column + 1} / span ${cell.columnSpan}`,
+                          gridRow: `${cell.row + 1} / span ${cell.rowSpan}`,
+                        }}
+                      />
+                    ))}
+                </div>
+              ) : null}
+              <div className="project-canvas-table-controls__columns">
+                {Array.from(
+                  { length: selectedCanvasTable.columns },
+                  (_, column) => {
+                    const cellIds = selectedCanvasTable.cells
+                      .filter(
+                        (cell) =>
+                          column >= cell.column &&
+                          column < cell.column + cell.columnSpan,
+                      )
+                      .map((cell) => cell.elementId);
+                    const selected =
+                      selectedCanvasTableHasCellSelection &&
+                      cellIds.length ===
+                        selectedCanvasTable.selectedCellIds.length &&
+                      cellIds.every((id) =>
+                        selectedCanvasTable.selectedCellIds.includes(id),
+                      );
+                    return (
+                      <button
+                        key={column}
+                        type="button"
+                        aria-label={`Select column ${column + 1}`}
+                        aria-pressed={selected}
+                        onClick={() => selectCanvasTableCells(cellIds)}
+                      >
+                        <DragIcon aria-hidden="true" />
+                      </button>
+                    );
+                  },
+                )}
+              </div>
+              <div className="project-canvas-table-controls__rows">
+                {Array.from({ length: selectedCanvasTable.rows }, (_, row) => {
+                  const cellIds = selectedCanvasTable.cells
+                    .filter(
+                      (cell) =>
+                        row >= cell.row && row < cell.row + cell.rowSpan,
+                    )
+                    .map((cell) => cell.elementId);
+                  const selected =
+                    selectedCanvasTableHasCellSelection &&
+                    cellIds.length ===
+                      selectedCanvasTable.selectedCellIds.length &&
+                    cellIds.every((id) =>
+                      selectedCanvasTable.selectedCellIds.includes(id),
+                    );
+                  return (
+                    <button
+                      key={row}
+                      type="button"
+                      aria-label={`Select row ${row + 1}`}
+                      aria-pressed={selected}
+                      onClick={() => selectCanvasTableCells(cellIds)}
+                    >
+                      <DragIcon aria-hidden="true" />
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedCanvasTableHasCellSelection ? (
+                <>
+                  <button
+                    type="button"
+                    className="project-canvas-table-controls__add-column"
+                    aria-label="Add column"
+                    onClick={() => addCanvasTableAxis("column")}
+                  >
+                    <PlusIcon />
+                  </button>
+                  <button
+                    type="button"
+                    className="project-canvas-table-controls__add-row"
+                    aria-label="Add row"
+                    onClick={() => addCanvasTableAxis("row")}
+                  >
+                    <PlusIcon />
+                  </button>
+                </>
+              ) : null}
+            </div>
+          </>
+        ) : null}
+        {selectedStickyNote && !selectedCanvasTable && !canvasReadOnly && (
           <ProjectObjectToolbar
             color={selectedStickyNote.color}
             format={selectedStickyNote.format}
@@ -6626,19 +7464,23 @@ export function ProjectPlayground({
             }
           />
         )}
-        {selectedCanvasText && !selectedStickyNote && !canvasReadOnly && (
-          <ProjectObjectToolbar
-            color={selectedCanvasText.color}
-            colorOptions={canvasTextColors}
-            format={selectedCanvasText.format}
-            style={canvasTextToolbarStyle}
-            objectLabel="Text"
-            onColorChange={(color) => updateSelectedCanvasText({ color })}
-            onFormatChange={(format) => updateSelectedCanvasText({ format })}
-          />
-        )}
+        {selectedCanvasText &&
+          !selectedCanvasTable &&
+          !selectedStickyNote &&
+          !canvasReadOnly && (
+            <ProjectObjectToolbar
+              color={selectedCanvasText.color}
+              colorOptions={canvasTextColors}
+              format={selectedCanvasText.format}
+              style={canvasTextToolbarStyle}
+              objectLabel="Text"
+              onColorChange={(color) => updateSelectedCanvasText({ color })}
+              onFormatChange={(format) => updateSelectedCanvasText({ format })}
+            />
+          )}
         {selectedCanvasShape &&
         selectedShapeOption &&
+        !selectedCanvasTable &&
         !selectedStickyNote &&
         !selectedCanvasText &&
         !canvasReadOnly ? (

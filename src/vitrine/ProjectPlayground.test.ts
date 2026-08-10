@@ -301,10 +301,36 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     source,
     /stampPlacementRef\.current[\s\S]*?insertCanvasStampAt\([\s\S]*?currentStamp/,
   );
-  assert.match(source, /onPointerUp=\{handleCanvasPlacementPointerUp\}/);
+  assert.match(source, /onPointerUpCapture=\{handleCanvasPlacementPointerUp\}/);
+  assert.match(source, /rows = 2/);
+  assert.match(source, /columns = 2/);
+  assert.match(source, /const cellHeight = 54/);
+  assert.match(source, /canvasTableReferenceForSelection/);
+  assert.match(source, /canvasTableWithSelectedCells/);
+  assert.match(source, /canvasTableCellSelectionRef/);
+  assert.match(
+    source,
+    /const selectCanvasTableCells = useCallback\([\s\S]*?canvasTableCellSelectionRef\.current = \{[\s\S]*?setSelectedCanvasTable\(nextTable\);[\s\S]*?selectedElementIds: \{\},[\s\S]*?selectedGroupIds: \{\},[\s\S]*?editingGroupId: null/,
+  );
+  assert.match(source, /className="project-canvas-table-controls"/);
+  assert.match(
+    source,
+    /className="project-canvas-table-controls__cell-selections"/,
+  );
+  assert.match(source, /tableBottom \+ 38/);
+  assert.match(source, /aria-label="Add column"/);
+  assert.match(source, /aria-label="Add row"/);
   assert.match(
     source,
     /if \(nativeTool\) \{[\s\S]*?deactivateStickyTool\(\);[\s\S]*?deactivateTableTool\(\);[\s\S]*?deactivateStampTool\(\);/,
+  );
+  assert.match(
+    source,
+    /const drawResearchFrame = useCallback\([\s\S]*?deactivateStickyTool\(\);[\s\S]*?editor\.setActiveTool\(\{ type: "frame" \}\)/,
+  );
+  assert.match(
+    source,
+    /const toggleStickyNoteTool = useCallback\([\s\S]*?selectedElementIds: \{\},[\s\S]*?selectedGroupIds: \{\},[\s\S]*?editingGroupId: null,[\s\S]*?setSelectedCanvasTable\(undefined\);[\s\S]*?setSelectedCanvasText\(undefined\);[\s\S]*?setSelectedCanvasShape\(undefined\);[\s\S]*?setSelectedResearchFrame\(undefined\);/,
   );
   assert.match(
     source,
@@ -325,6 +351,14 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(
     css,
     /project-playground__canvas--frame-drawing[\s\S]*?selected-shape-actions[\s\S]*?display:\s*none !important/s,
+  );
+  assert.match(
+    css,
+    /\.project-canvas-table-controls__columns button::before[\s\S]*?background: #a0caf3/,
+  );
+  assert.match(
+    css,
+    /\.project-canvas-table-controls__cell-selections span[\s\S]*?border: 2px solid #0d99ff/,
   );
   assert.match(source, /className="project-canvas-tools-catalog"/);
   assert.match(source, /placeholder="Search"/);
@@ -1052,7 +1086,10 @@ test("gives a selected sticky note its own formatting toolbar", () => {
   );
   assert.match(playgroundSource, /onCollaborationChange=/);
   // Read-only boards get the metadata, not the controls.
-  assert.match(playgroundSource, /selectedStickyNote && !canvasReadOnly &&/);
+  assert.match(
+    playgroundSource,
+    /selectedStickyNote && !selectedCanvasTable && !canvasReadOnly/,
+  );
   // Colour lives on the container, ink and type on the bound text element.
   assert.match(
     playgroundSource,
@@ -1093,7 +1130,7 @@ test("gives a selected sticky note its own formatting toolbar", () => {
   /* Text shares this shell without inheriting sticky-note collaboration. */
   assert.match(
     playgroundSource,
-    /selectedCanvasText && !selectedStickyNote && !canvasReadOnly &&/,
+    /selectedCanvasText &&[\s\S]*?!selectedCanvasTable &&[\s\S]*?!selectedStickyNote &&[\s\S]*?!canvasReadOnly/,
   );
   assert.match(playgroundSource, /colorOptions=\{canvasTextColors\}/);
   assert.match(playgroundSource, /objectLabel="Sticky note"/);
