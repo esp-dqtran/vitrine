@@ -81,6 +81,9 @@ interface CommandPaletteProps {
   collections: ResearchCollection[];
   plan: 'free' | 'pro';
   publicBrowse?: boolean;
+  appOnly?: boolean;
+  appSearchLoading?: boolean;
+  appSearchError?: string | null;
   initialNav?: CommandPaletteNav;
   initialFlowQuery?: string;
   initialPlatform?: Platform;
@@ -88,6 +91,7 @@ interface CommandPaletteProps {
   onCollectionsChange: (collections: ResearchCollection[]) => void;
   onQueryChange: (value: string) => void;
   onRetrySearch: () => void;
+  onRetryAppSearch?: () => void;
   onClose: () => void;
   onSelectApp: (appId: string) => void;
   onSelectScreen: (appId: string, evidenceId?: number) => void;
@@ -105,6 +109,9 @@ export function CommandPalette({
   collections,
   plan,
   publicBrowse = false,
+  appOnly = false,
+  appSearchLoading = false,
+  appSearchError = null,
   initialNav = 'trending',
   initialFlowQuery = '',
   initialPlatform = 'web',
@@ -112,6 +119,7 @@ export function CommandPalette({
   onCollectionsChange,
   onQueryChange,
   onRetrySearch,
+  onRetryAppSearch,
   onClose,
   onSelectApp,
   onSelectScreen,
@@ -170,23 +178,6 @@ export function CommandPalette({
     for (const app of apps) for (const screen of app.screens) for (const name of screen.componentNames ?? []) names.add(name);
     return Array.from(names);
   }, [apps]);
-  const publicApps = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return apps;
-    return apps.filter((app) => {
-      const searchText = [
-        app.app,
-        ...app.categories.map(({ name }) => name),
-        ...app.screens.flatMap((screen) => [
-          screen.type,
-          screen.productArea,
-          ...(screen.componentNames ?? []),
-          ...(screen.visibleText ?? []),
-        ]),
-      ].join(' ').toLowerCase();
-      return searchText.includes(normalizedQuery);
-    });
-  }, [apps, query]);
   const visibleItems = useMemo(() => groupInspirationResults(result?.items ?? []).flatMap((group) => group.items), [result]);
   const flowGroups = useMemo(() => {
     const groups = new Map<string, FlowCatalogItem[]>();
@@ -482,12 +473,13 @@ export function CommandPalette({
 
         <div className="command-palette-body">
           <div className="command-palette-sidebar">
-            {NAV_ITEMS.filter((item) => (
-              plan === 'pro'
-              || item.id === 'trending'
-              || item.id === 'categories'
-              || initialNav === 'flows' && item.id === 'flows'
-            )).map((item) => (
+            {NAV_ITEMS.filter((item) => {
+              if (appOnly) return item.id === 'trending' || item.id === 'categories';
+              return plan === 'pro'
+                || item.id === 'trending'
+                || item.id === 'categories'
+                || initialNav === 'flows' && item.id === 'flows';
+            }).map((item) => (
               <ToggleButton
                 key={item.id}
                 label={item.label}
@@ -517,17 +509,24 @@ export function CommandPalette({
           </div>
 
           <div ref={resultsScrollRef} className="inspiration-modal-content command-palette-content">
-            {nav === 'flows' && flowModeEnabled ? browseContent : publicBrowse ? (
+            {nav === 'flows' && flowModeEnabled ? browseContent : publicBrowse || appOnly ? (
               nav === 'categories' ? browseContent : (
                 <>
-                  <div style={SECTION_LABEL}>{query.trim() ? `${publicApps.length} matching apps` : 'Browse apps'}</div>
-                  {publicApps.length ? (
-                    <div style={TILE_GRID}>
-                      {publicApps.map((app) => <AppTile key={app.id} app={app} onSelect={() => selectApp(app.id)} />)}
+                  <div style={SECTION_LABEL}>{query.trim() ? `${apps.length} matching apps` : 'Browse apps'}</div>
+                  {appSearchError ? (
+                    <div role="alert">
+                      <span>{appSearchError}</span>
+                      {onRetryAppSearch ? <Button label="Retry app search" size="sm" onClick={onRetryAppSearch} /> : null}
                     </div>
-                  ) : (
+                  ) : null}
+                  {appSearchLoading ? <Spinner size="sm" aria-label="Searching apps" /> : null}
+                  {!appSearchLoading && !appSearchError && apps.length ? (
+                    <div style={TILE_GRID}>
+                      {apps.map((app) => <AppTile key={app.id} app={app} onSelect={() => selectApp(app.id)} />)}
+                    </div>
+                  ) : !appSearchLoading && !appSearchError ? (
                     <div style={{ color: 'var(--color-text-disabled)', fontSize: 14 }}>No apps match this search.</div>
-                  )}
+                  ) : null}
                 </>
               )
             ) : plan === 'free' ? (

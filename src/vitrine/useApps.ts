@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch } from './apiFetch.ts';
 import type { DiscoveryFacet } from './discoveryTypes.ts';
+import type { Platform } from '../platformFromUrl.ts';
 import {
   parseCatalogDiscoveryPage,
   type CatalogDiscoveryResponse,
@@ -58,6 +59,15 @@ function catalogRequestSignal(signal?: AbortSignal): {
 export function appendUniqueApps(current: App[], next: App[]): App[] {
   const seen = new Set(current.map(({ id }) => id));
   return [...current, ...next.filter(({ id }) => !seen.has(id))];
+}
+
+/** Request shape shared by the Apps page and its legacy App-only palette. */
+export function appCatalogRequestPath(query = '', platform?: Platform): string {
+  const params = new URLSearchParams({ facets: 'summary' });
+  if (platform) params.set('platform', platform);
+  const trimmed = query.trim();
+  if (trimmed) params.set('query', trimmed);
+  return `/api/catalog?${params.toString()}`;
 }
 
 const catalogApps = (page: CatalogResponse): App[] =>
@@ -121,6 +131,7 @@ export function useApps(
   role: 'admin' | 'user' | undefined,
   enabled: boolean,
   query = '',
+  platform?: Platform,
 ) {
   const [apps, setApps] = useState<App[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -132,13 +143,10 @@ export function useApps(
   const requestGenerationRef = useRef(0);
   const loadMoreControllerRef = useRef<AbortController | null>(null);
   const trimmedQuery = query.trim();
-  const querySuffix = trimmedQuery ? `?query=${encodeURIComponent(trimmedQuery)}` : '';
+  const catalogPath = appCatalogRequestPath(trimmedQuery, platform);
   // This hook only ever reads the app list, but /api/catalog ships its full
   // facet payload by default — ~75k entries / 5.4MB, which measured as 14x
   // slower than the same request with facets=summary (2.89s vs 0.21s).
-  const catalogSuffix = trimmedQuery
-    ? `?facets=summary&query=${encodeURIComponent(trimmedQuery)}`
-    : '?facets=summary';
 
   const refresh = useCallback((signal?: AbortSignal) => {
     loadMoreControllerRef.current?.abort();
@@ -151,7 +159,7 @@ export function useApps(
     return (async () => {
       // No admin branch: /api/apps is now the public Apps grid, so the old
       // admin listing it used to serve is gone. Everyone reads the catalog.
-      const page = await refreshCatalogPage(`/api/catalog${catalogSuffix}`, signal);
+      const page = await refreshCatalogPage(catalogPath, signal);
       const firstPage = page.apps;
       if (generation !== requestGenerationRef.current) return;
       setApps(firstPage);
@@ -162,7 +170,7 @@ export function useApps(
           setError(err.message);
         }
       });
-  }, [role, querySuffix, catalogSuffix]);
+  }, [role, platform, catalogPath]);
 
   useEffect(() => () => {
     loadMoreControllerRef.current?.abort();
@@ -197,7 +205,7 @@ export function useApps(
     setLoadMoreError(null);
     try {
       const cursor = `cursor=${encodeURIComponent(nextCursor)}`;
-      const endpoint = `/api/catalog${catalogSuffix}&${cursor}`;
+      const endpoint = `${catalogPath}&${cursor}`;
       const response = await apiFetch(endpoint, {
         signal: controller.signal,
         cache: 'no-store',
@@ -225,7 +233,7 @@ export function useApps(
         setLoadingMore(false);
       }
     }
-  }, [nextCursor, role, querySuffix, catalogSuffix]);
+  }, [nextCursor, role, platform, catalogPath]);
 
   return {
     apps,

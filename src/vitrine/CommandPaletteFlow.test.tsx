@@ -122,6 +122,26 @@ test('keeps Flow mode unavailable on other Free public routes', () => {
   assert.doesNotMatch(html, /command-palette-flow-browser/);
 });
 
+test('uses the App catalog result set for Apps-only search', () => {
+  const html = renderToStaticMarkup(
+    <CommandPalette
+      {...baseProps}
+      appOnly
+      query="stripe"
+      apps={[{
+        id: 'stripe', app: 'Stripe', categories: [], accent: '#635BFF',
+        totalScreens: 4, platforms: ['web'], screens: [],
+      }]}
+    />,
+  );
+
+  assert.match(html, /1 matching apps/);
+  assert.match(html, /Open Stripe/);
+  assert.doesNotMatch(html, /aria-label="Screens"/);
+  assert.doesNotMatch(html, /aria-label="UI Elements"/);
+  assert.doesNotMatch(html, /aria-label="Flows"/);
+});
+
 test('uses Vitrines-specific search guidance and keeps recovery inside the palette', () => {
   const html = renderToStaticMarkup(
     <CommandPalette

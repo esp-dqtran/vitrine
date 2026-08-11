@@ -2,11 +2,19 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import {
+  appCatalogRequestPath,
   appendUniqueApps,
   fetchCatalogPage,
   invalidateCatalogPageCache,
   refreshCatalogPage,
 } from "./useApps.ts";
+
+test("builds a platform-scoped App search request for Typesense", () => {
+  assert.equal(
+    appCatalogRequestPath(" Stripe ", "web"),
+    "/api/catalog?facets=summary&platform=web&query=Stripe",
+  );
+});
 
 test("appends server-ordered pages without duplicates or reordering", () => {
   const current = [{ id: "tubi" }, { id: "ipsy" }];

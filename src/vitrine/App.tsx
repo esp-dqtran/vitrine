@@ -222,6 +222,7 @@ export function App() {
     : (entitlements?.plan ?? "free");
   const canUseProResearch = isAdmin || customerPlan === "pro";
   const canUseAdvancedSearch = advancedSearchEnabled && user !== null;
+  const legacyAppSearch = route.name === "apps" && !canUseAdvancedSearch;
   const openPricing = () => navigate({ name: "pricing" });
   const paletteCollections = isGuest ? [] : collections;
   const palettePlan = isGuest ? "free" : customerPlan;
@@ -248,10 +249,16 @@ export function App() {
   }, [q]);
   // The Apps page owns its catalog request through the discovery controller.
   // Keep this legacy list lazy and isolated to the legacy command palette.
-  const { apps } = useApps(
+  const {
+    apps,
+    loading: legacyAppsLoading,
+    error: legacyAppsError,
+    refresh: refreshLegacyApps,
+  } = useApps(
     user?.role,
     searchSnapshot.open && (!canUseAdvancedSearch || route.name === "flows"),
     debouncedLegacyQuery,
+    legacyAppSearch ? appPlatform : undefined,
   );
   const {
     detail,
@@ -324,7 +331,7 @@ export function App() {
   };
 
   useEffect(() => {
-    if (advancedSearchEnabled) {
+    if (advancedSearchEnabled || legacyAppSearch) {
       setSearchResult(null);
       setSearchError("");
       setSearchLoading(false);
@@ -373,7 +380,7 @@ export function App() {
       window.clearTimeout(timeout);
       controller.abort();
     };
-  }, [advancedSearchEnabled, canUseProResearch, q, filters, searchRetry]);
+  }, [advancedSearchEnabled, legacyAppSearch, canUseProResearch, q, filters, searchRetry]);
 
   const openApp = async (appId: string) => {
     closeDiscoveryOverlays();
@@ -555,6 +562,9 @@ export function App() {
             collections={paletteCollections}
             plan={palettePlan}
             publicBrowse={isGuest}
+            appOnly={legacyAppSearch}
+            appSearchLoading={legacyAppsLoading}
+            appSearchError={legacyAppsError}
             initialNav={route.name === "flows" ? "flows" : undefined}
             initialFlowQuery={
               route.name === "flows"
@@ -570,6 +580,7 @@ export function App() {
             onCollectionsChange={user ? setCollections : () => undefined}
             onQueryChange={setQ}
             onRetrySearch={() => setSearchRetry((value) => value + 1)}
+            onRetryAppSearch={() => void refreshLegacyApps()}
             onClose={closeLegacySearch}
             onSelectApp={(appId) => void openApp(appId)}
             onSelectScreen={(appId) => {
