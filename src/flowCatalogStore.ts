@@ -17,7 +17,6 @@ export { FlowCatalogCursorError } from "./flowCatalogCursor.ts";
 export interface FlowCatalogItem {
   category: string;
   title: string;
-  count: number;
   preview: {
     appId: string;
     appName: string;
@@ -318,7 +317,7 @@ function commonCtes(): string {
       -- query, so metadataSql (which shares these CTEs) fails to parse without this
       -- no-op typed reference keeping $6 resolvable in both queries.
       SELECT $6::int AS value
-    ), relevant_taxonomy AS MATERIALIZED (
+    ), relevant_taxonomy AS (
       SELECT
         canonical.id AS flow_id,
         COALESCE(parent.id, 0)::bigint AS category_id,
@@ -359,6 +358,17 @@ function commonCtes(): string {
     ), instances AS (
       SELECT
         latest.app_id,
+        mapping.flow_id,
+        afv.id AS version_flow_id
+      FROM latest
+      JOIN app_flow_versions afv ON afv.version_id = latest.version_id
+      JOIN app_flow_version_mappings mapping
+        ON mapping.app_flow_version_id = afv.id
+    ), unique_flow_ids AS MATERIALIZED (
+      SELECT DISTINCT flow_id
+      FROM instances
+    ), grouped_all AS (
+      SELECT
         taxonomy.flow_id,
         taxonomy.category_id,
         taxonomy.category,
@@ -367,27 +377,9 @@ function commonCtes(): string {
         taxonomy.title_key,
         taxonomy.exact_match,
         taxonomy.title_term_matches,
-        taxonomy.term_matches,
-        afv.id AS version_flow_id
-      FROM latest
-      JOIN app_flow_versions afv ON afv.version_id = latest.version_id
-      JOIN app_flow_version_mappings mapping
-        ON mapping.app_flow_version_id = afv.id
-      JOIN relevant_taxonomy taxonomy ON taxonomy.flow_id = mapping.flow_id
-    ), grouped_all AS (
-      SELECT
-        flow_id,
-        category_id,
-        category,
-        category_key,
-        title,
-        title_key,
-        MAX(exact_match)::int AS exact_match,
-        MAX(title_term_matches)::int AS title_term_matches,
-        MAX(term_matches)::int AS term_matches,
-        COUNT(DISTINCT app_id)::int AS count
-      FROM instances
-      GROUP BY flow_id, category_id, category, category_key, title, title_key
+        taxonomy.term_matches
+      FROM unique_flow_ids
+      JOIN relevant_taxonomy taxonomy ON taxonomy.flow_id = unique_flow_ids.flow_id
     ), filtered_items AS (
       SELECT *
       FROM grouped_all
@@ -395,100 +387,45 @@ function commonCtes(): string {
     )`;
 }
 
-function keyset(
-  sort: FlowCatalogSort,
-  cursor: FlowCatalogCursor | undefined,
-): { sql: string; values: unknown[] } {
+function keyset(cursor: FlowCatalogCursor | undefined): { sql: string; values: unknown[] } {
   if (!cursor) return { sql: "", values: [] };
   const key = cursor.key;
-  if (sort === "popular" && cursor.sort === "popular") {
-    const popularKey = cursor.key;
-    return {
-      sql: `WHERE ROW(
-          -ranked.exact_match,
-          -ranked.title_term_matches,
-          -ranked.term_matches,
-          ranked.other_rank,
-          ranked.category_rank,
-          -ranked.category_count,
-          ranked.category_sort,
-          ranked.category_id,
-          -ranked.count,
-          ranked.title_sort,
-          ranked.flow_id
-        ) > ROW(
-          -$9::int, -$10::int, -$11::int, $12::int, $13::int, -$14::int,
-          $15::text, $16::bigint, -$17::int, $18::text, $19::bigint
-        )`,
-      values: [
-        popularKey.exactMatch,
-        popularKey.titleTermMatches,
-        popularKey.termMatches,
-        popularKey.other,
-        popularKey.categoryRank,
-        popularKey.categoryCount,
-        popularKey.category,
-        popularKey.categoryId,
-        popularKey.count,
-        popularKey.title,
-        popularKey.flowId,
-      ],
-    };
-  }
   return {
     sql: `WHERE ROW(
         -ranked.exact_match,
         -ranked.title_term_matches,
         -ranked.term_matches,
         ranked.other_rank,
-        -ranked.category_count,
+        ranked.title_sort,
         ranked.category_sort,
         ranked.category_id,
-        -ranked.count,
-        ranked.title_sort,
         ranked.flow_id
       ) > ROW(
-        -$9::int, -$10::int, -$11::int, $12::int, -$13::int, $14::text,
-        $15::bigint, -$16::int, $17::text, $18::bigint
+        -$9::int, -$10::int, -$11::int, $12::int, $13::text, $14::text,
+        $15::bigint, $16::bigint
       )`,
     values: [
       key.exactMatch,
       key.titleTermMatches,
       key.termMatches,
       key.other,
-      key.categoryCount,
+      key.title,
       key.category,
       key.categoryId,
-      key.count,
-      key.title,
       key.flowId,
     ],
   };
 }
 
-function pageSql(sort: FlowCatalogSort, after: string): string {
-  const order = sort === "popular"
-    ? `ranked.exact_match DESC,
-       ranked.title_term_matches DESC,
-       ranked.term_matches DESC,
-       ranked.other_rank,
-       ranked.category_rank,
-       ranked.category_count DESC,
-       ranked.category_sort,
-       ranked.category_id,
-       ranked.count DESC,
-       ranked.title_sort,
-       ranked.flow_id`
-    : `ranked.exact_match DESC,
-       ranked.title_term_matches DESC,
-       ranked.term_matches DESC,
-       ranked.other_rank,
-       ranked.category_count DESC,
-       ranked.category_sort,
-       ranked.category_id,
-       ranked.count DESC,
-       ranked.title_sort,
-       ranked.flow_id`;
+function pageSql(after: string): string {
+  const order = `ranked.exact_match DESC,
+    ranked.title_term_matches DESC,
+    ranked.term_matches DESC,
+    ranked.other_rank,
+    ranked.title_sort,
+    ranked.category_sort,
+    ranked.category_id,
+    ranked.flow_id`;
   return `WITH ${commonCtes()},
     ranked AS (
       SELECT
@@ -496,12 +433,7 @@ function pageSql(sort: FlowCatalogSort, after: string): string {
         left(category_key, 120) AS category_sort,
         left(title_key, 120) AS title_sort,
         CASE WHEN category = 'Other Flows' THEN 1 ELSE 0 END::int AS other_rank,
-        (SUM(count) OVER (PARTITION BY category_id, category_key))::int AS category_count,
-        (SELECT COUNT(*)::int FROM filtered_items) AS page_total,
-        (ROW_NUMBER() OVER (
-          PARTITION BY category_id, category_key
-          ORDER BY count DESC, left(title_key, 120), flow_id
-        ))::int AS category_rank
+        (SELECT COUNT(*)::int FROM filtered_items) AS page_total
       FROM filtered_items
     ), paged AS (
       SELECT *
@@ -552,9 +484,6 @@ function pageSql(sort: FlowCatalogSort, after: string): string {
       paged.exact_match,
       paged.title_term_matches,
       paged.term_matches,
-      paged.count,
-      paged.category_count,
-      paged.category_rank,
       paged.other_rank,
       paged.page_total,
       representatives.version_id,
@@ -611,7 +540,7 @@ function itemFromRow(row: Record<string, unknown>, platform: Platform): FlowCata
     const label = typeof (step as { label?: unknown }).label === "string"
       ? String((step as { label: string }).label)
       : `Step ${index + 1}`;
-    const mediaUrl = `/api/catalog/flow-media/${encodeURIComponent(appId)}/${platform}/${versionId}/${versionFlowId}/${index + 1}`;
+    const mediaUrl = `/api/flows/media/${encodeURIComponent(appId)}/${platform}/${versionId}/${versionFlowId}/${index + 1}`;
     return {
       label,
       evidence: [{
@@ -625,7 +554,6 @@ function itemFromRow(row: Record<string, unknown>, platform: Platform): FlowCata
   return {
     category: String(row.category),
     title: String(row.title),
-    count: Number(row.count),
     preview: {
       appId,
       appName: String(row.app_name),
@@ -660,16 +588,12 @@ function cursorFromRow(
     titleTermMatches: Number(row.title_term_matches),
     termMatches: Number(row.term_matches),
     other: Number(row.other_rank) as 0 | 1,
-    categoryCount: Number(row.category_count),
     category: String(row.category_sort),
     categoryId: String(row.category_id),
-    count: Number(row.count),
     title: String(row.title_sort),
     flowId: String(row.flow_id),
   };
-  return base.sort === "popular"
-    ? { v: 2, ...base, sort: "popular", key: { ...key, categoryRank: Number(row.category_rank) } }
-    : { v: 2, ...base, sort: "grouped", key };
+  return { v: 3, ...base, sort: "grouped", key };
 }
 
 interface PublishedFlowCatalogPageInput {
@@ -693,7 +617,7 @@ function pageCacheKey(input: PublishedFlowCatalogPageInput): string {
   return [
     flowCatalogQueryIdentity({ query: input.cursorSecret }),
     input.platform,
-    input.sort ?? "popular",
+    input.sort ?? "grouped",
     String(pageLimit(input.limit)),
     identity,
     input.includeFacets === false ? "summary" : "full",
@@ -705,7 +629,7 @@ async function loadPublishedFlowCatalogPage(
   runQuery: FlowCatalogQuery = query,
 ): Promise<FlowCatalogPage> {
   const limit = pageLimit(input.limit);
-  const sort = input.sort ?? "popular";
+  const sort = input.sort ?? "grouped";
   const search = normalizeFlowCatalogText(input.query ?? "").slice(0, 120);
   const searchTerms = flowCatalogSearchTerms(search);
   const minimumTermMatches = minimumFlowCatalogTermMatches(searchTerms.length);
@@ -720,7 +644,7 @@ async function loadPublishedFlowCatalogPage(
     : undefined;
   const snapshotAt = cursor?.snapshotAt
     ?? (input.now ?? (() => new Date()))().toISOString();
-  const after = keyset(sort, cursor);
+  const after = keyset(cursor);
   const values = [
     input.platform,
     snapshotAt,
@@ -736,7 +660,7 @@ async function loadPublishedFlowCatalogPage(
     ?? (runQuery === query ? defaultFacetCache : new FlowCatalogFacetCache());
   const cacheKey = `${input.platform}\0${sort}\0${identity}`;
   let metadata = input.includeFacets === false ? undefined : cache.get(cacheKey);
-  const pageResultPromise = runQuery(pageSql(sort, after.sql), values);
+  const pageResultPromise = runQuery(pageSql(after.sql), values);
   const metadataResultPromise = input.includeFacets === false || metadata
     ? null
     : runQuery(metadataSql, values.slice(0, 8));
@@ -763,20 +687,9 @@ async function loadPublishedFlowCatalogPage(
     cache.set(cacheKey, metadata);
   }
   if (input.includeFacets === false) {
-    const facets = new Map<string, DiscoveryFacet>();
-    for (const row of visibleRows) {
-      const value = String(row.category);
-      if (!facets.has(value)) {
-        facets.set(value, {
-          group: "flowGroups",
-          value,
-          count: Number(row.category_count ?? 0),
-        });
-      }
-    }
     metadata = {
       totalCount: Number(rows[0]?.page_total ?? 0),
-      facets: [...facets.values()],
+      facets: [],
     };
   }
   metadata ??= { totalCount: 0, facets: [] };

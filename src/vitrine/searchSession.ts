@@ -7,6 +7,7 @@ import type {
   SearchScope,
 } from "../searchTypes.ts";
 import type { SearchPageState } from "./searchState.ts";
+import { defaultSearchState } from "./searchState.ts";
 
 export interface SearchSessionSnapshot {
   open: boolean;
@@ -59,7 +60,15 @@ export function createSearchSession(initial: SearchPageState) {
       emit();
     },
     close() {
-      current = { ...current, open: false };
+      current = {
+        open: false,
+        state: {
+          ...defaultSearchState,
+          filters: Object.fromEntries(
+            Object.entries(defaultSearchState.filters).map(([key, values]) => [key, [...values]]),
+          ) as unknown as SearchFilters,
+        },
+      };
       emit();
     },
   };

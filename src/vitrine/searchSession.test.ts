@@ -29,12 +29,14 @@ test("opens in gallery context and preserves compatible filters", () => {
   assert.deepEqual(session.snapshot().state.filters.siteSection, ["Pricing"]);
 });
 
-test("closing and reopening retains session filters", () => {
+test("closing clears modal-only search input and filters", () => {
   const session = createSearchSession(defaultSearchState);
   session.open("apps", { platform: ["ios"] });
+  session.update({ ...session.snapshot().state, query: "Linear" });
   session.close();
   session.open("apps");
-  assert.deepEqual(session.snapshot().state.filters.platform, ["ios"]);
+  assert.equal(session.snapshot().state.query, "");
+  assert.deepEqual(session.snapshot().state.filters.platform, []);
 });
 
 test("canonicalizes seeded filter values", () => {

@@ -67,7 +67,7 @@ export function appCatalogRequestPath(query = '', platform?: Platform): string {
   if (platform) params.set('platform', platform);
   const trimmed = query.trim();
   if (trimmed) params.set('query', trimmed);
-  return `/api/catalog?${params.toString()}`;
+  return `/api/apps${trimmed ? '/search' : ''}?${params.toString()}`;
 }
 
 const catalogApps = (page: CatalogResponse): App[] =>
@@ -144,7 +144,7 @@ export function useApps(
   const loadMoreControllerRef = useRef<AbortController | null>(null);
   const trimmedQuery = query.trim();
   const catalogPath = appCatalogRequestPath(trimmedQuery, platform);
-  // This hook only ever reads the app list, but /api/catalog ships its full
+  // This hook only ever reads the app list, but /api/apps ships its full
   // facet payload by default — ~75k entries / 5.4MB, which measured as 14x
   // slower than the same request with facets=summary (2.89s vs 0.21s).
 

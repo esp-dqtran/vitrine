@@ -4,6 +4,7 @@ import type { SiteVersionDetail, SitesStore } from "../../../src/sitesStore.ts";
 import { SitesCursorError } from "../../../src/sitesCursor.ts";
 import type { DiscoveryFilter } from "../../../src/vitrine/discoveryTypes.ts";
 import { searchDiscoveryFacets } from "../../../src/discoveryFacetSearch.ts";
+import type { TypesenseSiteCatalogClient } from "../../../src/typesenseSiteCatalog.ts";
 
 export interface SitesRouteDependencies {
   store: Pick<
@@ -15,6 +16,7 @@ export interface SitesRouteDependencies {
   >;
   cursorSecret: string;
   sendObject(metadata: ObjectMetadata, res: express.Response): Promise<void>;
+  typesenseSiteCatalog?: TypesenseSiteCatalogClient;
 }
 
 export function mountSitesRoutes(
@@ -227,13 +229,60 @@ function mountPublicReadySitesList(
   app: express.Express,
   dependencies: SitesRouteDependencies,
 ): void {
-  app.get("/sites", async (req, res) => {
+  const listSites = async (req: express.Request, res: express.Response) => {
+    const isSearchRequest = req.path === "/sites/search";
     const request = canonicalSitesPageRequest(req.query);
-    if (!request) {
+    if (!request || (isSearchRequest && !request.query)) {
       res.status(400).json({ error: "invalid Sites discovery query" });
       return;
     }
     try {
+      const typesenseCursorPrefix = "typesense-site:";
+      const typesensePage = request.cursor?.startsWith(typesenseCursorPrefix)
+        ? Number(request.cursor.slice(typesenseCursorPrefix.length))
+        : 1;
+      const supportsTypesenseSearch = Number.isInteger(typesensePage)
+        && typesensePage >= 1
+        && (!request.cursor || request.cursor.startsWith(typesenseCursorPrefix));
+      if (isSearchRequest && dependencies.typesenseSiteCatalog && supportsTypesenseSearch) {
+        const startedAt = performance.now();
+        try {
+          const result = await dependencies.typesenseSiteCatalog.search({
+            ...(request.query ? { query: request.query } : {}),
+            filters: request.filters,
+            sort: request.sort,
+            page: typesensePage,
+            ...(request.limit ? { limit: request.limit } : {}),
+          });
+          const durationMs = Math.round((performance.now() - startedAt) * 100) / 100;
+          res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=240");
+          res.setHeader("Server-Timing", `typesense-site;dur=${durationMs}`);
+          console.info(JSON.stringify({
+            event: "typesense_site_catalog_search",
+            outcome: "success",
+            durationMs,
+            hasQuery: Boolean(request.query),
+            filterCount: request.filters.length,
+          }));
+          res.json({
+            items: withRouteSlugs(result.sites).map(publicSiteSummary),
+            nextCursor: result.nextPage ? `${typesenseCursorPrefix}${result.nextPage}` : null,
+            totalCount: result.totalCount,
+            facets: request.includeFacets === false ? [] : result.facets,
+          });
+          return;
+        } catch {
+          const durationMs = Math.round((performance.now() - startedAt) * 100) / 100;
+          res.setHeader("Server-Timing", `typesense-site;dur=${durationMs};desc="fallback"`);
+          console.warn(JSON.stringify({
+            event: "typesense_site_catalog_search",
+            outcome: "fallback",
+            durationMs,
+            hasQuery: Boolean(request.query),
+            filterCount: request.filters.length,
+          }));
+        }
+      }
       const page = await dependencies.store.listReadySitesPage({
         ...request,
         cursorSecret: dependencies.cursorSecret,
@@ -258,7 +307,10 @@ function mountPublicReadySitesList(
       }
       throw error;
     }
-  });
+  };
+
+  app.get("/sites", listSites);
+  app.get("/sites/search", listSites);
 
   app.get("/sites/facets", async (req, res) => {
     const request = canonicalSitesPageRequest({

@@ -53,7 +53,7 @@ function fetchFacetPreviewPool(
     value: input.value,
     platform: input.platform,
   });
-  const request = fetcher(`/api/catalog/facet-preview?${query}`)
+  const request = fetcher(`/api/apps/facet-preview?${query}`)
     .then(async (response) => {
       if (response.status === 404) return [];
       if (!response.ok) throw new Error(`Facet preview request failed: ${response.status}`);

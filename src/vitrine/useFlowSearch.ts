@@ -12,8 +12,8 @@ interface FlowSearchInput {
 }
 
 /**
- * The Flow palette keeps browsing available to everyone, while rich content
- * search uses the existing Pro Typesense route. Abort and debounce on every
+ * The Flow palette keeps browsing available, while every non-empty Flow query
+ * uses the existing Typesense-backed search route. Abort and debounce on every
  * filter change so stale result sets can never replace the current query.
  */
 export function useFlowSearch({

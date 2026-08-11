@@ -29,7 +29,7 @@ const FILTER_GROUPS: AppsFacet['group'][] = [
 
 const STATE_DEFINITION = {
   platforms: ['web', 'ios', 'android'] as const,
-  sorts: ['latest', 'trending'] as const,
+  sorts: ['latest'] as const,
   filterGroups: FILTER_GROUPS,
 };
 
@@ -58,6 +58,7 @@ const normalizeState = (
   state: AppsDiscoveryControllerState,
 ): AppsDiscoveryControllerState => ({
   ...state,
+  sort: 'latest',
   query: state.query.trim().slice(0, 120),
   filters: normalizeDiscoveryFilters(state.filters, STATE_DEFINITION),
 });
@@ -72,7 +73,6 @@ export function appsCatalogRequestPath(
   params.set('platform', state.platform);
   params.set('facets', 'summary');
   if (state.query) params.set('query', state.query);
-  params.set('sort', state.sort);
   for (const filter of state.filters) {
     params.append('filter', `${filter.group}.${filter.value}`);
   }
@@ -80,7 +80,7 @@ export function appsCatalogRequestPath(
   // App cards now render up to three phone screenshots, which are supplied by
   // the catalog's bounded preview pass. `facets=summary` keeps this list route
   // free of the expensive full facet aggregation.
-  return `/api/catalog?${params.toString()}`;
+  return `/api/apps${state.query ? '/search' : ''}?${params.toString()}`;
 }
 
 export function loadAppsDiscoveryFacets(
@@ -98,7 +98,7 @@ export function loadAppsDiscoveryFacets(
     params.append('filter', `${filter.group}.${filter.value}`);
   }
   appendFacetSearchParams(params, { group, query, selected });
-  const path = source === 'admin' ? '/api/admin/catalog/facets' : '/api/catalog/facets';
+  const path = source === 'admin' ? '/api/admin/catalog/facets' : '/api/apps/facets';
   return loadDiscoveryFacets(`${path}?${params.toString()}`, signal);
 }
 
@@ -144,7 +144,6 @@ export function createAppsDiscoveryAdapter(
       const params = new URLSearchParams();
       params.set('platform', state.platform);
       params.set('content_type', state.contentType);
-      params.set('sort', state.sort);
       if (state.query) params.set('query', state.query);
       for (const filter of state.filters) {
         params.append('filter', `${filter.group}.${filter.value}`);

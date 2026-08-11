@@ -1,38 +1,27 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import type { Platform } from "./platformFromUrl.ts";
 
-export type FlowCatalogSort = "popular" | "grouped";
+export type FlowCatalogSort = "grouped";
 
 interface FlowCursorKeyBase {
   exactMatch: 0 | 1;
   titleTermMatches: number;
   termMatches: number;
   other: 0 | 1;
-  categoryCount: number;
   category: string;
   categoryId: string;
-  count: number;
   title: string;
   flowId: string;
 }
 
-export type FlowCatalogCursor =
-  | {
-      v: 2;
-      sort: "popular";
-      platform: Platform;
-      snapshotAt: string;
-      identity: string;
-      key: FlowCursorKeyBase & { categoryRank: number };
-    }
-  | {
-      v: 2;
-      sort: "grouped";
-      platform: Platform;
-      snapshotAt: string;
-      identity: string;
-      key: FlowCursorKeyBase;
-    };
+export interface FlowCatalogCursor {
+  v: 3;
+  sort: "grouped";
+  platform: Platform;
+  snapshotAt: string;
+  identity: string;
+  key: FlowCursorKeyBase;
+}
 
 const MAX_CURSOR_LENGTH = 2_048;
 const INT4_MAX = 2_147_483_647;
@@ -84,16 +73,13 @@ function bigintId(value: unknown, allowZero = false): value is string {
   }
 }
 
-function validKey(value: unknown, sort: FlowCatalogSort): boolean {
+function validKey(value: unknown): boolean {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const key = value as Record<string, unknown>;
   const fields = [
     "category",
-    "categoryCount",
     "categoryId",
     "exactMatch",
-    ...(sort === "popular" ? ["categoryRank"] : []),
-    "count",
     "flowId",
     "other",
     "termMatches",
@@ -105,9 +91,6 @@ function validKey(value: unknown, sort: FlowCatalogSort): boolean {
     && (key.exactMatch === 0 || key.exactMatch === 1)
     && count(key.titleTermMatches, 0)
     && count(key.termMatches, 0)
-    && count(key.categoryCount, 1)
-    && count(key.count, 1)
-    && (sort !== "popular" || count(key.categoryRank, 1))
     && boundedText(key.category)
     && boundedText(key.title)
     && bigintId(key.categoryId, true)
@@ -121,14 +104,14 @@ function validPayload(
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const item = value as Record<string, unknown>;
   return exactKeys(item, ["identity", "key", "platform", "snapshotAt", "sort", "v"])
-    && item.v === 2
+    && item.v === 3
     && item.sort === expected.sort
     && item.platform === expected.platform
     && item.identity === expected.identity
     && typeof item.identity === "string"
     && /^[A-Za-z0-9_-]{43}$/.test(item.identity)
     && canonicalIso(item.snapshotAt)
-    && validKey(item.key, expected.sort);
+    && validKey(item.key);
 }
 
 function signature(payload: FlowCatalogCursor, secret: string): string {

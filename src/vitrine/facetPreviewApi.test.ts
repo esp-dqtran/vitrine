@@ -11,7 +11,7 @@ const componentPreview = (app: string): FacetPreview => ({
   app,
   label: 'Dialog',
   iconUrl: null,
-  media: [`/api/catalog/facet-media/${app.toLowerCase()}/elements/Dialog/web/1`],
+  media: [`/api/apps/facet-media/${app.toLowerCase()}/elements/Dialog/web/1`],
 });
 
 const screenPreview = (app: string): FacetPreview => ({
@@ -19,7 +19,7 @@ const screenPreview = (app: string): FacetPreview => ({
   app,
   label: 'Signup',
   iconUrl: null,
-  media: [`/api/catalog/facet-media/${app.toLowerCase()}/screens/Signup/web/1`],
+  media: [`/api/apps/facet-media/${app.toLowerCase()}/screens/Signup/web/1`],
 });
 
 const jsonResponse = (body: unknown) => new Response(JSON.stringify(body), {
@@ -45,7 +45,7 @@ test('loads one public taxonomy pool and deduplicates concurrent requests', asyn
 
   assert.equal(first?.app, 'Linear');
   assert.equal(second?.app, 'Notion');
-  assert.deepEqual(calls, ['/api/catalog/facet-preview?group=elements&value=Dialog&platform=web']);
+  assert.deepEqual(calls, ['/api/apps/facet-preview?group=elements&value=Dialog&platform=web']);
 });
 
 test('selects again on every hover without immediately repeating an app', async () => {

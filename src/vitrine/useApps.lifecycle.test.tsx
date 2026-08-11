@@ -150,8 +150,8 @@ test("aborts pending load-more on unmount and reloads when public source becomes
     assert.equal(loadMoreSignals[0]?.aborted, true);
     assert.equal(exposed?.apps?.[0]?.id, "admin");
     assert.deepEqual(endpoints.slice(0, 3), [
-      "/api/catalog",
-      "/api/catalog?cursor=next",
+      "/api/apps",
+      "/api/apps?cursor=next",
       "/api/apps",
     ]);
     await act(async () => {

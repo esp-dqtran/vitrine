@@ -450,8 +450,8 @@ test('renders the Mobbin-style Apps filter bar, grid, and media-first card', () 
     html.indexOf('aria-label="Open Categories filters"'),
   );
   assert.doesNotMatch(platformMarkup, /role="radiogroup"/);
-  assert.match(html, /Newest/);
-  assert.match(html, /aria-label="Sort: Newest"/);
+  assert.doesNotMatch(html, /aria-label="Sort:/);
+  assert.doesNotMatch(html, /Popular/);
   assert.match(html, /1 app/);
   assert.doesNotMatch(html, /Most popular/);
   assert.match(html, /data-apps-discovery-grid="true"/);

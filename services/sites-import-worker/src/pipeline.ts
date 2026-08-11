@@ -26,6 +26,7 @@ interface SitesPipelineDependencies {
   getJob(id: number): Promise<JobRow | undefined>;
   setJobStatus(id: number, status: JobStatus, message?: string): Promise<void>;
   crawl(url: string, controls: SitesCrawlControls): Promise<SitesCrawlResult>;
+  syncSite?(siteId: number): Promise<void>;
 }
 
 const defaults: SitesPipelineDependencies = {
@@ -57,7 +58,8 @@ export function createSitesPipelineHandler(
       },
     };
     try {
-      await deps.crawl(job.url, controls);
+      const result = await deps.crawl(job.url, controls);
+      await deps.syncSite?.(result.siteId);
       await deps.setJobStatus(job.jobId, "done");
     } catch (error) {
       if (

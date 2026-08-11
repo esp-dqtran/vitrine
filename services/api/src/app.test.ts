@@ -330,7 +330,7 @@ test("serves real catalog stats publicly, without a session", async (t) => {
   } as never));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/catalog/stats`);
+  const response = await fetch(`${base}/apps/stats`);
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { apps: 512, screens: 137412, uiElements: 647 });
 });
@@ -388,7 +388,7 @@ test("serves a bounded public app evidence preview and records the view", async 
   }));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/catalog/apps/linear/preview`);
+  const response = await fetch(`${base}/apps/linear/preview`);
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.app.totalScreens, 443);
@@ -406,7 +406,7 @@ test("serves a bounded public app evidence preview and records the view", async 
     type: "Top Navigation Bar",
     group: "Navigation",
     count: 9,
-    thumbnailUrl: "/api/catalog/facet-media/linear/elements/Top%20Navigation%20Bar/web/1",
+    thumbnailUrl: "/api/apps/facet-media/linear/elements/Top%20Navigation%20Bar/web/1",
   }]);
   assert.deepEqual(body.previewFlows, [{
     id: "onboarding",
@@ -415,10 +415,10 @@ test("serves a bounded public app evidence preview and records the view", async 
     stepCount: 2,
     screens: [{
       label: "Start",
-      thumbnailUrl: "/api/catalog/flow-media/linear/web/11/22/1?variant=thumb",
+      thumbnailUrl: "/api/flows/media/linear/web/11/22/1?variant=thumb",
     }, {
       label: "Finish",
-      thumbnailUrl: "/api/catalog/flow-media/linear/web/11/22/2?variant=thumb",
+      thumbnailUrl: "/api/flows/media/linear/web/11/22/2?variant=thumb",
     }],
   }]);
   assert.equal(response.headers.get("cache-control"), "private, max-age=60, stale-while-revalidate=300");
@@ -443,7 +443,7 @@ test("serves ordered published Categories publicly", async (t) => {
   } as never));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/catalog/categories`);
+  const response = await fetch(`${base}/apps/categories`);
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("cache-control"), "public, max-age=300");
   assert.deepEqual(await response.json(), { categories });
@@ -471,7 +471,7 @@ test("serves the exact canonical Flow discovery envelope", async (t) => {
   t.after(() => close(server));
 
   const response = await fetch(
-    `${base}/catalog/flows?platform=web&query=profile&sort=grouped`
+    `${base}/flows?platform=web&query=profile&sort=grouped`
       + `&filter=flowGroups.Account%20Management&filter=flowGroups.Security&limit=40`,
   );
   assert.equal(response.status, 200);
@@ -496,7 +496,34 @@ test("serves the exact canonical Flow discovery envelope", async (t) => {
   }]);
 });
 
-test("maps only transition Flow views and rejects invalid queries before the store", async (t) => {
+test("uses Typesense for full-text Flow search", async (t) => {
+  const calls: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    typesenseFlowCatalog: {
+      search: async (input: unknown) => {
+        calls.push(input);
+        return { items: [], nextPage: 2, totalCount: 19, facets: [{ group: "flowGroups", value: "Account Management", count: 19 }] };
+      },
+    },
+    publishedFlowCatalogPage: async () => {
+      throw new Error("PostgreSQL Flow search should not run");
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/flows/search?platform=web&query=open%20profile&filter=flowGroups.Account%20Management&limit=20`);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("server-timing")?.startsWith("typesense-flow;dur="), true);
+  assert.deepEqual(await response.json(), {
+    items: [], nextCursor: "typesense-flow:2", totalCount: 19,
+    facets: [{ group: "flowGroups", value: "Account Management", count: 19 }],
+  });
+  assert.deepEqual(calls, [{
+    query: "open profile", platform: "web", flowGroups: ["Account Management"], page: 1, limit: 20,
+  }]);
+});
+
+test("normalizes legacy Flow views to category/title order and rejects invalid queries", async (t) => {
   const inputs: unknown[] = [];
   let calls = 0;
   const { base, server } = await serve(createApiApp({
@@ -509,9 +536,9 @@ test("maps only transition Flow views and rejects invalid queries before the sto
   } as never));
   t.after(() => close(server));
 
-  assert.equal((await fetch(`${base}/catalog/flows?platform=web&view=browse`)).status, 200);
-  assert.equal((await fetch(`${base}/catalog/flows?platform=web&view=grouped`)).status, 200);
-  assert.equal((inputs[0] as { sort: string }).sort, "popular");
+  assert.equal((await fetch(`${base}/flows?platform=web&view=browse`)).status, 200);
+  assert.equal((await fetch(`${base}/flows?platform=web&view=grouped`)).status, 200);
+  assert.equal((inputs[0] as { sort: string }).sort, "grouped");
   assert.equal((inputs[1] as { sort: string }).sort, "grouped");
 
   const invalid = [
@@ -527,7 +554,7 @@ test("maps only transition Flow views and rejects invalid queries before the sto
     "platform=web&limit=1.5",
   ];
   for (const query of invalid) {
-    assert.equal((await fetch(`${base}/catalog/flows?${query}`)).status, 400);
+    assert.equal((await fetch(`${base}/flows?${query}`)).status, 400);
   }
   assert.equal(calls, 2);
 });
@@ -1493,8 +1520,22 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
         componentNames: ["Button"],
       },
     }],
+    publishedImages: async () => [{
+      ...catalogImages[0],
+      analysis: {
+        description: "Toolbar with primary action",
+        purpose: "Manage issues",
+        pageType: "Workspace",
+        productArea: "Issues",
+        theme: "dark" as const,
+        visibleStates: ["default"],
+        componentNames: ["Button"],
+      },
+    }],
     listDesignSystems: async () => systems,
+    listPublishedDesignSystems: async () => systems,
     listAppFlowSets: async () => [],
+    listPublishedFlowSets: async () => [],
     recordAccessEvent: async (event) => { events.push(event); },
   }));
   t.after(() => close(server));
@@ -1506,6 +1547,11 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
   assert.equal(searchBody.items[0].imageUrl, "/api/media/linear/0123456789abcdef");
   assert.equal(searchBody.items[0].thumbnailUrl, "/api/media/linear/0123456789abcdef?variant=thumb");
   assert.deepEqual(events[0], { userId: user.id, featureKey: "search", action: "catalog-search", outcome: "success" });
+
+  const publicSearch = await fetch(`${base}/search?q=primary&kind=component`);
+  assert.equal(publicSearch.status, 200);
+  assert.equal((await publicSearch.json() as CatalogSearchResult).items[0].id, "component:linear:button");
+  assert.equal(events.length, 1);
 
   const compare = await fetch(`${base}/compare?apps=linear,airbnb`, { headers: { authorization: "Bearer user" } });
   assert.equal(compare.status, 200);
@@ -1600,7 +1646,7 @@ test("creates user-owned collections and edits item notes", async (t) => {
   ]);
 });
 
-test("enforces Free search, collection, note, and unlock policy", async (t) => {
+test("keeps search public while enforcing Free collection, note, and unlock policy", async (t) => {
   const now = "2026-07-21T00:00:00.000Z";
   let collectionCount = 0;
   let unlockCalled = false;
@@ -1621,14 +1667,16 @@ test("enforces Free search, collection, note, and unlock policy", async (t) => {
     addCollectionItem: async () => { throw new Error("Free notes must be rejected first"); },
     updateCollectionItemNotes: async () => { throw new Error("Free notes must be rejected first"); },
     unlockFreeApp: async () => { unlockCalled = true; return { status: "unlocked", remaining: 2 }; },
+    publishedImages: async () => [],
+    listPublishedDesignSystems: async () => [],
+    listPublishedFlowSets: async () => [],
     recordAccessEvent: async () => {},
   }));
   t.after(() => close(server));
   const headers = { authorization: "Bearer user", "content-type": "application/json" };
 
   const search = await fetch(`${base}/search?q=checkout`, { headers });
-  assert.equal(search.status, 403);
-  assert.equal((await search.json()).code, "upgrade_required");
+  assert.equal(search.status, 200);
 
   const described = await fetch(`${base}/collections`, { method: "POST", headers, body: JSON.stringify({ name: "Research", description: "Notes" }) });
   assert.equal(described.status, 403);
@@ -1966,7 +2014,7 @@ test("serves the public catalog from one bounded page dependency", async (t) => 
     },
   } as never));
   t.after(() => close(server));
-  const response = await fetch(`${base}/catalog?cursor=${validCursor}&limit=3`);
+  const response = await fetch(`${base}/apps?cursor=${validCursor}&limit=3`);
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.deepEqual(input, {
@@ -2002,7 +2050,7 @@ test("serves eligible App catalog searches from Typesense with timing metadata",
   t.after(() => close(server));
 
   const response = await fetch(
-    `${base}/catalog?platform=web&query=linear&filter=categories.Productivity&limit=3`,
+    `${base}/apps/search?platform=web&query=linear&filter=categories.Productivity&limit=3`,
   );
   assert.equal(response.status, 200);
   assert.match(response.headers.get("server-timing") ?? "", /^typesense-app;dur=\d/);
@@ -2023,6 +2071,39 @@ test("serves eligible App catalog searches from Typesense with timing metadata",
   });
 });
 
+test("keeps empty-query Apps browsing on PostgreSQL when Typesense is configured", async (t) => {
+  let typesenseCalls = 0;
+  let fallbackCalls = 0;
+  const { base, server } = await serve(createApiApp({
+    typesenseAppCatalog: {
+      search: async () => {
+        typesenseCalls += 1;
+        return { apps: [], totalCount: 0, nextPage: null, facets: [] };
+      },
+    },
+    publishedCatalogPage: async () => {
+      fallbackCalls += 1;
+      return catalogPageRecord;
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/apps?platform=web&facets=summary`);
+  assert.equal(response.status, 200);
+  assert.equal(typesenseCalls, 0);
+  assert.equal(fallbackCalls, 1);
+  assert.equal(response.headers.get("server-timing"), null);
+  assert.deepEqual((await response.json()).items, buildPublishedCatalogPage(catalogPageRecord).apps);
+});
+
+test("does not expose the retired public catalog route", async (t) => {
+  const { base, server } = await serve(createApiApp());
+  t.after(() => close(server));
+
+  assert.equal((await fetch(`${base}/catalog`)).status, 401);
+  assert.equal((await fetch(`${base}/catalog/flows?platform=web`)).status, 401);
+});
+
 test("falls back to PostgreSQL when an eligible Typesense App search fails", async (t) => {
   let fallbackCalls = 0;
   const { base, server } = await serve(createApiApp({
@@ -2034,7 +2115,7 @@ test("falls back to PostgreSQL when an eligible Typesense App search fails", asy
   } as never));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/catalog?platform=web&query=linear`);
+  const response = await fetch(`${base}/apps/search?platform=web&query=linear`);
   assert.equal(response.status, 200);
   assert.match(response.headers.get("server-timing") ?? "", /typesense-app;dur=\d.*fallback/);
   assert.equal(fallbackCalls, 1);
@@ -2046,7 +2127,7 @@ test("returns 400 for an invalid public catalog cursor", async (t) => {
   } as never));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/catalog?cursor=***`);
+  const response = await fetch(`${base}/apps?cursor=***`);
   assert.equal(response.status, 400);
   assert.deepEqual(await response.json(), { error: "invalid catalog cursor" });
 });
@@ -2062,10 +2143,10 @@ test("passes valid category and flow facets to public catalog pagination", async
   t.after(() => close(server));
 
   assert.equal((await fetch(
-    `${base}/catalog?group=categories&value=CRM&platform=web`,
+    `${base}/apps?group=categories&value=CRM&platform=web`,
   )).status, 200);
   assert.equal((await fetch(
-    `${base}/catalog?group=flows&value=Setting%20Up&platform=android`,
+    `${base}/apps?group=flows&value=Setting%20Up&platform=android`,
   )).status, 200);
   assert.deepEqual(inputs, [
     {
@@ -2089,7 +2170,7 @@ test("rejects incomplete public catalog facets", async (t) => {
   const { base, server } = await serve(createApiApp());
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/catalog?group=flows&value=Setting%20Up`);
+  const response = await fetch(`${base}/apps?group=flows&value=Setting%20Up`);
   assert.equal(response.status, 400);
   assert.deepEqual(await response.json(), { error: "invalid catalog facet" });
 });
@@ -2109,7 +2190,7 @@ test("serves one exact discovery envelope for repeated canonical catalog filters
   t.after(() => close(server));
 
   const response = await fetch(
-    `${base}/catalog?filter=categories.CRM&filter=categories.Sales`
+    `${base}/apps?filter=categories.CRM&filter=categories.Sales`
       + `&filter=flows.Setting%20Up&platform=web&query=linear&sort=trending&limit=3`,
   );
 
@@ -2149,7 +2230,7 @@ test("compresses a large catalog envelope without dropping complete facets", asy
   } as never));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/catalog?platform=web`, {
+  const response = await fetch(`${base}/apps?platform=web`, {
     headers: { "accept-encoding": "gzip" },
   });
 
@@ -2178,7 +2259,7 @@ test("rejects invalid repeated canonical catalog filters before reading the stor
     "sort=popular",
   ];
   for (const query of invalid) {
-    assert.equal((await fetch(`${base}/catalog?${query}`)).status, 400);
+    assert.equal((await fetch(`${base}/apps?${query}`)).status, 400);
   }
   assert.equal(calls, 0);
 });
@@ -2190,7 +2271,7 @@ test("keeps the catalog public and every App detail endpoint private", async (t)
   } as never));
   t.after(() => close(server));
 
-  assert.equal((await fetch(`${base}/catalog`)).status, 200);
+  assert.equal((await fetch(`${base}/apps`)).status, 200);
   assert.equal((await fetch(`${base}/preview-media/linear/web/1`)).status, 503);
 
   const privatePaths = [
@@ -2360,7 +2441,7 @@ test("serves allowlisted public taxonomy previews and protected media", async (t
   t.after(() => close(server));
 
   const response = await fetch(
-    `${base}/catalog/facet-preview?group=flows&value=Setting%20Up&platform=web`,
+    `${base}/apps/facet-preview?group=flows&value=Setting%20Up&platform=web`,
   );
   assert.equal(response.status, 200);
   const body = await response.json();
@@ -2372,9 +2453,9 @@ test("serves allowlisted public taxonomy previews and protected media", async (t
         label: "Setting Up",
         iconUrl: null,
         media: [
-          "/api/catalog/facet-media/linear/flows/Setting%20Up/web/1",
-          "/api/catalog/facet-media/linear/flows/Setting%20Up/web/2",
-          "/api/catalog/facet-media/linear/flows/Setting%20Up/web/3",
+          "/api/apps/facet-media/linear/flows/Setting%20Up/web/1",
+          "/api/apps/facet-media/linear/flows/Setting%20Up/web/2",
+          "/api/apps/facet-media/linear/flows/Setting%20Up/web/3",
         ],
       },
       {
@@ -2383,8 +2464,8 @@ test("serves allowlisted public taxonomy previews and protected media", async (t
         label: "Setting Up",
         iconUrl: null,
         media: [
-          "/api/catalog/facet-media/notion/flows/Setting%20Up/web/1",
-          "/api/catalog/facet-media/notion/flows/Setting%20Up/web/2",
+          "/api/apps/facet-media/notion/flows/Setting%20Up/web/1",
+          "/api/apps/facet-media/notion/flows/Setting%20Up/web/2",
         ],
       },
     ],
@@ -2397,7 +2478,7 @@ test("serves allowlisted public taxonomy previews and protected media", async (t
   }]);
 
   const media = await fetch(
-    `${base}/catalog/facet-media/linear/flows/Setting%20Up/web/2`,
+    `${base}/apps/facet-media/linear/flows/Setting%20Up/web/2`,
   );
   assert.equal(media.status, 200);
   assert.deepEqual(mediaInputs, [{
@@ -2452,13 +2533,13 @@ test("serves dynamic Screen-pattern media and quick previews from the normalized
   });
 
   assert.equal((await fetch(
-    `${base}/catalog/facet-media/linear/screens/Does%20Not%20Exist/web/1`,
+    `${base}/apps/facet-media/linear/screens/Does%20Not%20Exist/web/1`,
   )).status, 404);
   assert.equal((await fetch(
-    `${base}/catalog/facet-media/linear/screens/${"x".repeat(121)}/web/1`,
+    `${base}/apps/facet-media/linear/screens/${"x".repeat(121)}/web/1`,
   )).status, 400);
   assert.equal((await fetch(
-    `${base}/catalog/facet-preview?group=screens&value=Dashboard&platform=web`,
+    `${base}/apps/facet-preview?group=screens&value=Dashboard&platform=web`,
   )).status, 200);
   assert.equal(mediaInputs.length, 2);
 });
@@ -2482,7 +2563,7 @@ test("serves bounded public Flow catalog media without an App detail request", a
   t.after(() => close(server));
 
   const media = await fetch(
-    `${base}/catalog/flow-media/linear/web/7/71/2`,
+    `${base}/flows/media/linear/web/7/71/2`,
   );
   assert.equal(media.status, 200);
   assert.equal(media.headers.get("content-type"), "image/webp");
@@ -2497,7 +2578,7 @@ test("serves bounded public Flow catalog media without an App detail request", a
   }]);
 
   const thumbnail = await fetch(
-    `${base}/catalog/flow-media/linear/web/7/71/2?variant=thumb`,
+    `${base}/flows/media/linear/web/7/71/2?variant=thumb`,
   );
   assert.equal(thumbnail.status, 200);
   assert.deepEqual(inputs[1], {
@@ -2510,7 +2591,7 @@ test("serves bounded public Flow catalog media without an App detail request", a
   });
 
   const inline = await fetch(
-    `${base}/catalog/flow-media/linear/web/7/71/2?inline=1`,
+    `${base}/flows/media/linear/web/7/71/2?inline=1`,
   );
   assert.equal(inline.status, 200);
   assert.equal(await inline.text(), "image");
@@ -2525,7 +2606,7 @@ test("serves bounded public Flow catalog media without an App detail request", a
   });
 
   assert.equal((await fetch(
-    `${base}/catalog/flow-media/linear/web/7/71/7`,
+    `${base}/flows/media/linear/web/7/71/7`,
   )).status, 400);
   assert.equal(inputs.length, 3);
 });
@@ -2545,13 +2626,13 @@ test("rejects unknown taxonomy preview inputs before dependencies run", async (t
   t.after(() => close(server));
 
   assert.equal((await fetch(
-    `${base}/catalog/facet-preview?group=elements&value=Unknown&platform=web`,
+    `${base}/apps/facet-preview?group=elements&value=Unknown&platform=web`,
   )).status, 400);
   assert.equal((await fetch(
-    `${base}/catalog/facet-preview?group=flows&value=Setting%20Up&platform=android`,
+    `${base}/apps/facet-preview?group=flows&value=Setting%20Up&platform=android`,
   )).status, 400);
   assert.equal((await fetch(
-    `${base}/catalog/facet-media/linear/flows/Setting%20Up/web/4`,
+    `${base}/apps/facet-media/linear/flows/Setting%20Up/web/4`,
   )).status, 400);
   assert.equal(calls, 0);
 });

@@ -134,9 +134,9 @@ function installFakeTimers() {
   globalThis.setTimeout = ((handler: TimerHandler) => {
     const id = ++nextId;
     callbacks.set(id, handler as () => void);
-    return id as ReturnType<typeof setTimeout>;
-  }) as typeof setTimeout;
-  globalThis.clearTimeout = ((id: number) => callbacks.delete(id)) as typeof clearTimeout;
+    return id as unknown as ReturnType<typeof setTimeout>;
+  }) as unknown as typeof setTimeout;
+  globalThis.clearTimeout = ((id: number) => callbacks.delete(id)) as unknown as typeof clearTimeout;
   return {
     runAll() {
       for (const callback of [...callbacks.values()]) callback();
@@ -155,11 +155,11 @@ const flowItem = (
 ): Record<string, unknown> => ({
   category: 'Account Management',
   title,
-  count: 12,
   preview: {
     appId: 'whatsapp',
     appName: 'WhatsApp',
     appIconUrl: '/icons/whatsapp.png',
+    versionId: 17,
     version: 7,
     sourceFlowId,
     screenCount: 1,
@@ -254,7 +254,7 @@ test('mounts one StrictMode Flows controller with URL hydration, infinite scroll
       await settle();
     });
     assert.deepEqual(requests.map(({ url }) => url), [
-      '/api/catalog/flows?platform=ios&limit=12&facets=summary&query=settings&sort=grouped'
+      '/api/flows/search?platform=ios&limit=12&facets=summary&query=settings&sort=grouped'
         + '&filter=flowGroups.Account+Management',
     ]);
 
@@ -264,11 +264,15 @@ test('mounts one StrictMode Flows controller with URL hydration, infinite scroll
     });
     assert.equal(
       requests[1]?.url,
-      '/api/catalog/flows?platform=ios&limit=12&facets=summary&query=settings&sort=grouped'
+      '/api/flows/search?platform=ios&limit=12&facets=summary&query=settings&sort=grouped'
         + '&filter=flowGroups.Account+Management&cursor=page-2',
     );
     assert.deepEqual(
-      controller?.items.map(({ title }) => title),
+      (controller as DiscoveryController<
+        FlowCatalogItem,
+        FlowsDiscoveryControllerState['sort'],
+        FlowsDiscoveryControllerState
+      > | null)?.items.map(({ title }) => title),
       ['Logging out', 'Onboarding'],
     );
 
@@ -283,7 +287,7 @@ test('mounts one StrictMode Flows controller with URL hydration, infinite scroll
     assert.equal(requests.length, 3);
     assert.equal(
       requests[2]?.url,
-      '/api/catalog/flows?platform=ios&limit=12&facets=summary&query=onboarding&sort=grouped'
+      '/api/flows/search?platform=ios&limit=12&facets=summary&query=onboarding&sort=grouped'
         + '&filter=flowGroups.Account+Management',
     );
     assert.equal(dom.historyCalls[0]?.mode, 'replace');
@@ -310,7 +314,7 @@ test('mounts one StrictMode Flows controller with URL hydration, infinite scroll
     assert.equal(requests.length, 5);
     assert.equal(
       requests[4]?.url,
-      '/api/catalog/flows?platform=android&limit=12&facets=summary&query=back&sort=popular'
+      '/api/flows/search?platform=android&limit=12&facets=summary&query=back&sort=grouped'
         + '&filter=flowGroups.New+User+Experience',
     );
 
@@ -325,7 +329,7 @@ test('mounts one StrictMode Flows controller with URL hydration, infinite scroll
     assert.equal(requests.length, 6);
     assert.equal(
       requests[5]?.url,
-      '/api/catalog/flows?platform=android&limit=12&facets=summary&sort=popular'
+      '/api/flows?platform=android&limit=12&facets=summary&sort=grouped'
         + '&filter=flowGroups.New+User+Experience',
     );
     assert.equal(dom.historyCalls.at(-1)?.mode, 'replace');

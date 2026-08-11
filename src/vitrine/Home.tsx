@@ -174,11 +174,11 @@ const STAT_ICONS = [
 // "Adding a card" (iOS). Handset captures read better in the bento's tall
 // cells than web pages, and the counts are the catalog's own.
 const FLOW_VIGNETTE = {
-  caption: "Adding a card · 64 screens · observed in 47 apps",
+  caption: "Adding a card · 64 screens",
   // Rendered at ~200 CSS px in the bento and ~80px in the document vignette,
   // so the thumbnail variant is the right size in both places.
   screens: [1, 2, 3].map(
-    (step) => `/api/catalog/flow-media/trello/ios/1575/7912/${step}?variant=thumb`,
+    (step) => `/api/flows/media/trello/ios/1575/7912/${step}?variant=thumb`,
   ),
 };
 
@@ -568,7 +568,7 @@ export function Home({
     meta: i === 2 ? "captured steps from one product" : null,
   }));
 
-  // `/api/catalog` returns no per-screen classification — every preview comes
+  // `/api/apps` returns no per-screen classification — every preview comes
   // back `Unclassified` with empty text and component arrays — so there is no
   // way to tell a dense screen from a splash or loading state. The page is
   // built around that: the two single-image slots use Vitrines' own captures,

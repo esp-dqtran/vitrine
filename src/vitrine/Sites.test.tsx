@@ -195,6 +195,8 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.doesNotMatch(html, /reference-discovery-nav/);
   assert.match(html, /class="[^"]*reference-discovery__content[^"]*"/);
   assert.match(html, /class="[^"]*reference-discovery__taxonomy[^"]*reference-discovery__taxonomy--sites[^"]*"/);
+  assert.match(html, /Hide filter shortcuts/);
+  assert.match(html, /aria-expanded="true"/);
   assert.match(html, /class="[^"]*reference-discovery__facet[^"]*"/);
   assert.match(html, /Categories/);
   assert.match(html, /Sections/);
@@ -204,6 +206,8 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.match(html, /Minimal/);
   assert.match(html, /data-sites-filterbar="true"/);
   assert.match(html, /aria-label="Site discovery controls"/);
+  assert.doesNotMatch(html, /placeholder="Search sites, sections, styles, or technology"/);
+  assert.doesNotMatch(html, /Search site names, domains, captured content, and verified implementation evidence\./);
   assert.match(html, /aria-label="Site platform: Web"/);
   assert.doesNotMatch(html, /role="radiogroup"[^>]*aria-label="Site platform"/);
   assert.match(html, /Open Categories filters/);
@@ -259,6 +263,26 @@ test('keeps the Sites hero taxonomy curated when the API returns noisy facets', 
   assert.match(html, />Colorful</);
   assert.doesNotMatch(html, />000</);
   assert.doesNotMatch(html, />7HgfXftRBBqsYtAEYcqjGLQrNJLL6Tww9ek4rE3Apump</);
+});
+
+test('shows a URL-backed Sites query and an understandable card match label', () => {
+  const html = renderToStaticMarkup(
+    <SitesPageView
+      controller={siteController({
+        state: {
+          platform: 'web',
+          sort: 'latest',
+          query: 'minimal',
+          filters: [],
+        },
+      })}
+      isAdmin
+    />,
+  );
+
+  assert.doesNotMatch(html, /value="minimal"/);
+  assert.match(html, /Browse filter shortcuts/);
+  assert.match(html, /Matched style: Minimal/);
 });
 
 test('uses the server total in Sites result metadata while one cursor page is loaded', () => {

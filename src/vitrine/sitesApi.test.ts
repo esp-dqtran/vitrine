@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { parseRoutePath, routeToPath } from './router.ts';
-import { getSiteVersion, getSiteVersionBySlug, listSitesPage } from './sitesApi.ts';
+import {
+  getSiteVersion,
+  getSiteVersionBySlug,
+  invalidateSitesPageCache,
+  listSitesPage,
+} from './sitesApi.ts';
 
 const approvedUrl = 'https://mobbin.com/sites/v-7-1fbe80df-2586-4a09-aa5c-29aeeb716a09/f4e176f7-aeb6-4f9a-9689-e4379fc357b1/preview';
 
@@ -194,10 +199,43 @@ test('requests one canonical cursor Site page from discovery state', async (t) =
   assert.equal(requests.length, 1);
   assert.equal(
     requests[0]?.url,
-    '/api/sites?platform=web&sort=popular&facets=summary&query=linear'
+    '/api/sites/search?platform=web&sort=popular&facets=summary&query=linear'
       + '&filter=categories.Business&filter=categories.Finance'
       + '&filter=sections.Pricing&cursor=opaque&limit=12',
   );
+});
+
+test('reuses a successful Site page across catalog remounts until invalidated', async (t) => {
+  const original = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = original;
+    invalidateSitesPageCache();
+  });
+  invalidateSitesPageCache();
+  let requests = 0;
+  globalThis.fetch = async () => {
+    requests += 1;
+    return Response.json({
+      items: [],
+      nextCursor: null,
+      totalCount: 0,
+      facets: [],
+    });
+  };
+  const state = {
+    platform: 'web' as const,
+    sort: 'latest' as const,
+    query: '',
+    filters: [],
+  };
+
+  await listSitesPage(state);
+  await listSitesPage(state);
+  assert.equal(requests, 1);
+
+  invalidateSitesPageCache();
+  await listSitesPage(state);
+  assert.equal(requests, 2);
 });
 
 test('never caches malformed canonical Site responses and exposes no-store retry', async (t) => {

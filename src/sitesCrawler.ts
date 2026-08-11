@@ -1,6 +1,13 @@
+import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { isIP } from "node:net";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { promisify } from "node:util";
+import ffmpegPath from "ffmpeg-static";
 import type { BrowserContext, Page, Response } from "playwright";
+import sharp from "sharp";
 import { launchMobbinContext, type MobbinContextOptions } from "./crawler.ts";
 import {
   siteObjectKey,
@@ -24,6 +31,8 @@ import {
 
 const MAX_MEDIA_BYTES = 64 * 1024 * 1024;
 const SOURCE_TIMEOUT_MS = 45_000;
+const PREVIEW_POSTER_WIDTH = 640;
+const run = promisify(execFile);
 
 export class SiteImportCancelledError extends Error {
   constructor() {
@@ -75,6 +84,7 @@ export interface SitesCrawlerDependencies {
   captureSource(url: string): Promise<SiteImport>;
   resolveSiteIcon?(url: string, name: string): Promise<string | null | undefined>;
   download(url: string): Promise<DownloadedSiteAsset>;
+  derivePreviewPoster?(video: Buffer): Promise<Buffer>;
   objectStore: ObjectStore;
   sitesStore: Pick<SitesStore, "beginImport" | "completeImport" | "failImport">;
   isCancelled(): Promise<boolean>;
@@ -248,8 +258,34 @@ export async function crawlMobbinSite(
       graph.version.previewVideoUrl,
       graph.version.previewMediaKind ?? "video",
     );
-    objectKeys.preview = preview.key;
-    objects.set(preview.key, preview);
+    objectKeys.preview = preview.metadata.key;
+    objects.set(preview.metadata.key, preview.metadata);
+    if ((graph.version.previewMediaKind ?? "video") === "video") {
+      await deps.report?.("Deriving Site preview poster");
+      const posterBody = await (deps.derivePreviewPoster ?? deriveMobbinPreviewPoster)(preview.body);
+      if (posterBody.byteLength === 0 || posterBody.byteLength > MAX_MEDIA_BYTES) {
+        throw new PermanentSiteImportError("Mobbin Site preview poster exceeds the 64 MiB media ceiling");
+      }
+      const posterMedia = verifiedMediaType("image/webp", posterBody);
+      if (posterMedia.contentType !== "image/webp") {
+        throw new PermanentSiteImportError("Mobbin Site preview poster is not a WebP image");
+      }
+      const poster = await putVerifiedObject(deps.objectStore, {
+        key: siteObjectKey(
+          identity.sourceSiteId,
+          identity.sourceVersionId,
+          "poster",
+          "preview",
+          sha256(posterBody),
+          "webp",
+        ),
+        body: posterBody,
+        contentType: "image/webp",
+        accessClass: "public-preview",
+      });
+      objectKeys.poster = poster.key;
+      objects.set(poster.key, poster);
+    }
 
     for (const page of graph.pages) {
       await deps.report?.(`Saving Site page ${page.position + 1}/${graph.pages.length}`);
@@ -261,8 +297,8 @@ export async function crawlMobbinSite(
         page.fullPageImageUrl,
         "image",
       );
-      objectKeys.pages[page.sourceId] = pageObject.key;
-      objects.set(pageObject.key, pageObject);
+      objectKeys.pages[page.sourceId] = pageObject.metadata.key;
+      objects.set(pageObject.metadata.key, pageObject.metadata);
 
       for (const section of page.sections) {
         const media = await downloadAndStore(
@@ -273,11 +309,11 @@ export async function crawlMobbinSite(
           section.mediaUrl,
           section.mediaKind,
         );
-        objects.set(media.key, media);
+        objects.set(media.metadata.key, media.metadata);
         let poster: string | undefined;
         if (section.posterUrl) {
           if (section.posterUrl === page.fullPageImageUrl) {
-            poster = pageObject.key;
+            poster = pageObject.metadata.key;
           } else {
             const posterObject = await downloadAndStore(
               deps,
@@ -287,12 +323,12 @@ export async function crawlMobbinSite(
               section.posterUrl,
               "image",
             );
-            objects.set(posterObject.key, posterObject);
-            poster = posterObject.key;
+            objects.set(posterObject.metadata.key, posterObject.metadata);
+            poster = posterObject.metadata.key;
           }
         }
         objectKeys.sections[section.sourceId] = {
-          media: media.key,
+          media: media.metadata.key,
           ...(poster ? { poster } : {}),
         };
       }
@@ -325,7 +361,7 @@ async function downloadAndStore(
   recordIdentity: string,
   url: string,
   expectedMediaKind: "image" | "video",
-): Promise<ObjectMetadata> {
+): Promise<{ metadata: ObjectMetadata; body: Buffer }> {
   await assertNotCancelled(deps);
   assertPublicHttpsUrl(url);
   const downloaded = await deps.download(url);
@@ -360,7 +396,7 @@ async function downloadAndStore(
     ? await stripMobbinWatermark(downloadedBody)
     : downloadedBody;
   verifiedMediaType(media.contentType, body);
-  return putVerifiedObject(deps.objectStore, {
+  const metadata = await putVerifiedObject(deps.objectStore, {
     key: siteObjectKey(
       identity.sourceSiteId,
       identity.sourceVersionId,
@@ -373,6 +409,37 @@ async function downloadAndStore(
     contentType: media.contentType,
     accessClass: "protected",
   });
+  return { metadata, body };
+}
+
+export async function deriveMobbinPreviewPoster(video: Buffer): Promise<Buffer> {
+  if (!ffmpegPath) {
+    throw new PermanentSiteImportError("Mobbin Site preview poster encoder is unavailable");
+  }
+  const directory = await mkdtemp(join(tmpdir(), "mobbin-site-preview-poster-"));
+  const videoPath = join(directory, "preview.mp4");
+  const framePath = join(directory, "frame-0.png");
+  try {
+    await writeFile(videoPath, video);
+    await run(ffmpegPath, [
+      "-y",
+      "-v", "error",
+      "-ss", "0",
+      "-i", videoPath,
+      "-vframes", "1",
+      framePath,
+    ]);
+    const frame = await readFile(framePath);
+    return await sharp(frame)
+      .resize(PREVIEW_POSTER_WIDTH, null, { withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toBuffer();
+  } catch (error) {
+    if (error instanceof PermanentSiteImportError) throw error;
+    throw new PermanentSiteImportError("Mobbin Site preview poster could not be derived");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 }
 
 async function putVerifiedObject(

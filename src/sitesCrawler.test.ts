@@ -209,6 +209,29 @@ test("stores an image-only Site preview using the image media contract", async (
   assert.ok(preview);
   assert.equal(preview.contentType, "image/png");
   assert.match(preview.key, /\.png$/);
+  assert.equal(harness.completeCalls[0]?.input.objectKeys.poster, undefined);
+});
+
+test("derives and persists a public preview poster from the video preview", async () => {
+  const posterBody = Buffer.from([0x52, 0x49, 0x46, 0x46, 0x04, 0, 0, 0, 0x57, 0x45, 0x42, 0x50]);
+  let derivedFrom: Buffer | undefined;
+  const harness = crawlerHarness({
+    derivePreviewPoster: async (video) => {
+      derivedFrom = Buffer.from(video);
+      return posterBody;
+    },
+  });
+
+  await crawlMobbinSite(approved, harness.dependencies);
+
+  const preview = harness.putCalls.find((call) => call.key.includes("/preview/"));
+  const poster = harness.putCalls.find((call) => call.accessClass === "public-preview");
+  assert.ok(preview);
+  assert.deepEqual(derivedFrom, preview.body);
+  assert.ok(poster);
+  assert.equal(poster.contentType, "image/webp");
+  assert.equal(poster.accessClass, "public-preview");
+  assert.equal(harness.completeCalls[0]?.input.objectKeys.poster, poster.key);
 });
 
 test("replaces Mobbin Site artwork only with a validated product-site icon", async () => {
@@ -247,7 +270,7 @@ test("stores normalized source and every required V7 media object before one com
   assert.equal(harness.beginCalls.length, 1);
   assert.equal(harness.completeCalls.length, 1);
   assert.equal(harness.failCalls.length, 0);
-  assert.equal(harness.putCalls.length, 64);
+  assert.equal(harness.putCalls.length, 65);
   assert.equal(harness.putCalls.every((call) => call.key.startsWith("sites/")), true);
   const source = harness.putCalls.find((call) => call.contentType === "application/json");
   assert.ok(source);
@@ -259,7 +282,8 @@ test("stores normalized source and every required V7 media object before one com
   const completed = harness.completeCalls[0];
   assert.equal(Object.keys(completed.input.objectKeys.pages).length, 16);
   assert.equal(Object.keys(completed.input.objectKeys.sections).length, 46);
-  assert.equal(completed.objects.length, 64);
+  assert.equal(completed.objects.length, 65);
+  assert.ok(completed.input.objectKeys.poster);
 });
 
 test("redacts encrypted Mobbin delivery values from the normalized source object", async () => {
@@ -397,6 +421,9 @@ function crawlerHarness(overrides: Partial<SitesCrawlerDependencies> = {}) {
   const dependencies: SitesCrawlerDependencies = {
     captureSource: async () => fixtureImport,
     download: async (url) => fixtureAsset(url),
+    derivePreviewPoster: async () => Buffer.from([
+      0x52, 0x49, 0x46, 0x46, 0x04, 0, 0, 0, 0x57, 0x45, 0x42, 0x50,
+    ]),
     objectStore,
     sitesStore,
     isCancelled: async () => false,

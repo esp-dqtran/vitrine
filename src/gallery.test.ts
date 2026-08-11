@@ -261,7 +261,7 @@ test("builds the existing public catalog contract from bounded app records", () 
   assert.deepEqual(
     page.apps[0]?.previewScreens.map(({ url }) => url),
     [
-      "/api/catalog/facet-media/linear/screens/Dashboard/web/1?variant=full",
+      "/api/apps/facet-media/linear/screens/Dashboard/web/1?variant=full",
       "/api/preview-media/linear/web/2?variant=full",
     ],
   );

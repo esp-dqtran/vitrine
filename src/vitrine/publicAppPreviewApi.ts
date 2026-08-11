@@ -34,7 +34,7 @@ export function loadPublicAppPreview(
   signal?: AbortSignal,
   request: Requester = fetch,
 ): Promise<PublicAppPreview> {
-  const endpoint = `/api/catalog/apps/${encodeURIComponent(appId)}/preview?v=2`;
+  const endpoint = `/api/apps/${encodeURIComponent(appId)}/preview?v=2`;
   return request(endpoint, { signal }).then((response) =>
     responseJson<PublicAppPreview>(response, endpoint));
 }

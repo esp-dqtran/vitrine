@@ -10,6 +10,7 @@ import type {
   SitesStore,
 } from "../../../src/sitesStore.ts";
 import { SitesCursorError } from "../../../src/sitesCursor.ts";
+import type { TypesenseSiteCatalogClient } from "../../../src/typesenseSiteCatalog.ts";
 import { mountPublicSitesRoutes } from "./sites.ts";
 
 const summary: SiteSummary = {
@@ -48,6 +49,7 @@ const cursorSecret = "public-sites-test-secret-0123456789abcdef";
 async function serve(
   sites = [summary],
   listReadySitesPage?: (input: ReadySitesPageInput) => Promise<ReadySitesPage>,
+  typesenseSiteCatalog?: TypesenseSiteCatalogClient,
 ) {
   const reads: Array<Parameters<SitesStore["siteMediaObject"]>[0]> = [];
   const pageReads: ReadySitesPageInput[] = [];
@@ -81,6 +83,7 @@ async function serve(
       },
     } as never,
     cursorSecret,
+    ...(typesenseSiteCatalog ? { typesenseSiteCatalog } : {}),
     sendObject: async (_object, res) => {
       res.status(302).setHeader("Location", "https://objects.example/signed").end();
     },
@@ -189,6 +192,60 @@ test("serves the exact canonical cursor discovery envelope", async (t) => {
     ],
   }]);
   assert.equal(listReads(), 0);
+});
+
+test("serves Site catalog searches from Typesense before PostgreSQL", async (t) => {
+  let postgresReads = 0;
+  let typesenseInput: unknown;
+  const { base, server } = await serve(
+    [summary],
+    async () => {
+      postgresReads += 1;
+      return { items: [], nextCursor: null, totalCount: 0, facets: [] };
+    },
+    {
+      index: async () => 0,
+      upsert: async () => undefined,
+      search: async (input) => {
+        typesenseInput = input;
+        return {
+          sites: [summary],
+          nextPage: 2,
+          totalCount: 13,
+          facets: [{ group: "sections", value: "Pricing", count: 7 }],
+        };
+      },
+    },
+  );
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/sites/search?platform=web&sort=popular&query=framer&filter=sections.Pricing&limit=12`);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("server-timing") ?? "", /^typesense-site;dur=/);
+  assert.equal(postgresReads, 0);
+  assert.deepEqual(typesenseInput, {
+    query: "framer",
+    filters: [{ group: "sections", value: "Pricing" }],
+    sort: "popular",
+    page: 1,
+    limit: 12,
+  });
+  assert.deepEqual(await response.json(), {
+    items: [{
+      ...summary,
+      routeSlug: "v7",
+      previewUrl: "/api/sites/1/versions/2/catalog-media/preview",
+      previews: [{
+        id: 10,
+        title: "Home",
+        position: 0,
+        url: "/api/sites/1/versions/2/catalog-media/posters/10",
+      }],
+    }],
+    nextCursor: "typesense-site:2",
+    totalCount: 13,
+    facets: [{ group: "sections", value: "Pricing", count: 7 }],
+  });
 });
 
 test("rejects invalid canonical Site queries before reading the store", async (t) => {

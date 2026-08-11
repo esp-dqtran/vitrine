@@ -86,7 +86,6 @@ import {
   buildPublishedPreviewScreens,
 } from "../../../src/gallery.ts";
 import { adminCatalogPage, publishedCatalogPage } from "../../../src/publicCatalogStore.ts";
-import { publishedAppsPage } from "../../../src/appsListStore.ts";
 import { CatalogCursorError } from "../../../src/catalogCursor.ts";
 import {
   parsePublicFacet,
@@ -119,6 +118,8 @@ import { createDistinctValueLimiter, createFixedWindowLimiter, ipPrefix } from "
 import { buildComparison, searchCatalog, type CatalogEntityKind } from "../../../src/catalogResearch.ts";
 import type { TypesenseCatalogClient } from "../../../src/typesenseCatalog.ts";
 import type { TypesenseAppCatalogClient } from "../../../src/typesenseAppCatalog.ts";
+import type { TypesenseFlowCatalogClient } from "../../../src/typesenseFlowCatalog.ts";
+import type { TypesenseSiteCatalogClient } from "../../../src/typesenseSiteCatalog.ts";
 import { buildExportArtifact, type ExportFormat, type ExportScope } from "../../../src/exportEngine.ts";
 import { applyCuratorAction, type CuratorAction } from "../../../src/curatorReview.ts";
 import { exportObjectKey, type ObjectMetadata, type ObjectStore, type StoredContentType } from "../../../src/objectStore.ts";
@@ -507,8 +508,11 @@ const defaults = {
     | undefined,
   typesenseCatalog: undefined as TypesenseCatalogClient | undefined,
   typesenseAppCatalog: undefined as TypesenseAppCatalogClient | undefined,
+  typesenseFlowCatalog: undefined as TypesenseFlowCatalogClient | undefined,
+  typesenseSiteCatalog: undefined as TypesenseSiteCatalogClient | undefined,
   syncTypesenseCatalog: undefined as (() => Promise<void>) | undefined,
   syncTypesenseAppCatalog: undefined as ((app: string, platform: Platform) => Promise<void>) | undefined,
+  syncTypesenseFlowCatalog: undefined as (() => Promise<void>) | undefined,
   acquireAppKnowledgeNotificationClient: async () =>
     pool.connect() as unknown as AppKnowledgeNotificationClient,
 };
@@ -1002,91 +1006,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       .json((await resolveRequestUser(req)) ?? null);
   });
 
-  // The Apps grid. Public and published-only by construction — there is no
-  // admin visibility branch here, so an unpublished version can never be served
-  // from this path. Returns only what a card renders: no facet aggregation and
-  // no preview-screen pass, which is what /catalog carries for its other
-  // consumers (palette, project libraries, Flows).
-  app.get("/apps", async (req, res) => {
-    const platform = req.query.platform === undefined
-      ? undefined
-      : platformQuery(req.query.platform);
-    if (platform === undefined && req.query.platform !== undefined) {
-      res.status(400).json({ error: "invalid platform" });
-      return;
-    }
-    const filters = catalogFilters(req.query.filter);
-    if (filters === null) {
-      res.status(400).json({ error: "invalid filter" });
-      return;
-    }
-    const category = filters.find(({ group }) => group === "categories")?.value;
-    if (filters.some(({ group }) => group !== "categories")) {
-      res.status(400).json({ error: "only categories filters are supported" });
-      return;
-    }
-    let cursor: { updatedAt: string; id: number } | null = null;
-    if (typeof req.query.cursor === "string" && req.query.cursor) {
-      try {
-        const decoded = JSON.parse(
-          Buffer.from(req.query.cursor, "base64url").toString("utf8"),
-        ) as { updatedAt?: unknown; id?: unknown };
-        if (typeof decoded.updatedAt !== "string" || !Number.isSafeInteger(decoded.id)) {
-          throw new Error("invalid cursor");
-        }
-        cursor = { updatedAt: decoded.updatedAt, id: decoded.id as number };
-      } catch {
-        res.status(400).json({ error: "invalid cursor" });
-        return;
-      }
-    }
-    try {
-      const page = await publishedAppsPage({
-        platform: platform ?? null,
-        category: category ?? null,
-        cursor,
-        limit: typeof req.query.limit === "string" ? Number(req.query.limit) : undefined,
-      });
-      res.setHeader("Cache-Control", "public, max-age=280");
-      res.json({
-        items: page.rows.map((row) => ({
-          id: row.app,
-          app: row.display_name ?? row.app,
-          categories: row.categories,
-          // The parser requires a string; accent_color is null for most rows.
-          accent: row.accent_color ?? "#2f3136",
-          iconUrl: row.icon_url,
-          // Drives the card badge: "Updated" once an App has been re-crawled.
-          isUpdated: row.is_updated === true,
-          description: row.description,
-          websiteUrl: row.website_url,
-          // Served by the Worker straight from R2 — no API call, no database
-          // lookup, no presigned redirect. Keys are content-addressed, so the
-          // response is cached immutably at the edge.
-          previewUrl: row.preview_object_key
-            ? `/assets/${row.preview_object_key}`
-            : null,
-          // The grid renders from previewUrl; previewScreens stays present and
-          // empty so the existing discovery parser keeps accepting this shape.
-          previewScreens: [],
-          platforms: row.available_platforms,
-          totalScreens: row.total_screens,
-          lastCapturedAt: new Date(row.updated_at).toISOString(),
-        })),
-        totalCount: page.totalCount,
-        // The grid reads facets from /catalog/facets on demand, so this list
-        // deliberately ships none — the key is present for shape compatibility.
-        facets: [],
-        nextCursor: page.nextCursor
-          ? Buffer.from(JSON.stringify(page.nextCursor)).toString("base64url")
-          : null,
-      });
-    } catch {
-      res.status(503).json({ error: "Apps are unavailable" });
-    }
-  });
-
-  app.get("/catalog", async (req, res) => {
+  const listApps = async (req: express.Request, res: express.Response) => {
+    const isSearchRequest = req.path === "/apps/search";
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
     const platform = req.query.platform === undefined
@@ -1117,7 +1038,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "invalid catalog facet" });
       return;
     }
-    if (platform === undefined && req.query.platform !== undefined
+    if ((isSearchRequest && !search)
+      || platform === undefined && req.query.platform !== undefined
       || search === null
       || (sort !== "latest" && sort !== "trending")
       || (req.query.facets !== undefined && req.query.facets !== "summary")
@@ -1129,7 +1051,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const typesensePage = cursor?.startsWith(typesenseCursorPrefix)
       ? Number(cursor.slice(typesenseCursorPrefix.length))
       : 1;
-    const supportsTypesenseAppSearch = sort === "latest"
+    const supportsTypesenseAppSearch = isSearchRequest
+      && Boolean(search)
+      && sort === "latest"
       && filters.every(({ group }) => group === "categories")
       && Number.isInteger(typesensePage)
       && typesensePage >= 1
@@ -1201,9 +1125,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       }
       throw error;
     }
-  });
+  };
+  app.get("/apps", listApps);
+  app.get("/apps/search", listApps);
 
-  app.get("/catalog/facets", async (req, res) => {
+  app.get("/apps/facets", async (req, res) => {
     const platform = req.query.platform === undefined
       ? undefined
       : platformQuery(req.query.platform);
@@ -1241,17 +1167,18 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     });
   });
 
-  app.get("/catalog/stats", async (_req, res) => {
+  app.get("/apps/stats", async (_req, res) => {
     res.setHeader("Cache-Control", "public, max-age=600");
     res.json(await deps.catalogStats());
   });
 
-  app.get("/catalog/categories", async (_req, res) => {
+  app.get("/apps/categories", async (_req, res) => {
     res.setHeader("Cache-Control", "public, max-age=300");
     res.json({ categories: await deps.categoryStore.listPublished() });
   });
 
-  app.get("/catalog/flows", async (req, res) => {
+  const listFlows = async (req: express.Request, res: express.Response) => {
+    const isSearchRequest = req.path === "/flows/search";
     const platform = platformQuery(req.query.platform);
     const cursor = req.query.cursor === undefined
       ? undefined
@@ -1271,13 +1198,10 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const requestedSort = req.query.sort;
     const legacyView = req.query.view;
     const flowGroups = flowCatalogFilters(req.query.filter);
-    const sort = requestedSort === undefined
-      ? legacyView === "grouped"
-        ? "grouped"
-        : "popular"
-      : requestedSort;
+    const sort = "grouped";
     const includeFacets = req.query.facets !== "summary";
     if (!platform
+      || (isSearchRequest && !search)
       || cursor === null
       || (cursor !== undefined && cursor.length > 2_048)
       || limit === null
@@ -1286,13 +1210,63 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       || (search !== undefined && search.length > 120)
       || flowGroups === null
       || (req.query.facets !== undefined && req.query.facets !== "summary")
-      || (sort !== "popular" && sort !== "grouped")
+      || (requestedSort !== undefined
+        && requestedSort !== "popular"
+        && requestedSort !== "grouped")
       || (legacyView !== undefined
         && (typeof legacyView !== "string"
           || (legacyView !== "browse" && legacyView !== "grouped")))
       || (requestedSort !== undefined && legacyView !== undefined)) {
       res.status(400).json({ error: "invalid Flow catalog query" });
       return;
+    }
+    const typesenseCursorPrefix = "typesense-flow:";
+    const typesensePage = cursor?.startsWith(typesenseCursorPrefix)
+      ? Number(cursor.slice(typesenseCursorPrefix.length))
+      : 1;
+    const supportsTypesenseFlowSearch = isSearchRequest
+      && Boolean(search)
+      && Number.isInteger(typesensePage)
+      && typesensePage >= 1
+      && (!cursor || cursor.startsWith(typesenseCursorPrefix));
+    if (deps.typesenseFlowCatalog && supportsTypesenseFlowSearch) {
+      const startedAt = performance.now();
+      try {
+        const result = await deps.typesenseFlowCatalog.search({
+          query: search!,
+          platform,
+          flowGroups,
+          page: typesensePage,
+          ...(limit ? { limit } : {}),
+        });
+        const durationMs = Math.round((performance.now() - startedAt) * 100) / 100;
+        res.setHeader("Cache-Control", "public, max-age=300");
+        res.setHeader("Server-Timing", `typesense-flow;dur=${durationMs}`);
+        console.info(JSON.stringify({
+          event: "typesense_flow_catalog_search",
+          outcome: "success",
+          durationMs,
+          platform,
+          filterCount: flowGroups.length,
+        }));
+        res.json({
+          items: result.items,
+          nextCursor: result.nextPage ? `${typesenseCursorPrefix}${result.nextPage}` : null,
+          totalCount: result.totalCount,
+          facets: includeFacets ? result.facets : [],
+        });
+        return;
+      } catch {
+        const durationMs = Math.round((performance.now() - startedAt) * 100) / 100;
+        res.setHeader("Server-Timing", `typesense-flow;dur=${durationMs};desc="fallback"`);
+        console.warn(JSON.stringify({
+          event: "typesense_flow_catalog_search",
+          outcome: "fallback",
+          durationMs,
+          platform,
+          filterCount: flowGroups.length,
+        }));
+      }
     }
     try {
       const page = await deps.publishedFlowCatalogPage({
@@ -1319,9 +1293,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       }
       throw error;
     }
-  });
+  };
+  app.get("/flows", listFlows);
+  app.get("/flows/search", listFlows);
 
-  app.get("/catalog/flow-groups", async (req, res) => {
+  app.get("/flows/facets", async (req, res) => {
     const platform = platformQuery(req.query.platform);
     const search = facetSearchText(req.query.query);
     const facetQuery = facetSearchText(req.query.facet_query);
@@ -1353,7 +1329,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     });
   });
 
-  app.get("/catalog/flow-media/:app/:platform/:versionId/:versionFlowId/:rank", async (req, res) => {
+  app.get("/flows/media/:app/:platform/:versionId/:versionFlowId/:rank", async (req, res) => {
     const platform = platformQuery(req.params.platform);
     const versionId = positiveId(req.params.versionId);
     const versionFlowId = positiveId(req.params.versionFlowId);
@@ -1394,7 +1370,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
   });
 
-  app.get("/catalog/facet-preview", async (req, res) => {
+  app.get("/apps/facet-preview", async (req, res) => {
     const facet = parsePublicFacet({
       group: req.query.group,
       value: req.query.value,
@@ -1417,7 +1393,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         label: preview.label,
         iconUrl: preview.iconUrl,
         media: Array.from({ length: preview.mediaCount }, (_, index) => [
-          "/api/catalog/facet-media",
+          "/api/apps/facet-media",
           encodeURIComponent(preview.app),
           encodeURIComponent(facet.group),
           encodeURIComponent(facet.value),
@@ -1428,7 +1404,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     });
   });
 
-  app.get("/catalog/facet-media/:app/:group/:value/:platform/:rank", async (req, res) => {
+  app.get("/apps/facet-media/:app/:group/:value/:platform/:rank", async (req, res) => {
     const facet = catalogFacetMedia({
       group: req.params.group,
       value: req.params.value,
@@ -1491,7 +1467,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
   });
 
-  app.get("/catalog/apps/:app/preview", async (req, res) => {
+  app.get("/apps/:app/preview", async (req, res) => {
     const appSlug = req.params.app;
     if (!isAppSlug(appSlug)) {
       res.status(400).json({ error: "invalid app slug" });
@@ -1550,7 +1526,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         group: item.component_group,
         count: item.occurrence_count,
         thumbnailUrl: [
-          "/api/catalog/facet-media",
+          "/api/apps/facet-media",
           encodeURIComponent(appSlug),
           "elements",
           encodeURIComponent(item.component_type),
@@ -1564,7 +1540,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           && step.evidence.some((value) => Number.isSafeInteger(value) && Number(value) > 0)
         ));
         const mediaBase = [
-          "/api/catalog/flow-media",
+          "/api/flows/media",
           encodeURIComponent(appSlug),
           encodeURIComponent(platform ?? "web"),
           String(flow.version_id),
@@ -1596,6 +1572,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   const sitesRouteDependencies = {
     store: deps.sitesStore,
     cursorSecret: deps.mediaSigningSecret,
+    ...(deps.typesenseSiteCatalog ? { typesenseSiteCatalog: deps.typesenseSiteCatalog } : {}),
     sendObject: async (metadata: ObjectMetadata, res: express.Response) => {
       if (!deps.objectStore) throw new Error("Object storage is unavailable");
       await sendStoredObject(deps.objectStore, metadata, res);
@@ -1657,6 +1634,12 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   });
 
   app.use(async (req, res, next) => {
+    // Public discovery is deliberately limited to published search results.
+    // All other routes still establish an authenticated user below.
+    if (req.path === "/search") {
+      next();
+      return;
+    }
     const user = await resolveRequestUser(req);
     if (!user) {
       res.status(401).json({ error: "Authentication required" });
@@ -1667,6 +1650,19 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   });
 
   app.use(async (req, res, next) => {
+    if (req.path === "/search") {
+      const blocked = generalLimiter.check(`public-search:${req.ip}`);
+      if (!blocked.allowed) {
+        res.setHeader("Retry-After", String(blocked.retryAfterSeconds));
+        res.status(429).json({
+          error: "Too many search requests",
+          retryAfterSeconds: blocked.retryAfterSeconds,
+        });
+        return;
+      }
+      next();
+      return;
+    }
     if (res.locals.user.role === "admin") {
       next();
       return;
@@ -2415,6 +2411,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       const syncs = [
         deps.syncTypesenseCatalog?.(),
         deps.syncTypesenseAppCatalog?.(published.app, published.platform as Platform),
+        deps.syncTypesenseFlowCatalog?.(),
       ].filter((sync): sync is Promise<void> => Boolean(sync));
       void Promise.allSettled(syncs).then((results) => {
         if (results.some((result) => result.status === "rejected")) {
@@ -2474,13 +2471,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   });
 
   app.get("/search", async (req, res) => {
+    const user = await resolveRequestUser(req);
+    const isAdmin = user?.role === "admin";
     const requestedKind = optionalQuery(req.query.kind) ?? "all";
     if (requestedKind !== "all" && !catalogKinds.has(requestedKind as CatalogEntityKind)) {
       res.status(400).json({ error: "invalid search kind" });
-      return;
-    }
-    if (await effectiveCustomerPlan(res) !== "pro") {
-      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
       return;
     }
     const searchOptions = {
@@ -2498,7 +2493,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       limit: optionalQuery(req.query.limit) ? Number(req.query.limit) : undefined,
     };
     let result;
-    if (res.locals.user.role !== "admin" && deps.typesenseCatalog) {
+    if (!isAdmin && deps.typesenseCatalog) {
       try {
         result = await deps.typesenseCatalog.search(searchOptions);
       } catch {
@@ -2508,9 +2503,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     let imagesById: Map<number, Awaited<ReturnType<typeof deps.publishedImages>>[number]> | undefined;
     if (!result) {
       const [images, systems, flows] = await Promise.all([
-        res.locals.user.role === "admin" ? deps.allImages() : deps.publishedImages(),
-        res.locals.user.role === "admin" ? deps.listDesignSystems() : deps.listPublishedDesignSystems(),
-        res.locals.user.role === "admin" ? deps.listAppFlowSets() : deps.listPublishedFlowSets(),
+        isAdmin ? deps.allImages() : deps.publishedImages(),
+        isAdmin ? deps.listDesignSystems() : deps.listPublishedDesignSystems(),
+        isAdmin ? deps.listAppFlowSets() : deps.listPublishedFlowSets(),
       ]);
       const appNames = [...new Set([
         ...images.map(({ app }) => app),
@@ -2533,12 +2528,14 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       }, searchOptions);
       imagesById = new Map(allowedImages.map((image) => [image.id, image]));
     }
-    await deps.recordAccessEvent({
-      userId: res.locals.user.id,
-      featureKey: "search",
-      action: "catalog-search",
-      outcome: "success",
-    });
+    if (user) {
+      await deps.recordAccessEvent({
+        userId: user.id,
+        featureKey: "search",
+        action: "catalog-search",
+        outcome: "success",
+      });
+    }
     res.json({
       ...result,
       items: imagesById ? result.items.map((item) => {

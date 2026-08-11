@@ -16,7 +16,7 @@ const identity = flowCatalogQueryIdentity({
   flowGroups: ["account management"],
 });
 const grouped: FlowCatalogCursor = {
-  v: 2,
+  v: 3,
   sort: "grouped",
   platform: "web",
   snapshotAt: "2026-07-29T05:00:00.000Z",
@@ -26,10 +26,8 @@ const grouped: FlowCatalogCursor = {
     titleTermMatches: 1,
     termMatches: 2,
     other: 0,
-    categoryCount: 1081,
     category: "account management",
     categoryId: "7",
-    count: 744,
     title: "logging in",
     flowId: "42",
   },
@@ -44,19 +42,12 @@ function signed(payload: unknown): string {
   })).toString("base64url");
 }
 
-test("round-trips exact versioned grouped and popular Flow cursors", () => {
-  const popular: FlowCatalogCursor = {
-    ...grouped,
-    sort: "popular",
-    key: { ...grouped.key, categoryRank: 2 },
-  };
-  for (const cursor of [grouped, popular]) {
-    assert.deepEqual(decodeFlowCatalogCursor(
-      encodeFlowCatalogCursor(cursor, secret),
-      { sort: cursor.sort, platform: cursor.platform, identity },
-      secret,
-    ), cursor);
-  }
+test("round-trips the one category/title Flow cursor", () => {
+  assert.deepEqual(decodeFlowCatalogCursor(
+    encodeFlowCatalogCursor(grouped, secret),
+    { sort: grouped.sort, platform: grouped.platform, identity },
+    secret,
+  ), grouped);
   const other: FlowCatalogCursor = {
     ...grouped,
     key: {
@@ -83,9 +74,6 @@ test("rejects tampering, wrong secret, sort/platform/filter mismatch, and overlo
       sort: "grouped", platform: "web", identity,
     }, wrong),
     () => decodeFlowCatalogCursor(encoded, {
-      sort: "popular", platform: "web", identity,
-    }, secret),
-    () => decodeFlowCatalogCursor(encoded, {
       sort: "grouped", platform: "ios", identity,
     }, secret),
     () => decodeFlowCatalogCursor(encoded, {
@@ -101,8 +89,6 @@ test("rejects extra keys and impossible tuple values before use", () => {
   for (const payload of [
     { ...grouped, extra: true },
     { ...grouped, key: { ...grouped.key, extra: true } },
-    { ...grouped, key: { ...grouped.key, count: -1 } },
-    { ...grouped, key: { ...grouped.key, categoryCount: 2_147_483_648 } },
     { ...grouped, key: { ...grouped.key, category: "Not Normalized" } },
     { ...grouped, key: { ...grouped.key, flowId: "9223372036854775808" } },
   ]) {

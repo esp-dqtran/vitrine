@@ -118,7 +118,7 @@ function screen(
     group === "screens" || group === "elements");
   const exactPreviewUrl = exactFacet
     ? [
-        "/api/catalog/facet-media",
+        "/api/apps/facet-media",
         encodeURIComponent(app),
         encodeURIComponent(exactFacet.group),
         encodeURIComponent(exactFacet.value),

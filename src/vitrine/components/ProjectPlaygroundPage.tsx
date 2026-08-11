@@ -2879,7 +2879,7 @@ function canvasMediaFetchUrl(source: string): string {
   if (
     url.origin === window.location.origin &&
     (url.pathname.startsWith("/api/preview-media/") ||
-      url.pathname.startsWith("/api/catalog/flow-media/"))
+      url.pathname.startsWith("/api/flows/media/"))
   ) {
     url.searchParams.set("inline", "1");
   }

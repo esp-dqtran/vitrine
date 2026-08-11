@@ -9,7 +9,6 @@ import {
 export interface FlowCatalogItem {
   category: string;
   title: string;
-  count: number;
   preview: {
     appId: string;
     appName: string;
@@ -27,6 +26,25 @@ export interface FlowCatalogPage {
   nextCursor: string | null;
   totalCount: number;
   facets: DiscoveryFacet[];
+}
+
+const FLOW_CATALOG_PAGE_CACHE_MS = 280_000;
+const flowCatalogPageCache = new Map<string, {
+  expiresAt: number;
+  page: FlowCatalogPage;
+}>();
+
+/** Discard catalog pages after an explicit refresh or a Flow catalog mutation. */
+export function invalidateFlowCatalogPageCache(): void {
+  flowCatalogPageCache.clear();
+}
+
+function cachedFlowCatalogPage(endpoint: string): FlowCatalogPage | null {
+  const cached = flowCatalogPageCache.get(endpoint);
+  if (!cached) return null;
+  if (cached.expiresAt > Date.now()) return cached.page;
+  flowCatalogPageCache.delete(endpoint);
+  return null;
 }
 
 export function flowCatalogItemKey({
@@ -107,7 +125,7 @@ function flow(value: unknown, field: string): DesignFlow<EvidenceView> {
 
 function catalogItem(value: unknown, field: string): FlowCatalogItem {
   const item = record(value, field);
-  exact(item, ['category', 'count', 'preview', 'title'], field);
+  exact(item, ['category', 'preview', 'title'], field);
   const preview = record(item.preview, `${field}.preview`);
   exact(preview, [
     'appIconUrl',
@@ -125,7 +143,6 @@ function catalogItem(value: unknown, field: string): FlowCatalogItem {
   return {
     category: text(item.category, `${field}.category`),
     title: text(item.title, `${field}.title`),
-    count: integer(item.count, `${field}.count`, 1),
     preview: {
       appId: text(preview.appId, `${field}.preview.appId`),
       appName: text(preview.appName, `${field}.preview.appName`),
@@ -171,7 +188,6 @@ export async function loadFlowCatalogPage(
     query?: string;
     cursor?: string;
     limit?: number;
-    order?: 'grouped' | 'browse';
     flowGroups?: readonly string[];
   },
   signal?: AbortSignal,
@@ -183,16 +199,29 @@ export async function loadFlowCatalogPage(
     facets: 'summary',
   });
   if (input.query?.trim()) params.set('query', input.query.trim());
-  params.set('sort', input.order === 'grouped' ? 'grouped' : 'popular');
+  params.set('sort', 'grouped');
   for (const group of input.flowGroups ?? []) {
     params.append('filter', `flowGroups.${group}`);
   }
   if (input.cursor) params.set('cursor', input.cursor);
-  const response = await fetcher(`/api/catalog/flows?${params.toString()}`, {
+  const endpoint = `/api/flows${input.query?.trim() ? '/search' : ''}?${params.toString()}`;
+  const cacheable = fetcher === fetch;
+  if (cacheable) {
+    const cached = cachedFlowCatalogPage(endpoint);
+    if (cached) return cached;
+  }
+  const response = await fetcher(endpoint, {
     signal,
   });
   if (!response.ok) throw new Error(`Flow catalog returned ${response.status}`);
-  return parseFlowCatalogPage(await response.json());
+  const page = parseFlowCatalogPage(await response.json());
+  if (cacheable) {
+    flowCatalogPageCache.set(endpoint, {
+      expiresAt: Date.now() + FLOW_CATALOG_PAGE_CACHE_MS,
+      page,
+    });
+  }
+  return page;
 }
 
 export function loadFlowCatalogFacets(
@@ -215,5 +244,5 @@ export function loadFlowCatalogFacets(
     query,
     selected,
   });
-  return loadDiscoveryFacets(`/api/catalog/flow-groups?${params.toString()}`, signal);
+  return loadDiscoveryFacets(`/api/flows/facets?${params.toString()}`, signal);
 }

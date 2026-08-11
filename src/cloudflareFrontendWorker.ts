@@ -116,11 +116,11 @@ const ORIGIN_CACHE_CONTROL_HEADER = "X-Vitrines-Origin-Cache-Control";
 const EDGE_CACHE_VERSION = "2";
 
 const PUBLIC_API_CACHE_PATHS = new Set([
-  "/api/catalog/stats",
-  "/api/catalog/categories",
-  "/api/catalog/flows",
-  "/api/catalog/flow-groups",
-  "/api/catalog/facet-preview",
+  "/api/apps/stats",
+  "/api/apps/categories",
+  "/api/flows",
+  "/api/flows/facets",
+  "/api/apps/facet-preview",
   "/api/apps",
   "/api/sites",
   "/api/sites/facets",

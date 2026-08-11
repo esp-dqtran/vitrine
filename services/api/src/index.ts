@@ -25,8 +25,19 @@ import {
   createTypesenseAppCatalogClient,
 } from "../../../src/typesenseAppCatalog.ts";
 import {
+  TYPESENSE_FLOW_CATALOG_COLLECTION,
+  createTypesenseFlowCatalogClient,
+} from "../../../src/typesenseFlowCatalog.ts";
+import {
+  TYPESENSE_SITE_CATALOG_COLLECTION,
+  createTypesenseSiteCatalogClient,
+} from "../../../src/typesenseSiteCatalog.ts";
+import {
   publishedAppCatalogDocument,
 } from "../../../src/typesenseAppCatalogSource.ts";
+import { publishedFlowCatalogDocuments } from "../../../src/typesenseFlowCatalogSource.ts";
+import { publishedSiteCatalogDocuments } from "../../../src/typesenseSiteCatalogSource.ts";
+import { createSitesStore } from "../../../src/sitesStore.ts";
 import type { Platform } from "../../../src/platformFromUrl.ts";
 
 const PORT = Number(process.env.PORT ?? DEFAULT_API_PORT);
@@ -41,6 +52,12 @@ await startApi({
     const typesenseCatalog = typesenseConfig ? createTypesenseCatalogClient(typesenseConfig) : undefined;
     const typesenseAppCatalog = typesenseConfig
       ? createTypesenseAppCatalogClient({ ...typesenseConfig, collection: TYPESENSE_APP_CATALOG_COLLECTION })
+      : undefined;
+    const typesenseFlowCatalog = typesenseConfig
+      ? createTypesenseFlowCatalogClient({ ...typesenseConfig, collection: TYPESENSE_FLOW_CATALOG_COLLECTION })
+      : undefined;
+    const typesenseSiteCatalog = typesenseConfig
+      ? createTypesenseSiteCatalogClient({ ...typesenseConfig, collection: TYPESENSE_SITE_CATALOG_COLLECTION })
       : undefined;
     let typesenseSync: Promise<void> | undefined;
     const syncTypesenseCatalog = (): Promise<void> => {
@@ -62,6 +79,37 @@ await startApi({
       await typesenseAppCatalog.upsert(document);
       console.log(`[api] Updated Typesense App document ${document.id}.`);
     };
+    let typesenseFlowSync: Promise<void> | undefined;
+    const syncTypesenseFlowCatalog = (): Promise<void> => {
+      if (typesenseFlowSync) return typesenseFlowSync;
+      typesenseFlowSync = (async () => {
+        if (typesenseFlowCatalog) {
+          const indexed = await typesenseFlowCatalog.index(await publishedFlowCatalogDocuments({
+            cursorSecret: config.mediaSigningSecret,
+            loadPage: publishedFlowCatalogPage,
+          }));
+          console.log(`[api] Indexed ${indexed} Typesense Flow documents.`);
+        }
+      })().finally(() => {
+        typesenseFlowSync = undefined;
+      });
+      return typesenseFlowSync;
+    };
+    let typesenseSiteSync: Promise<void> | undefined;
+    const syncTypesenseSiteCatalog = (): Promise<void> => {
+      if (typesenseSiteSync) return typesenseSiteSync;
+      typesenseSiteSync = (async () => {
+        if (typesenseSiteCatalog) {
+          const indexed = await typesenseSiteCatalog.index(
+            await publishedSiteCatalogDocuments(createSitesStore()),
+          );
+          console.log(`[api] Indexed ${indexed} Typesense Site documents.`);
+        }
+      })().finally(() => {
+        typesenseSiteSync = undefined;
+      });
+      return typesenseSiteSync;
+    };
     const referralCampaign = referralCampaignFromEnv(process.env);
     await seedAdmin(seed.email, seed.password);
     const stripe = new Stripe(config.stripeSecretKey);
@@ -76,24 +124,25 @@ await startApi({
         markStripeEventProcessed,
       },
     });
-    void Promise.allSettled(
-      (["web", "ios", "android"] as const).map((platform) =>
-        publishedFlowCatalogPage({
-          platform,
-          limit: 12,
-          sort: "popular",
-          includeFacets: false,
-          cursorSecret: config.mediaSigningSecret,
-        })
-      ),
-    ).then((flowWarmups) => {
-      const failedFlowWarmups = flowWarmups.filter(
-        (result) => result.status === "rejected",
-      ).length;
+    void (async () => {
+      let failedFlowWarmups = 0;
+      for (const platform of ["web", "ios", "android"] as const) {
+        try {
+          await publishedFlowCatalogPage({
+            platform,
+            limit: 12,
+            sort: "grouped",
+            includeFacets: false,
+            cursorSecret: config.mediaSigningSecret,
+          });
+        } catch {
+          failedFlowWarmups += 1;
+        }
+      }
       if (failedFlowWarmups > 0) {
         console.warn(`[api] ${failedFlowWarmups} Flow catalog warmup(s) failed`);
       }
-    });
+    })();
     const app = createApiApp({
       billing,
       objectStore,
@@ -110,6 +159,8 @@ await startApi({
         syncTypesenseCatalog,
       } : {}),
       ...(typesenseAppCatalog ? { typesenseAppCatalog, syncTypesenseAppCatalog } : {}),
+      ...(typesenseFlowCatalog ? { typesenseFlowCatalog, syncTypesenseFlowCatalog } : {}),
+      ...(typesenseSiteCatalog ? { typesenseSiteCatalog } : {}),
     });
     app.listen(PORT, () => {
       console.log(`[api] listening on :${PORT}`);
@@ -118,6 +169,16 @@ await startApi({
       if (typesenseCatalog) {
         void syncTypesenseCatalog().catch((error) => {
           console.warn(`[api] Typesense catalog reindex failed: ${error instanceof Error ? error.message : String(error)}`);
+        });
+      }
+      if (typesenseSiteCatalog) {
+        void syncTypesenseSiteCatalog().catch((error) => {
+          console.warn(`[api] Typesense Site reindex failed: ${error instanceof Error ? error.message : String(error)}`);
+        });
+      }
+      if (typesenseFlowCatalog) {
+        void syncTypesenseFlowCatalog().catch((error) => {
+          console.warn(`[api] Typesense Flow reindex failed: ${error instanceof Error ? error.message : String(error)}`);
         });
       }
     });

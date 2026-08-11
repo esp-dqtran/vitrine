@@ -244,7 +244,7 @@ export function App() {
   // matching the pacing already used for the pro adaptive-search request below.
   const [debouncedLegacyQuery, setDebouncedLegacyQuery] = useState("");
   useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedLegacyQuery(q), 180);
+    const timer = window.setTimeout(() => setDebouncedLegacyQuery(q), 250);
     return () => window.clearTimeout(timer);
   }, [q]);
   // The Apps page owns its catalog request through the discovery controller.
@@ -574,13 +574,14 @@ export function App() {
             initialPlatform={
               route.name === "flows"
                 ? (flowDiscoveryState?.platform ?? "web")
-                : undefined
+                : legacyAppSearch ? appPlatform : undefined
             }
             onUpgrade={paletteUpgrade}
             onCollectionsChange={user ? setCollections : () => undefined}
             onQueryChange={setQ}
             onRetrySearch={() => setSearchRetry((value) => value + 1)}
             onRetryAppSearch={() => void refreshLegacyApps()}
+            onAppPlatformChange={legacyAppSearch ? setAppPlatform : undefined}
             onClose={closeLegacySearch}
             onSelectApp={(appId) => void openApp(appId)}
             onSelectScreen={(appId) => {
@@ -694,7 +695,6 @@ export function App() {
     case "flows":
       page = (
         <FlowsPage
-          onOpenSearch={() => void openPalette("apps")}
           onSelectFlow={(title, platform) => {
             setQ("");
             setSearchResult(null);
@@ -1134,7 +1134,7 @@ export function App() {
       <ApplicationHeader
         active={discoveryRoute ?? "apps"}
         className="apps-top-nav"
-        search={
+        search={(
           <SearchTrigger
             label={
               discoveryRoute === "apps"
@@ -1180,7 +1180,7 @@ export function App() {
                 : activeFilterCount(searchSnapshot.state.filters)
             }
           />
-        }
+        )}
         accountControls={accountControls}
       />
       {page}

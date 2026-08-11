@@ -451,6 +451,7 @@ export interface DiscoveryFilterBarProps {
   resultCount: number;
   resultLabels: readonly [string, string];
   showResultCount?: boolean;
+  showSort?: boolean;
   sort: string;
   sortOptions: readonly DiscoveryFilterSortOption[];
   onSortChange: (sort: string) => void;
@@ -466,6 +467,7 @@ export function DiscoveryFilterBar({
   resultCount,
   resultLabels,
   showResultCount = false,
+  showSort = true,
   sort,
   sortOptions,
   onSortChange,
@@ -609,14 +611,16 @@ export function DiscoveryFilterBar({
             <span className="apps-filterbar__divider" aria-hidden="true" />
           </>
         ) : null}
-        <DiscoverySortDropdown
-          value={sort}
-          options={sortOptions}
-          open={isMenuOpen({ type: 'sort' })}
-          containerRef={isMenuOpen({ type: 'sort' }) ? openMenuContainerRef : undefined}
-          onOpenChange={(open) => setSingleSelectOpen({ type: 'sort' }, open)}
-          onChange={onSortChange}
-        />
+        {showSort ? (
+          <DiscoverySortDropdown
+            value={sort}
+            options={sortOptions}
+            open={isMenuOpen({ type: 'sort' })}
+            containerRef={isMenuOpen({ type: 'sort' }) ? openMenuContainerRef : undefined}
+            onOpenChange={(open) => setSingleSelectOpen({ type: 'sort' }, open)}
+            onChange={onSortChange}
+          />
+        ) : null}
       </div>
     </ControlRail>
   );

@@ -14,7 +14,7 @@ test('round-trips Mobbin-style Apps filter state through the URL', () => {
   const state = {
     platform: 'web' as const,
     contentType: 'screens' as const,
-    sort: 'trending' as const,
+    sort: 'latest' as const,
     filters: {
       categories: ['Shopping', 'Business', 'AI'],
       screens: ['My Account & Profile', 'Settings & Preferences'],
@@ -24,7 +24,7 @@ test('round-trips Mobbin-style Apps filter state through the URL', () => {
 
   assert.match(path, /^\/apps\?/);
   assert.match(path, /content_type=screens/);
-  assert.match(path, /sort=trending/);
+  assert.doesNotMatch(path, /sort=/);
   assert.match(
     path,
     /filter=categories\.AI&filter=categories\.Business&filter=categories\.Shopping&filter=screens\.My\+Account\+%26\+Profile&filter=screens\.Settings\+%26\+Preferences/,
@@ -49,7 +49,7 @@ test('serializes Apps filter values alphabetically within each group', () => {
         flows: ['Zeta', 'Alpha'],
       },
     }),
-    '/apps?platform=web&content_type=apps&sort=latest&filter=categories.Alpha&filter=categories.Zeta&filter=flows.Alpha&filter=flows.Zeta',
+    '/apps?platform=web&content_type=apps&filter=categories.Alpha&filter=categories.Zeta&filter=flows.Alpha&filter=flows.Zeta',
   );
 });
 
@@ -61,7 +61,7 @@ test('reads legacy underscore-delimited Apps filters but serializes them canonic
   assert.deepEqual(state, {
     platform: 'ios',
     contentType: 'flows',
-    sort: 'trending',
+    sort: 'latest',
     filters: {
       categories: ['Finance'],
       flows: ['Checkout'],
@@ -69,7 +69,7 @@ test('reads legacy underscore-delimited Apps filters but serializes them canonic
   });
   assert.equal(
     appsDiscoveryPath(state),
-    '/apps?platform=ios&content_type=flows&sort=trending&filter=categories.Finance&filter=flows.Checkout',
+    '/apps?platform=ios&content_type=flows&filter=categories.Finance&filter=flows.Checkout',
   );
 });
 
@@ -83,7 +83,7 @@ test('preserves underscores inside legacy Apps filter values', () => {
   );
 });
 
-test('preserves the fallback sort unless a valid URL content type switches modes', () => {
+test('normalizes every Apps sort to newest', () => {
   const customSortFallback = {
     platform: 'web' as const,
     contentType: 'apps' as const,
@@ -91,14 +91,14 @@ test('preserves the fallback sort unless a valid URL content type switches modes
     filters: {},
   };
 
-  assert.equal(parseAppsDiscoveryState('', customSortFallback).sort, 'trending');
+  assert.equal(parseAppsDiscoveryState('', customSortFallback).sort, 'latest');
   assert.equal(
     parseAppsDiscoveryState('?content_type=unknown', customSortFallback).sort,
-    'trending',
+    'latest',
   );
   assert.equal(
     parseAppsDiscoveryState('?content_type=flows', defaultAppsDiscoveryState()).sort,
-    'trending',
+    'latest',
   );
   assert.equal(
     parseAppsDiscoveryState('?content_type=flows&sort=latest', customSortFallback).sort,
@@ -120,7 +120,7 @@ test('normalizes fallback filters into isolated group arrays', () => {
   assert.deepEqual(fallback.filters, { categories: [' Finance ', 'Finance'] });
 });
 
-test('selecting, toggling, and clearing multiple facets preserves the active result mode', () => {
+test('selecting, toggling, and clearing multiple facets keeps Apps newest-only', () => {
   const first = setAppsDiscoveryFacet(
     defaultAppsDiscoveryState('web', { group: 'categories', value: 'Shopping' }),
     { group: 'screens', value: 'My Account & Profile' },
@@ -134,7 +134,7 @@ test('selecting, toggling, and clearing multiple facets preserves the active res
     { group: 'categories', value: 'AI' },
   );
   assert.equal(deduplicated.contentType, 'screens');
-  assert.equal(deduplicated.sort, 'trending');
+  assert.equal(deduplicated.sort, 'latest');
   assert.deepEqual(appsDiscoveryFacets(deduplicated), [
     { group: 'categories', value: 'Shopping' },
     { group: 'categories', value: 'AI' },
@@ -150,6 +150,6 @@ test('selecting, toggling, and clearing multiple facets preserves the active res
 
   const cleared = clearAppsDiscoveryFacet(toggled, 'screens');
   assert.equal(cleared.contentType, 'screens');
-  assert.equal(cleared.sort, 'trending');
+  assert.equal(cleared.sort, 'latest');
   assert.deepEqual(cleared.filters, { categories: ['Shopping', 'AI'] });
 });

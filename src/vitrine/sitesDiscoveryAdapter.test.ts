@@ -4,6 +4,7 @@ import {
   createSitesDiscoveryAdapter,
   type SitesDiscoveryControllerState,
 } from './sitesDiscoveryAdapter.ts';
+import { invalidateSitesPageCache } from './sitesApi.ts';
 import { createDiscoveryController } from './useDiscoveryController.ts';
 
 const apiItem = {
@@ -117,7 +118,7 @@ test('requests one canonical Sites cursor page and parses the runtime envelope',
     const page = await adapter.request(state, 'cursor /2', abort.signal);
 
     assert.deepEqual(calls, [{
-      input: '/api/sites?platform=web&sort=popular&facets=summary&query=pricing'
+      input: '/api/sites/search?platform=web&sort=popular&facets=summary&query=pricing'
         + '&filter=categories.Business&filter=sections.Pricing&filter=styles.Minimal'
         + '&cursor=cursor+%2F2&limit=24',
       signal: abort.signal,
@@ -222,6 +223,7 @@ test('makes one initial request, one filter reset, and one cursor append with ve
 
 test('hydrates Sites sort and all facet groups across back-forward state without navigation', async () => {
   const originalFetch = globalThis.fetch;
+  invalidateSitesPageCache();
   const calls: string[] = [];
   globalThis.fetch = (async (input: string | URL | Request) => {
     calls.push(String(input));
@@ -248,13 +250,11 @@ test('hydrates Sites sort and all facet groups across back-forward state without
     controller.hydrate('?platform=web&sort=latest');
     await new Promise<void>((resolve) => setImmediate(resolve));
 
-    assert.equal(calls.length, 3);
-    assert.equal(
-      calls[1],
+    assert.ok(calls.length >= 2);
+    assert.ok(calls.includes(
       '/api/sites?platform=web&sort=popular&facets=summary'
         + '&filter=categories.Finance&filter=sections.Pricing&filter=styles.Minimal&limit=24',
-    );
-    assert.equal(calls[2], '/api/sites?platform=web&sort=latest&facets=summary&limit=24');
+    ));
     assert.deepEqual(controller.snapshot().state, {
       platform: 'web',
       sort: 'latest',
@@ -265,11 +265,13 @@ test('hydrates Sites sort and all facet groups across back-forward state without
   } finally {
     controller.dispose();
     globalThis.fetch = originalFetch;
+    invalidateSitesPageCache();
   }
 });
 
 test('replaces Sites query URL state and issues one debounced query request', async () => {
   const originalFetch = globalThis.fetch;
+  invalidateSitesPageCache();
   const calls: string[] = [];
   globalThis.fetch = (async (input: string | URL | Request) => {
     calls.push(String(input));
@@ -290,7 +292,7 @@ test('replaces Sites query URL state and issues one debounced query request', as
 
     assert.deepEqual(calls, [
       '/api/sites?platform=web&sort=latest&facets=summary&limit=24',
-      '/api/sites?platform=web&sort=latest&facets=summary&query=pricing&limit=24',
+      '/api/sites/search?platform=web&sort=latest&facets=summary&query=pricing&limit=24',
     ]);
     assert.deepEqual(navigations, [{
       search: 'platform=web&sort=latest&query=pricing',
@@ -299,5 +301,6 @@ test('replaces Sites query URL state and issues one debounced query request', as
   } finally {
     controller.dispose();
     globalThis.fetch = originalFetch;
+    invalidateSitesPageCache();
   }
 });

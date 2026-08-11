@@ -13,7 +13,7 @@ test('loads the bounded public app preview with an encoded app slug', async () =
       previewFlows: [],
     });
   });
-  assert.equal(endpoint, '/api/catalog/apps/quora%20mobile/preview?v=2');
+  assert.equal(endpoint, '/api/apps/quora%20mobile/preview?v=2');
   assert.equal(preview.app.app, 'Quora');
 });
 

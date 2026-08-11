@@ -15,7 +15,7 @@ import {
   type FlowCatalogItem,
 } from './flowCatalogApi.ts';
 
-export type FlowsDiscoverySort = 'popular' | 'grouped';
+export type FlowsDiscoverySort = 'grouped';
 export type FlowsDiscoveryControllerState = DiscoveryState<FlowsDiscoverySort>;
 
 export interface FlowsDiscoveryAdapterDefaults {
@@ -27,7 +27,7 @@ export interface FlowsDiscoveryAdapterDefaults {
 
 const STATE_DEFINITION: DiscoveryStateDefinition<FlowsDiscoverySort> = {
   platforms: ['web', 'ios', 'android'],
-  sorts: ['popular', 'grouped'],
+  sorts: ['grouped'],
   filterGroups: ['flowGroups'],
 };
 
@@ -38,7 +38,7 @@ function normalizedDefaults(
     platform: STATE_DEFINITION.platforms.includes(initial.platform ?? 'web')
       ? initial.platform ?? 'web'
       : 'web',
-    sort: initial.sort === 'grouped' ? 'grouped' : 'popular',
+    sort: 'grouped',
     query: initial.query?.trim().slice(0, 120) ?? '',
     filters: normalizeDiscoveryFilters(initial.filters ?? [], STATE_DEFINITION),
   };
@@ -67,7 +67,6 @@ export function createFlowsDiscoveryAdapter(
         query: state.query || undefined,
         cursor: cursor ?? undefined,
         limit: 12,
-        order: state.sort === 'grouped' ? 'grouped' : 'browse',
         flowGroups: state.filters
           .filter(({ group }) => group === 'flowGroups')
           .map(({ value }) => value),

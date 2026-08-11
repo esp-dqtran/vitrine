@@ -9,7 +9,6 @@ import {
 const apiItem = {
   category: 'Account Management',
   title: 'Logging out',
-  count: 12,
   preview: {
     appId: 'whatsapp',
     appName: 'WhatsApp',
@@ -75,14 +74,14 @@ test('parses and serializes URL-owned Flows state with repeated Flow groups', ()
   );
 });
 
-test('falls back invalid Flows state to web and Popular', () => {
+test('falls back invalid Flows state to web and category/title order', () => {
   const adapter = createFlowsDiscoveryAdapter();
 
   assert.deepEqual(adapter.parse(
     '?platform=desktop&sort=latest&filter=categories.Finance',
   ), {
     platform: 'web',
-    sort: 'popular',
+    sort: 'grouped',
     query: '',
     filters: [],
   });
@@ -103,7 +102,7 @@ test('requests one canonical Flow cursor page with OR Flow-group filters', async
     const adapter = createFlowsDiscoveryAdapter();
     const state: FlowsDiscoveryControllerState = {
       platform: 'android',
-      sort: 'popular',
+      sort: 'grouped',
       query: 'logging settings',
       filters: [
         { group: 'flowGroups', value: 'Account Management' },
@@ -113,8 +112,8 @@ test('requests one canonical Flow cursor page with OR Flow-group filters', async
     const page = await adapter.request(state, 'cursor /2', abort.signal);
 
     assert.deepEqual(calls, [{
-      input: '/api/catalog/flows?platform=android&limit=12&facets=summary'
-        + '&query=logging+settings&sort=popular'
+      input: '/api/flows?platform=android&limit=12&facets=summary'
+        + '&query=logging+settings&sort=grouped'
         + '&filter=flowGroups.Account+Management'
         + '&filter=flowGroups.New+User+Experience'
         + '&cursor=cursor+%2F2',

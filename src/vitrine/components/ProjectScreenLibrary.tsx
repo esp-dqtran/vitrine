@@ -270,7 +270,7 @@ export function ProjectScreenLibrary({
       facets: "summary",
     });
     if (query.trim()) params.set("query", query.trim());
-    return `/api/catalog?${params.toString()}`;
+    return `/api/apps?${params.toString()}`;
   }, [platform, query]);
 
   useEffect(() => {
@@ -283,7 +283,6 @@ export function ProjectScreenLibrary({
           platform,
           query,
           limit: 24,
-          order: "browse",
         }, controller.signal).then((page) => {
           setFlows(page.items);
         })

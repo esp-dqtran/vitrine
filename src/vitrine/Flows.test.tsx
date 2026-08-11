@@ -10,11 +10,11 @@ const items = [
   {
     category: 'Account Management',
     title: 'Logging in',
-    count: 12,
     preview: {
       appId: 'linear',
       appName: 'Linear',
       appIconUrl: '/icons/linear.png',
+      versionId: 3,
       version: 3,
       sourceFlowId: 'logging-in',
       screenCount: 2,
@@ -25,8 +25,8 @@ const items = [
         description: '',
         tags: [],
         steps: [
-          { label: 'Enter email', evidence: [{ imageId: 1, imageUrl: '/flow/1', description: 'Enter email' }] },
-          { label: 'Submit', evidence: [{ imageId: 2, imageUrl: '/flow/2', description: 'Submit' }] },
+          { label: 'Enter email', evidence: [{ imageId: 1, imageUrl: '/flow/1', thumbnailUrl: '/flow/1', description: 'Enter email' }] },
+          { label: 'Submit', evidence: [{ imageId: 2, imageUrl: '/flow/2', thumbnailUrl: '/flow/2', description: 'Submit' }] },
         ],
       },
     },
@@ -34,11 +34,11 @@ const items = [
   {
     category: 'New User Experience',
     title: 'Onboarding',
-    count: 8,
     preview: {
       appId: 'notion',
       appName: 'Notion',
       appIconUrl: '/icons/notion.png',
+      versionId: 2,
       version: 2,
       sourceFlowId: 'onboarding',
       screenCount: 1,
@@ -48,18 +48,18 @@ const items = [
         category: 'New User Experience',
         description: '',
         tags: [],
-        steps: [{ label: 'Welcome', evidence: [{ imageId: 1, imageUrl: '/flow/1', description: 'Welcome' }] }],
+        steps: [{ label: 'Welcome', evidence: [{ imageId: 1, imageUrl: '/flow/1', thumbnailUrl: '/flow/1', description: 'Welcome' }] }],
       },
     },
   },
   {
     category: 'Account Management',
     title: 'Resetting password',
-    count: 5,
     preview: {
       appId: 'linear',
       appName: 'Linear',
       appIconUrl: null,
+      versionId: 3,
       version: 3,
       sourceFlowId: 'resetting-password',
       screenCount: 1,
@@ -69,7 +69,7 @@ const items = [
         category: 'Account Management',
         description: '',
         tags: [],
-        steps: [{ label: 'Reset', evidence: [{ imageId: 1, imageUrl: '/flow/1', description: 'Reset' }] }],
+        steps: [{ label: 'Reset', evidence: [{ imageId: 1, imageUrl: '/flow/1', thumbnailUrl: '/flow/1', description: 'Reset' }] }],
       },
     },
   },
@@ -89,7 +89,7 @@ function controller(
   return {
     state: {
       platform: 'web',
-      sort: 'popular',
+      sort: 'grouped',
       query: '',
       filters: [],
     },
@@ -121,7 +121,6 @@ test('renders a first-class searchable Flow catalog beside Apps and Sites', () =
   const html = renderToStaticMarkup(
     <FlowsPageView
       controller={controller()}
-      onOpenSearch={() => undefined}
       onSelectFlow={() => undefined}
       onSelectApp={() => undefined}
     />,
@@ -138,7 +137,7 @@ test('renders a first-class searchable Flow catalog beside Apps and Sites', () =
   assert.match(html, /Open Flow groups filters/);
   assert.match(html, /Showing<\/small> <strong>23 flows/);
   assert.equal((html.match(/23 flows/g) ?? []).length, 1);
-  assert.match(html, />Popular</);
+  assert.doesNotMatch(html, />Popular|>Grouped</);
   assert.doesNotMatch(html, /data-reference-discovery-toolbar="true"/);
   assert.match(html, />Settings</);
   assert.match(html, />Home</);
@@ -151,7 +150,7 @@ test('renders a first-class searchable Flow catalog beside Apps and Sites', () =
   assert.match(html, /<img src="\/icons\/linear\.png" alt=""/);
   assert.doesNotMatch(html, /flows-discovery__flow-heading/);
   assert.doesNotMatch(html, /Previewed from/);
-  assert.match(html, /observed in 12 apps/);
+  assert.doesNotMatch(html, /observed in/);
   assert.match(html, /data-flow-strip-card="true"/);
   assert.match(html, /class="flow-gallery" aria-label="Flow catalog"/);
   assert.match(html, /class="flow-gallery__strips"/);
@@ -162,6 +161,26 @@ test('renders a first-class searchable Flow catalog beside Apps and Sites', () =
   assert.doesNotMatch(html, /Load more Flows/);
 });
 
+test('leaves Flow search to the shared header trigger', () => {
+  const html = renderToStaticMarkup(
+    <FlowsPageView
+      controller={controller({
+        state: {
+          platform: 'web',
+          sort: 'grouped',
+          query: 'reset password',
+          filters: [],
+        },
+      })}
+      onSelectFlow={() => undefined}
+      onSelectApp={() => undefined}
+    />,
+  );
+
+  assert.doesNotMatch(html, /data-flows-search="true"/);
+  assert.doesNotMatch(html, /Search flows by name or group/);
+});
+
 test('shows the server total independently of loaded cards', () => {
   const html = renderToStaticMarkup(
     <FlowsPageView
@@ -170,12 +189,11 @@ test('shows the server total independently of loaded cards', () => {
         totalCount: 40,
         state: {
           platform: 'web',
-          sort: 'popular',
+        sort: 'grouped',
           query: '',
           filters: [{ group: 'flowGroups', value: 'Home' }],
         },
       })}
-      onOpenSearch={() => undefined}
       onSelectFlow={() => undefined}
       onSelectApp={() => undefined}
     />,
@@ -194,7 +212,6 @@ test('keeps the top Flow taxonomy a fixed 5-item list regardless of API facets',
   const html = renderToStaticMarkup(
     <FlowsPageView
       controller={controller({ facets })}
-      onOpenSearch={() => undefined}
       onSelectFlow={() => undefined}
       onSelectApp={() => undefined}
     />,
@@ -211,7 +228,6 @@ test('delegates initial, empty, and load-more error states to the shared layout'
   const loading = renderToStaticMarkup(
     <FlowsPageView
       controller={controller({ items: [], totalCount: null, loading: true })}
-      onOpenSearch={() => undefined}
       onSelectFlow={() => undefined}
       onSelectApp={() => undefined}
     />,
@@ -219,7 +235,6 @@ test('delegates initial, empty, and load-more error states to the shared layout'
   const empty = renderToStaticMarkup(
     <FlowsPageView
       controller={controller({ items: [], totalCount: 0, hasMore: false })}
-      onOpenSearch={() => undefined}
       onSelectFlow={() => undefined}
       onSelectApp={() => undefined}
     />,
@@ -245,7 +260,7 @@ test('keeps the canonical Flow query in route state while the shared header is a
       controller={controller({
         state: {
           platform: 'web',
-          sort: 'popular',
+        sort: 'grouped',
           query: 'settings',
           filters: [],
         },

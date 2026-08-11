@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button } from '@astryxdesign/core';
 import type { FacetPreview } from '../facetPreviewApi.ts';
 import type { SearchFilters } from '../../searchTypes.ts';
@@ -215,6 +215,12 @@ export function SitesPageView({
   onOpen = (site) => navigate({ name: 'site-version', siteSlug: site.routeSlug }),
 }: SitesPageViewProps) {
   void isAdmin;
+  const [taxonomyExpanded, setTaxonomyExpanded] = useState(
+    () => controller.state.filters.length === 0 && controller.state.query.trim() === '',
+  );
+  useEffect(() => {
+    if (controller.state.query.trim()) setTaxonomyExpanded(false);
+  }, [controller.state.query]);
   const { previewRef, showPreview, movePreview, hidePreview } = useCategoryHoverPreview();
   const previewPools = useMemo(
     () => buildSiteFacetPreviewPools(controller.items),
@@ -239,6 +245,10 @@ export function SitesPageView({
       }),
     })),
   [controller.state.filters, previewPools]);
+  const searchMatchLabel = (site: SiteSummary) => siteSearchMatchLabel(
+    site,
+    controller.state.query,
+  );
   return (
     <DiscoveryPageLayout
       kind="sites"
@@ -246,49 +256,71 @@ export function SitesPageView({
       taxonomyLabel="Site discovery filters"
       taxonomy={(
         <>
-          {DISCOVERY_FACETS.map((group) => (
-            <ReferenceDiscoveryFacetGroup
-              key={group.group}
-              label={group.label}
-              className={`sites-discovery__facet sites-discovery__facet--${group.group}`}
+          <div
+            className={`sites-discovery__taxonomy-toggle ${taxonomyExpanded
+              ? 'sites-discovery__taxonomy-toggle--expanded'
+              : 'sites-discovery__taxonomy-toggle--collapsed'}`}
+          >
+            <button
+              type="button"
+              className="sites-discovery__taxonomy-toggle-button"
+              aria-expanded={taxonomyExpanded}
+              aria-controls="sites-discovery-shortcuts"
+              onClick={() => setTaxonomyExpanded((expanded) => !expanded)}
             >
-              {group.defaults.map((value) => {
-                const facet = {
-                  group: group.group,
-                  value,
-                };
-                const selected = controller.state.filters.some(
-                  (filter) => filter.group === group.group && filter.value === value,
-                );
-                const hoverFacet = facet.group === 'styles' ? null : facet;
-                return (
-                  <Button
-                    key={value}
-                    label={value}
-                    variant="ghost"
-                    size="sm"
-                    aria-pressed={selected}
-                    data-facet-preview={hoverFacet?.group}
-                    onPointerEnter={hoverFacet ? (event) => {
-                      const preview = siteFacetPreview(
-                        previewPools,
-                        hoverFacet,
-                        Math.random,
-                        siteFacetImageReady,
-                      ) ?? siteFacetPreview(previewPools, hoverFacet);
-                      if (preview) showPreview(preview, event.clientX, event.clientY);
-                      prefetchNextSiteFacetPreview(previewPools, hoverFacet);
-                    } : undefined}
-                    onPointerMove={hoverFacet ? (event) => {
-                      movePreview(event.clientX, event.clientY);
-                    } : undefined}
-                    onPointerLeave={hoverFacet ? hidePreview : undefined}
-                    onClick={() => controller.toggleFilter(facet)}
-                  />
-                );
-              })}
-            </ReferenceDiscoveryFacetGroup>
-          ))}
+              {taxonomyExpanded ? 'Hide filter shortcuts' : 'Browse filter shortcuts'}
+            </button>
+          </div>
+          {taxonomyExpanded ? (
+            <div id="sites-discovery-shortcuts" className="sites-discovery__taxonomy-groups">
+              {DISCOVERY_FACETS.map((group) => (
+                <ReferenceDiscoveryFacetGroup
+                  key={group.group}
+                  label={group.label}
+                  className={`sites-discovery__facet sites-discovery__facet--${group.group}`}
+                >
+                  {group.defaults.map((value) => {
+                    const facet = {
+                      group: group.group,
+                      value,
+                    };
+                    const selected = controller.state.filters.some(
+                      (filter) => filter.group === group.group && filter.value === value,
+                    );
+                    const hoverFacet = facet.group === 'styles' ? null : facet;
+                    return (
+                      <Button
+                        key={value}
+                        label={value}
+                        variant="ghost"
+                        size="sm"
+                        aria-pressed={selected}
+                        data-facet-preview={hoverFacet?.group}
+                        onPointerEnter={hoverFacet ? (event) => {
+                          const preview = siteFacetPreview(
+                            previewPools,
+                            hoverFacet,
+                            Math.random,
+                            siteFacetImageReady,
+                          ) ?? siteFacetPreview(previewPools, hoverFacet);
+                          if (preview) showPreview(preview, event.clientX, event.clientY);
+                          prefetchNextSiteFacetPreview(previewPools, hoverFacet);
+                        } : undefined}
+                        onPointerMove={hoverFacet ? (event) => {
+                          movePreview(event.clientX, event.clientY);
+                        } : undefined}
+                        onPointerLeave={hoverFacet ? hidePreview : undefined}
+                        onClick={() => {
+                          controller.toggleFilter(facet);
+                          setTaxonomyExpanded(false);
+                        }}
+                      />
+                    );
+                  })}
+                </ReferenceDiscoveryFacetGroup>
+              ))}
+            </div>
+          ) : null}
         </>
       )}
       preview={(
@@ -336,7 +368,7 @@ export function SitesPageView({
       loadMoreError={controller.loadMoreError}
       onRetry={controller.retry}
       onRetryLoadMore={controller.retryLoadMore}
-      onReset={() => controller.setState({ ...controller.state, filters: [] })}
+      onReset={() => controller.setState({ ...controller.state, query: '', filters: [] })}
       sentinelRef={controller.sentinelRef}
     >
       <div
@@ -344,11 +376,37 @@ export function SitesPageView({
         className="reference-discovery__grid sites-discovery__grid"
       >
         {controller.items.map((site) => (
-          <SiteCard key={`${site.id}:${site.versionId}`} site={site} onOpen={() => onOpen(site)} />
+          <SiteCard
+            key={`${site.id}:${site.versionId}`}
+            site={site}
+            matchLabel={searchMatchLabel(site)}
+            onOpen={() => onOpen(site)}
+          />
         ))}
       </div>
     </DiscoveryPageLayout>
   );
+}
+
+function siteSearchMatchLabel(site: SiteSummary, rawQuery: string): string | undefined {
+  const query = rawQuery.trim().toLocaleLowerCase();
+  if (!query) return undefined;
+  if (site.name.toLocaleLowerCase().includes(query)) return 'Matched site name';
+  if (safeSiteHostname(site.sourceUrl).includes(query)) return 'Matched domain';
+  if (site.description?.toLocaleLowerCase().includes(query)) return 'Matched description';
+  const category = site.categories?.find((value) => value.toLocaleLowerCase().includes(query));
+  if (category) return `Matched category: ${category}`;
+  const style = site.styles?.find((value) => value.toLocaleLowerCase().includes(query));
+  if (style) return `Matched style: ${style}`;
+  return 'Matched captured site evidence';
+}
+
+function safeSiteHostname(value: string): string {
+  try {
+    return new URL(value).hostname.replace(/^www\./, '').toLocaleLowerCase();
+  } catch {
+    return '';
+  }
 }
 
 interface SitesPageProps {

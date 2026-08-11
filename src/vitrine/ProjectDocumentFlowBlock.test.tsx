@@ -179,7 +179,6 @@ test("converts a catalog result into a stable embeddable Flow reference", () => 
   const option = catalogFlowOption({
     category: "Account Management",
     title: "Creating Account",
-    count: 727,
     preview: {
       appId: "linear",
       appName: "Linear",
@@ -199,8 +198,8 @@ test("converts a catalog result into a stable embeddable Flow reference", () => 
             label: "Open account",
             evidence: [{
               imageId: 1,
-              imageUrl: "/api/catalog/flow-media/linear/web/7/71/1?variant=full",
-              thumbnailUrl: "/api/catalog/flow-media/linear/web/7/71/1?variant=thumb",
+              imageUrl: "/api/flows/media/linear/web/7/71/1?variant=full",
+              thumbnailUrl: "/api/flows/media/linear/web/7/71/1?variant=thumb",
               description: "Open account",
             }],
           },
@@ -208,8 +207,8 @@ test("converts a catalog result into a stable embeddable Flow reference", () => 
             label: "Submit details",
             evidence: [{
               imageId: 2,
-              imageUrl: "/api/catalog/flow-media/linear/web/7/71/2?variant=full",
-              thumbnailUrl: "/api/catalog/flow-media/linear/web/7/71/2?variant=thumb",
+              imageUrl: "/api/flows/media/linear/web/7/71/2?variant=full",
+              thumbnailUrl: "/api/flows/media/linear/web/7/71/2?variant=thumb",
               description: "Submit details",
             }],
           },
@@ -235,8 +234,8 @@ test("converts a catalog result into a stable embeddable Flow reference", () => 
     id: "catalog-flow:web:linear:3:creating-account",
     platform: "web",
     previews: [
-      { label: "Open account", url: "/api/catalog/flow-media/linear/web/7/71/1?variant=thumb" },
-      { label: "Submit details", url: "/api/catalog/flow-media/linear/web/7/71/2?variant=thumb" },
+      { label: "Open account", url: "/api/flows/media/linear/web/7/71/1?variant=thumb" },
+      { label: "Submit details", url: "/api/flows/media/linear/web/7/71/2?variant=thumb" },
     ],
     source: "catalog",
     stepCount: 2,
@@ -249,15 +248,14 @@ test("keeps the complete visible step sequence instead of truncating the Flow ca
     label: `Step ${index + 1}`,
     evidence: [{
       imageId: index + 1,
-      imageUrl: `/api/catalog/flow-media/lovable/web/9/22/${index + 1}?variant=full`,
-      thumbnailUrl: `/api/catalog/flow-media/lovable/web/9/22/${index + 1}?variant=thumb`,
+      imageUrl: `/api/flows/media/lovable/web/9/22/${index + 1}?variant=full`,
+      thumbnailUrl: `/api/flows/media/lovable/web/9/22/${index + 1}?variant=thumb`,
       description: `Step ${index + 1}`,
     }],
   }));
   const option = catalogFlowOption({
     category: "Account Management",
     title: "Deleting account",
-    count: 1,
     preview: {
       appId: "lovable",
       appName: "Lovable",

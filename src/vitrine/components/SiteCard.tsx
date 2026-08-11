@@ -6,15 +6,17 @@ import { DiscoveryCard } from './DiscoveryCard.tsx';
 export function SiteCard({
   site,
   onOpen,
+  matchLabel,
 }: {
   site: SiteSummary;
   onOpen: () => void;
+  matchLabel?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   // Preview videos are multi-megabyte, so nothing about them is fetched — not
-  // even metadata — until someone hovers. Once loaded the element stays mounted
-  // so a second hover replays from cache instead of re-fetching.
-  const [videoRequested, setVideoRequested] = useState(false);
+  // even metadata — until the card is hovered or focused. Unmount it again as
+  // soon as that intent ends, leaving the poster as the only idle media.
+  const [previewActive, setPreviewActive] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
   const hostname = safeHostname(site.sourceUrl);
   const description = site.description || `${site.sectionCount} captured sections from ${hostname}.`;
@@ -27,16 +29,17 @@ export function SiteCard({
 
   const startPreview = () => {
     if (!playsVideo) return;
-    setVideoRequested(true);
+    setPreviewActive(true);
     const video = videoRef.current;
     if (video) void video.play().catch(() => undefined);
   };
   const stopPreview = () => {
     const video = videoRef.current;
-    if (!video) return;
-    video.pause();
-    // Frame 0 is the thumbnail, so resetting leaves the card looking untouched.
-    video.currentTime = 0;
+    if (video) {
+      video.pause();
+      video.currentTime = 0;
+    }
+    setPreviewActive(false);
   };
 
   return (
@@ -58,7 +61,7 @@ export function SiteCard({
           ) : (
             <span className="site-discovery-card__fallback">Preview unavailable</span>
           )}
-          {playsVideo && videoRequested ? (
+          {playsVideo && previewActive ? (
             <video
               ref={videoRef}
               className="site-discovery-card__video"
@@ -88,6 +91,7 @@ export function SiteCard({
       )}
       title={site.name}
       description={description}
+      metadata={matchLabel}
     />
   );
 }

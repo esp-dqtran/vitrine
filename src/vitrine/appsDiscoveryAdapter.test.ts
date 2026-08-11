@@ -41,7 +41,7 @@ test('parses canonical Apps discovery state and serializes it in canonical order
   assert.deepEqual(state, {
     platform: 'ios',
     contentType: 'flows',
-    sort: 'trending',
+    sort: 'latest',
     query: 'billing',
     filters: [
       { group: 'categories', value: 'Finance' },
@@ -50,7 +50,7 @@ test('parses canonical Apps discovery state and serializes it in canonical order
   });
   assert.equal(
     adapter.serialize(state),
-    'platform=ios&content_type=flows&sort=trending&query=billing&filter=categories.Finance&filter=flows.Checkout',
+    'platform=ios&content_type=flows&query=billing&filter=categories.Finance&filter=flows.Checkout',
   );
 });
 
@@ -67,11 +67,11 @@ test('reads legacy Apps filters and content_type but writes repeated canonical f
   ]);
   assert.equal(
     adapter.serialize(state),
-    'platform=web&content_type=screens&sort=trending&filter=categories.Business&filter=screens.Dashboard',
+    'platform=web&content_type=screens&filter=categories.Business&filter=screens.Dashboard',
   );
 });
 
-test('builds one catalog request with platform, query, sort, repeated filters, and cursor', () => {
+test('builds one newest-only Apps request with platform, query, repeated filters, and cursor', () => {
   const state: AppsDiscoveryControllerState = {
     platform: 'android',
     contentType: 'screens',
@@ -85,7 +85,7 @@ test('builds one catalog request with platform, query, sort, repeated filters, a
 
   assert.equal(
     appsCatalogRequestPath(state, 'cursor /2'),
-    '/api/catalog?platform=android&facets=summary&query=checkout&sort=trending&filter=categories.Shopping&filter=screens.Cart&cursor=cursor+%2F2',
+    '/api/apps/search?platform=android&facets=summary&query=checkout&filter=categories.Shopping&filter=screens.Cart&cursor=cursor+%2F2',
   );
 });
 
@@ -107,7 +107,7 @@ test('requests and parses one runtime catalog envelope, converting previews to A
     const page = await adapter.request(adapter.defaults, null, controller.signal);
 
     assert.equal(calls.length, 1);
-    assert.equal(calls[0]?.input, '/api/catalog?platform=web&facets=summary&sort=latest');
+    assert.equal(calls[0]?.input, '/api/apps?platform=web&facets=summary');
     assert.equal(calls[0]?.signal, controller.signal);
     assert.equal(page.items[0]?.screens[0]?.url, '/linear.png');
     assert.equal(page.nextCursor, 'next');
@@ -174,8 +174,8 @@ test('drives one initial request and one reset filter request through the generi
     await new Promise<void>((resolve) => setImmediate(resolve));
 
     assert.deepEqual(calls, [
-      '/api/catalog?platform=web&facets=summary&query=controller-integration&sort=latest',
-      '/api/catalog?platform=web&facets=summary&query=controller-integration&sort=latest&filter=screens.Dashboard',
+      '/api/apps/search?platform=web&facets=summary&query=controller-integration',
+      '/api/apps/search?platform=web&facets=summary&query=controller-integration&filter=screens.Dashboard',
     ]);
     assert.equal(navigations.length, 1);
     assert.equal(navigations[0]?.mode, 'push');
@@ -215,7 +215,7 @@ test('uses the shared published Apps envelope for admin viewers and preserves pr
     }, null, new AbortController().signal);
 
     assert.deepEqual(calls, [
-      '/api/catalog?platform=web&facets=summary&sort=latest&filter=screens.Dashboard',
+      '/api/apps?platform=web&facets=summary&filter=screens.Dashboard',
     ]);
     assert.equal(page.items[0]?.analyzedScreens, 2);
     assert.deepEqual(page.facets, [

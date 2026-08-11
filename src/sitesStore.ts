@@ -45,6 +45,7 @@ export interface CompletedSiteImport {
   objectKeys: {
     source: string;
     preview: string;
+    poster?: string;
     pages: Record<string, string>;
     sections: Record<string, { media: string; poster?: string }>;
   };
@@ -1123,13 +1124,19 @@ export function createSitesStore(
           `UPDATE site_versions
            SET source_object_key = $2,
                preview_object_key = $3,
+               poster_object_key = $4,
                is_latest = true,
                status = 'ready',
                failure_message = NULL,
                updated_at = now()
            WHERE id = $1 AND status = 'importing'
            RETURNING id`,
-          [versionId, input.objectKeys.source, input.objectKeys.preview],
+          [
+            versionId,
+            input.objectKeys.source,
+            input.objectKeys.preview,
+            input.objectKeys.poster ?? null,
+          ],
         );
         if (ready.rowCount !== 1) throw new Error("Site import ready transition failed");
         return { siteId, versionId };

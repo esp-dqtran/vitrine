@@ -235,7 +235,14 @@ function facetCountsQuery(input: {
   )`;
   const query = `(${search}::text IS NULL
     OR a.name ILIKE '%' || ${search} || '%'
-    OR COALESCE(a.display_name, '') ILIKE '%' || ${search} || '%')`;
+    OR COALESCE(a.display_name, '') ILIKE '%' || ${search} || '%'
+    OR EXISTS (
+      SELECT 1
+      FROM app_categories search_app_category
+      JOIN categories search_category ON search_category.id = search_app_category.category_id
+      WHERE search_app_category.app_id = a.id
+        AND search_category.name ILIKE '%' || ${search} || '%'
+    ))`;
   const where = (omit: PublicFacetGroup) =>
     `${published}
       AND ${query}
@@ -435,6 +442,13 @@ async function catalogPage(
          ${search}::text IS NULL
          OR a.name ILIKE '%' || ${search} || '%'
          OR COALESCE(a.display_name, '') ILIKE '%' || ${search} || '%'
+         OR EXISTS (
+           SELECT 1
+           FROM app_categories search_app_category
+           JOIN categories search_category ON search_category.id = search_app_category.category_id
+           WHERE search_app_category.app_id = a.id
+             AND search_category.name ILIKE '%' || ${search} || '%'
+         )
        )
        AND ${filters}
      ), totals AS (

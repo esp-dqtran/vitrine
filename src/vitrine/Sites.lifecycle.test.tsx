@@ -224,7 +224,7 @@ test('mounts one StrictMode Sites controller and keeps query, filter, and popsta
       await settle();
     });
     assert.deepEqual(requests.map(({ url }) => url), [
-      '/api/sites?platform=web&sort=latest&facets=summary&query=initial&limit=24',
+      '/api/sites/search?platform=web&sort=latest&facets=summary&query=initial&limit=24',
     ]);
 
     await act(async () => {
@@ -238,7 +238,7 @@ test('mounts one StrictMode Sites controller and keeps query, filter, and popsta
     assert.equal(requests.length, 2);
     assert.equal(
       requests[1]?.url,
-      '/api/sites?platform=web&sort=latest&facets=summary&query=pricing&limit=24',
+      '/api/sites/search?platform=web&sort=latest&facets=summary&query=pricing&limit=24',
     );
     assert.deepEqual(dom.historyCalls, [{
       mode: 'replace',
@@ -252,7 +252,7 @@ test('mounts one StrictMode Sites controller and keeps query, filter, and popsta
     assert.equal(requests.length, 3);
     assert.equal(
       requests[2]?.url,
-      '/api/sites?platform=web&sort=latest&facets=summary&query=pricing'
+      '/api/sites/search?platform=web&sort=latest&facets=summary&query=pricing'
         + '&filter=categories.Business&limit=24',
     );
     assert.equal(dom.historyCalls[1]?.mode, 'push');
@@ -267,7 +267,7 @@ test('mounts one StrictMode Sites controller and keeps query, filter, and popsta
     assert.equal(requests.length, 4);
     assert.equal(
       requests[3]?.url,
-      '/api/sites?platform=web&sort=popular&facets=summary&query=back'
+      '/api/sites/search?platform=web&sort=popular&facets=summary&query=back'
         + '&filter=sections.Pricing&filter=styles.Minimal&limit=24',
     );
     assert.deepEqual(queryChanges, ['back']);

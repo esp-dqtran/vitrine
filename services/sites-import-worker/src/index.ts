@@ -17,6 +17,12 @@ import {
   parseSitesQueueScope,
 } from "../../../src/sitesQueue.ts";
 import { createSitesStore } from "../../../src/sitesStore.ts";
+import { typesenseCatalogConfigFromEnv } from "../../../src/typesenseCatalog.ts";
+import {
+  TYPESENSE_SITE_CATALOG_COLLECTION,
+  createTypesenseSiteCatalogClient,
+} from "../../../src/typesenseSiteCatalog.ts";
+import { publishedSiteCatalogDocument } from "../../../src/typesenseSiteCatalogSource.ts";
 import { createWappalyzerTechnologyDetector } from "../../../src/wappalyzerBrowser.ts";
 import { createSitesPipelineHandler } from "./pipeline.ts";
 import {
@@ -28,6 +34,10 @@ import { wappalyzerOptionsFromEnvironment } from "./wappalyzerConfig.ts";
 
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
 const sitesStore = createSitesStore();
+const typesenseConfig = typesenseCatalogConfigFromEnv(process.env);
+const typesenseSiteCatalog = typesenseConfig
+  ? createTypesenseSiteCatalogClient({ ...typesenseConfig, collection: TYPESENSE_SITE_CATALOG_COLLECTION })
+  : undefined;
 if (
   !sitesStore.beginGenericImport ||
   !sitesStore.completeGenericImport ||
@@ -51,6 +61,17 @@ const technologyDetector = wappalyzerOptions
 const queueScope = parseSitesQueueScope(process.env.MOBBIN_SITES_QUEUE_SCOPE);
 const crawlTimeoutMs = sitesCrawlTimeoutMs(process.env.SITES_CRAWL_TIMEOUT_MS);
 const handler = createSitesPipelineHandler({
+  syncSite: async (siteId) => {
+    if (!typesenseSiteCatalog) return;
+    try {
+      const document = await publishedSiteCatalogDocument(siteId, sitesStore);
+      if (!document) return;
+      await typesenseSiteCatalog.upsert(document);
+      console.log(`[sites-import-worker] Updated Typesense Site document ${document.id}.`);
+    } catch (error) {
+      console.warn(`[sites-import-worker] Typesense Site sync failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  },
   crawl: async (url, controls) => {
     const identity = classifySiteImportUrl(url);
     if (identity.kind === "public-page") {

@@ -111,7 +111,7 @@ test("Cloudflare proxies API requests without changing the frontend API contract
   };
 
   const response = await worker.fetch(
-    new Request("https://app.example.com/api/catalog?limit=24", {
+    new Request("https://app.example.com/api/apps?limit=24", {
       method: "POST",
       headers: {
         authorization: "Bearer signed.jwt.token",
@@ -123,7 +123,7 @@ test("Cloudflare proxies API requests without changing the frontend API contract
   );
 
   assert.equal(response.status, 202);
-  assert.equal(forwarded?.url, "https://api.example.com/catalog?limit=24");
+  assert.equal(forwarded?.url, "https://api.example.com/apps?limit=24");
   assert.equal(forwarded?.method, "POST");
   assert.equal(forwarded?.headers.get("authorization"), "Bearer signed.jwt.token");
   assert.equal(await forwarded?.text(), JSON.stringify({ cursor: "next" }));
@@ -245,11 +245,11 @@ test("Cloudflare edge-caches only successful explicitly public API responses", a
   };
 
   const first = await worker.fetch(
-    new Request("https://vitrines.ai/api/catalog/stats"),
+    new Request("https://vitrines.ai/api/apps/stats"),
     environment,
   );
   const second = await worker.fetch(
-    new Request("https://vitrines.ai/api/catalog/stats"),
+    new Request("https://vitrines.ai/api/apps/stats"),
     environment,
   );
   await worker.fetch(new Request("https://vitrines.ai/api/auth/me"), environment);
@@ -279,7 +279,7 @@ test("Cloudflare does not cache public-route errors or origin no-store responses
   const worker = module.createCloudflareFrontendWorker(async (request: Request) => {
     originCalls += 1;
     const url = new URL(request.url);
-    if (url.pathname === "/catalog/facet-preview") {
+    if (url.pathname === "/apps/facet-preview") {
       return Response.json({ error: "invalid facet preview" }, {
         status: 400,
         headers: { "Cache-Control": "public, max-age=300" },
@@ -295,11 +295,11 @@ test("Cloudflare does not cache public-route errors or origin no-store responses
   };
 
   await worker.fetch(
-    new Request("https://vitrines.ai/api/catalog/facet-preview"),
+    new Request("https://vitrines.ai/api/apps/facet-preview"),
     environment,
   );
   await worker.fetch(
-    new Request("https://vitrines.ai/api/catalog/facet-preview"),
+    new Request("https://vitrines.ai/api/apps/facet-preview"),
     environment,
   );
   await worker.fetch(
@@ -355,7 +355,7 @@ test("Cloudflare serves only public media prefixes straight from R2", async () =
   assert.equal(publicMediaKey("/assets/../images/1/secret.png"), null);
   assert.equal(publicMediaKey("/assets/thumbnails/../images/1/secret.png"), null);
   assert.equal(publicMediaKey("/assets/%2e%2e/images/1/secret.png"), null);
-  assert.equal(publicMediaKey("/api/catalog"), null);
+  assert.equal(publicMediaKey("/api/apps"), null);
 
   // A prefix the asset router answers first is a prefix this Worker never sees.
   const routes = (JSON.parse(await readDeploymentFile("wrangler.jsonc")) as {

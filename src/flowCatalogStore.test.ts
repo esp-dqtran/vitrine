@@ -70,11 +70,33 @@ test("freezes published App versions and canonical taxonomy at one snapshot", as
   assert.equal(calls[0]!.values?.[1], timestamp);
 });
 
+test("deduplicates mapped Flows before attaching taxonomy labels", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  await publishedFlowCatalogPage({
+    platform: "web",
+    sort: "grouped",
+    cursorSecret: secret,
+    now: () => new Date(timestamp),
+  }, async (sql, values) => {
+    calls.push({ sql, values });
+    return result(calls.length === 1 ? [row()] : [{ total_count: 1, facets: [] }]);
+  });
+
+  const pageSql = calls.find(({ sql }) => !/total_count/.test(sql))!.sql;
+  assert.match(pageSql, /unique_flow_ids AS MATERIALIZED/);
+  assert.match(
+    pageSql,
+    /SELECT DISTINCT flow_id\s+FROM instances/,
+  );
+  assert.match(pageSql, /FROM unique_flow_ids\s+JOIN relevant_taxonomy taxonomy/);
+  assert.doesNotMatch(pageSql, /COUNT\(DISTINCT app_id\)/);
+});
+
 test("keeps heavyweight Flow preview JSON out of the catalog-wide materialized CTEs", async () => {
   const statements: string[] = [];
   await publishedFlowCatalogPage({
     platform: "web",
-    sort: "popular",
+    sort: "grouped",
     cursorSecret: secret,
     now: () => new Date(timestamp),
   }, async (sql) => {
@@ -108,7 +130,7 @@ test("starts the independent first-page and facet metadata queries concurrently"
   });
   const operation = publishedFlowCatalogPage({
     platform: "web",
-    sort: "popular",
+    sort: "grouped",
     cursorSecret: secret,
     now: () => new Date(timestamp),
   }, async (sql) => {
@@ -130,8 +152,9 @@ test("starts the independent first-page and facet metadata queries concurrently"
   await operation;
 });
 
-test("uses mixed-direction keyset tuples for popular and grouped pages without OFFSET", async () => {
-  for (const sort of ["popular", "grouped"] as const) {
+test("uses title/category keyset pagination without OFFSET", async () => {
+  {
+    const sort = "grouped" as const;
     const cache = new FlowCatalogFacetCache({ maxEntries: 4, ttlMs: 60_000 });
     const firstRows = [
       row(),
@@ -187,7 +210,6 @@ test("uses mixed-direction keyset tuples for popular and grouped pages without O
     assert.equal(calls, 3, "cursor page reuses cached facets");
     assert.ok(sql.every((statement) => !/\bOFFSET\b/i.test(statement)));
     assert.match(sql[2]!, /ROW\([\s\S]*\) > ROW\(/);
-    if (sort === "popular") assert.match(sql[2]!, /category_rank/);
   }
 });
 
@@ -244,15 +266,15 @@ test("continues after 800-character stored category and title names with bounded
   assert.equal(second.items[0]?.title, "Next");
   assert.match(statements[0]!, /left\([\s\S]*category_key[\s\S]*120\)[\s\S]*AS category_sort/i);
   assert.match(statements[0]!, /left\([\s\S]*title_key[\s\S]*120\)[\s\S]*AS title_sort/i);
-  assert.match(statements[0]!, /ORDER BY[\s\S]*category_sort[\s\S]*category_id[\s\S]*title_sort[\s\S]*flow_id/i);
-  assert.match(statements[2]!, /ROW\([\s\S]*category_sort[\s\S]*category_id[\s\S]*title_sort[\s\S]*flow_id[\s\S]*\) > ROW\(/i);
+  assert.match(statements[0]!, /ORDER BY[\s\S]*title_sort[\s\S]*category_sort[\s\S]*category_id[\s\S]*flow_id/i);
+  assert.match(statements[2]!, /ROW\([\s\S]*title_sort[\s\S]*category_sort[\s\S]*category_id[\s\S]*flow_id[\s\S]*\) > ROW\(/i);
 });
 
 test("normalizes child and parent search variants and applies OR group filters", async () => {
   const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
   const page = await publishedFlowCatalogPage({
     platform: "ios",
-    sort: "popular",
+    sort: "grouped",
     query: "  Billing & Payments! ",
     flowGroups: ["Account & Profile", "Commerce"],
     cursorSecret: secret,
@@ -384,7 +406,7 @@ test("reuses one complete, snapshot-consistent first page for a warm query", asy
   };
   const input = {
     platform: "web" as const,
-    sort: "popular" as const,
+    sort: "grouped" as const,
     limit: 12,
     cursorSecret: secret,
     pageCache,
@@ -428,7 +450,7 @@ test("serves a stale first page immediately while one background refresh runs", 
   };
   const input = {
     platform: "web" as const,
-    sort: "popular" as const,
+    sort: "grouped" as const,
     limit: 12,
     cursorSecret: secret,
     includeFacets: false,
@@ -481,8 +503,8 @@ test("preserves the bounded Flow card and media structure", async () => {
     : [row()]));
   assert.deepEqual(page.items[0]?.preview.flow.steps[0]?.evidence[0], {
     imageId: 10,
-    imageUrl: "/api/catalog/flow-media/linear/web/7/71/1?variant=full",
-    thumbnailUrl: "/api/catalog/flow-media/linear/web/7/71/1?variant=thumb",
+    imageUrl: "/api/flows/media/linear/web/7/71/1?variant=full",
+    thumbnailUrl: "/api/flows/media/linear/web/7/71/1?variant=thumb",
     description: "Open profile",
   });
 });

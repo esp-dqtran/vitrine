@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  invalidateFlowCatalogPageCache,
   loadFlowCatalogPage,
   parseFlowCatalogPage,
 } from './flowCatalogApi.ts';
@@ -8,7 +9,6 @@ import {
 const item = {
   category: 'Account Management',
   title: 'Creating Account',
-  count: 727,
   preview: {
     appId: 'linear',
     appName: 'Linear',
@@ -27,8 +27,8 @@ const item = {
         label: 'Open account',
         evidence: [{
           imageId: 1,
-          imageUrl: '/api/catalog/flow-media/linear/web/7/71/1?variant=full',
-          thumbnailUrl: '/api/catalog/flow-media/linear/web/7/71/1?variant=thumb',
+          imageUrl: '/api/flows/media/linear/web/7/71/1?variant=full',
+          thumbnailUrl: '/api/flows/media/linear/web/7/71/1?variant=thumb',
           description: 'Open account',
         }],
       }],
@@ -49,7 +49,6 @@ test('loads one canonical cacheable Flow request with stable filters', async () 
       platform: 'web',
       cursor: 'next page',
       limit: 40,
-      order: 'grouped',
       flowGroups: ['Account Management', 'Security'],
     },
     undefined,
@@ -63,13 +62,13 @@ test('loads one canonical cacheable Flow request with stable filters', async () 
   assert.equal(calls.length, 1);
   assert.equal(
     calls[0]?.input,
-    '/api/catalog/flows?platform=web&limit=40&facets=summary&sort=grouped'
+    '/api/flows?platform=web&limit=40&facets=summary&sort=grouped'
       + '&filter=flowGroups.Account+Management&filter=flowGroups.Security&cursor=next+page',
   );
   assert.equal(calls[0]?.init?.cache, undefined);
 });
 
-test('uses canonical popular sort for typed Flow suggestions', async () => {
+test('uses canonical category/title sort for typed Flow suggestions', async () => {
   const calls: string[] = [];
   await loadFlowCatalogPage(
     { platform: 'android', query: 'log in' },
@@ -80,8 +79,30 @@ test('uses canonical popular sort for typed Flow suggestions', async () => {
     },
   );
   assert.deepEqual(calls, [
-    '/api/catalog/flows?platform=android&limit=80&facets=summary&query=log+in&sort=popular',
+    '/api/flows/search?platform=android&limit=80&facets=summary&query=log+in&sort=grouped',
   ]);
+});
+
+test('reuses a successful Flow page across catalog remounts until invalidated', async (t) => {
+  const original = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = original;
+    invalidateFlowCatalogPageCache();
+  });
+  invalidateFlowCatalogPageCache();
+  let requests = 0;
+  globalThis.fetch = async () => {
+    requests += 1;
+    return Response.json(envelope);
+  };
+
+  await loadFlowCatalogPage({ platform: 'web', limit: 12 });
+  await loadFlowCatalogPage({ platform: 'web', limit: 12 });
+  assert.equal(requests, 1);
+
+  invalidateFlowCatalogPageCache();
+  await loadFlowCatalogPage({ platform: 'web', limit: 12 });
+  assert.equal(requests, 2);
 });
 
 test('strictly parses every envelope, item, preview, Flow, step, evidence, and facet field', () => {
@@ -91,7 +112,7 @@ test('strictly parses every envelope, item, preview, Flow, step, evidence, and f
     { ...envelope, totalCount: -1 },
     { ...envelope, facets: [{ ...envelope.facets[0], group: 'flows' }] },
     { ...envelope, facets: [{ ...envelope.facets[0], count: 1.5 }] },
-    { ...envelope, items: [{ ...item, count: '727' }] },
+    { ...envelope, items: [{ ...item, count: 727 }] },
     { ...envelope, items: [{ ...item, preview: { ...item.preview, version: 0 } }] },
     { ...envelope, items: [{ ...item, preview: { ...item.preview, screenCount: -1 } }] },
     { ...envelope, items: [{ ...item, preview: {

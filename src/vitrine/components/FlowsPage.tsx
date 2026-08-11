@@ -37,7 +37,7 @@ function catalogFlowTitle(item: FlowCatalogItem): string {
 
 const FLOW_GROUPS_TAXONOMY = ['Settings', 'Home', 'Account settings', 'Onboarding', 'Logging in'];
 
-// Full catalog values (from `/api/catalog/flow-groups`), used to seed the toolbar filter
+// Full Flow values (from `/api/flows/facets`), used to seed the toolbar filter
 // dropdown so it doesn't need a live facet query. FLOW_GROUPS_TAXONOMY above stays a
 // short curated list for the taxonomy quick-links panel.
 const ALL_FLOW_GROUPS = [
@@ -90,7 +90,6 @@ interface FlowsPageViewProps {
     FlowsDiscoverySort,
     FlowsDiscoveryControllerState
   >;
-  onOpenSearch: () => void;
   onSelectFlow: (title: string, platform: Platform) => void;
   onSelectApp: (appId: string) => void;
   accountControls?: ReactNode;
@@ -168,12 +167,10 @@ export function FlowsPageView({
           resultCount={controller.items.length}
           resultLabels={['flow', 'flows']}
           showResultCount={false}
+          showSort={false}
           sort={controller.state.sort}
-          sortOptions={[
-            { value: 'popular', label: 'Popular' },
-            { value: 'grouped', label: 'Grouped' },
-          ]}
-          onSortChange={(value) => controller.setSort(value as FlowsDiscoverySort)}
+          sortOptions={[]}
+          onSortChange={() => undefined}
           onToggleFilter={(group, value) => controller.toggleFilter({ group, value })}
           onClearFilter={controller.clearFilterGroup}
         />
@@ -202,7 +199,7 @@ export function FlowsPageView({
           if (!item) return undefined;
           return {
             screenCount: item.preview.screenCount,
-            metaLabel: `${item.preview.screenCount} ${item.preview.screenCount === 1 ? 'screen' : 'screens'} · observed in ${item.count} ${item.count === 1 ? 'app' : 'apps'}`,
+            metaLabel: `${item.preview.screenCount} ${item.preview.screenCount === 1 ? 'screen' : 'screens'}`,
             sourceAppName: item.preview.appName,
             sourceAppIconUrl: item.preview.appIconUrl,
             documentSource: {
@@ -224,7 +221,6 @@ export function FlowsPageView({
 }
 
 interface FlowsPageProps {
-  onOpenSearch: () => void;
   onSelectFlow: (title: string, platform: Platform) => void;
   onSelectApp: (appId: string) => void;
   accountControls?: ReactNode;
@@ -232,7 +228,6 @@ interface FlowsPageProps {
 }
 
 export function FlowsPage({
-  onOpenSearch,
   onSelectFlow,
   onSelectApp,
   accountControls,
@@ -252,7 +247,6 @@ export function FlowsPage({
   return (
     <FlowsPageView
       controller={controller}
-      onOpenSearch={onOpenSearch}
       onSelectFlow={onSelectFlow}
       onSelectApp={onSelectApp}
       accountControls={accountControls}

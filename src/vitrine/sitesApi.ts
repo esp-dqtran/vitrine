@@ -31,6 +31,25 @@ export interface SitesPageOptions {
   signal?: AbortSignal;
 }
 
+const SITES_PAGE_CACHE_MS = 280_000;
+const sitesPageCache = new Map<string, {
+  expiresAt: number;
+  page: DiscoveryPage<SiteSummary>;
+}>();
+
+/** Discard catalog pages after an explicit refresh or a Site catalog mutation. */
+export function invalidateSitesPageCache(): void {
+  sitesPageCache.clear();
+}
+
+function cachedSitesPage(endpoint: string): DiscoveryPage<SiteSummary> | null {
+  const cached = sitesPageCache.get(endpoint);
+  if (!cached) return null;
+  if (cached.expiresAt > Date.now()) return cached.page;
+  sitesPageCache.delete(endpoint);
+  return null;
+}
+
 export function listSitesPage(
   state: SitesDiscoveryState,
   cursor?: string,
@@ -139,14 +158,27 @@ async function requestSitesDiscoveryPage(
   }
   if (cursor) params.set('cursor', cursor);
   params.set('limit', String(limit));
+  const endpoint = `/api/sites${query ? '/search' : ''}?${params.toString()}`;
+  if (!options.noStore) {
+    const cached = cachedSitesPage(endpoint);
+    if (cached) return cached;
+  }
   if (options.noStore) params.set('refresh', '1');
-  const response = await apiFetch(`/api/sites?${params.toString()}`, {
+  const response = await apiFetch(
+    `/api/sites${query ? '/search' : ''}?${params.toString()}`,
+    {
     ...(options.signal ? { signal: options.signal } : {}),
     ...(options.noStore ? { cache: 'no-store' as const } : {}),
-  });
+    },
+  );
   const body = await responseBody(response);
   if (!response.ok) throw new Error(errorMessage(body, `Sites returned ${response.status}`));
-  return parseSitesDiscoveryPage(body);
+  const page = parseSitesDiscoveryPage(body);
+  sitesPageCache.set(endpoint, {
+    expiresAt: Date.now() + SITES_PAGE_CACHE_MS,
+    page,
+  });
+  return page;
 }
 
 export function loadSitesDiscoveryFacets(

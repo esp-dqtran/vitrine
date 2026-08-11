@@ -94,7 +94,7 @@ export function useCatalogStats(): CatalogStatCounts | null {
   const [stats, setStats] = useState<CatalogStatCounts | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    apiFetch('/api/catalog/stats', { signal: controller.signal })
+    apiFetch('/api/apps/stats', { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((s: CatalogStatCounts) => { if (s && s.apps > 0) setStats(s); })
       .catch(() => { /* keep null → marketing fallback */ });
@@ -103,14 +103,14 @@ export function useCatalogStats(): CatalogStatCounts | null {
   return stats;
 }
 
-// `/api/catalog` is public (registered before the auth middleware), so the
+// `/api/apps` is public (registered before the auth middleware), so the
 // logged-out marketing pages can show real apps and real preview screenshots.
 // Returns null while loading and [] when unavailable — both keep placeholders.
 export function useCatalogPreview(limit = 12): PreviewApp[] | null {
   const [apps, setApps] = useState<PreviewApp[] | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    apiFetch(`/api/catalog?limit=${limit}`, { signal: controller.signal })
+    apiFetch(`/api/apps?limit=${limit}`, { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((page) => setApps(toPreviewApps(parseCatalogDiscoveryPage(page))))
       .catch((err: Error) => { if (err.name !== 'AbortError') setApps([]); });

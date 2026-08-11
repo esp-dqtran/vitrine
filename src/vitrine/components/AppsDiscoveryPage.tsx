@@ -466,15 +466,10 @@ export function AppsDiscoveryPageView({
             }))}
           resultCount={renderedCount}
           resultLabels={[labels.singular, labels.plural]}
+          showSort={false}
           sort={state.sort}
-          sortOptions={[
-            { value: 'latest', label: 'Newest' },
-            { value: 'trending', label: 'Popular' },
-          ]}
-          onSortChange={(sort) => changeState({
-            ...state,
-            sort: sort as AppsDiscoveryFilterState['sort'],
-          })}
+          sortOptions={[]}
+          onSortChange={() => undefined}
           onToggleFilter={(group, value) => changeState(toggleAppsDiscoveryFacet(state, {
             group: group as AppsFacet['group'],
             value,

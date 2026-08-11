@@ -30,7 +30,7 @@ export interface AppsDiscoveryScreenResult {
 export const APPS_DISCOVERY_CATEGORIES = ['AI', 'Finance', 'CRM', 'Business', 'News'];
 export const APPS_DISCOVERY_STATIC_FACETS = PUBLIC_APP_STATIC_FACETS;
 
-// Full catalog values (from `/api/catalog/facets`), used to seed the toolbar filter
+// Full Apps values (from `/api/apps/facets`), used to seed the toolbar filter
 // dropdowns so they don't need a live facet query. APPS_DISCOVERY_CATEGORIES above stays
 // a short curated list for the taxonomy quick-links panel.
 export const ALL_APPS_CATEGORIES = [

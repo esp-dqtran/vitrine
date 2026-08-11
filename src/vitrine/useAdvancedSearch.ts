@@ -20,6 +20,11 @@ export interface AdvancedSearchViewState {
   revision: number;
 }
 
+export function hasAdvancedSearchIntent(state: SearchPageState): boolean {
+  return Boolean(state.query.trim())
+    || Object.values(state.filters).some((values) => values.length > 0);
+}
+
 export function createAdvancedSearchController(client: AdvancedSearchClient) {
   let view: AdvancedSearchViewState = {
     result: null,
@@ -108,12 +113,14 @@ export function useAdvancedSearch(
 } {
   const controller = useMemo(() => createAdvancedSearchController(client), [client]);
   const serialized = serializeSearchState(state);
+  const shouldSearch = hasAdvancedSearchIntent(state);
   useEffect(() => {
+    if (!shouldSearch) return;
     const timer = window.setTimeout(() => {
       void controller.search(state);
     }, 180);
     return () => window.clearTimeout(timer);
-  }, [controller, serialized]);
+  }, [controller, serialized, shouldSearch]);
   useEffect(() => () => controller.dispose(), [controller]);
   const view = useSyncExternalStore(
     controller.subscribe,

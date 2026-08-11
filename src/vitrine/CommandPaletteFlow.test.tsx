@@ -7,6 +7,8 @@ import {
   CommandPalette,
   flowIdFromCatalogResultId,
   flowIdFromSearchResult,
+  readRecentAppSearches,
+  saveRecentAppSearch,
 } from './components/CommandPalette.tsx';
 
 const baseProps = {
@@ -85,14 +87,10 @@ test('opens directly in Flow mode with the current Flow query and platform', () 
   assert.match(html, /data-nav="flows"/);
   assert.match(html, /data-querying="true"/);
   assert.match(html, /value="settings"/);
-  assert.match(html, /aria-label="Flow search filters"/);
-  assert.match(html, /App category/);
-  assert.match(html, /Flow tag/);
+  assert.doesNotMatch(html, /Flow search filters/);
+  assert.doesNotMatch(html, /Refine results|App category|Flow tag/);
   assert.match(html, /No Flow descriptions, tags, or steps match this search/);
-  assert.match(
-    html,
-    /<button(?=[^>]*aria-label="iOS")(?=[^>]*aria-pressed="true")/,
-  );
+  assert.doesNotMatch(html, /aria-label="Search platform"/);
   assert.match(html, /data-is-pressed="true"[^>]*aria-label="Flows"/);
 });
 
@@ -111,6 +109,7 @@ test('enables only the route-scoped Flow mode for a Free plan', () => {
   assert.match(html, /data-nav="flows"/);
   assert.match(html, /aria-label="Flows"/);
   assert.match(html, /command-palette-flow-browser/);
+  assert.match(html, /No Flow descriptions, tags, or steps match this search/);
   assert.doesNotMatch(html, /aria-label="Screens"/);
   assert.doesNotMatch(html, /aria-label="UI Elements"/);
   assert.doesNotMatch(html, /<input[^>]*disabled/);
@@ -144,6 +143,34 @@ test('uses the App catalog result set for Apps-only search', () => {
   assert.doesNotMatch(html, /aria-label="Screens"/);
   assert.doesNotMatch(html, /aria-label="UI Elements"/);
   assert.doesNotMatch(html, /aria-label="Flows"/);
+});
+
+test('focuses Apps search on names and categories, with its selected platform', () => {
+  const html = renderToStaticMarkup(
+    <CommandPalette {...baseProps} appOnly initialPlatform="ios" />,
+  );
+
+  assert.match(html, />Search apps<\/label>/);
+  assert.match(html, /placeholder="Search app name or category/);
+  assert.match(
+    html,
+    /<button(?=[^>]*aria-label="iOS")(?=[^>]*aria-pressed="true")/,
+  );
+  assert.doesNotMatch(html, /aria-label="Popular apps"/);
+});
+
+test('stores a bounded deduplicated recent-app history', () => {
+  const values = new Map<string, string>();
+  const storage = {
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => { values.set(key, value); },
+  };
+  saveRecentAppSearch(storage, { id: 'linear', app: 'Linear', accent: '#5e6ad2' });
+  saveRecentAppSearch(storage, { id: 'stripe', app: 'Stripe', accent: '#635bff' });
+  const recent = saveRecentAppSearch(storage, { id: 'linear', app: 'Linear', accent: '#5e6ad2' });
+
+  assert.deepEqual(recent.map(({ id }) => id), ['linear', 'stripe']);
+  assert.deepEqual(readRecentAppSearches(storage).map(({ id }) => id), ['linear', 'stripe']);
 });
 
 test('uses Vitrines-specific search guidance and keeps recovery inside the palette', () => {

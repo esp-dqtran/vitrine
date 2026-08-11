@@ -31,6 +31,49 @@ const NAV_ITEMS: Array<{ id: CommandPaletteNav; label: string; icon: IconName }>
 
 const SECTION_LABEL: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)', margin: '22px 0 12px' };
 const TILE_GRID: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(120px,1fr))', gap: 14 };
+const RECENT_APP_SEARCHES_KEY = 'vitrines:recent-app-searches';
+const RECENT_APP_SEARCHES_LIMIT = 6;
+
+export interface RecentAppSearch {
+  id: string;
+  app: string;
+  iconUrl?: string | null;
+  accent: string;
+}
+
+type LocalStorageReader = Pick<Storage, 'getItem'>;
+type LocalStorageWriter = Pick<Storage, 'setItem'>;
+
+function isRecentAppSearch(value: unknown): value is RecentAppSearch {
+  return Boolean(value && typeof value === 'object'
+    && typeof (value as RecentAppSearch).id === 'string'
+    && typeof (value as RecentAppSearch).app === 'string'
+    && typeof (value as RecentAppSearch).accent === 'string');
+}
+
+export function readRecentAppSearches(storage: LocalStorageReader): RecentAppSearch[] {
+  try {
+    const parsed: unknown = JSON.parse(storage.getItem(RECENT_APP_SEARCHES_KEY) ?? '[]');
+    return Array.isArray(parsed) ? parsed.filter(isRecentAppSearch).slice(0, RECENT_APP_SEARCHES_LIMIT) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveRecentAppSearch(
+  storage: LocalStorageWriter,
+  app: RecentAppSearch,
+): RecentAppSearch[] {
+  const recent = readRecentAppSearches(storage as LocalStorageReader);
+  const next = [app, ...recent.filter((candidate) => candidate.id !== app.id)]
+    .slice(0, RECENT_APP_SEARCHES_LIMIT);
+  try {
+    storage.setItem(RECENT_APP_SEARCHES_KEY, JSON.stringify(next));
+  } catch {
+    // LocalStorage can be unavailable in a privacy-restricted browsing context.
+  }
+  return next;
+}
 
 export function flowIdFromSearchResult(item: CatalogSearchResultItem): string | undefined {
   if (item.kind !== 'flow') return undefined;
@@ -93,6 +136,7 @@ interface CommandPaletteProps {
   onQueryChange: (value: string) => void;
   onRetrySearch: () => void;
   onRetryAppSearch?: () => void;
+  onAppPlatformChange?: (platform: Platform) => void;
   onClose: () => void;
   onSelectApp: (appId: string) => void;
   onSelectScreen: (appId: string, evidenceId?: number) => void;
@@ -121,6 +165,7 @@ export function CommandPalette({
   onQueryChange,
   onRetrySearch,
   onRetryAppSearch,
+  onAppPlatformChange,
   onClose,
   onSelectApp,
   onSelectScreen,
@@ -146,11 +191,12 @@ export function CommandPalette({
   const [comparisonError, setComparisonError] = useState('');
   const [platform, setPlatform] = useState<Platform>(initialPlatform);
   const [flowQuery, setFlowQuery] = useState(initialFlowQuery);
-  const [flowAppCategory, setFlowAppCategory] = useState('');
-  const [flowTag, setFlowTag] = useState('');
   const [activeFlowIndex, setActiveFlowIndex] = useState(0);
+  const [recentApps, setRecentApps] = useState<RecentAppSearch[]>([]);
   const flowSentinelRef = useRef<HTMLDivElement>(null);
   const flowModeEnabled = plan === 'pro' || initialNav === 'flows';
+  const richFlowSearchEnabled = nav === 'flows'
+    && Boolean(flowQuery.trim());
   const {
     items: flowItems,
     cursor: flowCursor,
@@ -159,21 +205,16 @@ export function CommandPalette({
     retry: retryFlows,
     cancel: cancelFlowRequests,
   } = useCommandPaletteFlowCatalog({
-    enabled: flowModeEnabled && nav === 'flows',
+    enabled: flowModeEnabled && nav === 'flows' && !richFlowSearchEnabled,
     platform,
     query: flowQuery,
     rootRef: resultsScrollRef,
     sentinelRef: flowSentinelRef,
   });
-  const richFlowSearchEnabled = nav === 'flows'
-    && plan === 'pro'
-    && Boolean(flowQuery.trim() || flowAppCategory || flowTag);
   const richFlowSearch = useFlowSearch({
     enabled: richFlowSearchEnabled,
     query: flowQuery,
     platform,
-    ...(flowAppCategory ? { appCategory: flowAppCategory } : {}),
-    ...(flowTag ? { flowTag } : {}),
   });
   const richFlowItems = useMemo(
     () => richFlowSearch.result?.items.filter((item) => item.kind === 'flow') ?? [],
@@ -211,6 +252,16 @@ export function CommandPalette({
     return () => window.clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    if (!appOnly) return;
+    setPlatform(initialPlatform);
+  }, [appOnly, initialPlatform]);
+
+  useEffect(() => {
+    if (!appOnly || typeof window === 'undefined') return;
+    setRecentApps(readRecentAppSearches(window.localStorage));
+  }, [appOnly]);
+
   useEffect(() => { setActiveIndex(0); }, [result]);
   useEffect(() => { setActiveFlowIndex(0); }, [flowItems]);
 
@@ -237,7 +288,9 @@ export function CommandPalette({
     const afterClose = afterCloseRef.current;
     afterCloseRef.current = null;
     onClose();
-    afterClose?.();
+    // Let the native dialog unmount and release its body-scroll lock before
+    // opening another modal (for example, the public app preview).
+    if (afterClose) window.setTimeout(afterClose, 0);
   };
 
   const openPreview = (item: CatalogSearchResultItem) => {
@@ -354,7 +407,24 @@ export function CommandPalette({
     onQueryChange('');
   };
 
-  const selectApp = (appId: string) => requestClose(() => onSelectApp(appId));
+  const selectApp = (appId: string) => {
+    if (appOnly && typeof window !== 'undefined') {
+      const app = apps.find((candidate) => candidate.id === appId);
+      if (app) {
+        setRecentApps(saveRecentAppSearch(window.localStorage, {
+          id: app.id,
+          app: app.app,
+          iconUrl: app.iconUrl,
+          accent: app.accent,
+        }));
+      }
+    }
+    requestClose(() => onSelectApp(appId));
+  };
+  const selectRecentApp = (app: RecentAppSearch) => {
+    if (typeof window !== 'undefined') setRecentApps(saveRecentAppSearch(window.localStorage, app));
+    requestClose(() => onSelectApp(app.id));
+  };
   const selectScreen = (app: App, index: number) => requestClose(() => onSelectScreen(app.id, app.screens[index].id));
   const selectCategory = (categoryName: string) => {
     onQueryChange('');
@@ -362,6 +432,10 @@ export function CommandPalette({
   };
   const selectFlowFacet = (item: FlowCatalogItem) => {
     requestClose(() => onSearchFlow(item.title, platform, item.category));
+  };
+  const selectPlatform = (nextPlatform: Platform) => {
+    setPlatform(nextPlatform);
+    if (appOnly) onAppPlatformChange?.(nextPlatform);
   };
 
   const browseContent = nav === 'categories' ? (
@@ -398,26 +472,6 @@ export function CommandPalette({
     </>
   ) : nav === 'flows' ? (
     <div className="command-palette-flow-browser">
-      <div className="command-palette-flow-filters" aria-label="Flow search filters">
-        <label>
-          App category
-          <select value={flowAppCategory} onChange={(event) => setFlowAppCategory(event.target.value)}>
-            <option value="">All categories</option>
-            {(richFlowSearch.result?.facets.appCategories ?? []).map((value) => (
-              <option key={value} value={value}>{value}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Flow tag
-          <select value={flowTag} onChange={(event) => setFlowTag(event.target.value)}>
-            <option value="">All tags</option>
-            {(richFlowSearch.result?.facets.flowTags ?? []).map((value) => (
-              <option key={value} value={value}>{value}</option>
-            ))}
-          </select>
-        </label>
-      </div>
       {richFlowSearchEnabled ? (
         <>
           {richFlowSearch.loading ? <div className="command-palette-flow-state"><Spinner size="sm" aria-label="Searching flows" /></div> : null}
@@ -456,9 +510,6 @@ export function CommandPalette({
                 data-highlighted={itemIndex === activeFlowIndex ? 'true' : undefined}
                 onMouseEnter={() => setActiveFlowIndex(itemIndex)}
                 onClick={() => selectFlowFacet(item)}
-                endContent={(
-                  <span data-command-flow-count="true">{item.count.toLocaleString()}</span>
-                )}
               />
               );
             })}
@@ -507,41 +558,53 @@ export function CommandPalette({
           <div className="command-palette-search">
             <TextInput
               ref={inputRef}
-              label="Search catalog"
+              label={appOnly ? 'Search apps' : 'Search catalog'}
               isLabelHidden
               value={nav === 'flows' ? flowQuery : query}
               onChange={handleQueryChange}
-              placeholder="Describe a product moment, flow, or interface…"
+              placeholder={appOnly
+                ? 'Search app name or category…'
+                : 'Describe a product moment, flow, or interface…'}
               hasClear={Boolean(nav === 'flows' ? flowQuery : query)}
               width="100%"
               isDisabled={plan === 'free' && !publicBrowse && !flowModeEnabled}
             />
           </div>
-          <div className="command-palette-platforms" aria-label="Search platform">
-            {(['ios', 'web', 'android'] as Platform[]).map((value) => (
-              <ToggleButton
-                key={value}
-                label={value === 'ios' ? 'iOS' : value === 'web' ? 'Web' : 'Android'}
-                isPressed={platform === value}
-                size="sm"
-                onPressedChange={() => setPlatform(value)}
-              />
-            ))}
-          </div>
-          <IconButton label="Close search" icon={<Icon icon="close" size="sm" />} variant="ghost" size="sm" className="astryx-modal__icon-action" onClick={() => requestClose()} />
+          {nav !== 'flows' ? (
+            <div className="command-palette-platforms" aria-label="Search platform">
+              {(['ios', 'web', 'android'] as Platform[]).map((value) => (
+                <ToggleButton
+                  key={value}
+                  label={value === 'ios' ? 'iOS' : value === 'web' ? 'Web' : 'Android'}
+                  isPressed={platform === value}
+                  size="sm"
+                  onPressedChange={() => selectPlatform(value)}
+                />
+              ))}
+            </div>
+          ) : null}
+          <span className="command-palette-close">
+            <IconButton label="Close search" icon={<Icon icon="close" size="sm" />} variant="ghost" size="sm" onClick={() => requestClose()} />
+          </span>
         </div>
 
-        <div className="command-palette-app-chips" aria-label="Popular apps">
-          {apps.slice(0, 6).map((app) => (
+        {(!appOnly || recentApps.length > 0) ? (
+        <div
+          className="command-palette-app-chips"
+          aria-label={appOnly ? 'Recent app searches' : 'Popular apps'}
+          data-recent-app-searches={appOnly ? 'true' : undefined}
+        >
+          {(appOnly ? recentApps : apps.slice(0, 6)).map((app) => (
             <Button
               key={app.id}
               label={app.app}
               variant="secondary"
-              onClick={() => selectApp(app.id)}
+              onClick={() => appOnly ? selectRecentApp(app) : selectApp(app.id)}
               icon={<AppIcon name={app.app} iconUrl={app.iconUrl} accent={app.accent} size={22} className="command-palette-app-logo" />}
             />
           ))}
         </div>
+        ) : null}
 
         <div className="command-palette-body">
           <div className="command-palette-sidebar">

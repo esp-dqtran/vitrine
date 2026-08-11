@@ -12,7 +12,7 @@ import {
 test("builds a platform-scoped App search request for Typesense", () => {
   assert.equal(
     appCatalogRequestPath(" Stripe ", "web"),
-    "/api/catalog?facets=summary&platform=web&query=Stripe",
+    "/api/apps/search?facets=summary&platform=web&query=Stripe",
   );
 });
 
@@ -51,7 +51,7 @@ test("refresh bypasses a cached first catalog page and updates its data", async 
   }) as typeof fetch;
 
   try {
-    const endpoint = "/api/catalog?test=refresh-cache";
+    const endpoint = "/api/apps?test=refresh-cache";
     const first = await fetchCatalogPage(endpoint);
     const cached = await fetchCatalogPage(endpoint);
     const refreshed = await refreshCatalogPage(endpoint);
@@ -91,7 +91,7 @@ test("invalidating the catalog cache reloads an AppCard preview", async () => {
   }) as typeof fetch;
 
   try {
-    const endpoint = "/api/catalog?test=preview-cache-invalidation";
+    const endpoint = "/api/apps?test=preview-cache-invalidation";
     await fetchCatalogPage(endpoint);
     invalidateCatalogPageCache();
     const reloaded = await fetchCatalogPage(endpoint);
@@ -149,7 +149,7 @@ test("does not cache an invalid catalog response", async () => {
   }) as typeof fetch;
 
   try {
-    const endpoint = "/api/catalog?test=invalid-not-cached";
+    const endpoint = "/api/apps?test=invalid-not-cached";
     await assert.rejects(
       () => fetchCatalogPage(endpoint),
       /invalid catalog response: previewScreens/,

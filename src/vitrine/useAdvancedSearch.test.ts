@@ -3,6 +3,7 @@ import { test } from "node:test";
 import type { AdvancedSearchResult, SearchResultItem } from "../searchTypes.ts";
 import {
   createAdvancedSearchController,
+  hasAdvancedSearchIntent,
   type AdvancedSearchClient,
 } from "./useAdvancedSearch.ts";
 import { defaultSearchState, type SearchPageState } from "./searchState.ts";
@@ -56,6 +57,14 @@ function resultPage(ids: string[], nextCursor: string | null): AdvancedSearchRes
 function state(input: Partial<SearchPageState>): SearchPageState {
   return { ...defaultSearchState, ...input };
 }
+
+test("does not search until the Quick Search dialog has input or an explicit filter", () => {
+  assert.equal(hasAdvancedSearchIntent(defaultSearchState), false);
+  assert.equal(hasAdvancedSearchIntent(state({ query: "checkout" })), true);
+  assert.equal(hasAdvancedSearchIntent(state({
+    filters: { ...emptyFacets, appCategory: ["Finance"] },
+  })), true);
+});
 
 test("discards an older response after search state changes", async () => {
   const pending: Array<(value: AdvancedSearchResult) => void> = [];

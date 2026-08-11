@@ -1,11 +1,9 @@
 // Site cards show a still until hover. That still used to be the full-page
 // screenshot (1440x7008, ~2.5MB) while the preview video is one 1440x900
 // viewport, so hovering jumped to different content. Derive the poster from the
-// video's own first meaningful frame instead: same framing, ~16KB.
-//
-// "Meaningful" matters — a good share of the captures start recording before the
-// page has painted, so frame 0 is a blank body with a spinner. Pick the first
-// candidate frame that actually has detail.
+// video's literal first frame instead: same framing, ~16KB. The poster must
+// exactly match playback at 0s; a later, more visually interesting frame still
+// creates a visible jump when preview playback begins.
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -22,16 +20,21 @@ const run = promisify(execFile);
 
 // Cards render ~320px wide; 640 covers 2x displays.
 const POSTER_WIDTH = 640;
-// Seconds to sample, in order. A capture that is still blank at 6s has nothing
-// better to offer than its first frame.
-const CANDIDATE_SECONDS = [0, 1, 2, 3, 4, 6];
-// Mean per-channel standard deviation. A loading page (white body, thin nav) sits
-// under 20; real content measures 40-110.
-const MIN_DETAIL = 20;
+const FIRST_FRAME_SECONDS = 0;
+
+function positiveInteger(value: string | undefined): number {
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    throw new Error("--version must be a positive integer");
+  }
+  return parsed;
+}
 
 const apply = process.argv.includes("--apply");
 const refresh = process.argv.includes("--refresh");
 const onlyKind = process.argv.includes("--images") ? "image/" : process.argv.includes("--videos") ? "video/" : null;
+const versionFlag = process.argv.indexOf("--version");
+const versionId = versionFlag === -1 ? null : positiveInteger(process.argv[versionFlag + 1]);
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
 
 // The card frame is the shared 16/10 one, and a preview video is natively
@@ -54,8 +57,9 @@ const source = await query<{
    WHERE sv.status = 'ready'
      AND ($1::boolean OR sv.poster_object_key IS NULL)
      AND ($2::text IS NULL OR so.content_type LIKE $2 || '%')
+     AND ($3::bigint IS NULL OR sv.id = $3)
    ORDER BY sv.id`,
-  [refresh, onlyKind],
+  [refresh, onlyKind, versionId],
 );
 
 interface Derived {
@@ -79,11 +83,6 @@ async function frameAt(videoPath: string, directory: string, seconds: number): P
   } catch {
     return null;
   }
-}
-
-async function detailOf(frame: Buffer): Promise<number> {
-  const stats = await sharp(frame).stats();
-  return stats.channels.reduce((total, channel) => total + channel.stdev, 0) / stats.channels.length;
 }
 
 async function store(versionId: number, body: Buffer): Promise<void> {
@@ -136,20 +135,10 @@ try {
       const videoPath = join(directory, "preview");
       await writeFile(videoPath, video.body);
 
-      let chosen: { frame: Buffer; seconds: number; detail: number } | null = null;
-      for (const seconds of CANDIDATE_SECONDS) {
-        const frame = await frameAt(videoPath, directory, seconds);
-        if (!frame) continue;
-        const detail = await detailOf(frame);
-        if (!chosen) chosen = { frame, seconds, detail };
-        if (detail >= MIN_DETAIL) {
-          chosen = { frame, seconds, detail };
-          break;
-        }
-      }
-      if (!chosen) throw new Error("No decodable frame");
+      const frame = await frameAt(videoPath, directory, FIRST_FRAME_SECONDS);
+      if (!frame) throw new Error("Could not decode the first video frame");
 
-      const body = await sharp(chosen.frame)
+      const body = await sharp(frame)
         .resize(POSTER_WIDTH, null, { withoutEnlargement: true })
         .webp({ quality: 82 })
         .toBuffer();
@@ -157,8 +146,8 @@ try {
       derived.push({
         versionId: row.version_id,
         name: row.name,
-        seconds: chosen.seconds,
-        detail: Math.round(chosen.detail),
+        seconds: FIRST_FRAME_SECONDS,
+        detail: 0,
         bytes: body.byteLength,
         sourceBytes: video.body.byteLength,
       });
@@ -181,14 +170,12 @@ try {
 }
 
 const sum = (values: number[]): number => values.reduce((total, value) => total + value, 0);
-const skippedBlankStart = derived.filter(({ seconds }) => seconds > 0);
 console.log(JSON.stringify({
   mode: apply ? "apply" : "dry-run",
   examined: source.rows.length,
   derived: derived.length,
   failed: failures.length,
-  // How many captures start on a page that had not painted yet.
-  startedAfterBlankFrames: skippedBlankStart.length,
+  versionId,
   posterMegabytes: Number((sum(derived.map(({ bytes }) => bytes)) / 1e6).toFixed(1)),
   averagePosterKilobytes: derived.length
     ? Math.round(sum(derived.map(({ bytes }) => bytes)) / derived.length / 1024)

@@ -8,6 +8,9 @@ import {
 } from './discoveryState.ts';
 
 export type AppsDiscoveryContent = 'apps' | 'screens' | 'elements' | 'flows';
+// Kept as a compatibility type for callers holding an older Apps state. The
+// parser and adapter normalize every value to newest-only before it reaches UI
+// or the API.
 export type AppsDiscoverySort = 'latest' | 'trending';
 
 export interface AppsDiscoveryFilterState {
@@ -32,18 +35,12 @@ const GROUP_ORDER: AppsFacet['group'][] = ['categories', 'screens', 'elements', 
 
 const APPS_DISCOVERY_DEFINITION: DiscoveryStateDefinition<AppsDiscoverySort> = {
   platforms: ['web', 'ios', 'android'],
-  sorts: ['latest', 'trending'],
+  sorts: ['latest'],
   filterGroups: GROUP_ORDER,
 };
 
 const validContentType = (value: string | null): value is AppsDiscoveryContent =>
   value === 'apps' || value === 'screens' || value === 'elements' || value === 'flows';
-
-const validSort = (value: string | null): value is AppsDiscoverySort =>
-  value === 'latest' || value === 'trending';
-
-const defaultSortFor = (contentType: AppsDiscoveryContent): AppsDiscoverySort =>
-  contentType === 'apps' ? 'latest' : 'trending';
 
 const flattenedFilters = (filters: AppsDiscoveryFilterState['filters']) =>
   GROUP_ORDER.flatMap((group) =>
@@ -83,7 +80,7 @@ export function defaultAppsDiscoveryState(
   return {
     platform,
     contentType,
-    sort: contentType === 'apps' ? 'latest' : 'trending',
+    sort: 'latest',
     filters: facet ? { [facet.group]: [facet.value] } : {},
   };
 }
@@ -97,14 +94,9 @@ export function parseAppsDiscoveryState(
   const contentType = validContentType(requestedContentType)
     ? requestedContentType
     : fallback.contentType;
-  const requestedSort = params.get('sort');
   const sharedDefaults: DiscoveryState<AppsDiscoverySort> = {
     platform: fallback.platform,
-    sort: validContentType(requestedContentType)
-      && contentType !== fallback.contentType
-      && !validSort(requestedSort)
-      ? defaultSortFor(contentType)
-      : fallback.sort,
+    sort: 'latest',
     query: '',
     filters: [],
   };
@@ -137,7 +129,6 @@ export function serializeAppsDiscoveryState(state: AppsDiscoveryFilterState): st
   const params = new URLSearchParams();
   params.set('platform', sharedParams.get('platform') ?? state.platform);
   params.set('content_type', validContentType(state.contentType) ? state.contentType : 'apps');
-  params.set('sort', sharedParams.get('sort') ?? state.sort);
   for (const filter of sharedParams.getAll('filter')) params.append('filter', filter);
   return params.toString();
 }
@@ -160,9 +151,7 @@ export function setAppsDiscoveryFacet(
   return {
     ...state,
     contentType,
-    sort: contentType === state.contentType
-      ? state.sort
-      : contentType === 'apps' ? 'latest' : 'trending',
+    sort: 'latest',
     filters: {
       ...state.filters,
       [facet.group]: current.includes(facet.value) ? current : [...current, facet.value],
