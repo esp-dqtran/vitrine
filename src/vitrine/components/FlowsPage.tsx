@@ -22,8 +22,10 @@ import {
 } from './AppsFilterBar.tsx';
 import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
 import { FlowGallery } from './FlowGallery.tsx';
+import type { FlowPreviewVariant } from './FlowPreviewDialog.tsx';
 import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
 import type { FlowTreeGroup } from '../flowTree.ts';
+import { PUBLIC_CATALOG_GUEST_LIMIT } from '../../publicCatalogAccess.ts';
 
 function catalogFlowTitle(item: FlowCatalogItem): string {
   if (
@@ -94,6 +96,12 @@ interface FlowsPageViewProps {
   onSelectApp: (appId: string) => void;
   accountControls?: ReactNode;
   userRole?: 'admin' | 'user';
+  previewVariant?: FlowPreviewVariant | 'none';
+  fullAccessLabel?: string;
+  onRequestFullAccess?: (appId: string) => void;
+  onOpenFullFlow?: (item: FlowCatalogItem, platform: Platform) => void;
+  isGuest?: boolean;
+  onGuestLimitReached?: () => void;
 }
 
 export function FlowsPageView({
@@ -101,6 +109,12 @@ export function FlowsPageView({
   onSelectFlow,
   onSelectApp,
   userRole = 'user',
+  previewVariant = 'full',
+  fullAccessLabel,
+  onRequestFullAccess,
+  onOpenFullFlow,
+  isGuest = false,
+  onGuestLimitReached,
 }: FlowsPageViewProps) {
   const flowGroups = useMemo<DiscoveryFilterGroup>(() => ({
     id: 'flowGroups',
@@ -186,6 +200,8 @@ export function FlowsPageView({
       onRetry={controller.retry}
       onRetryLoadMore={controller.retryLoadMore}
       onReset={() => controller.setState({ ...controller.state, filters: [] })}
+      guestLimitReached={isGuest && controller.items.length >= PUBLIC_CATALOG_GUEST_LIMIT}
+      onGuestLimitReached={onGuestLimitReached}
       sentinelRef={controller.sentinelRef}
     >
       <FlowGallery
@@ -209,6 +225,14 @@ export function FlowsPageView({
               flowId: item.preview.sourceFlowId,
             },
             onOpenSourceApp: () => onSelectApp(item.preview.appId),
+            previewVariant,
+            fullAccessLabel,
+            onRequestFullAccess: onRequestFullAccess
+              ? () => onRequestFullAccess(item.preview.appId)
+              : undefined,
+            onOpen: () => onOpenFullFlow
+              ? onOpenFullFlow(item, controller.state.platform)
+              : onSelectFlow(item.title, controller.state.platform),
           };
         }}
         onSelectFlow={(flowId) => {
@@ -225,6 +249,12 @@ interface FlowsPageProps {
   onSelectApp: (appId: string) => void;
   accountControls?: ReactNode;
   userRole?: 'admin' | 'user';
+  previewVariant?: FlowPreviewVariant | 'none';
+  fullAccessLabel?: string;
+  onRequestFullAccess?: (appId: string) => void;
+  onOpenFullFlow?: (item: FlowCatalogItem, platform: Platform) => void;
+  isGuest?: boolean;
+  onGuestLimitReached?: () => void;
 }
 
 export function FlowsPage({
@@ -232,6 +262,12 @@ export function FlowsPage({
   onSelectApp,
   accountControls,
   userRole = 'user',
+  previewVariant,
+  fullAccessLabel,
+  onRequestFullAccess,
+  onOpenFullFlow,
+  isGuest = false,
+  onGuestLimitReached,
 }: FlowsPageProps) {
   const locationKey = useLocationKey();
   const search = locationKey.includes('?') ? locationKey.slice(locationKey.indexOf('?')) : '';
@@ -242,6 +278,7 @@ export function FlowsPage({
         replace: mode === 'replace',
       });
     },
+    isGuest,
   });
 
   return (
@@ -251,6 +288,12 @@ export function FlowsPage({
       onSelectApp={onSelectApp}
       accountControls={accountControls}
       userRole={userRole}
+      previewVariant={previewVariant}
+      fullAccessLabel={fullAccessLabel}
+      onRequestFullAccess={onRequestFullAccess}
+      onOpenFullFlow={onOpenFullFlow}
+      isGuest={isGuest}
+      onGuestLimitReached={onGuestLimitReached}
     />
   );
 }
@@ -259,14 +302,16 @@ interface UseFlowsDiscoveryPageControllerOptions {
   locationSearch: string;
   onNavigate(search: string, mode: 'push' | 'replace'): void;
   observerFactory?: DiscoveryObserverFactory;
+  isGuest: boolean;
 }
 
 export function useFlowsDiscoveryPageController({
   locationSearch,
   onNavigate,
   observerFactory,
+  isGuest,
 }: UseFlowsDiscoveryPageControllerOptions) {
-  const adapter = useMemo(() => createFlowsDiscoveryAdapter(), []);
+  const adapter = useMemo(() => createFlowsDiscoveryAdapter({ isGuest }), [isGuest]);
   return useDiscoveryController({
     adapter,
     locationSearch,

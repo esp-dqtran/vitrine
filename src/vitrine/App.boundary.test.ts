@@ -30,8 +30,8 @@ test('uses the shared Astryx dropdown for authenticated account actions', async 
 test('serializes Flow and step selection through the controlled App route', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
   assert.match(source, /initialFlowView=\{route\.flowView\}/);
-  assert.match(source, /onFlowChange=\{\(flow, step, flowView, platform, version\) => navigate\(\{/);
-  assert.match(source, /section: 'flows'/);
+  assert.match(source, /onFlowChange=\{\(flow, step, flowView, platform, version\) =>\s*navigate\(\{/);
+  assert.match(source, /section: ["']flows["']/);
   assert.match(source, /\.\.\.\(flow \? \{ flow \} : \{\}\)/);
   assert.match(source, /\.\.\.\(step \? \{ step \} : \{\}\)/);
   assert.match(source, /\.\.\.\(flowView \? \{ flowView \} : \{\}\)/);
@@ -65,9 +65,10 @@ test('keeps primary catalogs and detail surfaces ready while lazy-loading second
   assert.match(source, /lazy\(\(\) =>\s*import\(['"]\.\/components\/ProjectsPage['"]\)/);
   assert.match(source, /lazy\(\(\) =>\s*import\(['"]\.\/components\/ProjectPlaygroundPage['"]\)/);
   assert.doesNotMatch(source, /components\/ResearchProjectPage/);
-  assert.doesNotMatch(source, /ProjectDocument|VITE_PROJECT_DOCUMENTS_ENABLED/);
-  assert.match(source, /case ['"]project['"]:[\s\S]*?<ProjectPlayground projectId=\{route\.projectId\}/);
-  assert.match(source, /case ['"]project-playground['"]:/);
+  assert.match(source, /const ProjectDocumentPage = lazy\(\(\) =>/);
+  assert.match(source, /case ["']project["']:[\s\S]*?<ProjectFilesPage projectId=\{route\.projectId\} area="canvas"/);
+  assert.match(source, /case ["']project-canvas["']:[\s\S]*?<ProjectPlayground/);
+  assert.match(source, /case ["']project-playground["']:/);
   assert.match(source, /<Suspense fallback=\{<ApplicationPageSpinner \/>}/);
   assert.match(source, /<ApplicationSurface/);
 });
@@ -90,11 +91,11 @@ test('keeps Sites data independent from Apps and free from job-list reads', asyn
     readFile(new URL('./sitesApi.ts', import.meta.url), 'utf8'),
   ]);
 
-  assert.match(appSource, /case 'sites':/);
-  assert.match(appSource, /case 'site-version':/);
+  assert.match(appSource, /case ["']sites["']:/);
+  assert.match(appSource, /case ["']site-version["']:/);
   assert.match(
     appSource,
-    /searchSnapshot\.open && \(!canUseAdvancedSearch \|\| route\.name === 'flows'\)/,
+    /searchSnapshot\.open && \(!canUseAdvancedSearch \|\| route\.name === ["']flows["']\)/,
   );
   assert.doesNotMatch(appSource, /useApps\(user\?\.role, route\.name === 'apps'\)/);
   assert.doesNotMatch(`${appSource}\n${sitesSource}\n${sitesApiSource}`, /\buseJobs\s*\(/);
@@ -104,8 +105,8 @@ test('keeps Sites data independent from Apps and free from job-list reads', asyn
 
 test('opens the shared catalog search overlay from Sites', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
-  assert.match(source, /onOpenSearch=\{\(seed\) => void openPalette\('sites', seed\)\}/);
-  assert.match(source, /searchMode=\{canUseAdvancedSearch \? 'advanced' : 'legacy'\}/);
+  assert.match(source, /onOpenSearch=\{\(seed\) => void openPalette\(["']sites["'], seed\)\}/);
+  assert.match(source, /searchMode=\{canUseAdvancedSearch \? ["']advanced["'] : ["']legacy["']\}/);
   assert.match(source, /<ApplicationSurface/);
   assert.match(source, /overlays=\{discoveryOverlays\}/);
 });
@@ -116,10 +117,10 @@ test('opens legacy Flow search in Flow mode and keeps selections on the Flows ro
     readFile(new URL('./components/CommandPalette.tsx', import.meta.url), 'utf8'),
   ]);
 
-  assert.match(appSource, /route\.name !== 'flows'/);
-  assert.match(appSource, /initialNav=\{route\.name === 'flows' \? 'flows' : undefined\}/);
-  assert.match(appSource, /initialFlowQuery=\{route\.name === 'flows'/);
-  assert.match(appSource, /initialPlatform=\{route\.name === 'flows'/);
+  assert.match(appSource, /route\.name !== ["']flows["']/);
+  assert.match(appSource, /initialNav=\{route\.name === ["']flows["'] \? ["']flows["'] : undefined\}/);
+  assert.match(appSource, /initialFlowQuery=\{\s*route\.name === ["']flows["']/);
+  assert.match(appSource, /initialPlatform=\{\s*route\.name === ["']flows["']/);
   assert.match(appSource, /selectedFlowDiscoverySearch/);
   assert.match(appSource, /updateLocation\(`\/flows\?\$\{nextSearch\}`\)/);
   assert.match(paletteSource, /useCommandPaletteFlowCatalog/);
@@ -132,8 +133,8 @@ test('owns one scoped search session and seeds it from each gallery', async () =
   assert.match(source, /createSearchSession/);
   assert.match(source, /useSyncExternalStore/);
   assert.match(source, /updateLocation/);
-  assert.match(source, /openPalette\('sites', seed\)/);
-  assert.match(source, /openPalette\('apps', seed\)/);
+  assert.match(source, /openPalette\(["']sites["'], seed\)/);
+  assert.match(source, /openPalette\(["']apps["'], seed\)/);
   assert.doesNotMatch(source, /const \[paletteOpen, setPaletteOpen\]/);
   assert.doesNotMatch(source, /window\.history/);
 });
@@ -142,12 +143,12 @@ test('maps each gallery taxonomy into only its compatible search filters', async
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
 
   assert.match(source, /platform: \[appsDiscoveryHeaderState\.platform\]/);
-  assert.match(source, /categories: 'appCategory'/);
-  assert.match(source, /screens: 'pageType'/);
-  assert.match(source, /elements: 'component'/);
-  assert.match(source, /flows: 'flow'/);
-  assert.match(source, /sections: 'siteSection'/);
-  assert.match(source, /styles: 'siteStyle'/);
+  assert.match(source, /categories: ["']appCategory["']/);
+  assert.match(source, /screens: ["']pageType["']/);
+  assert.match(source, /elements: ["']component["']/);
+  assert.match(source, /flows: ["']flow["']/);
+  assert.match(source, /sections: ["']siteSection["']/);
+  assert.match(source, /styles: ["']siteStyle["']/);
   assert.match(source, /openPalette\([\s\S]*discoverySearchSeed/);
 });
 
@@ -163,8 +164,8 @@ test('keeps Apps retry and terminal no-results states inside its discovery page'
   assert.match(controllerSource, /retryLoadMore/);
   assert.match(pageSource, /onRetry=\{controller\.retry\}/);
   assert.match(pageSource, /onRetryLoadMore=\{controller\.retryLoadMore\}/);
-  assert.match(layoutSource, /Could not load \{resultLabel\}/);
-  assert.match(layoutSource, /No \{resultLabel\} found/);
+  assert.match(layoutSource, /Could not load \$\{resultLabel\}/);
+  assert.match(layoutSource, /No \$\{resultLabel\} found/);
   assert.match(layoutSource, /label="Retry"/);
 });
 
@@ -188,7 +189,7 @@ test('loads additional app pages only when the gallery sentinel approaches the v
   assert.match(controllerSource, /nextCursor/);
   assert.match(controllerSource, /IntersectionObserver/);
   assert.doesNotMatch(appSource, /appsSentinelRef|new IntersectionObserver/);
-  assert.match(pageSource, /sentinelRef=\{controller\.sentinelRef\}/);
+  assert.match(pageSource, /sentinelRef=\{[\s\S]*controller\.sentinelRef[\s\S]*\}/);
   assert.match(pageSource, /loadingMore=\{controller\.loadingMore\}/);
   assert.doesNotMatch(pageSource, /<AppCardSkeleton/);
   assert.doesNotMatch(`${appSource}\n${pageSource}`, /fetch\(\s*['"]\/api\/jobs['"]/);
@@ -202,13 +203,13 @@ test('loads the member catalog one page at a time near the gallery viewport', as
   ]);
 
   assert.doesNotMatch(adapterSource, /do\s*\{/);
-  assert.match(adapterSource, /params\.set\('cursor', cursor\)/);
+  assert.match(adapterSource, /params\.set\(["']cursor["'], cursor\)/);
   assert.match(
     adapterSource,
-    /`\/api\/\$\{source === 'admin' \? 'apps' : 'catalog'\}\?\$\{params\.toString\(\)\}`/,
+    /return `\/api\/apps\$\{state\.query \? ["']\/search["'] : ["']["']\}\?\$\{params\.toString\(\)\}`/,
   );
   assert.doesNotMatch(appSource, /hasMore=\{hasMore\}|appsSentinelRef/);
-  assert.match(pageSource, /sentinelRef=\{controller\.sentinelRef\}/);
+  assert.match(pageSource, /sentinelRef=\{[\s\S]*controller\.sentinelRef[\s\S]*\}/);
 });
 
 test('separates gallery and detail route loaders', async () => {
@@ -220,10 +221,10 @@ test('separates gallery and detail route loaders', async () => {
 
   assert.match(
     appSource,
-    /searchSnapshot\.open && \(!canUseAdvancedSearch \|\| route\.name === 'flows'\)/,
+    /searchSnapshot\.open && \(!canUseAdvancedSearch \|\| route\.name === ["']flows["']\)/,
   );
   assert.match(gallerySource, /fetchCatalogPage/);
-  assert.match(appSource, /useAppDetail\(\s*route\.name === 'app' \? route\.appId : undefined,/);
+  assert.match(appSource, /useAppDetail\(\s*route\.name === ["']app["'] \? route\.appId : undefined,/);
   assert.doesNotMatch(gallerySource, /requestedAppId|fetchAppDetail|mergeApp/);
   assert.match(detailSource, /loadAppDetail/);
   assert.doesNotMatch(detailSource, /fetchAppDetailPage|limit=48/);
@@ -242,14 +243,13 @@ test('opens App detail as the only active transient surface', async () => {
     source.indexOf('const confirmUnlock = async'),
   );
 
-  assert.match(closeHelper, /setCollectionsOpen\(false\)/);
   assert.match(closeHelper, /setSettingsOpen\(false\)/);
   assert.match(closeHelper, /setLoginOpen\(false\)/);
   assert.doesNotMatch(closeHelper, /setImportOpen/);
   assert.match(closeHelper, /setAdvancedPreview\(null\)/);
-  assert.match(closeHelper, /searchSession\.close\(\)/);
+  assert.match(closeHelper, /closeLegacySearch\(\)/);
   assert.ok(
-    openApp.indexOf('closeDiscoveryOverlays()') < openApp.indexOf("navigate({ name: 'app', appId })"),
+    openApp.indexOf('closeDiscoveryOverlays()') < openApp.indexOf('navigate({ name: "app", appId })'),
     'transient overlays should close before navigating to App detail',
   );
 });
@@ -285,7 +285,7 @@ test('shares catalog search state with the inspiration modal', async () => {
 test('does not request Pro catalog research for a Free account', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
 
-  assert.match(source, /const canUseProResearch = isAdmin \|\| customerPlan === 'pro'/);
+  assert.match(source, /const canUseProResearch = isAdmin \|\| customerPlan === ["']pro["']/);
   assert.ok(source.indexOf('if (!canUseProResearch)') < source.indexOf('searchCatalog(q, filters, controller.signal)'));
   assert.match(source, /plan=\{customerPlan\}/);
   assert.match(source, /onUpgrade=\{openPricing\}/);
@@ -294,12 +294,12 @@ test('does not request Pro catalog research for a Free account', async () => {
 test('keeps independent Apps and Sites search state under References', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
 
-  assert.match(source, /const \[siteQuery, setSiteQuery\] = useState\(''\)/);
+  assert.match(source, /const \[siteQuery, setSiteQuery\] = useState\(["']["']\)/);
   assert.match(source, /const \[appFacet, setAppFacet\] = useState<AppsFacet \| null>\(null\)/);
-  assert.match(source, /active=\{discoveryRoute\}/);
+  assert.match(source, /active=\{discoveryRoute \?\? ["']apps["']\}/);
   assert.match(source, /query=\{siteQuery\}/);
   assert.match(
-    source.match(/case 'sites':[\s\S]*?break;/)?.[0] ?? '',
+    source.match(/case ["']sites["']:[\s\S]*?break;/)?.[0] ?? '',
     /query=\{siteQuery\}[\s\S]*onQueryChange=\{setSiteQuery\}/,
   );
 });
@@ -335,8 +335,8 @@ test('owns one persistent discovery header above galleries but not Project works
 test('opens account settings when returning from the Stripe billing portal', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
 
-  assert.match(source, /route\.name === 'settings-billing'/);
-  assert.match(source, /navigate\(\{ name: 'apps' \}\)/);
+  assert.match(source, /route\.name === ["']settings-billing["']/);
+  assert.match(source, /navigate\(\{ name: ["']apps["'] \}\)/);
 });
 
 test('opens guest catalog authentication in a modal without changing routes', async () => {

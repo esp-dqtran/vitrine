@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { canShowPublicSitePreview } from './App.tsx';
 import { SitesPageView } from './components/SitesPage.tsx';
 import * as SitesPageModule from './components/SitesPage.tsx';
 import * as SiteCardModule from './components/SiteCard.tsx';
@@ -34,6 +35,13 @@ const site: SiteSummary = {
     { id: 11, title: 'Pricing', position: 1, url: '/api/sites/1/versions/2/pages/11/media' },
   ],
 };
+
+test('shows the public Site preview only to guests and Free users', () => {
+  assert.equal(canShowPublicSitePreview(true, undefined), true);
+  assert.equal(canShowPublicSitePreview(false, 'free'), true);
+  assert.equal(canShowPublicSitePreview(false, 'pro'), false);
+  assert.equal(canShowPublicSitePreview(false, undefined), false);
+});
 
 const siteController = (
   overrides: Partial<DiscoveryController<

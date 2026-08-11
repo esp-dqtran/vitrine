@@ -26,7 +26,7 @@ test('keeps the search dialog mounted through its close animation', async () => 
   assert.match(flowLifecycle, /initialRequestRef\.current\?\.controller\.abort\(\)/);
   assert.match(flowLifecycle, /cursorRequestRef\.current\?\.controller\.abort\(\)/);
   assert.match(flowLifecycle, /observerRef\.current\?\.disconnect\(\)/);
-  assert.match(flowApi, /\/api\/catalog\/flows/);
+  assert.match(flowApi, /\/api\/flows/);
   assert.doesNotMatch(source, /loadDesignSystem/);
   assert.doesNotMatch(source, /Promise\.all\(apps\.map/);
   assert.match(source, /onKeyDownCapture/);

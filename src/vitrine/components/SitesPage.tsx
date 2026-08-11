@@ -16,6 +16,7 @@ import {
 import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
 import { SiteCard } from './SiteCard.tsx';
 import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
+import { PUBLIC_CATALOG_GUEST_LIMIT } from '../../publicCatalogAccess.ts';
 import {
   useDiscoveryController,
   type DiscoveryController,
@@ -207,12 +208,16 @@ interface SitesPageViewProps {
   activeFilterCount?: number;
   onOpen?: (site: SiteSummary) => void;
   memberControls?: ReactNode;
+  isGuest?: boolean;
+  onGuestLimitReached?: () => void;
 }
 
 export function SitesPageView({
   controller,
   isAdmin,
   onOpen = (site) => navigate({ name: 'site-version', siteSlug: site.routeSlug }),
+  isGuest = false,
+  onGuestLimitReached,
 }: SitesPageViewProps) {
   void isAdmin;
   const [taxonomyExpanded, setTaxonomyExpanded] = useState(
@@ -369,6 +374,8 @@ export function SitesPageView({
       onRetry={controller.retry}
       onRetryLoadMore={controller.retryLoadMore}
       onReset={() => controller.setState({ ...controller.state, query: '', filters: [] })}
+      guestLimitReached={isGuest && controller.items.length >= PUBLIC_CATALOG_GUEST_LIMIT}
+      onGuestLimitReached={onGuestLimitReached}
       sentinelRef={controller.sentinelRef}
     >
       <div
@@ -418,6 +425,8 @@ interface SitesPageProps {
   searchMode?: 'legacy' | 'advanced';
   activeFilterCount?: number;
   memberControls?: ReactNode;
+  isGuest?: boolean;
+  onGuestLimitReached?: () => void;
 }
 
 interface UseSitesDiscoveryPageControllerOptions {
@@ -425,6 +434,7 @@ interface UseSitesDiscoveryPageControllerOptions {
   onQueryChange: (value: string) => void;
   locationSearch: string;
   onNavigate(search: string, mode: 'push' | 'replace'): void;
+  isGuest: boolean;
 }
 
 export function useSitesDiscoveryPageController({
@@ -432,11 +442,12 @@ export function useSitesDiscoveryPageController({
   onQueryChange,
   locationSearch,
   onNavigate,
+  isGuest,
 }: UseSitesDiscoveryPageControllerOptions) {
   const initialQueryRef = useRef(query);
   const adapter = useMemo(
-    () => createSitesDiscoveryAdapter({ query: initialQueryRef.current }),
-    [],
+    () => createSitesDiscoveryAdapter({ query: initialQueryRef.current, isGuest }),
+    [isGuest],
   );
   const controller = useDiscoveryController({
     adapter,
@@ -485,6 +496,8 @@ export function SitesPage({
   searchMode,
   activeFilterCount,
   memberControls,
+  isGuest = false,
+  onGuestLimitReached,
 }: SitesPageProps) {
   const locationKey = useLocationKey();
   const search = locationKey.includes('?') ? locationKey.slice(locationKey.indexOf('?')) : '';
@@ -497,6 +510,7 @@ export function SitesPage({
         replace: mode === 'replace',
       });
     },
+    isGuest,
   });
 
   return (
@@ -508,6 +522,8 @@ export function SitesPage({
       searchMode={searchMode}
       activeFilterCount={activeFilterCount}
       memberControls={memberControls}
+      isGuest={isGuest}
+      onGuestLimitReached={onGuestLimitReached}
     />
   );
 }

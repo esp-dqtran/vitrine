@@ -73,7 +73,7 @@ test('documents the system and keeps icon-only App Detail controls named and too
   assert.match(story, /FOUNDATION 05 · ICONOGRAPHY/);
   assert.match(story, /Three sizes only/);
   assert.match(story, /accessible label plus tooltip/);
-  assert.match(screenCard, /label=\{selected[\s\S]*?tooltip=\{selected/);
+  assert.match(screenCard, /label=\{\s*selected[\s\S]*?tooltip=\{\s*selected/);
   assert.match(screenPreview, /label="Close screen preview"[\s\S]*?tooltip="Close screen preview"/);
   assert.match(flowCard, /iconTooltips\?: boolean/);
   assert.match(flowCard, /tooltip=\{iconTooltips \? 'More flow actions' : undefined\}/);

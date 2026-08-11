@@ -8,7 +8,11 @@ import {
 } from "@astryxdesign/core";
 
 import type { DesignerCanvasCommentThread } from "../../designerCanvas.ts";
-import figjamCommentToolIcon from "../assets/figjam-comment-tool.svg";
+
+const figjamCommentToolIcon = new URL(
+  "../assets/figjam-comment-tool.svg",
+  import.meta.url,
+).href;
 
 export function ProjectCanvasCommentGlyph() {
   return (

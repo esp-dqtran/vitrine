@@ -209,6 +209,29 @@ dialog.flow-preview-dialog-shell::backdrop {
   overflow: hidden;
 }
 
+.flow-preview-dialog__locked {
+  position: absolute;
+  z-index: 3;
+  right: 32px;
+  bottom: 32px;
+  left: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--vitrine-color-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--vitrine-color-surface) 92%, transparent);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 22%);
+  backdrop-filter: blur(12px);
+}
+
+.flow-preview-dialog__locked > span {
+  color: var(--flow-preview-muted);
+  font: var(--vitrine-type-label);
+}
+
 .flow-preview-dialog__body--document {
   overflow-x: hidden;
   overflow-y: auto;

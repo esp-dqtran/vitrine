@@ -53,5 +53,5 @@ test("new canvas comment drafts do not expose deletion", () => {
   );
 
   assert.doesNotMatch(markup, />Delete</);
-  assert.match(markup, />Comment</);
+  assert.match(markup, /aria-label="Send"/);
 });

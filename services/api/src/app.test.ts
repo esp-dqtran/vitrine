@@ -467,12 +467,14 @@ test("serves the exact canonical Flow discovery envelope", async (t) => {
       };
     },
     mediaSigningSecret: "flow-route-secret-0123456789abcdef",
+    verifyAuthToken: async () => admin,
   } as never));
   t.after(() => close(server));
 
   const response = await fetch(
     `${base}/flows?platform=web&query=profile&sort=grouped`
       + `&filter=flowGroups.Account%20Management&filter=flowGroups.Security&limit=40`,
+    { headers: adminAuth },
   );
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), {
@@ -508,10 +510,11 @@ test("uses Typesense for full-text Flow search", async (t) => {
     publishedFlowCatalogPage: async () => {
       throw new Error("PostgreSQL Flow search should not run");
     },
+    verifyAuthToken: async () => admin,
   } as never));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/flows/search?platform=web&query=open%20profile&filter=flowGroups.Account%20Management&limit=20`);
+  const response = await fetch(`${base}/flows/search?platform=web&query=open%20profile&filter=flowGroups.Account%20Management&limit=20`, { headers: adminAuth });
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("server-timing")?.startsWith("typesense-flow;dur="), true);
   assert.deepEqual(await response.json(), {
@@ -2012,9 +2015,10 @@ test("serves the public catalog from one bounded page dependency", async (t) => 
     publishedPreviewImages: async () => {
       throw new Error("legacy full-preview reader called");
     },
+    verifyAuthToken: async () => admin,
   } as never));
   t.after(() => close(server));
-  const response = await fetch(`${base}/apps?cursor=${validCursor}&limit=3`);
+  const response = await fetch(`${base}/apps?cursor=${validCursor}&limit=3`, { headers: adminAuth });
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.deepEqual(input, {
@@ -2046,11 +2050,13 @@ test("serves eligible App catalog searches from Typesense with timing metadata",
       fallbackCalls += 1;
       return catalogPageRecord;
     },
+    verifyAuthToken: async () => admin,
   } as never));
   t.after(() => close(server));
 
   const response = await fetch(
     `${base}/apps/search?platform=web&query=linear&filter=categories.Productivity&limit=3`,
+    { headers: adminAuth },
   );
   assert.equal(response.status, 200);
   assert.match(response.headers.get("server-timing") ?? "", /^typesense-app;dur=\d/);
@@ -2128,8 +2134,36 @@ test("returns 400 for an invalid public catalog cursor", async (t) => {
   t.after(() => close(server));
 
   const response = await fetch(`${base}/apps?cursor=***`);
-  assert.equal(response.status, 400);
-  assert.deepEqual(await response.json(), { error: "invalid catalog cursor" });
+  assert.equal(response.status, 403);
+  assert.deepEqual(await response.json(), {
+    error: "Create an account or sign in to continue browsing the catalog",
+    code: "guest_catalog_limit",
+  });
+});
+
+test("requires an account before a catalog cursor can fetch Apps, Sites, or Flows", async (t) => {
+  const { base, server } = await serve(createApiApp({
+    publishedCatalogPage: async () => {
+      throw new Error("anonymous App cursor reached the store");
+    },
+    publishedFlowCatalogPage: async () => {
+      throw new Error("anonymous Flow cursor reached the store");
+    },
+  } as never));
+  t.after(() => close(server));
+
+  for (const path of [
+    "/apps?cursor=next-page",
+    "/flows?platform=web&cursor=next-page",
+    "/sites?cursor=next-page",
+  ]) {
+    const response = await fetch(`${base}${path}`);
+    assert.equal(response.status, 403, path);
+    assert.deepEqual(await response.json(), {
+      error: "Create an account or sign in to continue browsing the catalog",
+      code: "guest_catalog_limit",
+    });
+  }
 });
 
 test("passes valid category and flow facets to public catalog pagination", async (t) => {
@@ -2151,14 +2185,14 @@ test("passes valid category and flow facets to public catalog pagination", async
   assert.deepEqual(inputs, [
     {
       cursor: undefined,
-      limit: undefined,
+      limit: 32,
       filters: [{ group: "categories", value: "CRM" }],
       platform: "web",
       sort: "latest",
     },
     {
       cursor: undefined,
-      limit: undefined,
+      limit: 32,
       filters: [{ group: "flows", value: "Setting Up" }],
       platform: "android",
       sort: "latest",
@@ -2563,7 +2597,7 @@ test("serves bounded public Flow catalog media without an App detail request", a
   t.after(() => close(server));
 
   const media = await fetch(
-    `${base}/flows/media/linear/web/7/71/2`,
+    `${base}/flows/media/linear/web/7/71/1`,
   );
   assert.equal(media.status, 200);
   assert.equal(media.headers.get("content-type"), "image/webp");
@@ -2573,12 +2607,12 @@ test("serves bounded public Flow catalog media without an App detail request", a
     platform: "web",
     versionId: 7,
     versionFlowId: 71,
-    rank: 2,
+    rank: 1,
     variant: "full",
   }]);
 
   const thumbnail = await fetch(
-    `${base}/flows/media/linear/web/7/71/2?variant=thumb`,
+    `${base}/flows/media/linear/web/7/71/1?variant=thumb`,
   );
   assert.equal(thumbnail.status, 200);
   assert.deepEqual(inputs[1], {
@@ -2586,12 +2620,12 @@ test("serves bounded public Flow catalog media without an App detail request", a
     platform: "web",
     versionId: 7,
     versionFlowId: 71,
-    rank: 2,
+    rank: 1,
     variant: "thumb",
   });
 
   const inline = await fetch(
-    `${base}/flows/media/linear/web/7/71/2?inline=1`,
+    `${base}/flows/media/linear/web/7/71/1?inline=1`,
   );
   assert.equal(inline.status, 200);
   assert.equal(await inline.text(), "image");
@@ -2601,12 +2635,12 @@ test("serves bounded public Flow catalog media without an App detail request", a
     platform: "web",
     versionId: 7,
     versionFlowId: 71,
-    rank: 2,
+    rank: 1,
     variant: "full",
   });
 
   assert.equal((await fetch(
-    `${base}/flows/media/linear/web/7/71/7`,
+    `${base}/flows/media/linear/web/7/71/2`,
   )).status, 400);
   assert.equal(inputs.length, 3);
 });

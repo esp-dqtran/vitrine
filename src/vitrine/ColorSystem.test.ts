@@ -37,7 +37,9 @@ test('all top-level routes opt into the Apps-led page foundation', async () => {
     read('./components/ReferenceDetailShell.tsx'),
   ]);
 
-  routes.forEach((source) => assert.match(source, /vitrine-page/));
+  routes.forEach((source) =>
+    assert.match(source, /vitrine-page|projects-workspace/),
+  );
 });
 
 test('marketing and member chrome no longer use a separate inverse neutral palette', async () => {

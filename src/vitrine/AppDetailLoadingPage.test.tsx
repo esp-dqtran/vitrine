@@ -18,7 +18,7 @@ test('renders calm App detail loading beneath the persistent navigation', () => 
   );
 
   assert.match(html, /data-reference-detail-loading="app"/);
-  assert.match(html, /apps-top-nav/);
+  assert.match(html, /reference-detail-top-nav/);
   assert.match(html, /aria-label="Loading App details"/);
   assert.doesNotMatch(html, /Skeleton|reference-detail__hero|reference-detail__tabs/);
   assert.doesNotMatch(html, /aria-label="Analysis"/);

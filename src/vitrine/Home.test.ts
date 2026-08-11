@@ -56,7 +56,7 @@ test("uses real catalog icons in the looping product carousel", async () => {
   // The icon belt now lives as the third row of the catalog mosaic rather
   // than a standalone section, but it is the same markup and the same loop.
   assert.match(source, /className="home-logo-carousel"/);
-  assert.match(source, /src=\{app\.iconUrl\}/);
+  assert.match(source, /<AppIcon name=\{app\.name\} iconUrl=\{app\.iconUrl\}/);
   assert.match(source, /\{\[0, 1\]\.map\(\(group\)/);
   assert.match(source, /mosaicIcons\.map/);
   assert.doesNotMatch(source, /proofNames/);

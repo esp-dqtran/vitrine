@@ -390,7 +390,7 @@ test("defines tablet and phone research-canvas layouts", () => {
   );
   assert.match(
     css,
-    /@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.research-decision-canvas__lanes\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/,
+    /@media \(max-width:\s*720px\)\s*\{[\s\S]*?\.research-decision-canvas__lanes\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/,
   );
 });
 

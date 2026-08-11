@@ -1,4 +1,4 @@
-import { type ReactNode, type RefObject } from 'react';
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import { Button, EmptyState, Skeleton } from '@astryxdesign/core';
 import { AppCardSkeleton } from './AppCardSkeleton.tsx';
 import { ReferenceDiscoveryPageShell } from './ReferenceDiscoveryPageShell.tsx';
@@ -24,6 +24,8 @@ export interface DiscoveryPageLayoutProps {
   onReset?: () => void;
   sentinelRef?: RefObject<HTMLDivElement | null>;
   beforeResults?: ReactNode;
+  guestLimitReached?: boolean;
+  onGuestLimitReached?: () => void;
   children: ReactNode;
 }
 
@@ -47,6 +49,8 @@ export function DiscoveryPageLayout({
   onReset,
   sentinelRef,
   beforeResults,
+  guestLimitReached = false,
+  onGuestLimitReached,
   children,
 }: DiscoveryPageLayoutProps) {
   const hasResults = renderedCount > 0;
@@ -112,6 +116,9 @@ export function DiscoveryPageLayout({
             <Button label="Retry" variant="secondary" onClick={onRetryLoadMore} />
           </div>
         ) : null}
+        {guestLimitReached && onGuestLimitReached ? (
+          <GuestCatalogLimitPrompt onReached={onGuestLimitReached} />
+        ) : null}
         {sentinelRef ? (
           <div
             ref={sentinelRef}
@@ -122,6 +129,36 @@ export function DiscoveryPageLayout({
         ) : null}
       </section>
     </ReferenceDiscoveryPageShell>
+  );
+}
+
+function GuestCatalogLimitPrompt({ onReached }: { onReached: () => void }) {
+  const promptRef = useRef<HTMLDivElement | null>(null);
+  const reachedRef = useRef(false);
+
+  useEffect(() => {
+    const prompt = promptRef.current;
+    if (!prompt || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting || reachedRef.current) return;
+      reachedRef.current = true;
+      onReached();
+    }, { threshold: 0.35 });
+    observer.observe(prompt);
+    return () => observer.disconnect();
+  }, [onReached]);
+
+  return (
+    <div
+      ref={promptRef}
+      className="discovery-page-layout__guest-limit"
+      data-guest-catalog-limit="true"
+      role="status"
+    >
+      <strong>You've reached the free preview limit.</strong>
+      <span>Create an account or sign in to continue exploring Vitrines.</span>
+      <Button label="Create account or sign in" variant="primary" onClick={onReached} />
+    </div>
   );
 }
 

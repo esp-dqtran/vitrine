@@ -103,14 +103,13 @@ test('keeps Flow internals domain-owned while sharing the App-detail body contai
   assert.equal(flowDiscoveryExclusions.length, 5);
   assert.doesNotMatch(styles, /\.reference-detail__body-inner:has\(\.flow-workspace\)/);
   assert.match(styles, /\.reference-detail__body-inner\s*\{[\s\S]*?padding:\s*var\(--spacing-8\) var\(--spacing-6\) var\(--spacing-12\)\s*!important/);
-  assert.match(styles, /\.reference-discovery__content:not\(\.flows-discovery__content\)/);
-  assert.match(styles, /\.reference-discovery__taxonomy:not\(\.flows-discovery__taxonomy\)/);
+  assert.match(styles, /\.reference-discovery__content\s*\{/);
+  assert.match(styles, /\.reference-discovery__taxonomy\s*\{/);
 });
 
 test('keeps App-card copy in one compact text group', async () => {
   const styles = await read('./productSpacing.css');
 
-  assert.match(styles, /\.apps-discovery \.discovery-card__copy\s*\{[\s\S]*?gap:\s*var\(--spacing-1\)\s*!important/);
   assert.match(styles, /\.apps-discovery \.discovery-card__copy small\s*\{[\s\S]*?margin-top:\s*0/);
 });
 

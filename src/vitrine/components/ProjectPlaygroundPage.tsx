@@ -72,6 +72,7 @@ import type { Platform } from "../../platformFromUrl.ts";
 import type { AppsDiscoveryScreenResult } from "../appsDiscovery.ts";
 import type { FlowCatalogItem } from "../flowCatalogApi.ts";
 import { getResearchProject } from "../researchProjectsApi.ts";
+import { useResolvedThemeMode } from "../theme.tsx";
 import {
   DesignerCanvasApiError,
   getDesignerCanvas,
@@ -194,7 +195,6 @@ const canvasMediaMimeTypeSet = new Set([
 const canvasSource = "https://astryx.design";
 // Keep the rendered board opaque so Excalidraw can composite every scene element.
 const canvasSceneBackground = "#f7f8fa";
-const canvasTheme: "light" = "light";
 const stickyNoteSize = 240;
 const canvasDocumentWidth = 760;
 const canvasDocumentHeight = 1_080;
@@ -2897,6 +2897,7 @@ export function ProjectPlayground({
   userId: string | number;
   userName: string;
 }) {
+  const resolvedTheme = useResolvedThemeMode();
   const [saveState, setSaveState] = useState<CanvasSaveState>("loading");
   const [saveErrorMessage, setSaveErrorMessage] = useState("");
   const [collaborationStatus, setCollaborationStatus] =
@@ -3468,7 +3469,7 @@ export function ProjectPlayground({
         ? canvas.snapshot
         : undefined;
       const sourceSnapshot =
-        remote ?? readLocalCanvas() ?? blankCanvas(canvasTheme);
+        remote ?? readLocalCanvas() ?? blankCanvas(resolvedTheme);
       /* Catalog assets use `asset:<uuid>` as both Excalidraw file ID and
          project asset ID. Remember their compact storage path when opening an
          older board that still has base64 bytes in its saved document. */
@@ -3488,7 +3489,7 @@ export function ProjectPlayground({
             sourceSnapshot.elements,
           ),
         },
-        canvasTheme,
+        resolvedTheme,
       );
       canvasCommentsRef.current = snapshot.comments;
       if (activeRef.current) setCanvasComments(snapshot.comments);
@@ -3500,7 +3501,7 @@ export function ProjectPlayground({
       writeLocalCanvas(snapshot);
       if (
         !remote ||
-        !usesCanvasPresentation(remote, canvasTheme) ||
+        !usesCanvasPresentation(remote, resolvedTheme) ||
         canvasSaveKey(snapshot) !== canvasSaveKey(sourceSnapshot)
       ) {
         // The board is ready to render; do not hold its initial paint behind
@@ -3515,8 +3516,8 @@ export function ProjectPlayground({
       return { ...snapshot, scrollToContent: true };
     } catch (error) {
       const snapshot = withCanvasPresentation(
-        readLocalCanvas() ?? blankCanvas(canvasTheme),
-        canvasTheme,
+        readLocalCanvas() ?? blankCanvas(resolvedTheme),
+        resolvedTheme,
       );
       lastQueuedSnapshotKeyRef.current = canvasSaveKey(snapshot);
       lastCanvasMutationKeyRef.current = canvasMutationKey(
@@ -3544,7 +3545,7 @@ export function ProjectPlayground({
   useEffect(() => {
     editorRef.current?.updateScene({
       appState: {
-        theme: canvasTheme,
+        theme: resolvedTheme,
         viewBackgroundColor: canvasSceneBackground,
         gridModeEnabled: true,
       },
@@ -7799,7 +7800,7 @@ export function ProjectPlayground({
           <Excalidraw
             key={projectId}
             name={references?.title ?? "Astryx designer canvas"}
-            theme={canvasTheme}
+            theme={resolvedTheme}
             gridModeEnabled
             viewModeEnabled={canvasReadOnly}
             initialData={initialData}
@@ -7807,7 +7808,7 @@ export function ProjectPlayground({
               editorRef.current = api;
               api.updateScene({
                 appState: {
-                  theme: canvasTheme,
+                  theme: resolvedTheme,
                   viewBackgroundColor: canvasSceneBackground,
                   gridModeEnabled: true,
                 },

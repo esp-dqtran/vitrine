@@ -72,9 +72,7 @@ test('applies the approved preview actions and modal geometry across production 
   assert.doesNotMatch(flowDialog, /More prototype actions/);
   assert.doesNotMatch(flowDialog, /flow-preview-dialog__menu/);
   assert.match(modalCss, /\.astryx-modal__icon-action \{[\s\S]*border-radius: 50% !important;[\s\S]*background: var\(--vitrine-color-on-action-primary\) !important;[\s\S]*color: var\(--vitrine-color-action-primary\) !important;/);
-  overlayIconActions.forEach((source) => {
-    assert.match(source, /className="astryx-modal__icon-action"/);
-  });
+  overlayIconActions.forEach((source) => assert.match(source, /<IconButton/));
   assert.doesNotMatch(projectsCss, /--astryx-modal-surface:/);
   assert.doesNotMatch(projectsCss, /border-radius: 16px !important/);
   assert.doesNotMatch(projectsCss, /projects-workspace-modal-in/);

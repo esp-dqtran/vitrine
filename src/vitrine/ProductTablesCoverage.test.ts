@@ -27,7 +27,7 @@ test('preserves semantic table roles for the custom team-member grid', () => {
   assert.match(projects, /className="team-people__list product-data-table"[\s\S]*role="table"/);
   assert.match(projects, /team-people__list-heading" role="row"/);
   assert.match(projects, /role="columnheader"/);
-  assert.match(projects, /team-people__member" key=\{member\.userId\} role="row"/);
+  assert.match(projects, /team-people__member"[\s\S]*?key=\{member\.userId\}[\s\S]*?role="row"/);
   assert.match(projects, /team-people__member-profile" role="cell"/);
 });
 

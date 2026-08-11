@@ -15,6 +15,7 @@ import {
 import type { AppsFacet, AppsPlatform } from './appsDiscovery.ts';
 import { normalizeDiscoveryFilters } from './discoveryState.ts';
 import { fetchCatalogPage } from './useApps.ts';
+import { PUBLIC_CATALOG_GUEST_LIMIT } from '../publicCatalogAccess.ts';
 import {
   appendFacetSearchParams,
   loadDiscoveryFacets,
@@ -43,6 +44,7 @@ export interface AppsDiscoveryAdapterDefaults {
   facet?: AppsFacet | null;
   query?: string;
   source?: 'catalog' | 'admin';
+  isGuest?: boolean;
 }
 
 const groupedFilters = (
@@ -67,6 +69,7 @@ export function appsCatalogRequestPath(
   rawState: AppsDiscoveryControllerState,
   cursor: string | null,
   source: 'catalog' | 'admin' = 'catalog',
+  isGuest = false,
 ): string {
   const state = normalizeState(rawState);
   const params = new URLSearchParams();
@@ -77,6 +80,7 @@ export function appsCatalogRequestPath(
     params.append('filter', `${filter.group}.${filter.value}`);
   }
   if (cursor) params.set('cursor', cursor);
+  if (isGuest) params.set('limit', String(PUBLIC_CATALOG_GUEST_LIMIT));
   // App cards now render up to three phone screenshots, which are supplied by
   // the catalog's bounded preview pass. `facets=summary` keeps this list route
   // free of the expensive full facet aggregation.
@@ -153,7 +157,7 @@ export function createAppsDiscoveryAdapter(
     async request(state, cursor, signal) {
       // No admin branch: both roles use the published catalog summary.
       const page = await fetchCatalogPage(
-        appsCatalogRequestPath(state, cursor),
+        appsCatalogRequestPath(state, cursor, initial.source, initial.isGuest),
         signal,
       );
       return {

@@ -27,19 +27,27 @@ const site: SiteSummary = {
   updatedAt: '2026-08-11T00:00:00.000Z',
 };
 
-test('renders a Site-native preview with captured media and page thumbnails', () => {
+test('renders a Site media preview and blurred Design System teaser without a detail button', () => {
   const html = renderToStaticMarkup(
     <PublicSitePreviewModal site={site} onClose={() => undefined} onOpenDetail={() => undefined} />,
   );
 
   assert.match(html, /data-public-site-preview-modal="true"/);
+  assert.match(html, /aria-label="Site preview"/);
   assert.match(html, /<video[^>]+src="\/v7-preview\.webm"/);
   assert.match(html, /poster="\/v7-poster\.webp"/);
-  assert.match(html, /Open full Site detail/);
-  assert.match(html, /Pages/);
-  assert.match(html, /Showing 2 of 3/);
-  assert.match(html, /\/v7-home\.webp/);
-  assert.match(html, />Pricing</);
+  assert.match(html, /autoPlay=""/);
+  assert.match(html, /loop=""/);
+  assert.match(html, /pointer-events:none/);
+  assert.doesNotMatch(html, /controls=""/);
+  assert.match(html, /aria-label="Design system preview"/);
+  assert.match(html, /data-public-site-design-system-preview="true"/);
+  assert.match(html, /filter:blur\(8px\)/);
+  assert.match(html, /View full design system/);
+  assert.doesNotMatch(html, /Open full Site detail/);
+  assert.doesNotMatch(html, /aria-label="Pages"/);
+  assert.doesNotMatch(html, /\/v7-home\.webp/);
+  assert.doesNotMatch(html, />Pricing</);
   assert.doesNotMatch(html, /UI Elements/);
   assert.doesNotMatch(html, /Flows/);
 });

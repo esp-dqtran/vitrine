@@ -170,8 +170,8 @@ test('defines the desktop rail and 980px drawer transition', () => {
   assert.match(css, /\.flow-strip-card\s*\{[\s\S]*display:\s*grid/);
   assert.match(css, /\.flow-strip-card__track\s*\{[\s\S]*height:\s*clamp\(380px,\s*30\.67vw,\s*450px\)[\s\S]*gap:\s*16px[\s\S]*justify-content:\s*flex-start[\s\S]*overflow-x:\s*auto/);
   assert.match(css, /\.flow-strip-card__screen\s*\{[\s\S]*flex:\s*0 0 auto[\s\S]*aspect-ratio:\s*390 \/ 844[\s\S]*border-radius:\s*24px/);
-  assert.match(css, /\.flow-strip-card__stage\[data-platform='web'\] \.flow-strip-card__track\s*\{[^}]*height:\s*clamp\(240px,\s*22vw,\s*340px\)/);
-  assert.match(css, /\.flow-strip-card__stage\[data-platform='web'\] \.flow-strip-card__screen\s*\{[^}]*aspect-ratio:\s*8 \/ 5;[^}]*border-radius:\s*12px/);
+  assert.match(css, /\.flow-strip-card__stage\[data-platform=["']web["']\] \.flow-strip-card__track\s*\{[^}]*height:\s*clamp\(240px,\s*22vw,\s*340px\)/);
+  assert.match(css, /\.flow-strip-card__stage\[data-platform=["']web["']\] \.flow-strip-card__screen\s*\{[^}]*aspect-ratio:\s*8 \/ 5;[^}]*border-radius:\s*12px/);
   assert.match(css, /\.flow-strip-card__footer\s*\{[\s\S]*justify-content:\s*space-between/);
   assert.doesNotMatch(css, /\.flow-strip-card__step-label/);
   assert.match(css, /\.visual-flow-panel\s*\{[\s\S]*background:\s*#1f1f1f/);

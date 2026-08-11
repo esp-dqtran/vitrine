@@ -80,9 +80,8 @@ test('uses the slow token for standard drawers and dialogs but not Flow previews
 test('standardizes reference detail motion and honors reduced motion', async () => {
   const shell = await read('./components/ReferenceDetailShell.tsx');
 
-  assert.match(shell, /useReducedMotion/);
-  assert.match(shell, /duration:\s*shouldReduceMotion \? 0 : 0\.24/);
-  assert.doesNotMatch(shell, /duration:\s*0\.(35|42)/);
+  assert.match(shell, /useSlidingIndicator/);
+  assert.doesNotMatch(shell, /framer-motion|duration:\s*0\.(35|42)/);
 });
 
 test('documents the motion scale in Storybook', async () => {

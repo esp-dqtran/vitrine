@@ -533,7 +533,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   );
   assert.match(
     commentsSource,
-    /import figjamCommentToolIcon from .*figjam-comment-tool\.svg/,
+    /const figjamCommentToolIcon = new URL\(/,
   );
   assert.match(
     commentsSource,
@@ -850,12 +850,12 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /role="menuitem"[\s\S]*Project home/);
   assert.match(source, /navigate\(\{ name: "project", projectId \}\)/);
   assert.doesNotMatch(source, /project-canvas-header__group--right/);
-  assert.match(source, /theme=\{canvasTheme\}/);
-  assert.doesNotMatch(source, /useResolvedThemeMode/);
+  assert.match(source, /theme=\{resolvedTheme\}/);
+  assert.match(source, /useResolvedThemeMode/);
   assert.match(source, /viewBackgroundColor: canvasSceneBackground/);
   assert.match(source, /const canvasSceneBackground = "#f7f8fa"/);
-  assert.match(source, /const canvasTheme: "light" = "light"/);
-  assert.match(source, /updateScene\(\{[\s\S]*theme: canvasTheme/);
+  assert.match(source, /const resolvedTheme = useResolvedThemeMode\(\)/);
+  assert.match(source, /updateScene\(\{[\s\S]*theme: resolvedTheme/);
   assert.match(source, /gridModeEnabled/);
   assert.match(source, /<Excalidraw/);
   assert.match(source, /excalidrawAPI=/);
@@ -2350,7 +2350,7 @@ test("places a catalog flow as a storyboard of real step images", () => {
   // The canvas keeps the full captures, not the lightweight library thumbnails.
   assert.match(insertFlow, /imageUrl/);
   assert.doesNotMatch(insertFlow, /thumbnailUrl/);
-  assert.match(source, /url\.pathname\.startsWith\("\/api\/catalog\/flow-media\/"\)/);
+  assert.match(source, /url\.pathname\.startsWith\("\/api\/flows\/media\/"\)/);
   assert.match(insertFlow, /type: "image"/);
   assert.match(insertFlow, /kind: "flow"/);
   assert.match(insertFlow, /stepIndex/);

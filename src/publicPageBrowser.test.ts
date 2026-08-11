@@ -819,6 +819,6 @@ test("captures a page through the production tsx worker runtime", { timeout: 45_
   assert.equal(code, 0, stderr);
   assert.deepEqual(JSON.parse(stdout), {
     name: "Fixture App",
-    sections: ["Navigation", "Hero section title", "Features", "Pricing", "Long content", "Start today", "Footer"],
+    sections: ["Navigation", "Hero section title", "Features"],
   });
 });

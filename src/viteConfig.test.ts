@@ -5,6 +5,7 @@ import config from "../vite.config.ts";
 test("proxies collaboration sockets before the host API fallback", () => {
   const proxy = config.server?.proxy as Record<string, { target: string }>;
   assert.deepEqual(Object.keys(proxy), [
+    "^/assets/(icons|thumbnails|sites|ui-elements)/",
     "/api/project-document-collaboration",
     "/api/designer-canvas-collaboration",
     "/api",

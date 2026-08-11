@@ -55,6 +55,7 @@
   min-width: 0;
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 32px;
 }
 
@@ -667,6 +668,8 @@
 .apps-filterbar__controls {
   flex: 1 1 auto;
   gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 
 .apps-filterbar__meta {

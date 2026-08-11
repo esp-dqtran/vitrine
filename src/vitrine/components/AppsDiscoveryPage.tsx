@@ -34,6 +34,7 @@ import { AppsDiscoveryScreenCard } from './AppsDiscoveryScreenCard.tsx';
 import { DiscoveryFilterBar } from './AppsFilterBar.tsx';
 import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
 import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
+import { PUBLIC_CATALOG_GUEST_LIMIT } from '../../publicCatalogAccess.ts';
 
 const readyAppFacetPreviews = new Map<string, FacetPreview>();
 const appFacetPreviewRequests = new Map<string, Promise<FacetPreview | null>>();
@@ -112,6 +113,8 @@ export interface AppsDiscoveryPageProps {
   accountControls?: ReactNode;
   beforeGrid?: ReactNode;
   reviewItemLimit?: number;
+  isGuest?: boolean;
+  onGuestLimitReached?: () => void;
 }
 
 export interface AppsDiscoveryPageViewProps
@@ -131,6 +134,7 @@ interface UseAppsDiscoveryPageControllerOptions {
   initialQuery: string;
   onFacetChange?: (facet: AppsFacet | null) => void;
   onNavigate(search: string, mode: 'push' | 'replace'): void;
+  isGuest: boolean;
 }
 
 const APP_DISCOVERY_TAXONOMY = [
@@ -284,6 +288,7 @@ export function useAppsDiscoveryPageController({
   initialQuery,
   onFacetChange,
   onNavigate,
+  isGuest,
 }: UseAppsDiscoveryPageControllerOptions) {
   const initialFallbackRef = useRef<{
     platform: AppsPlatform;
@@ -299,8 +304,9 @@ export function useAppsDiscoveryPageController({
     () => createAppsDiscoveryAdapter({
       ...initialFallbackRef.current!,
       source: isAdmin ? 'admin' : 'catalog',
+      isGuest,
     }),
-    [isAdmin],
+    [isAdmin, isGuest],
   );
   const controller = useDiscoveryController({
     adapter,
@@ -324,6 +330,8 @@ export function AppsDiscoveryPageView({
   onOpenApp,
   beforeGrid,
   reviewItemLimit,
+  isGuest = false,
+  onGuestLimitReached,
 }: AppsDiscoveryPageViewProps) {
   const state = filterState(controller.state);
   const activeFacets = appsDiscoveryFacets(state);
@@ -491,6 +499,8 @@ export function AppsDiscoveryPageView({
       onRetry={controller.retry}
       onRetryLoadMore={controller.retryLoadMore}
       onReset={() => changeState({ ...state, filters: {} })}
+      guestLimitReached={isGuest && controller.items.length >= PUBLIC_CATALOG_GUEST_LIMIT}
+      onGuestLimitReached={onGuestLimitReached}
       sentinelRef={reviewItemLimit === undefined ? controller.sentinelRef : undefined}
       beforeResults={beforeGrid}
     >
@@ -532,6 +542,8 @@ export function AppsDiscoveryPage({
   facet = null,
   query = '',
   onFacetChange,
+  isGuest = false,
+  onGuestLimitReached,
   ...props
 }: AppsDiscoveryPageProps) {
   const locationKey = useLocationKey();
@@ -543,6 +555,7 @@ export function AppsDiscoveryPage({
     initialFacet: facet,
     initialQuery: query,
     onFacetChange,
+    isGuest,
     onNavigate: (nextSearch, mode) => {
       updateLocation(`/apps${nextSearch ? `?${nextSearch}` : ''}`, {
         replace: mode === 'replace',
@@ -556,6 +569,8 @@ export function AppsDiscoveryPage({
       isAdmin={isAdmin}
       controller={controller}
       onFacetChange={onFacetChange}
+      isGuest={isGuest}
+      onGuestLimitReached={onGuestLimitReached}
     />
   );
 }

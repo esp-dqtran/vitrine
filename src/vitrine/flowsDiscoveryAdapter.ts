@@ -14,6 +14,7 @@ import {
   loadFlowCatalogPage,
   type FlowCatalogItem,
 } from './flowCatalogApi.ts';
+import { PUBLIC_CATALOG_GUEST_LIMIT } from '../publicCatalogAccess.ts';
 
 export type FlowsDiscoverySort = 'grouped';
 export type FlowsDiscoveryControllerState = DiscoveryState<FlowsDiscoverySort>;
@@ -23,6 +24,7 @@ export interface FlowsDiscoveryAdapterDefaults {
   sort?: FlowsDiscoverySort;
   query?: string;
   filters?: DiscoveryFilter[];
+  isGuest?: boolean;
 }
 
 const STATE_DEFINITION: DiscoveryStateDefinition<FlowsDiscoverySort> = {
@@ -66,7 +68,7 @@ export function createFlowsDiscoveryAdapter(
         platform: state.platform,
         query: state.query || undefined,
         cursor: cursor ?? undefined,
-        limit: 12,
+        limit: initial.isGuest ? PUBLIC_CATALOG_GUEST_LIMIT : 12,
         flowGroups: state.filters
           .filter(({ group }) => group === 'flowGroups')
           .map(({ value }) => value),

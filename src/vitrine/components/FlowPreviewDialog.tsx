@@ -33,6 +33,8 @@ export interface FlowPreviewDocumentSource {
   flowId: string;
 }
 
+export type FlowPreviewVariant = 'full' | 'public';
+
 interface FlowPreviewDialogProps {
   flowId: string;
   flowTitle: string;
@@ -45,6 +47,10 @@ interface FlowPreviewDialogProps {
   sourceAppIconUrl?: string | null;
   documentSource?: FlowPreviewDocumentSource;
   userRole?: 'admin' | 'user';
+  previewVariant?: FlowPreviewVariant;
+  totalScreenCount?: number;
+  onRequestFullAccess?: () => void;
+  fullAccessLabel?: string;
   onActiveIndexChange: (index: number) => void;
   onModeChange: (mode: FlowPreviewMode, index?: number) => void;
   onClose: () => void;
@@ -78,12 +84,17 @@ export function FlowPreviewDialog({
   sourceAppIconUrl,
   documentSource,
   userRole = 'user',
+  previewVariant = 'full',
+  totalScreenCount = screens.length,
+  onRequestFullAccess,
+  fullAccessLabel = 'Sign in to view full flow',
   onActiveIndexChange,
   onModeChange,
   onClose,
   onOpenSourceApp,
   iconTooltips = false,
 }: FlowPreviewDialogProps) {
+  const isPublicPreview = previewVariant === 'public';
   const dialogRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLOListElement>(null);
   const {
@@ -314,7 +325,7 @@ export function FlowPreviewDialog({
             ) : null}
           </div>
 
-          <div
+          {!isPublicPreview ? <div
             className="flow-preview-dialog__modes"
             role="tablist"
             aria-label="Flow preview mode"
@@ -352,17 +363,17 @@ export function FlowPreviewDialog({
               aria-selected={activeMode === 'document'}
               onClick={() => onModeChange('document')}
             />
-          </div>
+          </div> : <span aria-hidden="true" />}
 
           <div className="flow-preview-dialog__header-actions">
-            <IconButton
+            {!isPublicPreview ? <IconButton
               label={linkCopyState === 'copying' ? 'Copying…' : 'Copy link'}
               tooltip={iconTooltips ? (linkCopyState === 'copying' ? 'Copying…' : 'Copy link') : undefined}
               icon={<Icon icon="externalLink" size="sm" />}
               variant="ghost"
               onClick={() => void copyLink()}
-            />
-            <span className="flow-preview-dialog__divider" aria-hidden="true" />
+            /> : null}
+            {!isPublicPreview ? <span className="flow-preview-dialog__divider" aria-hidden="true" /> : null}
             <IconButton
               label="Close Flow preview"
               tooltip={iconTooltips ? 'Close Flow preview' : undefined}
@@ -385,7 +396,7 @@ export function FlowPreviewDialog({
               ? 'Flow prototype'
               : 'Flow screens'}
         >
-          {activeMode === 'document' ? (
+          {!isPublicPreview && activeMode === 'document' ? (
             <div className="flow-preview-dialog__document">
               <DocumentFlowPanel
                 flow={{
@@ -400,7 +411,7 @@ export function FlowPreviewDialog({
                 onOpenVisualStep={(step) => onModeChange('screens', Math.max(0, step - 1))}
               />
             </div>
-          ) : activeMode === 'prototype' && activeScreen ? (
+          ) : !isPublicPreview && activeMode === 'prototype' && activeScreen ? (
             <div className="flow-preview-dialog__prototype">
               <Button
                 label={`Prototype screen ${activeIndex + 1}: ${activeScreen.label}`}
@@ -438,6 +449,20 @@ export function FlowPreviewDialog({
             </ol>
           )}
 
+          {isPublicPreview && totalScreenCount > screens.length ? (
+            <aside className="flow-preview-dialog__locked" aria-label="Full Flow preview requires access">
+              <span>{totalScreenCount - screens.length} more {totalScreenCount - screens.length === 1 ? 'screen' : 'screens'} in this flow</span>
+              {onRequestFullAccess ? (
+                <Button
+                  label={fullAccessLabel}
+                  variant="primary"
+                  size="lg"
+                  onClick={onRequestFullAccess}
+                />
+              ) : null}
+            </aside>
+          ) : null}
+
           {showScreenNavigation
             && activeIndex > 0 ? (
             <IconButton
@@ -461,7 +486,7 @@ export function FlowPreviewDialog({
             />
           ) : null}
 
-          {activeMode === 'screens' ? <div className="flow-preview-dialog__footer-actions">
+          {!isPublicPreview && activeMode === 'screens' ? <div className="flow-preview-dialog__footer-actions">
             <Button
               label={saved ? 'Saved' : 'Save'}
               variant="primary"
@@ -478,7 +503,7 @@ export function FlowPreviewDialog({
               className="flow-preview-dialog__copy"
             />
           </div> : null}
-          {activeMode === 'prototype' ? (
+          {!isPublicPreview && activeMode === 'prototype' ? (
             <div className="flow-preview-dialog__footer-actions flow-preview-dialog__footer-actions--prototype">
               <Button
                 label="Restart prototype"
@@ -491,7 +516,7 @@ export function FlowPreviewDialog({
             </div>
           ) : null}
 
-          {activeMode !== 'document' ? <div className="flow-preview-dialog__metadata">
+          {!isPublicPreview && activeMode !== 'document' ? <div className="flow-preview-dialog__metadata">
             <span>{screenMeta}</span>
             <Button
               label="More info"
@@ -503,7 +528,7 @@ export function FlowPreviewDialog({
             />
           </div> : null}
 
-          {activeMode !== 'document' && infoOpen && activeScreen ? (
+          {!isPublicPreview && activeMode !== 'document' && infoOpen && activeScreen ? (
             <aside className="flow-preview-dialog__info" aria-label="Screen information">
               <strong>{activeScreen.label}</strong>
               <span>Screen {activeIndex + 1} of {screens.length}</span>
@@ -514,7 +539,7 @@ export function FlowPreviewDialog({
             </aside>
           ) : null}
 
-          {activeMode === 'screens' ? <span className="flow-preview-dialog__status" aria-live="polite">
+          {(isPublicPreview || activeMode === 'screens') ? <span className="flow-preview-dialog__status" aria-live="polite">
             Screen {activeIndex + 1} of {screens.length}: {activeScreen?.label}
           </span> : null}
           {activeMode === 'prototype' ? (

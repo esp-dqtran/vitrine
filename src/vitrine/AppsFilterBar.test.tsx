@@ -354,7 +354,7 @@ test('constrains long filter menus to the viewport and scrolls only their option
   );
   assert.match(
     css,
-    /\.apps-filterbar__menu\s*\{[^}]*min-height:\s*0[^}]*height:\s*100%/,
+    /\.apps-filterbar__menu\s*\{[^}]*min-height:\s*0[^}]*height:\s*auto/,
   );
   assert.match(
     css,

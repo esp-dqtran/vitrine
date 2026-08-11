@@ -112,7 +112,7 @@ test('requests one canonical Flow cursor page with OR Flow-group filters', async
     const page = await adapter.request(state, 'cursor /2', abort.signal);
 
     assert.deepEqual(calls, [{
-      input: '/api/flows?platform=android&limit=12&facets=summary'
+      input: '/api/flows/search?platform=android&limit=12&facets=summary'
         + '&query=logging+settings&sort=grouped'
         + '&filter=flowGroups.Account+Management'
         + '&filter=flowGroups.New+User+Experience'

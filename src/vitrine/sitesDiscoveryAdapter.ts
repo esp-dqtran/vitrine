@@ -11,6 +11,7 @@ import {
   type SitesDiscoveryState,
 } from './sitesApi.ts';
 import type { SiteSummary } from './types.ts';
+import { PUBLIC_CATALOG_GUEST_LIMIT } from '../publicCatalogAccess.ts';
 
 export type SitesDiscoveryControllerState = SitesDiscoveryState;
 
@@ -18,6 +19,7 @@ export interface SitesDiscoveryAdapterDefaults {
   sort?: SitesDiscoverySort;
   query?: string;
   filters?: DiscoveryFilter[];
+  isGuest?: boolean;
 }
 
 const FILTER_GROUPS = ['categories', 'sections', 'styles'] as const;
@@ -95,7 +97,10 @@ export function createSitesDiscoveryAdapter(
           filters: normalizeDiscoveryFilters(state.filters, STATE_DEFINITION),
         },
         cursor ?? undefined,
-        { signal },
+        {
+          signal,
+          ...(initial.isGuest ? { limit: PUBLIC_CATALOG_GUEST_LIMIT } : {}),
+        },
       );
     },
     itemKey: (site) => `${site.id}:${site.versionId}`,

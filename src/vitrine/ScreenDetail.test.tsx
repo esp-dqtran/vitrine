@@ -13,12 +13,10 @@ import { flowMatchesFilters, screenMatchesFilters } from './detailFilters.ts';
 test('shows the Design System tab only when the App has a snapshot', () => {
   assert.deepEqual(appDetailTabs(false).map(({ id }) => id), [
     'screens',
-    'elements',
     'flows',
   ]);
   assert.deepEqual(appDetailTabs(true).map(({ id }) => id), [
     'screens',
-    'elements',
     'flows',
     'design-system',
   ]);
@@ -41,7 +39,7 @@ test('shows the Design System tab only when the App has a snapshot', () => {
     />
   );
   assert.match(html, /Screens/);
-  assert.match(html, /UI Elements/);
+  assert.doesNotMatch(html, /UI Elements/);
   assert.match(html, /Flows/);
   assert.doesNotMatch(html, /aria-label="Overview"/);
   assert.match(html, /aria-selected="true"[^>]*aria-label="Screens"/);
@@ -476,7 +474,7 @@ test('exposes UI-element totals with the existing app-version count projection',
   assert.match(source, /AS ui_element_count/);
 });
 
-test('shows only Screens, UI Elements, and Flows to members', () => {
+test('shows only Screens and Flows to members', () => {
   const html = renderToStaticMarkup(
     <ScreenDetail
       collections={[]}
@@ -499,7 +497,7 @@ test('shows only Screens, UI Elements, and Flows to members', () => {
     />,
   );
   assert.match(html, /aria-label="Screens"/);
-  assert.match(html, /aria-label="UI Elements"/);
+  assert.doesNotMatch(html, /aria-label="UI Elements"/);
   assert.match(html, /aria-label="Flows"/);
   assert.match(html, /aria-selected="true"[^>]*aria-label="Screens"/);
   assert.doesNotMatch(html, /aria-label="Overview"/);
@@ -537,10 +535,6 @@ test('renders the Mobbin-style App detail navigation rail with real version stat
   assert.match(
     css,
     /\.reference-detail__navigation\s*\{[^}]*gap:\s*24px/,
-  );
-  assert.match(
-    css,
-    /\.reference-detail__navigation\s*\{[^}]*padding-block:\s*calc\(\(var\(--reference-nav-height\) - var\(--vitrine-control-height\)\) \/ 2\)/,
   );
   assert.match(
     css,

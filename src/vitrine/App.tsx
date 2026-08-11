@@ -105,6 +105,13 @@ const AdvancedSearchPage = lazy(() =>
   })),
 );
 
+export function canShowPublicSitePreview(
+  isGuest: boolean,
+  plan: SubscriptionView["plan"] | null | undefined,
+): boolean {
+  return isGuest || plan === "free";
+}
+
 export function App() {
   const { user, authenticate, register, completeLogin, logout } = useAuth();
   const isGuest = user === null;
@@ -391,6 +398,15 @@ export function App() {
     }
     navigate({ name: "app", appId });
     setUnlockTarget(null);
+  };
+
+  const openSite = (site: SiteSummary) => {
+    closeDiscoveryOverlays();
+    if (canShowPublicSitePreview(isGuest, entitlements?.plan)) {
+      setSitePreviewTarget(site);
+      return;
+    }
+    navigate({ name: "site-version", siteSlug: site.routeSlug });
   };
 
   const requestFullAppAnalysis = (appId: string) => {
@@ -695,6 +711,21 @@ export function App() {
     case "flows":
       page = (
         <FlowsPage
+          isGuest={isGuest}
+          onGuestLimitReached={() => setLoginOpen(true)}
+          previewVariant={canShowPublicSitePreview(isGuest, entitlements?.plan) ? "public" : "none"}
+          fullAccessLabel={isGuest ? "Sign in to view full flow" : "View full flow"}
+          onRequestFullAccess={(appId) => requestFullAppAnalysis(appId)}
+          onOpenFullFlow={(item, platform) => {
+            closeDiscoveryOverlays();
+            navigate({
+              name: "app",
+              appId: item.preview.appId,
+              section: "flows",
+              platform,
+              flow: item.preview.sourceFlowId,
+            });
+          }}
           onSelectFlow={(title, platform) => {
             setQ("");
             setSearchResult(null);
@@ -714,12 +745,14 @@ export function App() {
       page = (
         <SitesPage
           isAdmin={isAdmin}
+          isGuest={isGuest}
+          onGuestLimitReached={() => setLoginOpen(true)}
           query={siteQuery}
           onQueryChange={setSiteQuery}
           onOpenSearch={(seed) => void openPalette("sites", seed)}
           searchMode={canUseAdvancedSearch ? "advanced" : "legacy"}
           activeFilterCount={activeFilterCount(searchSnapshot.state.filters)}
-          onOpen={setSitePreviewTarget}
+          onOpen={openSite}
           memberControls={accountControls}
         />
       );
@@ -991,6 +1024,8 @@ export function App() {
       page = (
         <AppsDiscoveryPage
           isAdmin={isAdmin}
+          isGuest={isGuest}
+          onGuestLimitReached={() => setLoginOpen(true)}
           facet={appFacet}
           initialPlatform={appPlatform}
           onFacetChange={setAppFacet}

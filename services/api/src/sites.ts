@@ -5,6 +5,7 @@ import { SitesCursorError } from "../../../src/sitesCursor.ts";
 import type { DiscoveryFilter } from "../../../src/vitrine/discoveryTypes.ts";
 import { searchDiscoveryFacets } from "../../../src/discoveryFacetSearch.ts";
 import type { TypesenseSiteCatalogClient } from "../../../src/typesenseSiteCatalog.ts";
+import { PUBLIC_CATALOG_GUEST_LIMIT } from "../../../src/publicCatalogAccess.ts";
 
 export interface SitesRouteDependencies {
   store: Pick<
@@ -17,6 +18,7 @@ export interface SitesRouteDependencies {
   cursorSecret: string;
   sendObject(metadata: ObjectMetadata, res: express.Response): Promise<void>;
   typesenseSiteCatalog?: TypesenseSiteCatalogClient;
+  isGuestRequest?: (req: express.Request) => Promise<boolean>;
 }
 
 export function mountSitesRoutes(
@@ -230,12 +232,27 @@ function mountPublicReadySitesList(
   dependencies: SitesRouteDependencies,
 ): void {
   const listSites = async (req: express.Request, res: express.Response) => {
+    const isGuest = await (dependencies.isGuestRequest?.(req) ?? Promise.resolve(false));
     const isSearchRequest = req.path === "/sites/search";
     const request = canonicalSitesPageRequest(req.query);
     if (!request || (isSearchRequest && !request.query)) {
       res.status(400).json({ error: "invalid Sites discovery query" });
       return;
     }
+    if (isGuest && request.cursor) {
+      res.status(403).json({
+        error: "Create an account or sign in to continue browsing the catalog",
+        code: "guest_catalog_limit",
+      });
+      return;
+    }
+    const pageLimit = isGuest
+      ? Math.min(request.limit ?? PUBLIC_CATALOG_GUEST_LIMIT, PUBLIC_CATALOG_GUEST_LIMIT)
+      : request.limit;
+    const pageRequest = {
+      ...request,
+      ...(pageLimit ? { limit: pageLimit } : {}),
+    };
     try {
       const typesenseCursorPrefix = "typesense-site:";
       const typesensePage = request.cursor?.startsWith(typesenseCursorPrefix)
@@ -248,11 +265,11 @@ function mountPublicReadySitesList(
         const startedAt = performance.now();
         try {
           const result = await dependencies.typesenseSiteCatalog.search({
-            ...(request.query ? { query: request.query } : {}),
-            filters: request.filters,
-            sort: request.sort,
+            ...(pageRequest.query ? { query: pageRequest.query } : {}),
+            filters: pageRequest.filters,
+            sort: pageRequest.sort,
             page: typesensePage,
-            ...(request.limit ? { limit: request.limit } : {}),
+            ...(pageLimit ? { limit: pageLimit } : {}),
           });
           const durationMs = Math.round((performance.now() - startedAt) * 100) / 100;
           res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=240");
@@ -266,9 +283,9 @@ function mountPublicReadySitesList(
           }));
           res.json({
             items: withRouteSlugs(result.sites).map(publicSiteSummary),
-            nextCursor: result.nextPage ? `${typesenseCursorPrefix}${result.nextPage}` : null,
-            totalCount: result.totalCount,
-            facets: request.includeFacets === false ? [] : result.facets,
+            nextCursor: isGuest ? null : result.nextPage ? `${typesenseCursorPrefix}${result.nextPage}` : null,
+            totalCount: isGuest ? Math.min(result.totalCount, PUBLIC_CATALOG_GUEST_LIMIT) : result.totalCount,
+            facets: pageRequest.includeFacets === false ? [] : result.facets,
           });
           return;
         } catch {
@@ -284,7 +301,7 @@ function mountPublicReadySitesList(
         }
       }
       const page = await dependencies.store.listReadySitesPage({
-        ...request,
+        ...pageRequest,
         cursorSecret: dependencies.cursorSecret,
       });
       const items = withRouteSlugs(page.items).map(publicSiteSummary);
@@ -296,8 +313,8 @@ function mountPublicReadySitesList(
       );
       res.json({
         items,
-        nextCursor: page.nextCursor,
-        totalCount: page.totalCount,
+        nextCursor: isGuest ? null : page.nextCursor,
+        totalCount: isGuest ? Math.min(page.totalCount, PUBLIC_CATALOG_GUEST_LIMIT) : page.totalCount,
         facets: page.facets,
       });
     } catch (error) {

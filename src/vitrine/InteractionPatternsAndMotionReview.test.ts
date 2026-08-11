@@ -34,7 +34,8 @@ test('promotes the approved sticky chrome behavior to the production Apps route'
   const app = await read('./App.tsx');
   const styles = await read('./referenceDiscovery.css');
 
-  assert.match(app, /const stickyChromeEnabled = route\.name === "apps"/);
+  assert.match(app, /const stickyChromeEnabled =\s*route\.name === "apps"/);
+  assert.match(app, /route\.name === "flows"/);
   assert.match(app, /data-sticky-chrome=/);
   assert.doesNotMatch(app, /sticky_chrome_review/);
   assert.match(styles, /\[data-sticky-chrome='merged'\] \.apps-filterbar/);

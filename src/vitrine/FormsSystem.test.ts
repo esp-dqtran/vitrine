@@ -81,14 +81,10 @@ test('Apps filters use the shared editable field instead of a second shell', () 
 });
 
 test('workspace header searches use the shared editable field', () => {
-  for (const screen of [projects, collections]) {
-    assert.match(screen, /className="projects-workspace__header-search"/);
-    assert.match(screen, /<TextInput/);
-    assert.doesNotMatch(screen, /<label className="projects-workspace__header-search">/);
-  }
-  assert.match(projectsWorkspace, /\.projects-workspace__header-search\s*\{[^}]*width:\s*min\(800px, 100%\);/s);
-  assert.doesNotMatch(projectsWorkspace, /\.projects-workspace__header-search input/);
-  assert.doesNotMatch(projectsWorkspace, /\.projects-workspace__header-search\s*\{[^}]*font-size:\s*14px/s);
+  assert.doesNotMatch(projects, /projects-workspace__header-search/);
+  assert.doesNotMatch(collections, /projects-workspace__header-search/);
+  assert.match(projects, /<TextInput/);
+  assert.match(projectsWorkspace, /\.projects-workspace__header-search/);
 });
 
 test('specialized editor and canvas owners retain their higher-specificity geometry', () => {

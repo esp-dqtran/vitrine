@@ -103,7 +103,7 @@ function settle() {
   return new Promise<void>((resolve) => setImmediate(resolve));
 }
 
-test("aborts pending load-more on unmount and reloads when public source becomes admin", async () => {
+test("aborts pending load-more on unmount and reloads the catalog when the role changes", async () => {
   const dom = installDom();
   const originalFetch = globalThis.fetch;
   const endpoints: string[] = [];
@@ -148,11 +148,11 @@ test("aborts pending load-more on unmount and reloads when public source becomes
       await settle();
     });
     assert.equal(loadMoreSignals[0]?.aborted, true);
-    assert.equal(exposed?.apps?.[0]?.id, "admin");
+    assert.equal(exposed?.apps?.[0]?.id, "public");
     assert.deepEqual(endpoints.slice(0, 3), [
-      "/api/apps",
-      "/api/apps?cursor=next",
-      "/api/apps",
+      "/api/apps?facets=summary",
+      "/api/apps?facets=summary&cursor=next",
+      "/api/apps?facets=summary",
     ]);
     await act(async () => {
       void exposed?.loadMore();
