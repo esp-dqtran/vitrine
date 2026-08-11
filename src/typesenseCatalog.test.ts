@@ -20,7 +20,7 @@ const source = {
 };
 
 test("builds an escaped Typesense filter from catalog filters", () => {
-  assert.equal(typesenseFilter({ query: "", kind: "screen", state: "default", appCategory: "Productivity" }), "kind:=`screen` && states:=`default` && appCategories:=`Productivity`");
+  assert.equal(typesenseFilter({ query: "", kind: "flow", platform: "web", flowTag: "Authentication", appCategory: "Productivity" }), "kind:=`flow` && appCategories:=`Productivity` && platform:=`web` && flowTags:=`Authentication`");
   assert.equal(typesenseFilter({ query: "", kind: "all", state: "ready`\\now" }), "states:=`ready\\`\\\\now`");
 });
 

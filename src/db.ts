@@ -2101,11 +2101,11 @@ async function publishedDesignSystemsFrom(client: Pick<pg.PoolClient, "query">):
   return res.rows.map(({ snapshot }) => snapshot);
 }
 
-export async function listPublishedFlowSets(): Promise<Array<{ app: string; flows: DesignFlow[] }>> {
+export async function listPublishedFlowSets(): Promise<Array<{ app: string; platform: string; flows: DesignFlow[] }>> {
   return withTransaction(publishedFlowSetsFrom);
 }
 
-async function publishedFlowSetsFrom(client: pg.PoolClient): Promise<Array<{ app: string; flows: DesignFlow[] }>> {
+async function publishedFlowSetsFrom(client: pg.PoolClient): Promise<Array<{ app: string; platform: string; flows: DesignFlow[] }>> {
   const versions = await client.query<{ id: number; app: string; platform: string }>(
     `SELECT av.id, a.name AS app, av.platform
      FROM app_versions av JOIN apps a ON a.id = av.app_id
@@ -2116,10 +2116,11 @@ async function publishedFlowSetsFrom(client: pg.PoolClient): Promise<Array<{ app
      )
      ORDER BY a.name, av.platform`,
   );
-  const flowSets: Array<{ app: string; flows: DesignFlow[] }> = [];
+  const flowSets: Array<{ app: string; platform: string; flows: DesignFlow[] }> = [];
   for (const version of versions.rows) {
     flowSets.push({
       app: version.app,
+      platform: version.platform,
       flows: await readVersionFlows(client, { versionId: Number(version.id) }),
     });
   }
@@ -2134,7 +2135,7 @@ async function publishedFlowSetsFrom(client: pg.PoolClient): Promise<Array<{ app
 export async function publishedCatalogSearchSource(): Promise<{
   images: CrawledImage[];
   systems: DesignSystemSnapshot[];
-  flows: Array<{ app: string; flows: DesignFlow[] }>;
+  flows: Array<{ app: string; platform: string; flows: DesignFlow[] }>;
   appCategories: Record<string, string[]>;
 }> {
   return withTransaction(async (client) => {

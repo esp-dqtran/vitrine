@@ -31,6 +31,8 @@ export interface SearchFilters {
   layout?: string;
   component?: string;
   appCategory?: string;
+  platform?: string;
+  flowTag?: string;
 }
 
 export interface SaveReference {
@@ -61,6 +63,8 @@ export function searchCatalog(query: string, filters: SearchFilters, signal?: Ab
   if (filters.layout) params.set('layout', filters.layout);
   if (filters.component) params.set('component', filters.component);
   if (filters.appCategory) params.set('appCategory', filters.appCategory);
+  if (filters.platform) params.set('platform', filters.platform);
+  if (filters.flowTag) params.set('flowTag', filters.flowTag);
   return json(`/api/search?${params}`, { signal });
 }
 

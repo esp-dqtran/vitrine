@@ -111,6 +111,15 @@ await startApi({
       } : {}),
       ...(typesenseAppCatalog ? { typesenseAppCatalog, syncTypesenseAppCatalog } : {}),
     });
-    app.listen(PORT, () => console.log(`[api] listening on :${PORT}`));
+    app.listen(PORT, () => {
+      console.log(`[api] listening on :${PORT}`);
+      // Rebuild through an alias swap so a schema change (such as Flow platform
+      // and tag facets) never leaves the live search collection half-updated.
+      if (typesenseCatalog) {
+        void syncTypesenseCatalog().catch((error) => {
+          console.warn(`[api] Typesense catalog reindex failed: ${error instanceof Error ? error.message : String(error)}`);
+        });
+      }
+    });
   },
 });

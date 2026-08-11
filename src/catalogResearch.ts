@@ -20,6 +20,8 @@ export interface CatalogSearchItem {
   layoutPatterns: string[];
   componentNames: string[];
   appCategories: string[];
+  platform?: string;
+  flowTags?: string[];
   searchText: string;
 }
 
@@ -33,13 +35,15 @@ export interface CatalogSearchOptions {
   layout?: string;
   component?: string;
   appCategory?: string;
+  platform?: string;
+  flowTag?: string;
   limit?: number;
 }
 
 export interface CatalogResearchSource {
   images: CrawledImage[];
   systems: DesignSystemSnapshot[];
-  flows: Array<{ app: string; flows: DesignFlow[] }>;
+  flows: Array<{ app: string; platform?: string; flows: DesignFlow[] }>;
   appCategories?: Record<string, string[]>;
 }
 
@@ -52,6 +56,8 @@ export interface CatalogSearchFacets {
   layouts: string[];
   components: string[];
   appCategories: string[];
+  platforms: string[];
+  flowTags: string[];
 }
 
 export type CatalogSearchResultItem = Omit<CatalogSearchItem, "searchText">;
@@ -185,6 +191,8 @@ export function catalogSearchItems({ images, systems, flows, appCategories = {} 
         ...mediaForEvidence(evidenceIds),
         states: [],
         layoutPatterns: [], componentNames: [], appCategories: appCategories[entry.app] ?? [],
+        ...(entry.platform ? { platform: entry.platform } : {}),
+        flowTags: unique(flow.tags),
         searchText: [entry.app, ...(appCategories[entry.app] ?? []), flow.title, flow.description, ...flow.tags, ...flow.steps.map(({ label }) => label)].join(" "),
       });
     }
@@ -212,6 +220,8 @@ export function searchCatalog(source: CatalogResearchSource, options: CatalogSea
     layouts: unique(index.flatMap(({ layoutPatterns }) => layoutPatterns)).sort(),
     components: unique(index.flatMap(({ componentNames }) => componentNames)).sort(),
     appCategories: unique(index.flatMap(({ appCategories }) => appCategories)).sort(),
+    platforms: unique(index.flatMap(({ platform }) => platform ? [platform] : [])).sort(),
+    flowTags: unique(index.flatMap(({ flowTags }) => flowTags ?? [])).sort(),
   };
   for (const item of index) facets.kinds[item.kind] += 1;
 
@@ -227,7 +237,9 @@ export function searchCatalog(source: CatalogResearchSource, options: CatalogSea
       && (!options.state || item.states.includes(options.state))
       && (!options.layout || item.layoutPatterns.includes(options.layout))
       && (!options.component || item.componentNames.includes(options.component))
-      && (!options.appCategory || item.appCategories.includes(options.appCategory)))
+      && (!options.appCategory || item.appCategories.includes(options.appCategory))
+      && (!options.platform || item.platform === options.platform)
+      && (!options.flowTag || item.flowTags?.includes(options.flowTag)))
     .sort((a, b) => b.score - a.score || kindOrder.indexOf(a.item.kind) - kindOrder.indexOf(b.item.kind) || a.item.title.localeCompare(b.item.title))
     .slice(0, Math.min(Math.max(options.limit ?? 50, 1), 100))
     .map(({ item: { searchText: _searchText, ...item } }) => item);

@@ -85,6 +85,10 @@ test('opens directly in Flow mode with the current Flow query and platform', () 
   assert.match(html, /data-nav="flows"/);
   assert.match(html, /data-querying="true"/);
   assert.match(html, /value="settings"/);
+  assert.match(html, /aria-label="Flow search filters"/);
+  assert.match(html, /App category/);
+  assert.match(html, /Flow tag/);
+  assert.match(html, /No Flow descriptions, tags, or steps match this search/);
   assert.match(
     html,
     /<button(?=[^>]*aria-label="iOS")(?=[^>]*aria-pressed="true")/,

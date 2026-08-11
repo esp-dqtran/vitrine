@@ -1540,7 +1540,7 @@ test("uses the Typesense catalog before loading the PostgreSQL search source", a
   const response = await fetch(`${base}/search?q=workspace&kind=screen`, { headers: { authorization: "Bearer user" } });
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), typesenseResult);
-  assert.deepEqual(calls, [{ query: "workspace", kind: "screen", theme: undefined, pageType: undefined, productArea: undefined, state: undefined, layout: undefined, component: undefined, appCategory: undefined, limit: undefined }]);
+  assert.deepEqual(calls, [{ query: "workspace", kind: "screen", theme: undefined, pageType: undefined, productArea: undefined, state: undefined, layout: undefined, component: undefined, appCategory: undefined, platform: undefined, flowTag: undefined, limit: undefined }]);
 });
 
 test("creates user-owned collections and edits item notes", async (t) => {

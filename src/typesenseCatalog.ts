@@ -47,6 +47,8 @@ const facetFields = [
   "layoutPatterns",
   "componentNames",
   "appCategories",
+  "platform",
+  "flowTags",
 ];
 
 function collectionSchema(name: string) {
@@ -70,6 +72,8 @@ function collectionSchema(name: string) {
       { name: "layoutPatterns", type: "string[]", facet: true },
       { name: "componentNames", type: "string[]", facet: true },
       { name: "appCategories", type: "string[]", facet: true },
+      { name: "platform", type: "string", facet: true, optional: true },
+      { name: "flowTags", type: "string[]", facet: true, optional: true },
       // The model is intentionally fixed per collection. A model migration creates a
       // new collection instead of mixing incomparable embedding dimensions.
       { name: "embedding", type: "float[]", num_dim: 1536, optional: true },
@@ -103,13 +107,15 @@ export function typesenseFilter(options: CatalogSearchOptions): string {
   if (options.layout) filters.push(`layoutPatterns:=\`${escapeFilter(options.layout)}\``);
   if (options.component) filters.push(`componentNames:=\`${escapeFilter(options.component)}\``);
   if (options.appCategory) filters.push(`appCategories:=\`${escapeFilter(options.appCategory)}\``);
+  if (options.platform) filters.push(equalFilter("platform", options.platform));
+  if (options.flowTag) filters.push(`flowTags:=\`${escapeFilter(options.flowTag)}\``);
   return filters.join(" && ");
 }
 
 function emptyFacets(): CatalogSearchFacets {
   return {
     kinds: { app: 0, screen: 0, component: 0, token: 0, flow: 0, pattern: 0 },
-    themes: [], pageTypes: [], productAreas: [], states: [], layouts: [], components: [], appCategories: [],
+    themes: [], pageTypes: [], productAreas: [], states: [], layouts: [], components: [], appCategories: [], platforms: [], flowTags: [],
   };
 }
 
@@ -130,6 +136,8 @@ function responseFacets(facetCounts: TypesenseFacetCount[] | undefined): Catalog
       case "layoutPatterns": result.layouts = values; break;
       case "componentNames": result.components = values; break;
       case "appCategories": result.appCategories = values; break;
+      case "platform": result.platforms = values; break;
+      case "flowTags": result.flowTags = values; break;
     }
   }
   return result;

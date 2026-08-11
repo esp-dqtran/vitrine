@@ -68,8 +68,9 @@ const systems: DesignSystemSnapshot[] = [
   },
 ];
 
-const flows: Array<{ app: string; flows: DesignFlow[] }> = [{
+const flows: Array<{ app: string; platform: string; flows: DesignFlow[] }> = [{
   app: "linear",
+  platform: "web",
   flows: [{
     id: "sign-in",
     title: "Sign in",
@@ -114,6 +115,16 @@ test("searches every observed catalog entity and returns evidence-backed facets"
 test("matches natural phrases across screen purpose and curator-authored flows", () => {
   assert.equal(searchCatalog({ images, systems, flows }, { query: "sign in dark", kind: "all" }).items[0].id, "screen:1");
   assert.equal(searchCatalog({ images, systems, flows }, { query: "authenticate email", kind: "flow" }).items[0].id, "flow:linear:sign-in");
+});
+
+test("filters Flow results by platform and Flow tag", () => {
+  const result = searchCatalog(
+    { images, systems, flows, appCategories: { linear: ["Productivity"] } },
+    { query: "credentials", kind: "flow", platform: "web", flowTag: "Authentication" },
+  );
+  assert.deepEqual(result.items.map(({ id }) => id), ["flow:linear:sign-in"]);
+  assert.deepEqual(result.facets.platforms, ["web"]);
+  assert.deepEqual(result.facets.flowTags, ["Authentication"]);
 });
 
 test("builds an aligned 2-5 app comparison from observed snapshots and flows", () => {

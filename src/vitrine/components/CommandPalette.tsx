@@ -8,6 +8,7 @@ import type { App } from '../types';
 import type { FlowCatalogItem } from '../flowCatalogApi.ts';
 import { compareCatalogApps, searchRelatedCatalog } from '../researchApi';
 import { useCommandPaletteFlowCatalog } from '../useCommandPaletteFlowCatalog.ts';
+import { useFlowSearch } from '../useFlowSearch.ts';
 import { groupInspirationResults, moveSelection } from '../inspirationSearch';
 import { InspirationComparison } from './InspirationComparison';
 import { InspirationPreview } from './InspirationPreview';
@@ -145,6 +146,8 @@ export function CommandPalette({
   const [comparisonError, setComparisonError] = useState('');
   const [platform, setPlatform] = useState<Platform>(initialPlatform);
   const [flowQuery, setFlowQuery] = useState(initialFlowQuery);
+  const [flowAppCategory, setFlowAppCategory] = useState('');
+  const [flowTag, setFlowTag] = useState('');
   const [activeFlowIndex, setActiveFlowIndex] = useState(0);
   const flowSentinelRef = useRef<HTMLDivElement>(null);
   const flowModeEnabled = plan === 'pro' || initialNav === 'flows';
@@ -162,6 +165,20 @@ export function CommandPalette({
     rootRef: resultsScrollRef,
     sentinelRef: flowSentinelRef,
   });
+  const richFlowSearchEnabled = nav === 'flows'
+    && plan === 'pro'
+    && Boolean(flowQuery.trim() || flowAppCategory || flowTag);
+  const richFlowSearch = useFlowSearch({
+    enabled: richFlowSearchEnabled,
+    query: flowQuery,
+    platform,
+    ...(flowAppCategory ? { appCategory: flowAppCategory } : {}),
+    ...(flowTag ? { flowTag } : {}),
+  });
+  const richFlowItems = useMemo(
+    () => richFlowSearch.result?.items.filter((item) => item.kind === 'flow') ?? [],
+    [richFlowSearch.result],
+  );
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>();
@@ -274,6 +291,16 @@ export function CommandPalette({
       return;
     }
     if (selected || comparison) return;
+    if (nav === 'flows' && richFlowSearchEnabled && richFlowItems.length) {
+      if (event.key === 'Enter') {
+        const item = richFlowItems[activeFlowIndex];
+        if (item) {
+          event.preventDefault();
+          requestClose(() => onSelectFlow(item.app, flowIdFromSearchResult(item)));
+        }
+      }
+      return;
+    }
     if (nav === 'flows' && flowItems.length) {
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
         event.preventDefault();
@@ -322,6 +349,8 @@ export function CommandPalette({
     setComparison(null);
     setCompareApps([]);
     setFlowQuery('');
+    setFlowAppCategory('');
+    setFlowTag('');
     onQueryChange('');
   };
 
@@ -369,7 +398,50 @@ export function CommandPalette({
     </>
   ) : nav === 'flows' ? (
     <div className="command-palette-flow-browser">
-      {flowGroups.map(([category, items]) => (
+      <div className="command-palette-flow-filters" aria-label="Flow search filters">
+        <label>
+          App category
+          <select value={flowAppCategory} onChange={(event) => setFlowAppCategory(event.target.value)}>
+            <option value="">All categories</option>
+            {(richFlowSearch.result?.facets.appCategories ?? []).map((value) => (
+              <option key={value} value={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Flow tag
+          <select value={flowTag} onChange={(event) => setFlowTag(event.target.value)}>
+            <option value="">All tags</option>
+            {(richFlowSearch.result?.facets.flowTags ?? []).map((value) => (
+              <option key={value} value={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      {richFlowSearchEnabled ? (
+        <>
+          {richFlowSearch.loading ? <div className="command-palette-flow-state"><Spinner size="sm" aria-label="Searching flows" /></div> : null}
+          {richFlowSearch.error ? <div className="command-palette-flow-state" role="alert">{richFlowSearch.error}</div> : null}
+          {!richFlowSearch.loading && !richFlowSearch.error && richFlowItems.length === 0 ? (
+            <div className="command-palette-flow-state">No Flow descriptions, tags, or steps match this search.</div>
+          ) : null}
+          {richFlowItems.map((item, index) => (
+            <button
+              type="button"
+              key={item.id}
+              className="command-palette-flow-row command-palette-flow-row--rich"
+              data-flow-rich-result="true"
+              data-highlighted={index === activeFlowIndex ? 'true' : undefined}
+              onMouseEnter={() => setActiveFlowIndex(index)}
+              onClick={() => requestClose(() => onSelectFlow(item.app, flowIdFromSearchResult(item)))}
+            >
+              <strong>{item.title}</strong>
+              <span>{item.app}{item.flowTags?.length ? ` · ${item.flowTags.join(', ')}` : ''}</span>
+              <small>{item.description}</small>
+            </button>
+          ))}
+        </>
+      ) : flowGroups.map(([category, items]) => (
         <section key={category} className="command-palette-flow-group">
           <h2>{category}</h2>
           <div>
@@ -393,20 +465,20 @@ export function CommandPalette({
           </div>
         </section>
       ))}
-      {flowsLoading && flowItems.length === 0
+      {!richFlowSearchEnabled && flowsLoading && flowItems.length === 0
         ? <div className="command-palette-flow-state"><Spinner size="sm" aria-label="Loading flows" /></div>
         : null}
-      {!flowsLoading && !flowsError && flowItems.length === 0
+      {!richFlowSearchEnabled && !flowsLoading && !flowsError && flowItems.length === 0
         ? <div className="command-palette-flow-state">No flows observed yet.</div>
         : null}
-      {flowsError ? (
+      {!richFlowSearchEnabled && flowsError ? (
         <div className="command-palette-flow-state" role="alert">
           <span>Could not load flows.</span>
           <Button label="Retry" size="sm" onClick={retryFlows} />
         </div>
       ) : null}
-      {flowCursor ? <div ref={flowSentinelRef} className="command-palette-flow-sentinel" aria-hidden="true" /> : null}
-      {flowsLoading && flowItems.length > 0
+      {!richFlowSearchEnabled && flowCursor ? <div ref={flowSentinelRef} className="command-palette-flow-sentinel" aria-hidden="true" /> : null}
+      {!richFlowSearchEnabled && flowsLoading && flowItems.length > 0
         ? <div className="command-palette-flow-state"><Spinner size="sm" aria-label="Loading more flows" /></div>
         : null}
     </div>
@@ -496,7 +568,7 @@ export function CommandPalette({
                 <>
                   <span>FLOW SEARCH</span>
                   <strong>Search observed<br />product behaviors</strong>
-                  <p>Matches Flow titles and groups across apps on the selected platform.</p>
+                  <p>Search titles, descriptions, tags, and step text on the selected platform.</p>
                 </>
               ) : (
                 <>

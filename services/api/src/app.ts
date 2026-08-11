@@ -2493,6 +2493,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       layout: optionalQuery(req.query.layout),
       component: optionalQuery(req.query.component),
       appCategory: optionalQuery(req.query.appCategory),
+      platform: optionalQuery(req.query.platform),
+      flowTag: optionalQuery(req.query.flowTag),
       limit: optionalQuery(req.query.limit) ? Number(req.query.limit) : undefined,
     };
     let result;
