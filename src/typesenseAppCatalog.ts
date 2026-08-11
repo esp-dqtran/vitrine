@@ -105,6 +105,7 @@ function responseFacets(counts: TypesenseFacetCount[] | undefined): DiscoveryFac
 
 export interface TypesenseAppCatalogClient {
   index(documents: readonly AppCatalogIndexDocument[]): Promise<number>;
+  upsert(document: AppCatalogIndexDocument): Promise<void>;
   search(options: AppCatalogSearchOptions): Promise<AppCatalogSearchResult>;
 }
 
@@ -147,6 +148,14 @@ export function createTypesenseAppCatalogClient(
       if (!switched.ok) throw new Error(`Typesense app alias update returned ${switched.status}`);
       if (previous?.startsWith(`${config.collection}_`)) void call(collectionPath(previous), { method: "DELETE" });
       return rows.length;
+    },
+    async upsert(document) {
+      const response = await call(`${collectionPath(config.collection)}/documents?action=upsert`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(document),
+      });
+      if (!response.ok) throw new Error(`Typesense app document upsert returned ${response.status}`);
     },
     async search(options) {
       const limit = Math.min(Math.max(options.limit ?? 24, 1), 24);

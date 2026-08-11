@@ -508,6 +508,7 @@ const defaults = {
   typesenseCatalog: undefined as TypesenseCatalogClient | undefined,
   typesenseAppCatalog: undefined as TypesenseAppCatalogClient | undefined,
   syncTypesenseCatalog: undefined as (() => Promise<void>) | undefined,
+  syncTypesenseAppCatalog: undefined as ((app: string, platform: Platform) => Promise<void>) | undefined,
   acquireAppKnowledgeNotificationClient: async () =>
     pool.connect() as unknown as AppKnowledgeNotificationClient,
 };
@@ -1134,6 +1135,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       && typesensePage >= 1
       && (!cursor || cursor.startsWith(typesenseCursorPrefix));
     if (deps.typesenseAppCatalog && platform && supportsTypesenseAppSearch) {
+      const startedAt = performance.now();
       try {
         const result = await deps.typesenseAppCatalog.search({
           ...(search ? { query: search } : {}),
@@ -1143,7 +1145,17 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           page: typesensePage,
           ...(limit ? { limit } : {}),
         });
+        const durationMs = Math.round((performance.now() - startedAt) * 100) / 100;
         res.setHeader("Cache-Control", "private, max-age=280");
+        res.setHeader("Server-Timing", `typesense-app;dur=${durationMs}`);
+        console.info(JSON.stringify({
+          event: "typesense_app_catalog_search",
+          outcome: "success",
+          durationMs,
+          platform,
+          hasQuery: Boolean(search),
+          filterCount: filters.length,
+        }));
         res.json({
           items: result.apps,
           nextCursor: result.nextPage ? `${typesenseCursorPrefix}${result.nextPage}` : null,
@@ -1152,7 +1164,16 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         });
         return;
       } catch {
-        console.warn("[api] Typesense App catalog fallback");
+        const durationMs = Math.round((performance.now() - startedAt) * 100) / 100;
+        res.setHeader("Server-Timing", `typesense-app;dur=${durationMs};desc=\"fallback\"`);
+        console.warn(JSON.stringify({
+          event: "typesense_app_catalog_search",
+          outcome: "fallback",
+          durationMs,
+          platform,
+          hasQuery: Boolean(search),
+          filterCount: filters.length,
+        }));
       }
     }
     try {
@@ -2391,11 +2412,15 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     try {
       const published = await deps.publishAppVersion(versionId, res.locals.user.id);
-      try {
-        await deps.syncTypesenseCatalog?.();
-      } catch {
-        console.warn("[api] Typesense catalog sync failed");
-      }
+      const syncs = [
+        deps.syncTypesenseCatalog?.(),
+        deps.syncTypesenseAppCatalog?.(published.app, published.platform as Platform),
+      ].filter((sync): sync is Promise<void> => Boolean(sync));
+      void Promise.allSettled(syncs).then((results) => {
+        if (results.some((result) => result.status === "rejected")) {
+          console.warn("[api] Typesense catalog sync failed");
+        }
+      });
       res.json(published);
     }
     catch (error) { res.status(409).json({ error: (error as Error).message }); }

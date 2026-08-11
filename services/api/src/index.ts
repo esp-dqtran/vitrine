@@ -24,7 +24,10 @@ import {
   TYPESENSE_APP_CATALOG_COLLECTION,
   createTypesenseAppCatalogClient,
 } from "../../../src/typesenseAppCatalog.ts";
-import { publishedAppCatalogDocuments } from "../../../src/typesenseAppCatalogSource.ts";
+import {
+  publishedAppCatalogDocument,
+} from "../../../src/typesenseAppCatalogSource.ts";
+import type { Platform } from "../../../src/platformFromUrl.ts";
 
 const PORT = Number(process.env.PORT ?? DEFAULT_API_PORT);
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
@@ -39,15 +42,25 @@ await startApi({
     const typesenseAppCatalog = typesenseConfig
       ? createTypesenseAppCatalogClient({ ...typesenseConfig, collection: TYPESENSE_APP_CATALOG_COLLECTION })
       : undefined;
-    const syncTypesenseCatalog = async (): Promise<void> => {
+    let typesenseSync: Promise<void> | undefined;
+    const syncTypesenseCatalog = (): Promise<void> => {
+      if (typesenseSync) return typesenseSync;
+      typesenseSync = (async () => {
       if (typesenseCatalog) {
         const indexed = await typesenseCatalog.index(await publishedCatalogSearchSource());
         console.log(`[api] Indexed ${indexed} Typesense research documents.`);
       }
-      if (typesenseAppCatalog) {
-        const indexed = await typesenseAppCatalog.index(await publishedAppCatalogDocuments());
-        console.log(`[api] Indexed ${indexed} Typesense App documents.`);
-      }
+      })().finally(() => {
+        typesenseSync = undefined;
+      });
+      return typesenseSync;
+    };
+    const syncTypesenseAppCatalog = async (app: string, platform: Platform): Promise<void> => {
+      if (!typesenseAppCatalog) return;
+      const document = await publishedAppCatalogDocument(app, platform);
+      if (!document) return;
+      await typesenseAppCatalog.upsert(document);
+      console.log(`[api] Updated Typesense App document ${document.id}.`);
     };
     const referralCampaign = referralCampaignFromEnv(process.env);
     await seedAdmin(seed.email, seed.password);
@@ -96,7 +109,7 @@ await startApi({
         typesenseCatalog,
         syncTypesenseCatalog,
       } : {}),
-      ...(typesenseAppCatalog ? { typesenseAppCatalog } : {}),
+      ...(typesenseAppCatalog ? { typesenseAppCatalog, syncTypesenseAppCatalog } : {}),
     });
     app.listen(PORT, () => console.log(`[api] listening on :${PORT}`));
   },

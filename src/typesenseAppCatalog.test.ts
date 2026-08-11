@@ -49,3 +49,20 @@ test("indexes and returns App-card documents through a separate alias", async ()
   assert.match(requests.at(-1)?.url ?? "", /filter_by=platform%3A%3D%60web%60/);
   assert.match(requests.at(-1)?.url ?? "", /sort_by=_text_match%3Adesc%2ClatestAt%3Adesc/);
 });
+
+test("upserts a changed App document through the stable alias", async () => {
+  const requests: Array<{ url: string; init?: RequestInit }> = [];
+  const client = createTypesenseAppCatalogClient(
+    { host: "http://typesense.test", apiKey: "secret", collection: "vitrines_apps_v1" },
+    async (url, init) => {
+      requests.push({ url: String(url), init });
+      return new Response("{}", { status: 200 });
+    },
+  );
+
+  await client.upsert(document);
+  assert.equal(requests.length, 1);
+  assert.match(requests[0]?.url ?? "", /\/collections\/vitrines_apps_v1\/documents\?action=upsert$/);
+  assert.equal(requests[0]?.init?.method, "POST");
+  assert.equal(requests[0]?.init?.body, JSON.stringify(document));
+});

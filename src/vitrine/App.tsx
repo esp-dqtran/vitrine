@@ -306,13 +306,21 @@ export function App() {
     if (user) void ensureCollections().catch(() => []);
   };
 
+  const closeLegacySearch = () => {
+    setQ("");
+    setSearchResult(null);
+    setSearchError("");
+    setSearchLoading(false);
+    searchSession.close();
+  };
+
   const closeDiscoveryOverlays = () => {
     setSettingsOpen(false);
     setLoginOpen(false);
     setAdvancedPreview(null);
     setPreviewTarget(null);
     setSitePreviewTarget(null);
-    searchSession.close();
+    closeLegacySearch();
   };
 
   useEffect(() => {
@@ -562,7 +570,7 @@ export function App() {
             onCollectionsChange={user ? setCollections : () => undefined}
             onQueryChange={setQ}
             onRetrySearch={() => setSearchRetry((value) => value + 1)}
-            onClose={searchSession.close}
+            onClose={closeLegacySearch}
             onSelectApp={(appId) => void openApp(appId)}
             onSelectScreen={(appId) => {
               closeDiscoveryOverlays();

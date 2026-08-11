@@ -1663,19 +1663,33 @@ test("reviews and publishes an existing admin draft while hiding drafts from des
   const version = { id: 12, app: "linear", platform: "web", version_number: 2, label: "v2", source_url: null, provider: "m" as const, status: "draft" as const, notes: "", captured_at: "2026-07-11T00:00:00.000Z", submitted_at: null, published_at: null, screen_count: 7, analyzed_count: 7, component_count: 2, token_count: 4, flow_count: 1 };
   let publishedOnly: boolean | undefined;
   let queuedSearchSync = 0;
+  let appSync: unknown;
+  let releaseSearchSync: (() => void) | undefined;
+  const pendingSearchSync = new Promise<void>((resolve) => { releaseSearchSync = resolve; });
   const { base, server } = await serve(createApiApp({
     verifyAuthToken: async (token) => token === "admin" ? admin : user,
     listAppVersions: async (_app, _platform, only) => { publishedOnly = only; return only ? [] : [version]; },
     getVersionPublicationBlockers: async () => [],
     submitAppVersionForReview: async () => ({ ...version, status: "in_review" as const }),
     publishAppVersion: async () => ({ ...version, status: "published" as const, published_at: "2026-07-11T01:00:00.000Z" }),
-    syncTypesenseCatalog: async () => { queuedSearchSync += 1; },
+    syncTypesenseCatalog: async () => {
+      queuedSearchSync += 1;
+      await pendingSearchSync;
+    },
+    syncTypesenseAppCatalog: async (...input) => { appSync = input; },
   }));
   t.after(() => close(server));
   assert.equal((await fetch(`${base}/versions/12/blockers`, { headers: adminAuth })).status, 200);
   assert.equal((await fetch(`${base}/versions/12/submit`, { method: "POST", headers: adminAuth })).status, 200);
-  assert.equal((await (await fetch(`${base}/versions/12/publish`, { method: "POST", headers: adminAuth })).json()).status, "published");
+  const publish = fetch(`${base}/versions/12/publish`, { method: "POST", headers: adminAuth });
+  const response = await Promise.race([
+    publish,
+    new Promise<Response>((_, reject) => setTimeout(() => reject(new Error("publish waited for Typesense sync")), 250)),
+  ]);
+  assert.equal((await response.json()).status, "published");
   assert.equal(queuedSearchSync, 1);
+  assert.deepEqual(appSync, ["linear", "web"]);
+  releaseSearchSync?.();
 
   const designerVersions = await fetch(`${base}/apps/linear/versions?platform=web`, { headers: { authorization: "Bearer user" } });
   assert.equal(designerVersions.status, 200);
@@ -1930,7 +1944,7 @@ test("keeps liveness up but fails readiness when object storage is unavailable",
   assert.deepEqual(await response.json(), { status: "error", error: "object_storage_unavailable" });
 });
 
- test("serves the public catalog from one bounded page dependency", async (t) => {
+test("serves the public catalog from one bounded page dependency", async (t) => {
   let input: { cursor?: string; limit?: number } | undefined;
   const validCursor = encodeUpdatedCatalogCursor({
     v: 1,
@@ -1963,6 +1977,67 @@ test("keeps liveness up but fails readiness when object storage is unavailable",
   });
   assert.equal(body.items[0].previewScreens.length, 1);
   assert.doesNotMatch(JSON.stringify(body), /mobbin-bulk|image_url/);
+});
+
+test("serves eligible App catalog searches from Typesense with timing metadata", async (t) => {
+  let fallbackCalls = 0;
+  let typesenseInput: unknown;
+  const { base, server } = await serve(createApiApp({
+    typesenseAppCatalog: {
+      search: async (input: unknown) => {
+        typesenseInput = input;
+        return {
+          apps: buildPublishedCatalogPage(catalogPageRecord).apps,
+          totalCount: 1,
+          nextPage: 2,
+          facets: [{ group: "categories", value: "Productivity", count: 1 }],
+        };
+      },
+    },
+    publishedCatalogPage: async () => {
+      fallbackCalls += 1;
+      return catalogPageRecord;
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(
+    `${base}/catalog?platform=web&query=linear&filter=categories.Productivity&limit=3`,
+  );
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("server-timing") ?? "", /^typesense-app;dur=\d/);
+  assert.deepEqual(typesenseInput, {
+    query: "linear",
+    platform: "web",
+    filters: [{ group: "categories", value: "Productivity" }],
+    sort: "latest",
+    page: 1,
+    limit: 3,
+  });
+  assert.equal(fallbackCalls, 0);
+  assert.deepEqual(await response.json(), {
+    items: buildPublishedCatalogPage(catalogPageRecord).apps,
+    nextCursor: "typesense-app:2",
+    totalCount: 1,
+    facets: [{ group: "categories", value: "Productivity", count: 1 }],
+  });
+});
+
+test("falls back to PostgreSQL when an eligible Typesense App search fails", async (t) => {
+  let fallbackCalls = 0;
+  const { base, server } = await serve(createApiApp({
+    typesenseAppCatalog: { search: async () => { throw new Error("Typesense unavailable"); } },
+    publishedCatalogPage: async () => {
+      fallbackCalls += 1;
+      return catalogPageRecord;
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/catalog?platform=web&query=linear`);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("server-timing") ?? "", /typesense-app;dur=\d.*fallback/);
+  assert.equal(fallbackCalls, 1);
 });
 
 test("returns 400 for an invalid public catalog cursor", async (t) => {
