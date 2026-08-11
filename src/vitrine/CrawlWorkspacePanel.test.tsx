@@ -180,6 +180,21 @@ test("renders the empty curator workflow with app and homepage inputs", () => {
   assert.match(html, /Shared account session/);
 });
 
+test("prefills the App source URL and identifies the current web-only runner", () => {
+  const html = renderToStaticMarkup(
+    <CrawlWorkspacePanel
+      app="atlassian"
+      role="admin"
+      initialHomepageUrl="https://www.atlassian.com/"
+    />,
+  );
+
+  assert.match(html, /value="https:\/\/www\.atlassian\.com\/"/);
+  assert.match(html, /Chromium for web Apps/);
+  assert.doesNotMatch(html, />iOS</);
+  assert.doesNotMatch(html, />Android</);
+});
+
 test("renders queued, running, and error research job states", () => {
   for (const status of ["queued", "running"] as const) {
     const html = renderToStaticMarkup(

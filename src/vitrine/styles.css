@@ -10195,9 +10195,10 @@ body {
     var(--reference-font-family, var(--font-family-body))
   );
   font-size: var(--sticky-font-size, 16px);
-  font-weight: 400;
+  font-weight: var(--sticky-font-weight, 400);
   line-height: 1.35;
-  text-align: left;
+  text-align: var(--sticky-text-align, left);
+  text-decoration: var(--sticky-text-decoration, none);
   white-space: pre-wrap;
   overflow: auto;
   overflow-wrap: anywhere;
@@ -11737,32 +11738,40 @@ body {
   white-space: nowrap;
 }
 
-.project-screen-library__facets {
+.project-screen-library__prompts {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  max-height: 84px;
-  padding-right: 2px;
-  overflow-y: auto;
 }
 
-.project-screen-library__facet {
+.project-screen-library__prompt {
   min-width: 0;
-  padding: 5px 8px;
+  padding: 6px 9px;
   color: var(--project-canvas-muted-text, #606773);
-  background: var(--project-canvas-muted-surface, #f1f3f5);
+  background: transparent;
   border: 1px solid var(--project-canvas-border, rgb(17 24 39 / 10%));
   border-radius: 999px;
   cursor: pointer;
   font: inherit;
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 600;
   line-height: 1.2;
+  transition:
+    color var(--vitrine-transition-fast),
+    background-color var(--vitrine-transition-fast),
+    border-color var(--vitrine-transition-fast),
+    transform var(--vitrine-transition-fast);
 }
 
-.project-screen-library__facet[aria-pressed="true"] {
+.project-screen-library__prompt:hover,
+.project-screen-library__prompt:focus-visible {
   color: var(--color-on-primary-container, #23447a);
   background: var(--color-surface-primary-container, #eef4ff);
   border-color: var(--color-outline-primary, #8cabdc);
+}
+
+.project-screen-library__prompt:hover {
+  transform: translateY(-1px);
 }
 
 .project-screen-library__grid {
@@ -12508,7 +12517,7 @@ body {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   :root {
     --project-canvas-toolbelt-bottom: 72px;
   }
@@ -12603,9 +12612,37 @@ body {
   }
 
   .project-playground__canvas .excalidraw--mobile .App-toolbar--mobile {
-    position: absolute;
-    top: 52px;
-    left: 0;
+    position: fixed;
+    z-index: 420;
+    top: auto;
+    right: auto;
+    bottom: 8px;
+    left: 8px;
+    box-sizing: border-box;
+    width: calc(100vw - 120px);
+    max-width: calc(100vw - 120px);
+    padding: 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+
+  .project-playground__canvas
+    .excalidraw--mobile
+    .App-toolbar--mobile::-webkit-scrollbar {
+    display: none;
+  }
+
+  .project-playground__canvas
+    .excalidraw--mobile
+    .App-toolbar--mobile
+    > .Stack_horizontal {
+    width: max-content;
+    min-width: max-content;
+    max-width: none;
+    padding-right: 8px;
   }
 
   .project-playground__canvas .excalidraw--mobile .mobile-misc-tools-container {
@@ -12616,7 +12653,7 @@ body {
     position: fixed;
     z-index: 420;
     top: auto !important;
-    right: min(236px, calc(100vw - 112px)) !important;
+    right: 8px !important;
     bottom: 8px;
     left: auto !important;
     width: 96px;
@@ -12624,6 +12661,7 @@ body {
     display: block;
     margin: 0 !important;
     padding: 0 !important;
+    transform: none;
   }
 
   .project-playground__canvas .excalidraw--mobile .App-bottom-bar > .Island,
@@ -12857,6 +12895,50 @@ body {
 
   .project-screen-library__grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* A board can be used at phone width too. Keep the compact shape strip
+     anchored above the bottom toolbelt and let its less-common tools scroll
+     horizontally instead of pushing the browser's mobile toolbar upward. */
+  .project-canvas-shape-library {
+    right: 8px;
+    bottom: calc(var(--project-canvas-toolbelt-bottom, 64px) + 8px);
+    left: 8px;
+    width: auto;
+    max-width: none;
+    padding: 6px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    transform: none;
+  }
+
+  .project-canvas-shape-library::-webkit-scrollbar {
+    display: none;
+  }
+
+  .project-canvas-shape-library__color-control,
+  .project-canvas-shape-library__section,
+  .project-canvas-shape-library__more {
+    flex: 0 0 auto;
+  }
+
+  .project-canvas-shape-library__tile {
+    width: 30px;
+    flex-basis: 30px;
+  }
+
+  .project-canvas-shape-library__more {
+    margin-left: 2px;
+    padding-inline: 7px;
+  }
+
+  .project-canvas-shape-library__color-menu {
+    left: 0;
+  }
+
+  .project-canvas-more-shapes {
+    bottom: calc(var(--project-canvas-toolbelt-bottom, 64px) + 60px);
   }
 
   .project-sticky-note-picker {

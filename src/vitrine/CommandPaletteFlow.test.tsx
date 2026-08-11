@@ -121,3 +121,21 @@ test('keeps Flow mode unavailable on other Free public routes', () => {
   assert.doesNotMatch(html, /aria-label="Flows"/);
   assert.doesNotMatch(html, /command-palette-flow-browser/);
 });
+
+test('uses Vitrines-specific search guidance and keeps recovery inside the palette', () => {
+  const html = renderToStaticMarkup(
+    <CommandPalette
+      {...baseProps}
+      query="dashboard"
+      searchError="Search is taking longer than expected. Try again or keep browsing the library."
+    />,
+  );
+
+  assert.match(html, /Describe a product moment, flow, or interface/);
+  assert.match(html, /Start with intent/);
+  assert.match(html, /Narrow with evidence/);
+  assert.match(html, /VITRINES SEARCH/);
+  assert.match(html, /Retry search/);
+  assert.doesNotMatch(html, /AI Search is now/);
+  assert.doesNotMatch(html, /Deep Search is automatically selected/);
+});

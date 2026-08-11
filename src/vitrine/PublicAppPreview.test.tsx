@@ -31,7 +31,13 @@ const preview: PublicAppPreview = {
     id: 'invite-team', title: 'Inviting the team',
     description: 'Add collaborators', stepCount: 3,
     screens: [{ label: 'Invite people', thumbnailUrl: '/flow-invite.png' }],
-  }],
+  }, ...Array.from({ length: 6 }, (_, index) => ({
+    id: `flow-${index + 3}`,
+    title: `Flow ${index + 3}`,
+    description: null,
+    stepCount: 2,
+    screens: [{ label: `Step ${index + 1}`, thumbnailUrl: `/flow-${index + 3}.png` }],
+  }))],
 };
 
 test('public app preview emphasizes the app identity and keeps conversion on locked evidence', () => {
@@ -51,19 +57,27 @@ test('public app preview emphasizes the app identity and keeps conversion on loc
   assert.match(html, /width:72px/);
   assert.match(html, /font-size:clamp\(42px, 6vw, 56px\)/);
   assert.match(html, /443/);
-  assert.match(html, /18/);
   assert.match(html, /12/);
   assert.match(html, /Screens/);
-  assert.match(html, /UI Elements/);
   assert.match(html, /Flows/);
-  assert.match(html, /Navigation Menu/);
+  assert.doesNotMatch(html, /UI Elements/);
+  assert.doesNotMatch(html, /Navigation Menu/);
   assert.match(html, /Creating a project/);
-  assert.doesNotMatch(html, /Inviting the team/);
-  assert.match(html, /Showing 1 of 12/);
-  assert.match(html, /data-public-preview-featured-flow="true"/);
-  assert.match(html, /data-public-preview-flow-screen-strip="true"[^>]+overflow-x:auto/);
+  assert.match(html, /Inviting the team/);
+  assert.match(html, /Flow 6/);
+  assert.doesNotMatch(html, /Flow 7/);
+  assert.match(html, /Showing 6 of 12/);
+  assert.match(html, /data-public-preview-flow-expander="true"/);
+  assert.match(html, /Show all 8 flows/);
+  assert.match(html, /aria-expanded="false"/);
+  assert.match(html, /data-flow-strip-card="true"/);
+  assert.match(html, /Preview Creating a project flow screens/);
+  assert.match(html, /data-flow-preview-url-sync="false"/);
+  assert.doesNotMatch(html, /data-public-preview-featured-flow="true"/);
+  assert.doesNotMatch(html, /data-public-preview-flow-screen-strip="true"/);
   assert.match(html, /src="\/flow-template.png"/);
-  assert.match(html, /Choose template/);
+  assert.match(html, /4 steps · 2 real screens/);
+  assert.doesNotMatch(html, /Choose template/);
   assert.match(html, /Unlock more/);
   assert.match(html, /aria-label="Unlock more screens"/);
   assert.match(html, /src="\/preview-1\.png"/);
@@ -106,12 +120,12 @@ test('public app preview can render as a modal without page navigation', () => {
   assert.match(html, /aria-label="Close preview"/);
   assert.doesNotMatch(html, />Close preview</);
   assert.match(html, /Screens/);
-  assert.match(html, /UI Elements/);
+  assert.doesNotMatch(html, /UI Elements/);
   assert.match(html, /Flows/);
   assert.match(html, /aria-label="Unlock more screens"/);
 });
 
-test('public app preview loading state exposes the three-section shell immediately', () => {
+test('public app preview loading state exposes the screen-and-flow shell immediately', () => {
   const html = renderToStaticMarkup(
     <PublicAppPreviewModal
       preview={null}
@@ -126,6 +140,6 @@ test('public app preview loading state exposes the three-section shell immediate
 
   assert.match(html, /Loading public app preview/);
   assert.match(html, /Screens/);
-  assert.match(html, /UI Elements/);
+  assert.doesNotMatch(html, /UI Elements/);
   assert.match(html, /Flows/);
 });

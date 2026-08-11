@@ -43,10 +43,13 @@ test("turns one agent decision into a strict immutable one-flow plan", () => {
     },
   });
   assert.equal(episode.flows.length, 1);
-  assert.equal(episode.flows[0].steps[0].action, "click");
-  assert.equal(episode.flows[0].steps[0].expected.page, "same");
+  assert.equal(episode.flows[0].steps[0].id, "mission-1-entry");
+  assert.equal(episode.flows[0].steps[0].action, "goto");
+  assert.equal(episode.flows[0].steps[0].expected.state, "Observe starting state");
+  assert.equal(episode.flows[0].steps[1].action, "click");
+  assert.equal(episode.flows[0].steps[1].expected.page, "same");
   assert.equal(episode.reviewed, true);
-  assert.equal(Object.isFrozen(episode.flows[0].steps[0]), true);
+  assert.equal(Object.isFrozen(episode.flows[0].steps[1]), true);
 });
 
 test("blocks unrelated and private-network navigation", () => {
@@ -202,5 +205,5 @@ test("keeps named authentication secrets in the existing runtime substitution pa
     },
   });
   assert.deepEqual(plan.flows[0].requiredSecrets, ["APP_TEST_EMAIL"]);
-  assert.equal(plan.flows[0].steps[0].value, "$APP_TEST_EMAIL");
+  assert.equal(plan.flows[0].steps[1].value, "$APP_TEST_EMAIL");
 });

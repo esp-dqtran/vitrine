@@ -17,6 +17,7 @@ interface CatalogPage {
 }
 
 const CATALOG_PAGE_CACHE_MS = 280_000;
+const CATALOG_REQUEST_TIMEOUT_MS = 8_000;
 const catalogPageCache = new Map<string, {
   expiresAt: number;
   page: CatalogPage;
@@ -29,6 +30,29 @@ const catalogPageCache = new Map<string, {
  */
 export function invalidateCatalogPageCache(): void {
   catalogPageCache.clear();
+}
+
+function catalogRequestSignal(signal?: AbortSignal): {
+  signal: AbortSignal;
+  dispose(): void;
+} {
+  const controller = new AbortController();
+  const abortFromCaller = () => controller.abort(signal?.reason);
+  if (signal?.aborted) abortFromCaller();
+  else signal?.addEventListener('abort', abortFromCaller, { once: true });
+  const timeout = globalThis.setTimeout(() => {
+    controller.abort(new DOMException(
+      'Catalog is taking longer than expected. Try again.',
+      'TimeoutError',
+    ));
+  }, CATALOG_REQUEST_TIMEOUT_MS);
+  return {
+    signal: controller.signal,
+    dispose() {
+      globalThis.clearTimeout(timeout);
+      signal?.removeEventListener('abort', abortFromCaller);
+    },
+  };
 }
 
 export function appendUniqueApps(current: App[], next: App[]): App[] {
@@ -65,20 +89,25 @@ export async function fetchCatalogPage(
   // any time. Never let the browser's HTTP cache keep an old/unservable
   // catalog response after a reload; the bounded in-memory cache above still
   // avoids duplicate requests within the current view.
-  const response = await apiFetch(endpoint, { signal, cache: 'no-store' });
-  if (!response.ok) throw new Error(`${endpoint} returned ${response.status}`);
-  const page = parseCatalogDiscoveryPage(await response.json());
-  const result = {
-    apps: catalogApps(page),
-    nextCursor: page.nextCursor,
-    totalCount: page.totalCount,
-    facets: page.facets,
-  };
-  catalogPageCache.set(endpoint, {
-    expiresAt: Date.now() + CATALOG_PAGE_CACHE_MS,
-    page: result,
-  });
-  return result;
+  const request = catalogRequestSignal(signal);
+  try {
+    const response = await apiFetch(endpoint, { signal: request.signal, cache: 'no-store' });
+    if (!response.ok) throw new Error(`${endpoint} returned ${response.status}`);
+    const page = parseCatalogDiscoveryPage(await response.json());
+    const result = {
+      apps: catalogApps(page),
+      nextCursor: page.nextCursor,
+      totalCount: page.totalCount,
+      facets: page.facets,
+    };
+    catalogPageCache.set(endpoint, {
+      expiresAt: Date.now() + CATALOG_PAGE_CACHE_MS,
+      page: result,
+    });
+    return result;
+  } finally {
+    request.dispose();
+  }
 }
 
 export function refreshCatalogPage(

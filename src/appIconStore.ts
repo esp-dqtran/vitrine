@@ -39,6 +39,15 @@ export async function storeAppIcon(
   return storeIcon(deps, { table: "apps", id: appId, key: appIconObjectKey }, sourceUrl);
 }
 
+/** Stores trusted icon bytes discovered while inspecting the official website. */
+export async function storeAppIconBuffer(
+  deps: AppIconStoreDependencies,
+  appId: number,
+  source: Buffer,
+): Promise<string> {
+  return storeIcon(deps, { table: "apps", id: appId, key: appIconObjectKey }, source);
+}
+
 /**
  * Same pipeline for a Site logo. Site cards render the tile at 44px and the
  * sources are a mix of favicons, wordmarks and formats sharp cannot decode, so
@@ -55,11 +64,11 @@ export async function storeSiteIcon(
 async function storeIcon(
   deps: AppIconStoreDependencies,
   target: { table: "apps" | "sites"; id: number; key: (id: number, sha256: string) => string },
-  sourceUrl: string,
+  sourceInput: string | Buffer,
 ): Promise<string> {
   const download = deps.download ?? downloadIcon;
   const runQuery = deps.runQuery ?? liveQuery;
-  const source = await download(sourceUrl);
+  const source = typeof sourceInput === "string" ? await download(sourceInput) : sourceInput;
   const body = await sharp(source, { limitInputPixels: 64 * 1024 * 1024 })
     .resize(ICON_EDGE, ICON_EDGE, { fit: "inside", withoutEnlargement: true })
     .webp({ quality: 90 })

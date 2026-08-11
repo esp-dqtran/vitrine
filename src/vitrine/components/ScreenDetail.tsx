@@ -63,7 +63,6 @@ import type { FlowRepresentation } from '../router.ts';
 const DesignSystemPanel = lazy(() =>
   import('./DesignSystemPanel').then((module) => ({ default: module.DesignSystemPanel })),
 );
-
 type LightboxState = { index: number } | null;
 type ScreenFilterGroup = 'types' | 'layouts' | 'components' | 'states';
 type FlowFilterGroup = 'categories' | 'tags' | 'interactions' | 'states';
@@ -730,8 +729,9 @@ export function ScreenDetail({
       onChange={selectPlatform}
     />
   );
-  const tabs = appDetailTabs(designSystemAvailable
-    || (section === 'design-system' && !designSystemMissing));
+  const tabs = appDetailTabs(
+    designSystemAvailable || (section === 'design-system' && !designSystemMissing),
+  );
   const metadata = [
     { label: 'Platform', value: PLATFORM_LABEL[selectedPlatform], content: platformControl },
     { label: 'Category', value: app.categories.map(({ name }) => name).join(', ') },

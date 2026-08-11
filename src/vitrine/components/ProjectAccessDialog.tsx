@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import {
   Button,
   Heading,
+  Icon,
+  IconButton,
   Selector,
   Text,
   TextInput,
@@ -86,13 +88,23 @@ export function ProjectAccessDialog({
       width={520}
     >
       <div className="project-access-dialog">
-        <div>
-          <Heading level={3}>Share {project?.title ?? "project"}</Heading>
-          <Text color="secondary">
-            {view?.organization
-              ? `Everyone in ${view.organization.name} can edit by default. Direct roles can grant guest access or make a Team member view-only.`
-              : "Invite people directly as editors or viewers."}
-          </Text>
+        <div className="project-access-dialog__header">
+          <div>
+            <Heading level={3}>Share {project?.title ?? "project"}</Heading>
+            <Text color="secondary">
+              {view?.organization
+                ? `Everyone in ${view.organization.name} can edit by default. Direct roles can grant guest access or make a Team member view-only.`
+                : "Invite people directly as editors or viewers."}
+            </Text>
+          </div>
+          <IconButton
+            label="Close sharing"
+            icon={<Icon icon="close" size="sm" />}
+            variant="ghost"
+            size="sm"
+            className="astryx-modal__icon-action project-access-dialog__close"
+            onClick={() => onOpenChange(false)}
+          />
         </div>
 
         {!view && !error ? <div className="project-access-dialog__loading"><Spinner size="md" /></div> : null}
@@ -128,6 +140,7 @@ export function ProjectAccessDialog({
               isDisabled={!email.trim()}
               isLoading={busy}
               clickAction={invite}
+              className="project-access-dialog__add-person"
             />
           </form>
         ) : view ? (
@@ -158,13 +171,15 @@ export function ProjectAccessDialog({
                 ) : null}
               </div>
             )) : (
-              <Text color="secondary">No one has direct access yet.</Text>
+              <Text color="secondary" className="project-access-dialog__empty-state">
+                No one has direct access yet. Only people invited here can access this canvas.
+              </Text>
             )}
           </section>
         ) : null}
 
         <div className="projects-workspace__dialog-actions">
-          <Button label="Done" variant="ghost" clickAction={() => onOpenChange(false)} />
+          <Button label="Done" variant="secondary" clickAction={() => onOpenChange(false)} />
         </div>
       </div>
     </AstryxModal>

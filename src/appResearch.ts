@@ -5,6 +5,7 @@ import { isIP } from "node:net";
 import { dirname, join } from "node:path";
 import { chromium, type APIRequestContext, type APIResponse, type Route } from "playwright";
 import { parseCrawlPlan, parseCrawlStep, type CrawlPlan, type CrawlStep } from "./crawlPlan.ts";
+import { prepareFlowWorkspace } from "./flowPreparation.ts";
 import { planPath, type StepFailure } from "./smartCrawler.ts";
 import type { VerifiedResearchSource } from "./autonomousResearch.ts";
 
@@ -502,7 +503,9 @@ export async function researchApp(appName: string, homepageUrl: string, ask: Ask
   const path = planPath(appName, dataDir);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(plan, null, 2));
+  const workspace = prepareFlowWorkspace(plan, pages, dataDir);
   console.log(`Draft crawl plan written to ${path} (${plan.flows.length} flows).`);
+  console.log(`Flow preparation workspace written to ${workspace.root}. No screens were captured.`);
   console.log(`Review it, fix or delete flows, mark truly read-only ones "safe": true, then set "reviewed": true and run smart-crawl.`);
   return path;
 }

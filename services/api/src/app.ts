@@ -134,6 +134,7 @@ import {
 } from "../../../src/objectStoreDb.ts";
 import { parseCrawlPlan, parseCrawlStep } from "../../../src/crawlPlan.ts";
 import { buildRepairPrompt, extractJson } from "../../../src/appResearch.ts";
+import { ingestAppMetadata } from "../../../src/appMetadataIngest.ts";
 import { startChatSession } from "../../../src/llmChat.ts";
 import { createCrawlRunService } from "../../../src/crawlRun.ts";
 import {
@@ -421,6 +422,7 @@ const defaults = {
   retryCrawlRun: apiCrawlRunService.retry,
   markQueuedCrawlRunInterrupted,
   ensureActiveAppVersion,
+  ingestAppMetadata,
   createAutonomousRun: apiAutonomousStore.createAutonomousRun,
   getAutonomousRun: apiAutonomousStore.autonomousRunDetail,
   pauseAutonomousRun: apiAutonomousStore.requestPause,
@@ -1332,7 +1334,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     try {
-      await sendStoredObject(deps.objectStore, metadata, res);
+      await sendStoredObject(deps.objectStore, metadata, res, req.query.inline === "1");
     } catch {
       res.status(503).json({ error: "media storage unavailable" });
     }
@@ -1865,6 +1867,29 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.status(202).json({ jobId, app: appSlug, homepageUrl });
   });
 
+  app.post("/crawl/apps/:app/metadata", requireAdmin, async (req, res) => {
+    const appSlug = String(req.params.app);
+    const body = exactBody(req.body, ["homepageUrl"]);
+    const homepageUrl = publicHttpUrl(body?.homepageUrl);
+    if (!isAppSlug(appSlug) || !body || !homepageUrl) {
+      res.status(400).json({ error: "invalid App metadata request" });
+      return;
+    }
+    if (!deps.objectStore) {
+      res.status(503).json({ error: "App icon storage unavailable" });
+      return;
+    }
+    try {
+      const result = await deps.ingestAppMetadata(
+        { app: appSlug, sourceUrl: homepageUrl },
+        { objectStore: deps.objectStore },
+      );
+      res.status(result.created ? 201 : 200).json(result);
+    } catch (error) {
+      res.status(422).json({ error: (error as Error).message });
+    }
+  });
+
   app.post("/crawl/apps/:app/autonomous-runs", requireAdmin, async (req, res) => {
     const appSlug = String(req.params.app);
     const body = exactBody(req.body, [
@@ -1890,7 +1915,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     } : undefined;
     const agentConcurrency = boundedInteger(body?.agentConcurrency, 1, 8);
     if (
-      !isAppSlug(appSlug) || !body || !homepageUrl || !platform
+      !isAppSlug(appSlug) || !body || !homepageUrl || platform !== "web"
       || !repairProviders.has(provider as RepairProvider)
       || requiredSecrets === undefined || typeof body.allowAll !== "boolean"
       || typeof body.allowAllAcknowledged !== "boolean"

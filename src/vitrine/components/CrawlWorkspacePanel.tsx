@@ -193,6 +193,7 @@ async function loadWorkspace(app: string): Promise<{ plan?: CrawlPlanView; run?:
 interface CrawlWorkspacePanelProps {
   app: string;
   role: "admin" | "user";
+  initialHomepageUrl?: string;
   initialPlan?: CrawlPlanView;
   initialRun?: CrawlRunDetailView;
   initialRunPlan?: CrawlPlanView;
@@ -201,13 +202,14 @@ interface CrawlWorkspacePanelProps {
   onDraftVersionChange?: () => void | Promise<void>;
 }
 
-export function CrawlWorkspacePanel({ app, role, initialPlan, initialRun, initialRunPlan, initialRepairs = [], initialResearchJob, onDraftVersionChange }: CrawlWorkspacePanelProps) {
+export function CrawlWorkspacePanel({ app, role, initialHomepageUrl, initialPlan, initialRun, initialRunPlan, initialRepairs = [], initialResearchJob, onDraftVersionChange }: CrawlWorkspacePanelProps) {
   if (role !== "admin") return null;
-  return <AdminCrawlWorkspace initialApp={app} initialPlan={initialPlan} initialRun={initialRun} initialRunPlan={initialRunPlan} initialRepairs={initialRepairs} initialResearchJob={initialResearchJob} onDraftVersionChange={onDraftVersionChange} />;
+  return <AdminCrawlWorkspace initialApp={app} initialHomepageUrl={initialHomepageUrl} initialPlan={initialPlan} initialRun={initialRun} initialRunPlan={initialRunPlan} initialRepairs={initialRepairs} initialResearchJob={initialResearchJob} onDraftVersionChange={onDraftVersionChange} />;
 }
 
 function AdminCrawlWorkspace({
   initialApp,
+  initialHomepageUrl,
   initialPlan,
   initialRun,
   initialRunPlan,
@@ -216,6 +218,7 @@ function AdminCrawlWorkspace({
   onDraftVersionChange,
 }: {
   initialApp: string;
+  initialHomepageUrl?: string;
   initialPlan?: CrawlPlanView;
   initialRun?: CrawlRunDetailView;
   initialRunPlan?: CrawlPlanView;
@@ -224,7 +227,7 @@ function AdminCrawlWorkspace({
   onDraftVersionChange?: () => void | Promise<void>;
 }) {
   const [app, setApp] = useState(initialApp);
-  const [homepageUrl, setHomepageUrl] = useState(initialPlan?.plan.startUrl ?? "");
+  const [homepageUrl, setHomepageUrl] = useState(initialPlan?.plan.startUrl ?? initialHomepageUrl ?? "");
   const [planJson, setPlanJson] = useState(initialPlan ? JSON.stringify(initialPlan.plan, null, 2) : "");
   const [plan, setPlan] = useState(initialPlan);
   const [run, setRun] = useState(initialRun);
@@ -241,7 +244,7 @@ function AdminCrawlWorkspace({
   const [allowSideEffects, setAllowSideEffects] = useState(false);
   const [autonomousRun, setAutonomousRun] = useState<AutonomousRunDetailView>();
   const [autonomousProvider, setAutonomousProvider] = useState<CrawlResearchProvider>("chatgpt");
-  const [autonomousPlatform, setAutonomousPlatform] = useState<"web" | "ios" | "android">("web");
+  const autonomousPlatform = "web" as const;
   const [requiredSecretNames, setRequiredSecretNames] = useState("");
   const [allowAll, setAllowAll] = useState(false);
   const [allowAllAcknowledged, setAllowAllAcknowledged] = useState(false);
@@ -494,10 +497,11 @@ function AdminCrawlWorkspace({
         <p style={mutedStyle}>Research the app, delegate deep flow discovery to multiple agents, and retain only evidence-backed candidates.</p>
         <div style={fieldsStyle}>
           <div style={fieldStyle}><Selector label="Provider" value={autonomousProvider} onChange={(value) => setAutonomousProvider(value as CrawlResearchProvider)} options={[{ value: "chatgpt", label: "ChatGPT" }, { value: "claude", label: "Claude" }]} width="100%" /></div>
-          <div style={fieldStyle}><Selector label="Platform" value={autonomousPlatform} onChange={(value) => setAutonomousPlatform(value as typeof autonomousPlatform)} options={[{ value: "web", label: "Web" }, { value: "ios", label: "iOS" }, { value: "android", label: "Android" }]} width="100%" /></div>
+          <div style={fieldStyle}><Selector label="Platform" value={autonomousPlatform} onChange={() => undefined} options={[{ value: "web", label: "Web" }]} width="100%" /></div>
           <div style={fieldStyle}><Selector label="Agent concurrency" value={String(agentConcurrency)} onChange={(value) => setAgentConcurrency(Number(value))} options={Array.from({ length: 8 }, (_, index) => String(index + 1))} width="100%" /></div>
           <div style={{ ...fieldStyle, flex: 2 }}><TextInput label="Secret names (comma separated)" value={requiredSecretNames} onChange={setRequiredSecretNames} placeholder="APP_TEST_EMAIL, APP_TEST_PASSWORD" width="100%" /></div>
         </div>
+        <p style={mutedStyle}>The current agent uses Chromium for web Apps. Native iOS and Android capture requires a device runner.</p>
         <div style={{ display: "grid", gap: 7, marginTop: 10 }}>
           <CheckboxInput label="Allow all actions" value={allowAll} onChange={(checked) => { setAllowAll(checked); if (!checked) setAllowAllAcknowledged(false); }} />
           <CheckboxInput label="I acknowledge this shared test account may be mutated" value={allowAllAcknowledged} isDisabled={!allowAll} onChange={setAllowAllAcknowledged} />

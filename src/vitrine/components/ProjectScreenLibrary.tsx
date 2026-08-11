@@ -7,7 +7,6 @@ import {
 } from "react";
 import {
   Card,
-  Button,
   Icon,
   IconButton,
   SegmentedControl,
@@ -24,16 +23,11 @@ import {
 import { filterAppsDiscoveryScreens } from "../appsDiscovery.ts";
 import { fetchCatalogPage } from "../useApps.ts";
 import { AppIcon } from "./AppIcon.tsx";
+import { AppsPlatformSwitcher } from "./AppsPlatformSwitcher.tsx";
 import { useSegmentedIndicator } from "./useSegmentedIndicator.ts";
 import { PlaceholderImage } from "./PlaceholderImage.tsx";
 
 type ScreenLibraryState = "loading" | "ready" | "error";
-
-const platforms: Array<{ value: AppsPlatform; label: string }> = [
-  { value: "web", label: "Web" },
-  { value: "ios", label: "iOS" },
-  { value: "android", label: "Android" },
-];
 
 const screenKey = ({ app, screen }: AppsDiscoveryScreenResult) => `${app.id}:${screen.id}`;
 
@@ -62,7 +56,16 @@ export type ProjectScreenFacet = {
   count: number;
 };
 
-const unhelpfulScreenLabels = new Set(["", "unclassified", "unknown", "other"]);
+/* These values describe the ingestion source, not a visual reference a
+   designer can use to narrow inspiration. Keep them out of the filter chips
+   while preserving meaningful states such as onboarding or empty state. */
+const unhelpfulScreenLabels = new Set([
+  "",
+  "unclassified",
+  "unknown",
+  "other",
+  "app-store-listing",
+]);
 
 const usefulScreenLabel = (value: string | null | undefined) => {
   const label = value?.trim();
@@ -166,6 +169,14 @@ const modes: Array<{ value: ScreenLibraryMode; label: string }> = [
   { value: "flows", label: "Flows" },
 ];
 
+/* These are the jobs designers tend to look for when gathering references.
+   They deliberately avoid the ingestion metadata shown by the old facet bar
+   (for example, "State: app-store-listing"). */
+const inspirationPrompts: Record<ScreenLibraryMode, readonly string[]> = {
+  screens: ["Onboarding", "Sign in", "Checkout", "Dashboard", "Profile", "Empty state"],
+  flows: ["Onboarding", "Sign up", "Checkout", "Invite teammates", "Settings"],
+};
+
 export function ProjectScreenLibrary({
   message,
   onClose,
@@ -181,19 +192,17 @@ export function ProjectScreenLibrary({
 }) {
   const [query, setQuery] = useState("");
   const [platform, setPlatform] = useState<AppsPlatform>("web");
-  const platformSwitcherRef = useSegmentedIndicator(platform);
   const [state, setState] = useState<ScreenLibraryState>("loading");
   const [results, setResults] = useState<AppsDiscoveryScreenResult[]>([]);
   const [flows, setFlows] = useState<FlowCatalogItem[]>([]);
   const [mode, setMode] = useState<ScreenLibraryMode>("screens");
-  const [activeScreenFacet, setActiveScreenFacet] = useState<string>();
   const [addingKey, setAddingKey] = useState<string>();
   const modeSwitcherRef = useSegmentedIndicator(mode);
   const addToCanvas = (key: string, payload: CatalogDragPayload) => {
     if (addingKey) return;
     setAddingKey(key);
-    /* Card drags can prevent the design-system Button's async action. Use the
-       ordinary click path here, then keep the action's own promise visible. */
+    /* Keep the card busy until its placement work finishes, so rapid clicks
+       cannot create duplicate references. */
     void onAddItem(payload).finally(() => setAddingKey(undefined));
   };
   const addScreenFromKeyboard = (
@@ -204,6 +213,15 @@ export function ProjectScreenLibrary({
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     addToCanvas(key, { kind: "screen", result });
+  };
+  const addFlowFromKeyboard = (
+    event: ReactKeyboardEvent<HTMLElement>,
+    key: string,
+    item: FlowCatalogItem,
+  ) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    addToCanvas(key, { kind: "flow", item, platform });
   };
   /* The field searches whichever grain is showing, so its accessible name should say so. */
   /* Same handlers on every card: mark the drag copy-only, give the OS a label,
@@ -242,7 +260,7 @@ export function ProjectScreenLibrary({
   });
 
   const searchLabel = mode === "flows" ? "Search flows" : "Search visual references";
-  const searchPlaceholder = mode === "flows" ? "Search flows…" : "Search feature, state, or UI text…";
+  const searchPlaceholder = mode === "flows" ? "Search flows…" : "Search screens, features, or UI text…";
 
   const endpoint = useMemo(() => {
     const params = new URLSearchParams({
@@ -289,17 +307,11 @@ export function ProjectScreenLibrary({
     };
   }, [endpoint, mode, platform, query]);
 
-  const screenFacets = useMemo(() => projectScreenFacetOptions(results), [results]);
-  const visibleScreenResults = useMemo(() => activeScreenFacet
-    ? results.filter((result) => {
-      const facet = screenFacets.find(({ key }) => key === activeScreenFacet);
-      return facet ? projectScreenMatchesFacet(result, facet) : true;
-    })
-    : results, [activeScreenFacet, results, screenFacets]);
-  const activeFacet = screenFacets.find(({ key }) => key === activeScreenFacet);
+  const visibleScreenResults = results;
+  const referenceCount = mode === "flows" ? flows.length : visibleScreenResults.length;
   const resultSummary = query.trim()
-    ? `${visibleScreenResults.length} ${visibleScreenResults.length === 1 ? "reference" : "references"} matching “${query.trim()}”`
-    : `${visibleScreenResults.length} visual ${visibleScreenResults.length === 1 ? "reference" : "references"}${activeFacet ? ` in ${activeFacet.value}` : ""}`;
+    ? `${referenceCount} ${referenceCount === 1 ? "reference" : "references"} matching “${query.trim()}”`
+    : `${referenceCount} visual ${referenceCount === 1 ? "reference" : "references"}`;
 
   return (
     <aside className="project-screen-library" aria-label="Inspiration">
@@ -343,33 +355,24 @@ export function ProjectScreenLibrary({
         </SegmentedControl>
       </div>
 
-      {mode === "screens" && state === "ready" && (
+      {state === "ready" && (
         <>
           <div className="project-screen-library__browse-heading">
-            <span>Explore references</span>
+            <span>{query.trim() ? "Search results" : "Explore by task"}</span>
             <p className="project-screen-library__result-summary" role="status" aria-live="polite">
               {resultSummary}
             </p>
           </div>
-          {screenFacets.length > 0 && (
-            <div className="project-screen-library__facets" role="group" aria-label="Refine screens">
-              <button
-                type="button"
-                className="project-screen-library__facet"
-                aria-pressed={!activeScreenFacet}
-                onClick={() => setActiveScreenFacet(undefined)}
-              >
-                All screens
-              </button>
-              {screenFacets.map((facet) => (
+          {!query.trim() && (
+            <div className="project-screen-library__prompts" role="group" aria-label={`Explore ${mode} by task`}>
+              {inspirationPrompts[mode].map((prompt) => (
                 <button
-                  key={facet.key}
+                  key={prompt}
                   type="button"
-                  className="project-screen-library__facet"
-                  aria-pressed={activeScreenFacet === facet.key}
-                  onClick={() => setActiveScreenFacet(facet.key)}
+                  className="project-screen-library__prompt"
+                  onClick={() => setQuery(prompt)}
                 >
-                  {facet.label} ({facet.count})
+                  {prompt}
                 </button>
               ))}
             </div>
@@ -378,17 +381,11 @@ export function ProjectScreenLibrary({
       )}
 
       <div className="project-screen-library__platforms">
-        <SegmentedControl
-          ref={platformSwitcherRef}
-          label="Screen platform"
-          size="sm"
+        <AppsPlatformSwitcher
           value={platform}
-          onChange={(value) => setPlatform(value as AppsPlatform)}
-        >
-          {platforms.map((option) => (
-            <SegmentedControlItem key={option.value} value={option.value} label={option.label} />
-          ))}
-        </SegmentedControl>
+          onChange={setPlatform}
+          ariaLabel="Screen platform"
+        />
       </div>
 
       {message && <p className="project-screen-library__message" role="status">{message}</p>}
@@ -406,48 +403,49 @@ export function ProjectScreenLibrary({
         <div className="project-screen-library__grid">
           {flows.map((item) => {
             const key = `flow:${flowCatalogItemKey(item)}`;
-            const evidence = item.preview.flow.steps.flatMap((step) => step.evidence)[0];
+            const previewEvidence = item.preview.flow.steps
+              .flatMap((step) => step.evidence)
+              .slice(0, 3);
+            const flowSteps = previewEvidence.length ? previewEvidence : [undefined];
             return (
               <Card
                 key={key}
                 padding={1}
-                className="project-screen-library__card"
+                className="project-screen-library__card project-screen-library__card--flow"
+                role="button"
+                tabIndex={0}
+                aria-label={`Place ${item.title} from ${item.preview.appName} on the canvas`}
+                aria-busy={addingKey === key || undefined}
+                onClick={() => addToCanvas(key, { kind: "flow", item, platform })}
+                onKeyDown={(event) => addFlowFromKeyboard(event, key, item)}
                 {...dragProps({ kind: "flow", item, platform }, item.title)}
               >
-                <div className="project-screen-library__preview">
-                  <PlaceholderImage
-                    src={evidence?.thumbnailUrl ?? evidence?.imageUrl}
-                    accent={item.preview.appIconUrl ? undefined : "#edf3ff"}
-                    style={{ objectFit: "contain" }}
-                  />
-                </div>
-                <div className="project-screen-library__identity">
+                <div className="project-screen-library__preview project-screen-library__preview--flow">
+                  <div className="project-screen-library__flow-steps" aria-hidden="true">
+                    {flowSteps.map((evidence, index) => (
+                      <div className="project-screen-library__flow-step" key={evidence?.imageUrl ?? index}>
+                        <PlaceholderImage
+                          src={evidence?.thumbnailUrl ?? evidence?.imageUrl}
+                          accent={item.preview.appIconUrl ? undefined : "#edf3ff"}
+                          style={{ objectFit: "contain" }}
+                        />
+                      </div>
+                    ))}
+                  </div>
                   <AppIcon
                     name={item.preview.appName}
                     iconUrl={item.preview.appIconUrl ?? undefined}
-                    size={26}
-                    className="project-screen-library__app-icon"
+                    size={28}
+                    className="project-screen-library__app-icon project-screen-library__app-icon--overlay"
                   />
-                  <span>
+                  <span className="project-screen-library__flow-title" aria-hidden="true">
                     <strong>{item.title}</strong>
-                    <small>
-                      {item.preview.appName} · {item.preview.screenCount}
-                      {item.preview.screenCount === 1 ? " step" : " steps"}
-                    </small>
+                    <small>{item.preview.screenCount} {item.preview.screenCount === 1 ? "step" : "steps"}</small>
+                  </span>
+                  <span className="project-screen-library__place-hint" aria-hidden="true">
+                    Drag to canvas
                   </span>
                 </div>
-                <Button
-                  label={addingKey === key ? "Adding…" : "Add to canvas"}
-                  variant="secondary"
-                  size="sm"
-                  isDisabled={addingKey !== undefined}
-                  draggable={false}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    addToCanvas(key, { kind: "flow", item, platform });
-                  }}
-                />
-                <small className="project-screen-library__drag-hint">or drag to place</small>
               </Card>
             );
           })}

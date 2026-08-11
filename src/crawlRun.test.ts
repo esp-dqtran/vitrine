@@ -64,13 +64,19 @@ function identity(overrides: Partial<CompletedCaptureIdentity> = {}): CompletedC
 function screenshotPage(
   bytes: Uint8Array,
   observed?: { calls: number },
-  state: { url?: () => string; viewportSize?: () => { width: number; height: number } | null } = {},
+  state: {
+    url?: () => string;
+    viewportSize?: () => { width: number; height: number } | null;
+    expectedFullPage?: boolean;
+  } = {},
 ) {
   return {
     url: state.url ?? (() => "https://example.com/settings?attempt=page#panel"),
     viewportSize: state.viewportSize ?? (() => ({ width: 1280, height: 720 })),
-    screenshot: async (options: { fullPage: true }) => {
-      assert.deepEqual(options, { fullPage: true });
+    screenshot: async (options: { fullPage: boolean }) => {
+      if (state.expectedFullPage !== undefined) {
+        assert.deepEqual(options, { fullPage: state.expectedFullPage });
+      }
       if (observed) observed.calls++;
       return bytes;
     },
@@ -117,8 +123,16 @@ test("failure artifact uploads deterministic internal PNG before database attach
     attachFailureObject: async (input: { object: ObjectMetadata }) => { events.push("attach"); assert.equal(input.object.key, keys.at(-1)); },
   };
   const identity = { runId: "7", workerId: "worker-1", flowId: "settings/main", stepId: "open panel" };
-  const first = await persistFailureArtifact(screenshotPage(png), identity, dependencies);
-  const second = await persistFailureArtifact(screenshotPage(png), identity, dependencies);
+  const first = await persistFailureArtifact(
+    screenshotPage(png, undefined, { expectedFullPage: true }),
+    identity,
+    dependencies,
+  );
+  const second = await persistFailureArtifact(
+    screenshotPage(png, undefined, { expectedFullPage: true }),
+    identity,
+    dependencies,
+  );
   assert.deepEqual(events, ["put", "attach", "put", "attach"]);
   assert.equal(first.key, second.key);
   assert.match(first.key, /^crawl-failures\/7\//);
@@ -600,6 +614,31 @@ test("capture derives the durable URL and viewport from stable page state", asyn
   }
 });
 
+test("successful capture stores the current viewport instead of the full page", async () => {
+  const dataDir = mkdtempSync(join(tmpdir(), "astryx-capture-viewport-"));
+  const store = fakeCaptureStore(dataDir);
+  const screenshotOptions: Array<{ fullPage: boolean }> = [];
+
+  try {
+    await captureValidatedState(
+      {
+        url: () => "https://example.com/settings",
+        viewportSize: () => ({ width: 1280, height: 800 }),
+        screenshot: async (options: { fullPage: boolean }) => {
+          screenshotOptions.push(options);
+          return Buffer.from("viewport screenshot");
+        },
+      },
+      identity(),
+      store.deps,
+    );
+
+    assert.deepEqual(screenshotOptions, [{ fullPage: false }]);
+  } finally {
+    rmSync(dataDir, { recursive: true, force: true });
+  }
+});
+
 test("capture rejects page navigation or viewport changes during the screenshot", async () => {
   const dataDir = mkdtempSync(join(tmpdir(), "astryx-capture-changing-state-"));
   const store = fakeCaptureStore(dataDir);
@@ -757,14 +796,35 @@ test("canonical flow assembly follows plan order, replaces completed flows, and 
   assert.equal(flows.filter((flow) => flow.id === "alpha").length, 1);
   assert.equal(flows.filter((flow) => flow.id === "beta").length, 1);
   assert.equal(flows.some((flow) => flow.id === "incomplete"), false);
-  assert.deepEqual(flows.find((flow) => flow.id === "alpha")?.steps, [
+  assert.deepEqual(flows.find((flow) => flow.id === "alpha")?.steps.map(({ label, evidence }) => ({ label, evidence })), [
     { label: "Alpha start", evidence: [11] },
     { label: "Alpha finish", evidence: [12] },
   ]);
-  assert.deepEqual(flows.find((flow) => flow.id === "beta")?.steps, [
+  assert.deepEqual(flows.find((flow) => flow.id === "beta")?.steps.map(({ label, evidence }) => ({ label, evidence })), [
     { label: "Beta start", evidence: [20, 21] },
     { label: "Beta finish", evidence: [22] },
   ]);
+  const observed = flows.find((flow) => flow.id === "alpha")?.steps[0];
+  assert.equal(observed?.interaction, 'Wait for text "Alpha start"');
+  assert.deepEqual(observed?.observation, {
+    source: "crawl_observed",
+    action: "waitFor",
+    sourceUrl: "https://example.com/start",
+    finalUrl: "https://example.com/alpha/start",
+    visibleUi: ['text "Alpha start"'],
+    visibleText: ["Alpha start"],
+    likelyIntent: 'Wait for text "Alpha start"',
+    availableActions: ['Wait for text "Alpha start"'],
+    systemFeedback: [
+      "Reached Alpha start",
+      'text "Alpha start" is visible',
+      "Navigated from https://example.com/start to https://example.com/alpha/start",
+    ],
+    friction: [],
+    missingOrUncertainStates: [],
+    accessibility: [],
+    confidence: 1,
+  });
 });
 
 test("canonical assembly preserves an existing flow until every required step has pinned evidence", () => {
@@ -802,7 +862,7 @@ test("canonical assembly preserves an existing flow until every required step ha
   );
 
   assert.equal(flows.find((flow) => flow.id === "required"), oldRequired);
-  assert.deepEqual(flows.find((flow) => flow.id === "optional")?.steps, [
+  assert.deepEqual(flows.find((flow) => flow.id === "optional")?.steps.map(({ label, evidence }) => ({ label, evidence })), [
     { label: "Required", evidence: [3] },
     { label: "Optional", evidence: [4] },
   ]);
@@ -862,7 +922,7 @@ test("durable finalization loads the pinned run and saves plan-ordered flows by 
 
   assert.deepEqual(flows.map(({ id }) => id), ["partial", "complete"]);
   assert.equal(flows[0], retained);
-  assert.deepEqual(flows[1].steps, [
+  assert.deepEqual(flows[1].steps.map(({ label, evidence }) => ({ label, evidence })), [
     { label: "First", evidence: [1] },
     { label: "Second", evidence: [2] },
   ]);

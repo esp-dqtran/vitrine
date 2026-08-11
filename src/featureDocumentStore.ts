@@ -189,7 +189,12 @@ function checkedManifest(value: FeatureEvidenceManifestItem[]): FeatureEvidenceM
     identities.add(item.evidenceId);
     positions.add(position);
     if (typeof item.stepLabel !== "string" || !item.stepLabel.trim()) throw new Error("Invalid evidence step label");
-    return structuredClone(item);
+    return {
+      ...structuredClone(item),
+      ...(item.observation ? {
+        observation: parseFeatureStepAnalysis(item.observation, item.evidenceId),
+      } : {}),
+    };
   });
 }
 
@@ -538,22 +543,24 @@ export function createFeatureDocumentStore(
     },
 
     async requestCancel(userId, jobId) {
+      positiveInteger(userId, "user");
       const result = await runQuery(
         `UPDATE feature_document_jobs j SET cancel_requested = true, updated_at = now()
          FROM feature_documents d
          WHERE j.id = $1 AND d.id = j.document_id
            AND j.status IN ('queued', 'running')
          RETURNING ${JOB_COLUMNS}`,
-        [jobId, userId],
+        [jobId],
       );
       return jobFromRow(result.rows[0]);
     },
 
     async retryJob(userId, jobId, transportJobId) {
+      positiveInteger(userId, "user");
       positiveInteger(transportJobId, "transport job");
       const result = await runQuery(
         `UPDATE feature_document_jobs j
-         SET transport_job_id = $3, status = 'queued',
+         SET transport_job_id = $2, status = 'queued',
              stage = CASE WHEN j.done_count > 0 THEN 'analyzing' ELSE 'preparing' END,
              cancel_requested = false, error_code = NULL, error_message = NULL,
              updated_at = now(), completed_at = NULL
@@ -561,7 +568,7 @@ export function createFeatureDocumentStore(
          WHERE j.id = $1 AND d.id = j.document_id
            AND j.status IN ('error', 'cancelled')
          RETURNING ${JOB_COLUMNS}`,
-        [jobId, userId, transportJobId],
+        [jobId, transportJobId],
       );
       return jobFromRow(result.rows[0]);
     },

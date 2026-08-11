@@ -320,7 +320,7 @@ export function ProjectObjectToolbarColorPicker({
           className={`project-object-toolbar__panel project-object-toolbar__color-panel${
             panelClassName ? ` ${panelClassName}` : ""
           }`}
-          role="dialog"
+          role="radiogroup"
           aria-label={panelLabel}
         >
           {colorOptions.map((option) => (
@@ -328,8 +328,9 @@ export function ProjectObjectToolbarColorPicker({
               key={option.id}
               type="button"
               className="project-object-toolbar__color-swatch"
+              role="radio"
               aria-label={`Use ${option.name}`}
-              aria-pressed={color.toLowerCase() === option.fill.toLowerCase()}
+              aria-checked={color.toLowerCase() === option.fill.toLowerCase()}
               style={
                 {
                   "--object-color": option.fill,

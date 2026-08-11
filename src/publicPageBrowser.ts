@@ -39,6 +39,14 @@ const PREVIEW_FRAMES_PER_SECOND = 60;
 const TOP_OVERLAY_CAPTURE_MARGIN = 16;
 const STITCH_HIDDEN_FIXED_ATTRIBUTE = "data-astryx-stitch-hidden-fixed";
 const MAXIMUM_CAPTURE_HEIGHT = 100_000;
+// Stitched screenshots are intentionally conservative for normal pages, but a
+// 100kpx canvas can take several minutes to assemble on animation-heavy sites.
+// Keep a representative first window for those outliers so the worker can
+// produce structured evidence instead of timing out before analysis begins.
+const LARGE_PAGE_CAPTURE_THRESHOLD = 12_000;
+const LARGE_PAGE_CAPTURE_HEIGHT = VIEWPORT.height;
+const LARGE_PAGE_MOBILE_CAPTURE_HEIGHT = MOBILE_VIEWPORT.height;
+const LARGE_PAGE_PREVIEW_DURATION_MS = 2_000;
 const MAXIMUM_CAPTURE_BYTES = 64 * 1_024 * 1_024;
 const MAXIMUM_HTML_BYTES = 2 * 1_024 * 1_024;
 const CONSENT_ACTION_NAME =
@@ -134,7 +142,12 @@ async function capturePublicPage(
     await lockMainFrameNavigation(page);
     await settlePage(page);
     await dismissRecognizedConsent(page);
-    await primeLazyContent(page);
+    const dimensions = await page.evaluate(() => ({
+      width: document.documentElement.scrollWidth,
+      height: document.documentElement.scrollHeight,
+    }));
+    const desktopCaptureHeight = captureHeightForDocument(dimensions.height);
+    await primeLazyContent(page, desktopCaptureHeight);
     await dismissRecognizedConsent(page);
     assertPageUrl(page, finalUrl);
     await page.evaluate(() => window.scrollTo(0, 0));
@@ -144,6 +157,7 @@ async function capturePublicPage(
       page,
       "desktop",
       await resources.snapshot(),
+      desktopCaptureHeight < dimensions.height ? 1_000 : undefined,
     );
     const raw = await analyzeRenderedPage(page, requestedUrl, finalUrl);
     const capture = parsePublicPageCapture(raw);
@@ -157,7 +171,10 @@ async function capturePublicPage(
     const recording = await capturePreviewRecording(context, finalUrl, {
       validateNavigation: options.validateNavigation,
       pixelsPerSecond: checkedPositive(options.scrollPixelsPerSecond, "scroll speed"),
-      maxDurationMs: checkedPositive(options.maxScrollDurationMs, "maximum scroll duration"),
+      maxDurationMs: previewMaxDurationForCapture(
+        capture.document.height,
+        checkedPositive(options.maxScrollDurationMs, "maximum scroll duration"),
+      ),
       holdMs: checkedNonNegative(options.holdMs, "scroll hold"),
     });
     const mobile = await captureMobileEvidence(
@@ -310,7 +327,12 @@ async function captureMobileEvidence(
     await lockMainFrameNavigation(page);
     await settlePage(page);
     await dismissRecognizedConsent(page);
-    await primeLazyContent(page);
+    const dimensions = await page.evaluate(() => ({
+      width: document.documentElement.scrollWidth,
+      height: document.documentElement.scrollHeight,
+    }));
+    const mobileCaptureHeight = mobileCaptureHeightForDocument(dimensions.height);
+    await primeLazyContent(page, mobileCaptureHeight);
     await dismissRecognizedConsent(page);
     assertPageUrl(page, requestedUrl);
     await page.evaluate(() => window.scrollTo(0, 0));
@@ -319,14 +341,14 @@ async function captureMobileEvidence(
       page,
       "mobile",
       await resources.snapshot(),
+      mobileCaptureHeight < dimensions.height ? 1_000 : undefined,
     );
-    const dimensions = await page.evaluate(() => ({
-      width: document.documentElement.scrollWidth,
-      height: document.documentElement.scrollHeight,
-    }));
     const image = await captureStablePagePng(
       page,
-      publicPageCaptureClip(dimensions, MOBILE_VIEWPORT),
+      publicPageCaptureClip({
+        ...dimensions,
+        height: mobileCaptureHeight,
+      }, MOBILE_VIEWPORT),
     );
     assertCaptureBytes(image);
     return { inspection, image };
@@ -606,16 +628,22 @@ async function hideUnreachableConsent(page: Page): Promise<void> {
   }).catch(() => undefined);
 }
 
-async function primeLazyContent(page: Page): Promise<void> {
-  await page.evaluate(async () => {
-    const maximum = Math.min(document.documentElement.scrollHeight, 30_000);
+async function primeLazyContent(
+  page: Page,
+  maximumHeight = LARGE_PAGE_CAPTURE_THRESHOLD,
+): Promise<void> {
+  await page.evaluate(async (maximumHeight) => {
+    // The capture and section evidence stop at this same window. Warming lazy
+    // content beyond it only creates expensive reflows on infinite or canvas
+    // pages without improving the artifact we persist.
+    const maximum = Math.min(document.documentElement.scrollHeight, maximumHeight);
     for (let y = 0; y < maximum; y += Math.max(600, window.innerHeight * 0.8)) {
       window.scrollTo(0, y);
       await new Promise((resolve) => setTimeout(resolve, 20));
     }
     window.scrollTo(0, maximum);
     await new Promise((resolve) => setTimeout(resolve, 80));
-  });
+  }, maximumHeight);
 }
 
 async function analyzeRenderedPage(
@@ -628,6 +656,8 @@ async function analyzeRenderedPage(
     canonical,
     viewport,
     maximumHeight,
+    largePageCaptureThreshold,
+    largePageCaptureHeight,
     maximumHtmlBytes,
   }) => {
     type AnyRecord = Record<string, unknown>;
@@ -720,13 +750,16 @@ async function analyzeRenderedPage(
       const role = element.getAttribute("role");
       return style.position === "fixed" || role === "dialog" || role === "alertdialog";
     }] as const;
+    const fullDocumentHeight = Math.max(
+      viewport.height,
+      document.documentElement.scrollHeight,
+      document.body?.scrollHeight ?? 0,
+    );
     const documentHeight = Math.min(
       maximumHeight,
-      Math.max(
-        viewport.height,
-        document.documentElement.scrollHeight,
-        document.body?.scrollHeight ?? 0,
-      ),
+      fullDocumentHeight > largePageCaptureThreshold
+        ? largePageCaptureHeight
+        : fullDocumentHeight,
     );
     const pageWidth = Math.min(
       viewport.width,
@@ -790,7 +823,10 @@ async function analyzeRenderedPage(
       ...identifiedRoots,
       ...headingRoots,
     ])]
-      .filter((element) => visible(element) && !overlay(element));
+      .filter((element) => {
+        if (!visible(element) || overlay(element)) return false;
+        return Math.round(element.getBoundingClientRect().top + window.scrollY) < documentHeight;
+      });
     const captureRoots = rawRoots.length > 0
       ? rawRoots
       : document.body
@@ -977,6 +1013,8 @@ async function analyzeRenderedPage(
     canonical: finalUrl,
     viewport: VIEWPORT,
     maximumHeight: MAXIMUM_CAPTURE_HEIGHT,
+    largePageCaptureThreshold: LARGE_PAGE_CAPTURE_THRESHOLD,
+    largePageCaptureHeight: LARGE_PAGE_CAPTURE_HEIGHT,
     maximumHtmlBytes: MAXIMUM_HTML_BYTES,
   });
 }
@@ -1189,6 +1227,30 @@ export function publicPageCaptureClip(
     MAXIMUM_CAPTURE_HEIGHT,
   ));
   return { x: 0, y: 0, width, height };
+}
+
+export function captureHeightForDocument(height: number): number {
+  const documentHeight = checkedPositive(height, "document height");
+  return documentHeight > LARGE_PAGE_CAPTURE_THRESHOLD
+    ? LARGE_PAGE_CAPTURE_HEIGHT
+    : Math.min(documentHeight, MAXIMUM_CAPTURE_HEIGHT);
+}
+
+export function mobileCaptureHeightForDocument(height: number): number {
+  const documentHeight = checkedPositive(height, "document height");
+  return documentHeight > LARGE_PAGE_CAPTURE_THRESHOLD
+    ? LARGE_PAGE_MOBILE_CAPTURE_HEIGHT
+    : documentHeight;
+}
+
+export function previewMaxDurationForCapture(
+  captureHeight: number,
+  configuredMaximumMs: number,
+): number {
+  const maximum = checkedPositive(configuredMaximumMs, "maximum preview duration");
+  return checkedPositive(captureHeight, "capture height") === LARGE_PAGE_CAPTURE_HEIGHT
+    ? Math.min(maximum, LARGE_PAGE_PREVIEW_DURATION_MS)
+    : maximum;
 }
 
 async function lockMainFrameNavigation(page: Page): Promise<void> {

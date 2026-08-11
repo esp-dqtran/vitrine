@@ -4,14 +4,16 @@ interface CanvasAssetUploadResponse {
   src: string;
 }
 
+export const projectCanvasAssetUrl = (projectId: string, assetId: string) =>
+  `/api/designer-canvases/${projectId}/assets/${encodeURIComponent(assetId)}`;
+
 export async function uploadProjectCanvasAsset(
   projectId: string,
   assetId: string,
   file: Blob,
   signal?: AbortSignal,
 ): Promise<string> {
-  const assetPath = `/api/designer-canvases/${projectId}/assets`;
-  const response = await apiFetch(`${assetPath}/${encodeURIComponent(assetId)}`, {
+  const response = await apiFetch(projectCanvasAssetUrl(projectId, assetId), {
     method: "POST",
     headers: { "content-type": file.type },
     body: file,

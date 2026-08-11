@@ -161,13 +161,33 @@ function decisionStep(decision: AgentDecision, missionId: string, index: number,
   };
 }
 
+function entryObservationStep(input: BuildEpisodePlanInput): Record<string, unknown> {
+  return {
+    id: `${input.mission.id}-entry`,
+    action: "goto",
+    url: input.startUrl,
+    safety: "read",
+    expected: {
+      state: "Observe starting state",
+      url: input.startUrl,
+      page: "same",
+    },
+  };
+}
+
 export function buildEpisodePlan(input: BuildEpisodePlanInput): CrawlPlan {
   const decisions = Array.isArray(input.decision) ? input.decision : [input.decision];
   if (decisions.some((decision) => decision.mode === "mutate") && !input.allowAll) {
     throw new Error("Autonomous side-effect steps require allow_all");
   }
   const policy = createOriginPolicy(input.startUrl, input.allowedOrigins);
-  const steps = parseCrawlSteps(decisions.map((decision, index) => decisionStep(decision, input.mission.id, index, input.startUrl)));
+  // Every autonomous episode starts with durable, redacted evidence of the state the
+  // agent is about to leave. The runner then settles and captures after each action,
+  // producing an ordered entry → action → observed-state evidence trail.
+  const steps = parseCrawlSteps([
+    entryObservationStep(input),
+    ...decisions.map((decision, index) => decisionStep(decision, input.mission.id, index, input.startUrl)),
+  ]);
   for (const step of steps) {
     if (step.action === "goto" && step.url) policy.assert(resolveStepUrl(input.startUrl, step.url));
     if (step.expected.url) policy.assert(step.expected.url);

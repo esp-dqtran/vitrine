@@ -28,6 +28,11 @@ test("round-trips the first-class Flows catalog route", () => {
   assert.equal(routeToPath({ name: "flows" }), "/flows");
 });
 
+test("keeps Motion prompts within the Sites route family", () => {
+  assert.deepEqual(parseRoutePath("/sites/motion"), { name: "sites-motion" });
+  assert.equal(routeToPath({ name: "sites-motion" }), "/sites/motion");
+});
+
 test("round-trips Collections workspace routes", () => {
   assert.deepEqual(parseRoutePath("/collections"), { name: "collections" });
   assert.equal(routeToPath({ name: "collections" }), "/collections");

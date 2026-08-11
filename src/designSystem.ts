@@ -99,6 +99,22 @@ export interface DesignFlowInsights<T = number> {
   evidence: T[];
 }
 
+export interface DesignFlowStepObservation {
+  source: "crawl_observed";
+  action: "goto" | "click" | "fill" | "press" | "waitFor";
+  sourceUrl: string;
+  finalUrl: string;
+  visibleUi: string[];
+  visibleText: string[];
+  likelyIntent: string;
+  availableActions: string[];
+  systemFeedback: string[];
+  friction: string[];
+  missingOrUncertainStates: string[];
+  accessibility: string[];
+  confidence: number;
+}
+
 export interface DesignFlow<T = number> {
   id: string;
   title: string;
@@ -110,6 +126,7 @@ export interface DesignFlow<T = number> {
     label: string;
     interaction?: string;
     evidence: T[];
+    observation?: DesignFlowStepObservation;
     analysis?: {
       interaction: string;
       visibleStates: string[];
@@ -119,6 +136,24 @@ export interface DesignFlow<T = number> {
   }>;
   provenance?: FlowProvenance;
   insights?: DesignFlowInsights<T>;
+}
+
+function isDesignFlowInsights(value: unknown): value is DesignFlowInsights {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const insight = value as Partial<DesignFlowInsights>;
+  return typeof insight.purpose === "string"
+    && Array.isArray(insight.feedback)
+    && insight.feedback.every((item) => typeof item === "string")
+    && Array.isArray(insight.openQuestions)
+    && insight.openQuestions.every((item) => typeof item === "string")
+    && typeof insight.confidence === "number"
+    && Number.isFinite(insight.confidence)
+    && insight.confidence >= 0
+    && insight.confidence <= 1
+    && insight.reviewStatus === "needs_review"
+    && insight.source === "llm_inferred"
+    && Array.isArray(insight.evidence)
+    && insight.evidence.every((item) => Number.isSafeInteger(item) && item > 0);
 }
 
 export interface DesignSystemSnapshot<T = number> {
@@ -315,7 +350,7 @@ export function hydrateDesignSystem(
     flows: snapshot.flows.map(({ insights, ...flow }) => ({
       ...flow,
       steps: flow.steps.map((step) => ({ ...step, evidence: hydrate(step.evidence) })),
-      ...(insights ? {
+      ...(isDesignFlowInsights(insights) ? {
         insights: { ...insights, evidence: hydrate(insights.evidence) },
       } : {}),
     })),

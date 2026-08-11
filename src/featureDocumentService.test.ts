@@ -198,6 +198,16 @@ function setup(options: { store?: FakeStore; synthesis?: unknown; currentSha256?
   };
   const objects = new Map(manifest.map(({ imageId }) => [imageId, metadata(imageId)]));
   const objectStore = {
+    async head(key: string) {
+      const object = [...objects.values()].find((candidate) => candidate.key === key);
+      return object && {
+        key: object.key,
+        sha256: object.sha256,
+        byteSize: object.byteSize,
+        contentType: object.contentType,
+        accessClass: object.accessClass,
+      };
+    },
     async get(key: string) {
       const object = [...objects.values()].find((candidate) => candidate.key === key)!;
       return { metadata: object, body: object.body };
@@ -226,6 +236,38 @@ test("analyzes every ordered image then creates one validated revision", async (
     ["preparing", 0], ["analyzing", 0], ["analyzing", 1], ["analyzing", 2], ["analyzing", 3],
     ["synthesizing", 3], ["validating", 3], ["saving", 3],
   ]);
+});
+
+test("uses verified crawl observations without sending screenshots to the analysis provider", async () => {
+  const store = new FakeStore();
+  store.job.evidenceManifest = manifest.map((item) => ({
+    ...item,
+    observation: analysis(item.evidenceId),
+  }));
+  const { service, imageCalls, synthesisCalls } = setup({ store });
+
+  assert.equal(await service.generate(String(store.job.id)), "done");
+  assert.equal(imageCalls.length, 0);
+  assert.equal(synthesisCalls.length, 1);
+  assert.deepEqual(
+    store.stepAnalyses.map(({ evidenceId }) => evidenceId),
+    manifest.map(({ evidenceId }) => evidenceId),
+  );
+});
+
+test("analyzes only the screenshot steps that lack crawl observations", async () => {
+  const store = new FakeStore();
+  store.job.evidenceManifest = manifest.map((item, index) => ({
+    ...item,
+    ...(index === 0 ? { observation: analysis(item.evidenceId) } : {}),
+  }));
+  const { service, imageCalls } = setup({ store });
+
+  assert.equal(await service.generate(String(store.job.id)), "done");
+  assert.deepEqual(
+    imageCalls.map(({ prompt }) => prompt.evidenceId),
+    manifest.slice(1).map(({ evidenceId }) => evidenceId),
+  );
 });
 
 test("analyzes every ordered image in one whole-Flow provider call", async () => {

@@ -23,6 +23,22 @@ let reviewTransitionInvalid = false;
 let ownedJobStatus: typeof job.status | "error" | "cancelled" | "stale" = "running";
 const sseOrder: string[] = [];
 
+const observedStep = (state: string) => ({
+  source: "crawl_observed" as const,
+  action: "click" as const,
+  sourceUrl: "https://example.com/before",
+  finalUrl: "https://example.com/after",
+  visibleUi: [state],
+  visibleText: [state],
+  likelyIntent: `Continue to ${state}`,
+  availableActions: [`Continue to ${state}`],
+  systemFeedback: [`Reached ${state}`],
+  friction: [],
+  missingOrUncertainStates: [],
+  accessibility: [],
+  confidence: 1,
+});
+
 const job = {
   id: 31,
   documentId: 12,
@@ -116,8 +132,8 @@ const dependencies = {
     description: "Complete checkout",
     tags: ["commerce"],
     steps: [
-      { label: "Cart", evidence: [42, 43] },
-      { label: "Payment", evidence: [44] },
+      { label: "Cart", interaction: "Review cart", evidence: [42, 43], observation: observedStep("Cart") },
+      { label: "Payment", interaction: "Continue to payment", evidence: [44], observation: observedStep("Payment") },
     ],
   }],
   flowEvidenceImages: async () => [42, 43, 44].map((id) => ({
@@ -167,6 +183,15 @@ test("creates a durable generation only after every Flow image is object-backed"
   assert.deepEqual(await response.json(), { documentId: 12, jobId: 31 });
   assert.deepEqual(published[0], { type: "generate-feature-document", runId: "31", jobId: 72 });
   assert.equal((created[0].input.evidenceManifest as unknown[]).length, 3);
+  const evidenceManifest = created[0].input.evidenceManifest as Array<{ evidenceId: string; observation?: { evidenceId: string } }>;
+  assert.deepEqual(
+    evidenceManifest.map(({ evidenceId, observation }) => [evidenceId, observation?.evidenceId]),
+    [
+      ["FLOW-STEP-01-IMAGE-42", "FLOW-STEP-01-IMAGE-42"],
+      ["FLOW-STEP-01-IMAGE-43", "FLOW-STEP-01-IMAGE-43"],
+      ["FLOW-STEP-02-IMAGE-44", "FLOW-STEP-02-IMAGE-44"],
+    ],
+  );
   assert.equal(created[0].input.transportJobId, 72);
 });
 

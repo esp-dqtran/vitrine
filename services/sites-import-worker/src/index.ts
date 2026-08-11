@@ -56,6 +56,10 @@ const handler = createSitesPipelineHandler({
     if (identity.kind === "public-page") {
       const browser = await createPublicPageBrowser({
         headless: process.env.HEADLESS !== "false",
+        // Public marketing pages can leave animated WebGL canvases running
+        // indefinitely. DOM/CSS evidence remains available with graphics
+        // disabled, which keeps the catalog worker within its crawl budget.
+        disableWebGl: true,
       });
       return runSitesCrawlWithTimeout(
         () => crawlGenericSite(identity.canonicalUrl, {

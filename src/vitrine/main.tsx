@@ -21,6 +21,7 @@ import '@fontsource/figtree/700.css';
 import './styles.css';
 import './referenceDiscovery.css';
 import './flowPreviewDialog.css';
+import './motionPrompts.css';
 import './projectsWorkspace.css';
 import './collectionsWorkspace.css';
 import './settingsWorkspace.css';

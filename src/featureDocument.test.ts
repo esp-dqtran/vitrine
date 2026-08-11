@@ -1,11 +1,36 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  featureEvidenceManifestSha256,
   parseFeatureDocumentContent,
   parseFeatureStepAnalysis,
   renderFeatureDocumentMarkdown,
   type FeatureDocumentContent,
 } from "./featureDocument.ts";
+
+test("crawl observations participate in source drift checks without changing legacy manifests", () => {
+  const item = {
+    stepIndex: 0,
+    imageIndex: 0,
+    imageId: 42,
+    evidenceId: "IMAGE-42",
+    stepLabel: "Cart",
+    description: "Cart review",
+  };
+  const legacy = featureEvidenceManifestSha256([item]);
+  const observed = featureEvidenceManifestSha256([{
+    ...item,
+    observation: stepAnalysisFixture(),
+  }]);
+  const changed = featureEvidenceManifestSha256([{
+    ...item,
+    observation: { ...stepAnalysisFixture(), likelyIntent: "Open payment" },
+  }]);
+
+  assert.notEqual(observed, legacy);
+  assert.notEqual(changed, observed);
+  assert.equal(featureEvidenceManifestSha256([item]), legacy);
+});
 
 const claim = (
   id: string,

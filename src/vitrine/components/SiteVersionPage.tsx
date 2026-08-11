@@ -2,11 +2,10 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button, EmptyState } from '@astryxdesign/core';
 import { navigate, routeToPath, updateLocation } from '../router.ts';
 import { hasDesignSystemContent } from '../designSystemAvailability.ts';
-import { getSiteVersion, getSiteVersionBySlug, listSitesPage } from '../sitesApi.ts';
+import { getSiteVersion, getSiteVersionBySlug } from '../sitesApi.ts';
 import { useSlidingIndicator } from '../useSlidingIndicator.ts';
 import type {
   SiteSectionView,
-  SiteSummary,
   SiteVersionDetail,
   SiteVersionOption,
   SiteVersionPage as SitePage,
@@ -26,7 +25,6 @@ import {
 import { ReferenceDetailLoading } from './ReferenceDetailLoading.tsx';
 import { SiteAnalysisPanel } from './SiteAnalysisPanel.tsx';
 import { SiteDesignSystemPanel, siteDesignSystemForDetail } from './SiteDesignSystemPanel.tsx';
-import { SiteCard } from './SiteCard.tsx';
 import { SiteSectionVideoCard } from './SiteSectionVideoCard.tsx';
 import {
   SiteSectionInspector,
@@ -95,12 +93,10 @@ interface SiteVersionViewProps {
   onOpenSearch?: () => void;
   section?: string;
   initialSectionId?: number;
-  relatedSites?: SiteSummary[];
   onSectionChange: (section: SiteDetailSection) => void;
   onInspectorChange?: (sectionId: number | null) => void;
   onVersionChange: (versionId: number) => void;
   onBack: () => void;
-  onRelatedOpen?: (site: SiteSummary) => void;
 }
 
 interface SectionItem {
@@ -149,12 +145,10 @@ export function SiteVersionView({
   onOpenSearch,
   section,
   initialSectionId,
-  relatedSites = [],
   onSectionChange,
   onInspectorChange = () => undefined,
   onVersionChange,
   onBack,
-  onRelatedOpen = (site) => navigate({ name: 'site-version', siteSlug: site.routeSlug }),
 }: SiteVersionViewProps) {
   const pages = useMemo(() => [...detail.pages]
     .sort((a, b) => a.position - b.position)
@@ -397,22 +391,6 @@ export function SiteVersionView({
       >
         <div className={`site-detail__content site-detail__content--${activeSection}`}>
           {body}
-          {relatedSites.length ? (
-            <section className="site-detail__related" aria-labelledby="related-sites-title">
-              <div>
-                <h2 id="related-sites-title">More like {detail.site.name}</h2>
-              </div>
-              <div className="site-detail__related-grid">
-                {relatedSites.slice(0, 6).map((site) => (
-                  <SiteCard
-                    key={`${site.id}:${site.versionId}`}
-                    site={site}
-                    onOpen={() => onRelatedOpen(site)}
-                  />
-                ))}
-              </div>
-            </section>
-          ) : null}
         </div>
       </ReferenceDetailPage>
       {inspector && inspector.items[inspector.index] && (
@@ -654,7 +632,6 @@ export function SiteVersionPage(props: SiteVersionPageProps) {
   const versionId = 'versionId' in props ? props.versionId : undefined;
   const selectedVersionId = 'siteSlug' in props ? props.selectedVersionId : undefined;
   const [detail, setDetail] = useState<SiteVersionDetail | null>(null);
-  const [relatedSites, setRelatedSites] = useState<SiteSummary[]>([]);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
   useEffect(() => {
@@ -664,16 +641,12 @@ export function SiteVersionPage(props: SiteVersionPageProps) {
     let active = true;
     setDetail(null);
     setError('');
-    void Promise.all([
-      siteSlug
-        ? getSiteVersionBySlug(siteSlug, selectedVersionId)
-        : getSiteVersion(siteId as number, versionId as number),
-      listSitesPage(7, 0).then(({ sites }) => sites).catch(() => []),
-    ])
-      .then(([value, sites]) => {
+    void (siteSlug
+      ? getSiteVersionBySlug(siteSlug, selectedVersionId)
+      : getSiteVersion(siteId as number, versionId as number))
+      .then((value) => {
         if (!active) return;
         setDetail(value);
-        setRelatedSites(sites.filter((site) => site.id !== value.site.id));
       })
       .catch((cause: Error) => { if (active) setError(cause.message); });
     return () => { active = false; };
@@ -702,7 +675,6 @@ export function SiteVersionPage(props: SiteVersionPageProps) {
   return (
     <SiteVersionView
       detail={detail}
-      relatedSites={relatedSites}
       isAdmin={isAdmin}
       searchLabel={query || 'Search on Web...'}
       accountControls={accountControls}

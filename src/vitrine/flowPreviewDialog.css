@@ -244,7 +244,10 @@ dialog.flow-preview-dialog-shell::backdrop {
   height: 100%;
   display: flex;
   align-items: flex-start;
-  justify-content: safe center;
+  /* A scroll track must begin at its leading edge. Centering the complete
+     multi-screen strip offsets its first screen beyond the viewport, which
+     makes the selected screen look cropped. */
+  justify-content: flex-start;
   gap: 32px;
   margin: 0;
   padding: 16px 32px 106px;
@@ -310,7 +313,9 @@ dialog.flow-preview-dialog-shell::backdrop {
 
 .flow-preview-dialog--web .flow-preview-dialog__slide,
 .flow-preview-dialog--web .flow-preview-dialog__screen {
-  aspect-ratio: 16 / 10;
+  /* Web crawler captures use the standard desktop 16:9 viewport. Matching
+     the stage avoids the white bands that an unrelated 16:10 frame adds. */
+  aspect-ratio: 16 / 9;
 }
 
 .flow-preview-dialog--web .flow-preview-dialog__screen {
@@ -323,7 +328,9 @@ dialog.flow-preview-dialog-shell::backdrop {
 
 .flow-preview-dialog--web .flow-preview-dialog__screen > img,
 .flow-preview-dialog--web .flow-preview-dialog__screen img {
-  object-fit: cover;
+  /* Web captures are evidence. Preserve their full viewport rather than
+     cropping the top and bottom to fill this 16:10 presentation frame. */
+  object-fit: contain;
 }
 
 .flow-preview-dialog__prototype {

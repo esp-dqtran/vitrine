@@ -137,13 +137,14 @@ export async function inspectSiteViewport(
   page: Page,
   viewport: "desktop" | "mobile",
   resources: SiteResourceEvidence[],
+  maximumElements = 10_000,
 ): Promise<SiteViewportInspection> {
   const safeResources = resources.slice(0, 128).map((item) => ({
     url: item.url,
     kind: item.kind,
     text: item.text.slice(0, 512),
   }));
-  const raw = await page.evaluate(async ({ viewportName, resourceEvidence }) => {
+  const raw = await page.evaluate(async ({ viewportName, resourceEvidence, elementLimit }) => {
     type StructureNode = Record<string, unknown> & {
       id: string;
       key: string;
@@ -255,7 +256,7 @@ export async function inspectSiteViewport(
     const allElements = [
       document.body,
       ...document.body.querySelectorAll("*"),
-    ].filter((element): element is Element => Boolean(element)).slice(0, 10_000);
+    ].filter((element): element is Element => Boolean(element)).slice(0, elementLimit);
     const retainedElements: Element[] = [];
     for (const element of allElements) {
       if (retainedElements.length >= 1_000) break;
@@ -745,7 +746,11 @@ export async function inspectSiteViewport(
       mutations,
       warnings: [...new Set(warnings)].slice(0, 100),
     };
-  }, { viewportName: viewport, resourceEvidence: safeResources });
+  }, {
+    viewportName: viewport,
+    resourceEvidence: safeResources,
+    elementLimit: Math.max(1, Math.min(10_000, Math.floor(maximumElements))),
+  });
   return raw as SiteViewportInspection;
 }
 

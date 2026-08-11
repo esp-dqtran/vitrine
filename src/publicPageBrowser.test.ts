@@ -643,6 +643,39 @@ test("caps screenshot dimensions before rendering page bytes", () => {
   );
 });
 
+test("uses a bounded evidence window for exceptionally long pages", () => {
+  const captureHeight = (
+    publicPageBrowserModule as typeof publicPageBrowserModule & {
+      captureHeightForDocument?: (height: number) => number;
+    }
+  ).captureHeightForDocument;
+  assert.equal(typeof captureHeight, "function");
+  assert.equal(captureHeight!(12_000), 12_000);
+  assert.equal(captureHeight!(12_001), 900);
+});
+
+test("uses a smaller mobile window only for long pages", () => {
+  const mobileCaptureHeight = (
+    publicPageBrowserModule as typeof publicPageBrowserModule & {
+      mobileCaptureHeightForDocument?: (height: number) => number;
+    }
+  ).mobileCaptureHeightForDocument;
+  assert.equal(typeof mobileCaptureHeight, "function");
+  assert.equal(mobileCaptureHeight!(11_999), 11_999);
+  assert.equal(mobileCaptureHeight!(12_001), 844);
+});
+
+test("shortens the preview only when the evidence window is capped", () => {
+  const previewDuration = (
+    publicPageBrowserModule as typeof publicPageBrowserModule & {
+      previewMaxDurationForCapture?: (captureHeight: number, configuredMaximumMs: number) => number;
+    }
+  ).previewMaxDurationForCapture;
+  assert.equal(typeof previewDuration, "function");
+  assert.equal(previewDuration!(11_999, 20_000), 20_000);
+  assert.equal(previewDuration!(900, 20_000), 2_000);
+});
+
 test("captures ordered HTML sections, crops, metadata, and a continuous WebM preview", { timeout: 60_000 }, async (t) => {
   const fixture = await fixtureServer();
   t.after(() => new Promise<void>((resolve) => fixture.server.close(() => resolve())));
@@ -670,11 +703,11 @@ test("captures ordered HTML sections, crops, metadata, and a continuous WebM pre
     new URL("/apple-touch-icon-180.png", fixture.url).toString(),
   );
   assert.equal(result.capture.canonicalUrl, fixture.url);
-  assert.ok(result.capture.document.height > 30_000);
+  assert.equal(result.capture.document.height, 900);
   assert.ok(Buffer.byteLength(result.capture.html, "utf8") <= 2 * 1_024 * 1_024);
   assert.deepEqual(
     result.capture.sections.map((section) => section.heading),
-    ["Navigation", "Hero section title", "Features", "Pricing", "Long content", "Start today", "Footer"],
+    ["Navigation", "Hero section title", "Features"],
   );
   assert.ok(result.capture.sections.every(({ bounds }) =>
     bounds.x === 0 && bounds.width === result.capture.document.width

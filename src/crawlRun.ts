@@ -79,7 +79,7 @@ export interface CompletedCaptureIdentity {
 export interface ScreenshotPage {
   url(): string;
   viewportSize(): { width: number; height: number } | null;
-  screenshot(options: { fullPage: true }): Promise<Uint8Array>;
+  screenshot(options: { fullPage: boolean }): Promise<Uint8Array>;
   evaluate?: Page["evaluate"];
 }
 
@@ -312,7 +312,7 @@ export async function captureValidatedState(
   const sourceUrl = normalizeCaptureUrl(identity.sourceUrl, secretValues);
   const takeScreenshot = async () => {
     const before = livePageState(page, secretValues);
-    const png = await page.screenshot({ fullPage: true });
+    const png = await page.screenshot({ fullPage: false });
     const after = livePageState(page, secretValues);
     return { before, png, after };
   };
@@ -421,6 +421,58 @@ function evidenceOrder(a: CrawlEvidenceRecord, b: CrawlEvidenceRecord): number {
   );
 }
 
+function locatorDescription(locator: Pick<CrawlStep, "role" | "name" | "text" | "css"> | undefined): string | undefined {
+  if (!locator) return undefined;
+  if (locator.role) return locator.name ? `${locator.role} "${locator.name}"` : locator.role;
+  if (locator.text) return `text "${locator.text}"`;
+  if (locator.css) return "target element";
+  return undefined;
+}
+
+function locatorText(locator: Pick<CrawlStep, "name" | "text"> | undefined): string[] {
+  if (!locator) return [];
+  return [...new Set([locator.name, locator.text].filter((value): value is string => Boolean(value)))];
+}
+
+function observedInteraction(step: CrawlStep): string {
+  const target = locatorDescription(step);
+  if (step.action === "goto") return `Open ${step.expected.state}`;
+  if (step.action === "press") return `Press ${step.key} to reach ${step.expected.state}`;
+  if (step.action === "fill") return `Fill ${target ?? "field"} to reach ${step.expected.state}`;
+  if (step.action === "click") return `Click ${target ?? "control"} to reach ${step.expected.state}`;
+  return `Wait for ${target ?? step.expected.state}`;
+}
+
+function crawlStepObservation(
+  step: CrawlStep,
+  evidence: CrawlEvidenceRecord,
+): NonNullable<DesignFlow["steps"][number]["observation"]> {
+  const visibleTarget = locatorDescription(step.expected.visible);
+  const hiddenTarget = locatorDescription(step.expected.hidden);
+  const interaction = observedInteraction(step);
+  const systemFeedback = [
+    `Reached ${step.expected.state}`,
+    ...(visibleTarget ? [`${visibleTarget} is visible`] : []),
+    ...(hiddenTarget ? [`${hiddenTarget} is hidden`] : []),
+    ...(evidence.source_url !== evidence.final_url ? [`Navigated from ${evidence.source_url} to ${evidence.final_url}`] : []),
+  ];
+  return {
+    source: "crawl_observed",
+    action: step.action,
+    sourceUrl: evidence.source_url,
+    finalUrl: evidence.final_url,
+    visibleUi: visibleTarget ? [visibleTarget] : [],
+    visibleText: locatorText(step.expected.visible),
+    likelyIntent: interaction,
+    availableActions: [interaction],
+    systemFeedback,
+    friction: [],
+    missingOrUncertainStates: [],
+    accessibility: [],
+    confidence: 1,
+  };
+}
+
 export function assembleCanonicalFlows(
   plan: CrawlPlan,
   identity: { versionId: number; planId: string; completedFlowIds: Iterable<string> },
@@ -442,19 +494,27 @@ export function assembleCanonicalFlows(
     const steps: DesignFlow["steps"] = [];
     const seenImageIds = new Set<number>();
     for (const step of flow.steps) {
+      const stepEvidence = flowEvidence
+        .filter((record) => record.step_id === step.id)
+        .sort(evidenceOrder);
       const imageIds = [
         ...new Set(
-          flowEvidence
-            .filter((record) => record.step_id === step.id)
-            .sort(evidenceOrder)
-            .map((record) => record.image_id),
+          stepEvidence.map((record) => record.image_id),
         ),
       ].filter((imageId) => {
         if (seenImageIds.has(imageId)) return false;
         seenImageIds.add(imageId);
         return true;
       });
-      if (imageIds.length > 0) steps.push({ label: step.expected.state, evidence: imageIds });
+      if (imageIds.length > 0) {
+        const observation = crawlStepObservation(step, stepEvidence[0]);
+        steps.push({
+          label: step.expected.state,
+          interaction: observation.likelyIntent,
+          evidence: imageIds,
+          observation,
+        });
+      }
     }
     if (steps.length > 0) {
       built.push({ id: flow.id, title: flow.title, description: flow.description, tags: ["smart-crawler"], steps });

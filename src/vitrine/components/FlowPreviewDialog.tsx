@@ -250,6 +250,8 @@ export function FlowPreviewDialog({
     ? `${flowTitle} in ${sourceAppName}`
     : flowTitle;
   const saved = activeScreen ? savedScreens.has(activeScreen.stepNumber) : false;
+  const showScreenNavigation = activeMode !== 'document'
+    && (activeMode === 'prototype' || platform === 'web');
   const screenMeta = [
     platformName(platform),
     activeResolution ? `${activeResolution.width}×${activeResolution.height}` : null,
@@ -436,7 +438,7 @@ export function FlowPreviewDialog({
             </ol>
           )}
 
-          {(activeMode === 'prototype' || activeMode === 'screens')
+          {showScreenNavigation
             && activeIndex > 0 ? (
             <IconButton
               label="Previous Flow screen"
@@ -447,7 +449,7 @@ export function FlowPreviewDialog({
               onClick={() => selectScreen(activeIndex - 1)}
             />
           ) : null}
-          {(activeMode === 'prototype' || activeMode === 'screens')
+          {showScreenNavigation
             && activeIndex < screens.length - 1 ? (
             <IconButton
               label="Next Flow screen"

@@ -128,6 +128,7 @@ export interface FeatureEvidenceManifestItem {
   interaction?: string;
   description: string | null;
   capturedAt?: string | null;
+  observation?: FeatureStepAnalysis;
 }
 
 export interface FeatureSourceFlow {
@@ -228,6 +229,7 @@ export function featureEvidenceManifestSha256(manifest: FeatureEvidenceManifestI
     interaction: item.interaction ?? null,
     description: item.description,
     capturedAt: item.capturedAt ?? null,
+    ...(item.observation ? { observation: item.observation } : {}),
   }));
   return createHash("sha256").update(JSON.stringify(canonical)).digest("hex");
 }

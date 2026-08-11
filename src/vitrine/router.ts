@@ -46,6 +46,7 @@ export type Route =
       flowView?: FlowRepresentation;
     }
   | { name: "sites" }
+  | { name: "sites-motion" }
   | SiteVersionRoute
   | { name: "collections"; collectionId?: number }
   | { name: "projects" }
@@ -111,6 +112,7 @@ export function parseRoutePath(pathname: string): Route {
   if (path === "/apps") return { name: "apps" };
   if (path === "/flows") return { name: "flows" };
   if (path === "/sites") return { name: "sites" };
+  if (path === "/sites/motion") return { name: "sites-motion" };
   const siteMatch = path.match(
     /^\/sites\/([1-9]\d*)\/versions\/([1-9]\d*)(?:\/([^/]+)(?:\/([1-9]\d*))?)?$/,
   );
@@ -333,6 +335,8 @@ export function routeToPath(route: Route): string {
       return "/flows";
     case "sites":
       return "/sites";
+    case "sites-motion":
+      return "/sites/motion";
     case "site-version": {
       const base =
         "siteSlug" in route

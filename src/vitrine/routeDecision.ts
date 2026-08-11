@@ -51,6 +51,7 @@ export function decideRootRoute(
         : { kind: "redirect", route: { name: "apps" } };
     case "apps":
     case "sites":
+    case "sites-motion":
     case "flows":
     case "app":
       return { kind: "application" };

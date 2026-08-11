@@ -49,6 +49,7 @@ export const FEATURE_SYNTHESIS_SYSTEM_PROMPT = [
   "Each acceptance criterion is one observed or inferred BDD scenario with id, kind, given, when, then, and evidenceIds.",
   "A visible control proves existence only. Classify its result as inferred unless later evidence visibly demonstrates the result.",
   "Classify an action and its postcondition as observed only when before/after evidence or visible system feedback demonstrates the transition.",
+  "A crawl_observed manifest observation is a verified browser action and postcondition; use it directly without requiring separate image analysis.",
   "Do not mention loading completion unless a loading indicator or loading feedback is visibly evidenced.",
   "Put suggested changes only in proposedFeature and classify them proposed. Put unresolved behavior in openQuestions and classify it unknown.",
   "Requirement text must describe one capability-level replica behavior in product language, not an implementation task.",

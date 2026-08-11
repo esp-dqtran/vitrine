@@ -49,14 +49,14 @@ export interface ProductionAutonomousOrchestratorOptions {
 }
 
 function decisionPrompt(mission: CrawlMissionRecord, observation: Awaited<ReturnType<typeof observePage>>): string {
-  return `You are one bounded application discovery agent. Choose one to five actions that advance this mission without inventing controls.
+  return `You are one bounded application discovery agent. Choose a short, ordered sequence of one to five safe actions that advance this mission without inventing controls.
 Mission: ${mission.goal}
 Mode: ${mission.mode}
 Current observation: ${JSON.stringify(observation)}
 
 Return raw JSON: either one object or an array of at most five objects. Each object uses:
 {"action":"goto|click|fill|press|waitFor","role":"button","name":"Accessible name","url":"optional","key":"optional","value":"ordinary text or exact $SECRET_NAME","expectedState":"label","expectedUrl":"optional absolute URL","expectedVisible":{"role":"heading","name":"Accessible name"},"expectedPage":"same|new","mode":"${mission.mode}"}
-Use exactly one locator (role+name, text, or css) for click/fill/waitFor. Every action needs an expected URL or visible locator. Never include credential values.`;
+Use exactly one locator (role+name, text, or css) for click/fill/waitFor. Every action needs an expected URL or visible locator. The crawler captures the entry state and then settles, redacts, and captures after every individual action before moving to the next action. Keep actions in the exact required order; do not assume an unobserved control exists, submit a purchase, or include credential values.`;
 }
 
 function authenticationPrompt(

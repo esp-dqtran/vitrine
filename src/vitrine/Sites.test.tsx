@@ -440,22 +440,18 @@ test('uses an AA text token for related Site metadata', () => {
   assert.doesNotMatch(rule, /color-text-disabled/);
 });
 
-test('loads a bounded Mobbin-style related Site page on detail routes', () => {
+test('does not load or render related Sites on detail routes', () => {
   const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
-  assert.match(source, /listSitesPage\(7,\s*0\)/);
-  assert.doesNotMatch(source, /listSites\(\)/);
-  assert.match(source, /relatedSites\.slice\(0,\s*6\)/);
-  assert.match(source, /More like \{detail\.site\.name\}/);
-  assert.doesNotMatch(source, /Continue exploring/);
-  assert.doesNotMatch(source, /<SiteCard[\s\S]*?deferMediaUntilIntent/);
+  assert.doesNotMatch(source, /listSitesPage/);
+  assert.doesNotMatch(source, /relatedSites/);
+  assert.doesNotMatch(source, /More like/);
+  assert.doesNotMatch(source, /site-detail__related/);
 });
 
-test('renders related Sites with visible previews and compact identity copy', () => {
-  const relatedSite: SiteSummary = { ...site, previewMediaKind: 'image' };
+test('does not render related Sites below a Site detail', () => {
   const html = renderToStaticMarkup(
     <SiteVersionView
       detail={detail}
-      relatedSites={[relatedSite]}
       isAdmin={false}
       section="preview"
       onSectionChange={() => undefined}
@@ -464,10 +460,8 @@ test('renders related Sites with visible previews and compact identity copy', ()
     />,
   );
 
-  assert.match(html, /<h2 id="related-sites-title">More like V7<\/h2>/);
-  assert.match(html, new RegExp(`src="${relatedSite.previewUrl}"`));
-  assert.doesNotMatch(html, /Continue exploring/);
-  assert.doesNotMatch(html, new RegExp(`${relatedSite.label} · ${relatedSite.sectionCount} sections`));
+  assert.doesNotMatch(html, /More like V7/);
+  assert.doesNotMatch(html, /related-sites-title/);
 });
 
 test('delegates query, sort, filters, pagination, and retry state to the generic controller', () => {

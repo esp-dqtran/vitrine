@@ -1,8 +1,10 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Button, Heading, Icon, IconButton, Text } from '@astryxdesign/core';
+import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
 import type { PublicAppPreview } from '../publicAppPreviewApi.ts';
 import { AppIcon } from './AppIcon.tsx';
 import { AstryxModal } from './AstryxModal.tsx';
+import { FlowCard } from './FlowCard.tsx';
 import { ReferenceDetailNavigation } from './ReferenceDetailPage.tsx';
 
 const evidenceCardStyle = {
@@ -12,6 +14,8 @@ const evidenceCardStyle = {
   borderRadius: 14,
   background: 'var(--color-background-surface)',
 } as const;
+
+const PUBLIC_FLOW_LIMIT = 6;
 
 function LockedEvidenceCard({ kind, onUnlock }: { kind: string; onUnlock: () => void }) {
   return (
@@ -44,13 +48,11 @@ function EvidenceSection({
   summary,
   children,
   onUnlock,
-  featured = false,
 }: {
   title: string;
   summary: string;
   children: ReactNode;
   onUnlock: () => void;
-  featured?: boolean;
 }) {
   return (
     <section aria-label={title} style={{ marginTop: 34 }}>
@@ -58,13 +60,33 @@ function EvidenceSection({
         <Heading level={2}>{title}</Heading>
         <Text color="secondary">{summary}</Text>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: featured ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(174px, 1fr))', gap: 14, marginTop: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(174px, 1fr))', gap: 14, marginTop: 16 }}>
         {children}
         <LockedEvidenceCard kind={title.toLowerCase()} onUnlock={onUnlock} />
         <LockedEvidenceCard kind={title.toLowerCase()} onUnlock={onUnlock} />
       </div>
     </section>
   );
+}
+
+function previewFlowAsDesignFlow(
+  flow: PublicAppPreview['previewFlows'][number],
+): DesignFlow<EvidenceView> {
+  return {
+    id: flow.id,
+    title: flow.title,
+    description: flow.description ?? '',
+    tags: [],
+    steps: flow.screens.map((screen, index) => ({
+      label: screen.label,
+      evidence: [{
+        imageId: index + 1,
+        imageUrl: screen.thumbnailUrl,
+        thumbnailUrl: screen.thumbnailUrl,
+        description: null,
+      }],
+    })),
+  };
 }
 
 interface PublicAppPreviewContentProps {
@@ -81,9 +103,10 @@ function PublicAppPreviewContent({
   presentation,
 }: PublicAppPreviewContentProps) {
   const { app, previewScreens } = preview;
-  const previewUiElements = preview.previewUiElements ?? [];
   const previewFlows = preview.previewFlows ?? [];
-  const featuredFlows = previewFlows.slice(0, 1);
+  const [showAllFlows, setShowAllFlows] = useState(false);
+  const hasMoreFlows = previewFlows.length > PUBLIC_FLOW_LIMIT;
+  const visibleFlows = showAllFlows ? previewFlows : previewFlows.slice(0, PUBLIC_FLOW_LIMIT);
   const isModal = presentation === 'modal';
 
   return (
@@ -121,76 +144,52 @@ function PublicAppPreviewContent({
                   style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 />
               </div>
-              <figcaption style={{ padding: '12px 14px' }}>
-                <Text weight="semibold">{screen.type}</Text>
-                <div style={{ marginTop: 3 }}><Text color="secondary">{screen.productArea}</Text></div>
-              </figcaption>
             </figure>
           ))}
         </EvidenceSection>
 
         <EvidenceSection
-          title="UI Elements"
-          summary={`Showing ${previewUiElements.length} of ${app.totalUiElements}`}
+          title="Flows"
+          summary={`Showing ${visibleFlows.length} of ${app.totalFlows}`}
           onUnlock={onUnlock}
         >
-          {previewUiElements.map((item) => (
-            <article key={item.type} style={evidenceCardStyle}>
-              <div style={{ aspectRatio: '4 / 3', overflow: 'hidden', background: 'var(--color-background-muted)' }}>
-                <img
-                  src={item.thumbnailUrl}
-                  alt={`${app.app} ${item.type}`}
-                  loading="lazy"
-                  onError={(event) => { event.currentTarget.style.visibility = 'hidden'; }}
-                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          {visibleFlows.map((flow) => {
+            const flowScreenCount = flow.screens.length;
+            const screenLabel = `${flowScreenCount} real ${flowScreenCount === 1 ? 'screen' : 'screens'}`;
+            return (
+              <div key={flow.id} style={{ gridColumn: '1 / -1' }}>
+                <FlowCard
+                  flow={previewFlowAsDesignFlow(flow)}
+                  onOpen={onUnlock}
+                  platform="web"
+                  metaLabel={`${flow.stepCount} steps · ${screenLabel}`}
+                  syncPreviewUrl={false}
                 />
               </div>
-              <div style={{ padding: '12px 14px' }}>
-                <Text weight="semibold">{item.type}</Text>
-                <div style={{ marginTop: 3 }}>
-                  <Text color="secondary">{item.group} · {item.count} observed</Text>
-                </div>
-              </div>
-            </article>
-          ))}
-        </EvidenceSection>
-
-        <EvidenceSection
-          title="Flows"
-          summary={`Showing ${featuredFlows.length} of ${app.totalFlows}`}
-          onUnlock={onUnlock}
-          featured
-        >
-          {featuredFlows.map((flow) => (
-            <article key={flow.id} data-public-preview-featured-flow="true" style={{ ...evidenceCardStyle, gridColumn: '1 / -1' }}>
-              <div style={{ height: 270, padding: 12, boxSizing: 'border-box', background: 'var(--color-background-muted)' }}>
-                <div data-public-preview-flow-screen-strip="true" style={{ display: 'flex', gap: 12, height: '100%', overflowX: 'auto', overscrollBehaviorX: 'contain', scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}>
-                  {(flow.screens ?? []).map((screen, index) => (
-                    <figure key={`${flow.id}-${screen.thumbnailUrl}`} style={{ position: 'relative', flex: '0 0 min(76%, 520px)', height: '100%', margin: 0, overflow: 'hidden', scrollSnapAlign: 'start', border: '1px solid var(--color-border)', borderRadius: 12, background: 'var(--color-background-body)' }}>
-                      <img
-                        src={screen.thumbnailUrl}
-                        alt={`${flow.title}: ${screen.label}`}
-                        loading="lazy"
-                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                      />
-                      <figcaption style={{ position: 'absolute', left: 6, bottom: 6, width: 20, height: 20, display: 'grid', placeItems: 'center', borderRadius: '50%', fontSize: 11, fontWeight: 700, color: 'var(--color-background-body)', background: 'var(--color-text-primary)', boxShadow: 'var(--shadow-low)' }}>
-                        {index + 1}
-                      </figcaption>
-                    </figure>
-                  ))}
-                  {(flow.screens ?? []).length === 0 ? (
-                    <div style={{ width: '100%', display: 'grid', placeItems: 'center' }}><Text color="secondary">Flow preview unavailable</Text></div>
-                  ) : null}
-                </div>
-              </div>
-              <div style={{ padding: '12px 14px 14px' }}>
-                <Text weight="semibold">{flow.title}</Text>
-                <div style={{ marginTop: 6 }}>
-                  <Text color="secondary">{flow.stepCount} steps · {(flow.screens ?? []).length} real screens</Text>
-                </div>
-              </div>
-            </article>
-          ))}
+            );
+          })}
+          {hasMoreFlows && !showAllFlows ? (
+            <div
+              data-public-preview-flow-expander="true"
+              style={{
+                gridColumn: '1 / -1',
+                display: 'grid',
+                placeItems: 'center',
+                minHeight: 96,
+                marginTop: -30,
+                paddingTop: 42,
+                background: 'linear-gradient(to bottom, transparent, var(--color-background-primary) 62%)',
+              }}
+            >
+              <Button
+                label={`Show all ${previewFlows.length} flows`}
+                aria-expanded={false}
+                variant="secondary"
+                size="md"
+                onClick={() => setShowAllFlows(true)}
+              />
+            </div>
+          ) : null}
         </EvidenceSection>
     </div>
   );
@@ -208,7 +207,7 @@ function PublicAppPreviewLoading() {
           {block(44, '42%')}
         </div>
       </div>
-      {['Screens', 'UI Elements', 'Flows'].map((title) => (
+      {['Screens', 'Flows'].map((title) => (
         <section key={title} style={{ marginTop: 34 }}>
           <Heading level={2}>{title}</Heading>
           <div aria-hidden="true" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14, marginTop: 16 }}>

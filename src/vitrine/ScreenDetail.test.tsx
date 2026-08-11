@@ -52,6 +52,38 @@ test('shows the Design System tab only when the App has a snapshot', () => {
   assert.doesNotMatch(html, /Crawler/);
 });
 
+test('does not expose the crawler workspace in App information tabs', () => {
+  assert.deepEqual(appDetailTabs(false).map(({ id }) => id), [
+    'screens',
+    'flows',
+  ]);
+  assert.equal(appDetailTabs(false).some(({ id }) => id === 'crawl'), false);
+});
+
+test('falls back removed Crawl selections to Screens', () => {
+  const html = renderToStaticMarkup(
+    <ScreenDetail
+      collections={[]}
+      onCollectionsChange={() => undefined}
+      role="admin"
+      initialSection="crawl"
+      app={{
+        id: 'linear',
+        app: 'Linear',
+        categories: [{ id: 1, name: 'Productivity', slug: 'productivity' }],
+        accent: '#5E6AD2',
+        totalScreens: 0,
+        totalUiElements: 0,
+        totalFlows: 0,
+      }}
+      onBack={() => undefined}
+    />,
+  );
+
+  assert.doesNotMatch(html, /AI Crawl|Intelligent crawler/);
+  assert.match(html, /aria-selected="true"[^>]*aria-label="Screens"/);
+});
+
 test('falls back removed Review selections to Screens', () => {
   const html = renderToStaticMarkup(
     <ScreenDetail

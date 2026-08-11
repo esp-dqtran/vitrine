@@ -77,6 +77,7 @@ export interface AstryxDropdownProps {
   panelPortal?: boolean;
   triggerClassName?: string;
   triggerVariant?: AstryxDropdownVariant;
+  triggerIcon?: ReactNode;
   triggerEndContent?: ReactNode;
   hasChevron?: boolean;
   menuWidth?: number | string;
@@ -100,6 +101,7 @@ export function AstryxDropdown({
   panelPortal = false,
   triggerClassName,
   triggerVariant = 'secondary',
+  triggerIcon,
   triggerEndContent,
   hasChevron = true,
   menuWidth = 184,
@@ -135,6 +137,7 @@ export function AstryxDropdown({
           variant={triggerVariant}
           size="sm"
           className={triggerClasses}
+          icon={triggerIcon}
           onClick={() => onOpenChange(!open)}
           endContent={triggerEndContent ?? (hasChevron ? (
             <Icon icon="chevronDown" size="sm" />
@@ -162,6 +165,7 @@ export function AstryxDropdown({
         variant: triggerVariant,
         size: 'sm',
         className: triggerClasses,
+        icon: triggerIcon,
         endContent: triggerEndContent,
       }}
       isMenuOpen={open}

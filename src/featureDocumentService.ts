@@ -247,6 +247,26 @@ async function loadEvidenceImage(input: {
   return checkedImage(metadata, object, input.maximumBytes);
 }
 
+async function verifyObservedEvidence(input: {
+  evidence: FeatureEvidenceManifestItem;
+  objectStore: ObjectStore;
+  imageObjectById(imageId: number): Promise<ObjectMetadata | undefined>;
+  maximumBytes: number;
+}): Promise<void> {
+  const metadata = await input.imageObjectById(input.evidence.imageId);
+  if (!metadata) throw new FeatureGenerationError("image_missing");
+  if (!RASTER_TYPES.has(metadata.contentType)) throw new FeatureGenerationError("image_type_unsupported");
+  if (metadata.byteSize > input.maximumBytes) throw new FeatureGenerationError("image_size_excessive");
+  let stored: ObjectMetadata | undefined;
+  try {
+    stored = await input.objectStore.head(metadata.key);
+  } catch {
+    throw new FeatureGenerationError("image_missing");
+  }
+  if (!stored) throw new FeatureGenerationError("image_missing");
+  if (!sameMetadata(metadata, stored)) throw new FeatureGenerationError("image_metadata_mismatch");
+}
+
 export function createFeatureDocumentService(deps: {
   store: FeatureDocumentStore;
   provider: FeatureDocumentProvider;
@@ -281,7 +301,7 @@ export function createFeatureDocumentService(deps: {
         await deps.store.updateProgress(jobId, "preparing", 0);
         const manifest = orderedManifest(job);
         let content: FeatureDocumentContent;
-        if (deps.provider.analyzeFlow) {
+        if (deps.provider.analyzeFlow && !manifest.some(({ observation }) => observation)) {
           const flowImages: Array<{ evidence: FeatureEvidenceManifestItem; image: RasterImage }> = [];
           await deps.store.updateProgress(jobId, "analyzing", 0);
           for (let index = 0; index < manifest.length; index += 1) {
@@ -345,6 +365,26 @@ export function createFeatureDocumentService(deps: {
               && existing.imageId === evidence.imageId
             ) {
               analyses.push(existing.result);
+              await deps.store.updateProgress(jobId, "analyzing", index + 1);
+              continue;
+            }
+            if (evidence.observation) {
+              await verifyObservedEvidence({
+                evidence,
+                objectStore: deps.objectStore,
+                imageObjectById: deps.imageObjectById,
+                maximumBytes: maxImageBytes,
+              });
+              const observed = parseFeatureStepAnalysis(evidence.observation, evidence.evidenceId);
+              await deps.store.recordStepAnalysis(jobId, {
+                stepIndex: evidence.stepIndex,
+                imageIndex: evidence.imageIndex,
+                imageId: evidence.imageId,
+                evidenceId: evidence.evidenceId,
+                result: observed,
+                attemptCount: 1,
+              });
+              analyses.push(observed);
               await deps.store.updateProgress(jobId, "analyzing", index + 1);
               continue;
             }

@@ -77,72 +77,87 @@ export function ProjectCanvasCommentInbox({
   );
 
   return (
-    <aside className="project-canvas-comment-inbox" aria-label="Comments">
+    <aside
+      className="project-canvas-comment-inbox"
+      aria-label="Comments"
+      role="dialog"
+      aria-modal="false"
+    >
       <header>
+        <div className="project-canvas-comment-inbox__topbar">
+          <div>
+            <strong>Comments</strong>
+            <span>{visibleThreads.length}</span>
+          </div>
+          <div>
+            <button
+              type="button"
+              className="project-canvas-comment-inbox__icon-button"
+              aria-label={
+                showResolved
+                  ? "Hide resolved comments"
+                  : "Show resolved comments"
+              }
+              aria-pressed={showResolved}
+              onClick={() => setShowResolved((current) => !current)}
+            >
+              <Icon icon="funnel" size="sm" />
+            </button>
+            <span className="project-canvas-comment-inbox__menu">
+              <button
+                type="button"
+                className="project-canvas-comment-inbox__icon-button"
+                aria-label="Comment options"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((current) => !current)}
+              >
+                <Icon icon="moreHorizontal" size="sm" />
+              </button>
+              {menuOpen ? (
+                <span
+                  className="project-canvas-comment-inbox__menu-popover"
+                  role="menu"
+                >
+                  <button
+                    type="button"
+                    role="menuitemcheckbox"
+                    aria-checked={showResolved}
+                    onClick={() => {
+                      setShowResolved((current) => !current);
+                      setMenuOpen(false);
+                    }}
+                  >
+                    {showResolved
+                      ? "Hide resolved comments"
+                      : "Show resolved comments"}
+                  </button>
+                  <button type="button" role="menuitem" onClick={onClose}>
+                    Close comments
+                  </button>
+                </span>
+              ) : null}
+            </span>
+            <button
+              type="button"
+              className="project-canvas-comment-inbox__icon-button"
+              aria-label="Close comments"
+              onClick={onClose}
+            >
+              <Icon icon="close" size="sm" />
+            </button>
+          </div>
+        </div>
         <TextInput
           label="Search comments"
           isLabelHidden
           value={query}
           onChange={setQuery}
-          placeholder="Search"
+          placeholder="Search comments"
           startIcon={<Icon icon="search" size="sm" />}
           hasClear={Boolean(query)}
           size="sm"
           width="100%"
         />
-        <button
-          type="button"
-          className="project-canvas-comment-inbox__icon-button"
-          aria-label={
-            showResolved ? "Hide resolved comments" : "Show resolved comments"
-          }
-          aria-pressed={showResolved}
-          onClick={() => setShowResolved((current) => !current)}
-        >
-          <Icon icon="funnel" size="sm" />
-        </button>
-        <span className="project-canvas-comment-inbox__menu">
-          <button
-            type="button"
-            className="project-canvas-comment-inbox__icon-button"
-            aria-label="Comment options"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((current) => !current)}
-          >
-            <Icon icon="moreHorizontal" size="sm" />
-          </button>
-          {menuOpen ? (
-            <span
-              className="project-canvas-comment-inbox__menu-popover"
-              role="menu"
-            >
-              <button
-                type="button"
-                role="menuitemcheckbox"
-                aria-checked={showResolved}
-                onClick={() => {
-                  setShowResolved((current) => !current);
-                  setMenuOpen(false);
-                }}
-              >
-                {showResolved
-                  ? "Hide resolved comments"
-                  : "Show resolved comments"}
-              </button>
-              <button type="button" role="menuitem" onClick={onClose}>
-                Close comments
-              </button>
-            </span>
-          ) : null}
-        </span>
-        <button
-          type="button"
-          className="project-canvas-comment-inbox__icon-button"
-          aria-label="Close comments"
-          onClick={onClose}
-        >
-          <Icon icon="close" size="sm" />
-        </button>
       </header>
 
       <div className="project-canvas-comment-inbox__body">
@@ -197,6 +212,7 @@ export function ProjectCanvasCommentPanel({
   onSubmit,
   onResolve,
   onDelete,
+  onBack,
   onClose,
 }: {
   thread?: DesignerCanvasCommentThread;
@@ -206,6 +222,7 @@ export function ProjectCanvasCommentPanel({
   onSubmit(value: string): void;
   onResolve(): void;
   onDelete(): void;
+  onBack?(): void;
   onClose(): void;
 }) {
   const [reply, setReply] = useState("");
@@ -270,28 +287,39 @@ export function ProjectCanvasCommentPanel({
   }
   return (
     <aside
-      className="project-canvas-comments"
+      className="project-canvas-comments project-canvas-comments--thread"
       aria-label={thread ? "Comment thread" : "New comment"}
       style={style}
     >
       <header>
         <div>
-          <span>Canvas comment</span>
-          <strong>
+          <strong>Comments</strong>
+          <span>
             {thread
               ? thread.resolved
                 ? "Resolved"
                 : "Discussion"
               : "New thread"}
-          </strong>
+          </span>
         </div>
-        <IconButton
-          label="Close comments"
-          icon={<Icon icon="close" size="sm" />}
-          variant="ghost"
-          size="sm"
-          clickAction={onClose}
-        />
+        <div className="project-canvas-comments__header-actions">
+          {onBack ? (
+            <IconButton
+              label="Back to comments"
+              icon={<Icon icon="chevronLeft" size="sm" />}
+              variant="ghost"
+              size="sm"
+              clickAction={onBack}
+            />
+          ) : null}
+          <IconButton
+            label="Close comments"
+            icon={<Icon icon="close" size="sm" />}
+            variant="ghost"
+            size="sm"
+            clickAction={onClose}
+          />
+        </div>
       </header>
       {thread ? (
         <div className="project-canvas-comments__messages">

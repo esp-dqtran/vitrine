@@ -148,8 +148,6 @@ The combined comparisons are direct 2560 × 720 compositions with no scaling.
 
 No actionable P0, P1, or P2 differences remain in this scoped comparison.
 
-final result: passed
-
 # Design QA — FigJam Section Tool
 
 Source visual truth:
@@ -1369,5 +1367,65 @@ Implementation evidence:
 - Pressed Escape and confirmed the temporary editor and object toolbar closed
   without leaving a test object on the board.
 - `npm run build` — passed.
+
+final result: passed
+
+---
+
+# Design QA — Motion Prompts
+
+Source visual truth: the existing Vitrines Sites catalogue and the established
+Flow detail modal. Motion remains a Sites extension rather than a separate
+top-level product area.
+
+## Verification
+
+- `/sites/motion` retains the Sites shell, movement taxonomy, search, type
+  dropdown, and catalogue layout without clipping or overlap.
+- A reference opens the Flow-style dialog. The **Site** tab presents its visual
+  reference; the **Prompt** tab presents an agent-ready implementation brief.
+- The agent selector changes the execution framing while preserving the
+  reference-specific prompt.
+- Browser console: no errors. The only warning is the existing Astryx theme
+  runtime-style-injection performance warning.
+- Focused route and UI tests: 33 passed. `npm run build` and `git diff --check`
+  passed.
+
+final result: passed
+
+---
+
+# Design QA — Motion Video-Card Gallery
+
+Source visual truth: the supplied MotionSites-style gallery reference, with
+large visual cards on a dark canvas and concise title/category metadata.
+
+## Same-state comparison
+
+- Source: `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/TemporaryItems/NSIRD_screencaptureui_ga8DNJ/Screenshot 2026-08-10 at 20.00.07.png`
+- Implementation: `/tmp/vitrines-motion-video-card.png`
+- Combined comparison: `/tmp/vitrines-motion-video-card-comparison.png`
+- Viewport: 2048 × 1152, Motion catalogue, dark theme, all motion types.
+
+## Findings and correction
+
+1. Replaced the bespoke Sites identity-card treatment with the shared
+   `MediaGridCard` surface for every Motion reference.
+2. Kept the image as the primary visual, with only a compact title and motion
+   category underneath; the repeated identity icon and description are gone.
+3. Preserved the responsive four/three/two/one-column card grid and the
+   existing Motion filtering controls.
+
+## Verification
+
+- The visual comparison confirms the intended dark media-gallery hierarchy,
+  image-first density, concise metadata, and rounded card treatment.
+- Opened a card in the in-app browser and confirmed the existing Flow-style
+  dialog shows both **Site** and **Prompt** tabs; the Prompt tab retains the
+  AI-agent selector and copy action.
+- Layout, typography, spacing, color, and interaction state have no P0, P1,
+  or P2 visual regressions in the checked desktop state.
+- `npx tsx --test src/vitrine/MotionPromptsPage.test.tsx` — 3 passed.
+- `npm run build` and targeted `git diff --check` — passed.
 
 final result: passed

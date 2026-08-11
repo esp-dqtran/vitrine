@@ -73,7 +73,6 @@ const autonomousOrchestrator = createProductionAutonomousOrchestrator({
   sessionEncryptionKey,
 });
 const staleRunThresholdMs = Number(process.env.CRAWL_STALE_RUN_THRESHOLD_MS ?? 5 * 60_000);
-
 async function currentFeatureSourceManifest(source: FeatureSourceFlow): Promise<{ sha256: string }> {
   const flows = source.versionId === undefined
     ? await getAppFlows(source.app, source.platform)
@@ -114,6 +113,20 @@ async function currentFeatureSourceManifest(source: FeatureSourceFlow): Promise<
         ...(step.interaction ? { interaction: step.interaction } : {}),
         description: image.description,
         ...(image.captured_at ? { capturedAt: new Date(image.captured_at).toISOString() } : {}),
+        ...(step.observation?.source === "crawl_observed" ? {
+          observation: {
+            evidenceId: `FLOW-STEP-${String(stepIndex + 1).padStart(2, "0")}-IMAGE-${imageId}`,
+            visibleUi: step.observation.visibleUi,
+            visibleText: step.observation.visibleText,
+            likelyIntent: step.observation.likelyIntent,
+            availableActions: step.observation.availableActions,
+            systemFeedback: step.observation.systemFeedback,
+            friction: step.observation.friction,
+            missingOrUncertainStates: step.observation.missingOrUncertainStates,
+            accessibility: step.observation.accessibility,
+            confidence: step.observation.confidence,
+          },
+        } : {}),
       });
     }
   }

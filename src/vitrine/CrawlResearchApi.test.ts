@@ -5,6 +5,7 @@ import {
   applyCrawlRepair,
   approveCrawlPlan,
   cancelCrawlRun,
+  createAppRecord,
   createCrawlRun,
   getCrawlPlan,
   getCrawlRun,
@@ -48,6 +49,7 @@ test("crawler API helpers use the admin crawl routes and JSON bodies", async (t)
   };
   t.after(() => { globalThis.fetch = originalFetch; });
 
+  await createAppRecord("atlassian", "https://www.atlassian.com/");
   await researchCrawlApp("atlassian", "https://www.atlassian.com/", "claude");
   await listCrawlPlans("atlassian");
   await getCrawlPlan("11");
@@ -74,6 +76,7 @@ test("crawler API helpers use the admin crawl routes and JSON bodies", async (t)
   await saveCrawlSession("atlassian", { cookies: [], origins: [] });
 
   assert.deepEqual(requests, [
+    { url: "/api/crawl/apps/atlassian/metadata", method: "POST", body: { homepageUrl: "https://www.atlassian.com/" } },
     { url: "/api/crawl/apps/atlassian/research", method: "POST", body: { homepageUrl: "https://www.atlassian.com/", provider: "claude" } },
     { url: "/api/crawl/apps/atlassian/plans", method: "GET" },
     { url: "/api/crawl/plans/11", method: "GET" },

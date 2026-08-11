@@ -113,6 +113,27 @@ export const applyReviewAction = (app: string, platform: Platform, action: Curat
 
 const crawlPath = (value: string) => encodeURIComponent(value);
 
+export interface AppMetadataIngestView {
+  id: number;
+  app: string;
+  displayName: string | null;
+  description: string | null;
+  websiteUrl: string;
+  iconUrl: string | null;
+  categories: Array<{ id: number; name: string; slug: string }>;
+  categoryAnalysis: { rationale: string; provider: string } | null;
+  created: boolean;
+  complete: boolean;
+  issues: string[];
+}
+
+export const createAppRecord = (app: string, homepageUrl: string): Promise<AppMetadataIngestView> =>
+  json(`/api/crawl/apps/${crawlPath(app)}/metadata`, {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify({ homepageUrl }),
+  });
+
 export const researchCrawlApp = (app: string, homepageUrl: string, provider?: CrawlResearchProvider): Promise<{ jobId: number; app: string; homepageUrl: string }> =>
   json(`/api/crawl/apps/${crawlPath(app)}/research`, {
     method: 'POST',

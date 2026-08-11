@@ -448,7 +448,7 @@ export function CommandPalette({
               isLabelHidden
               value={nav === 'flows' ? flowQuery : query}
               onChange={handleQueryChange}
-              placeholder="Web Apps, Screens, UI Elements, Flows or Keywords…"
+              placeholder="Describe a product moment, flow, or interface…"
               hasClear={Boolean(nav === 'flows' ? flowQuery : query)}
               width="100%"
               isDisabled={plan === 'free' && !publicBrowse && !flowModeEnabled}
@@ -508,9 +508,9 @@ export function CommandPalette({
                 </>
               ) : (
                 <>
-                  <span>NEW</span>
-                  <strong>AI Search is now<br />Deep Search</strong>
-                  <p>Deep Search is automatically selected for longer, more complex queries</p>
+                  <span>VITRINES SEARCH</span>
+                  <strong>Start with intent.<br />Narrow with evidence.</strong>
+                  <p>Describe the product moment you need, then focus by reference type and platform.</p>
                 </>
               )}
             </div>

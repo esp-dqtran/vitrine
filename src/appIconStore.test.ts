@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
 import sharp from "sharp";
-import { storeAppIcon } from "./appIconStore.ts";
+import { storeAppIcon, storeAppIconBuffer } from "./appIconStore.ts";
 import type { ObjectMetadata } from "./objectStore.ts";
 
 test("stores a downscaled WebP copy and points the app at it", async () => {
@@ -45,4 +45,25 @@ test("stores a downscaled WebP copy and points the app at it", async () => {
   assert.match(queries[0].sql, /INSERT INTO stored_objects/);
   assert.match(queries[1].sql, /UPDATE apps SET icon_object_key/);
   assert.deepEqual(queries[1].values, [stored.key, path, 42]);
+});
+
+test("stores official inline SVG artwork without downloading another favicon", async () => {
+  const puts: Array<ObjectMetadata & { body: Uint8Array }> = [];
+  const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#111"/><path d="M20 20h60v60H20z" fill="#fff"/></svg>');
+
+  const path = await storeAppIconBuffer({
+    objectStore: {
+      put: async (input: ObjectMetadata & { body: Uint8Array }) => {
+        puts.push(input);
+        return { created: true, metadata: input };
+      },
+    } as never,
+    download: async () => { throw new Error("inline SVG must not be downloaded"); },
+    runQuery: async () => undefined,
+  }, 43, svg);
+
+  assert.match(path, /^\/assets\/icons\/43\/[a-f0-9]{64}\.webp$/);
+  const image = await sharp(Buffer.from(puts[0].body)).metadata();
+  assert.equal(image.format, "webp");
+  assert.equal(image.width, 100, "small official artwork is not enlarged");
 });

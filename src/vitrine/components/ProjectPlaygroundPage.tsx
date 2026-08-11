@@ -130,7 +130,6 @@ import {
   projectStickyNoteFontForFamily,
   projectStickyNoteFontFamilies,
   stickyNoteUsesRichTextOverlay,
-  ProjectStickyNoteMetadata,
   ProjectObjectToolbar,
   ProjectObjectToolbarColorPicker,
   ProjectSelectionToolbar,
@@ -207,6 +206,7 @@ const researchFrameHeight = 640;
 const defaultSectionSize = 420;
 const defaultSectionFill = "#ffffff";
 const defaultSectionStroke = "#757575";
+const defaultConnectorStroke = "#1e1e1e";
 const canvasCollaborationColors = [
   { background: "#5b67f1", stroke: "#3f46bc" },
   { background: "#0f9f6e", stroke: "#087454" },
@@ -798,22 +798,28 @@ function CanvasShapeGlyph({
   );
 }
 
-function CanvasShapesCollageGlyph({ color }: { color: string }) {
+function CanvasShapesCollageGlyph({
+  shapeColor,
+  connectorColor,
+}: {
+  shapeColor: string;
+  connectorColor: string;
+}) {
   return (
     <span className="project-canvas-shapes-collage" aria-hidden="true">
       <ShapeLibraryGlyph
         shape={canvasShapePreviewOptions.rectangle}
-        color={color}
+        color={shapeColor}
         className="project-canvas-shapes-collage__rectangle"
       />
       <CanvasShapeGlyph
         icon={canvasShapePreviewOptions.connector.icon}
-        color={color}
+        color={connectorColor}
         className="project-canvas-shapes-collage__connector"
       />
       <ShapeLibraryGlyph
         shape={canvasShapePreviewOptions.ellipse}
-        color={color}
+        color={shapeColor}
         className="project-canvas-shapes-collage__ellipse"
       />
     </span>
@@ -1190,10 +1196,7 @@ function createStickyNoteElements({
   collaboration?: ProjectStickyNoteCollaboration;
 }): ExcalidrawElement[] {
   const noteId = crypto.randomUUID();
-  const normalizedFormat = {
-    ...normalizeProjectStickyNoteFormat(format),
-    textAlign: "left" as const,
-  };
+  const normalizedFormat = normalizeProjectStickyNoteFormat(format);
   const elements = convertToExcalidrawElements([
     {
       type: "rectangle",
@@ -1213,7 +1216,7 @@ function createStickyNoteElements({
         text,
         fontSize: normalizedFormat.fontSize,
         fontFamily: projectStickyNoteFontFamilies[normalizedFormat.font],
-        textAlign: "left",
+        textAlign: normalizedFormat.textAlign,
         verticalAlign: "top",
         strokeColor: color.text,
       },
@@ -1232,15 +1235,12 @@ function createStickyNoteElements({
   const container = elements.find((element) => element.type === "rectangle");
   const boundText = elements.find((element) => element.type === "text");
   if (!container || !boundText || boundText.type !== "text") return elements;
-  const position = stickyNoteBoundTextPosition(container, {
-    ...boundText,
-    textAlign: "left",
-  });
+  const position = stickyNoteBoundTextPosition(container, boundText);
   return elements.map((element) =>
     element.id === boundText.id
       ? withCanvasElementUpdate(element, {
           ...position,
-          textAlign: "left",
+          textAlign: normalizedFormat.textAlign,
         } as Partial<ExcalidrawElement>)
       : element,
   );
@@ -1682,9 +1682,14 @@ function stickyNoteReferenceForElement(
     color,
     format: {
       ...normalizeProjectStickyNoteFormat(reference.format),
-      // Alignment is a text-tool capability. FigJam Sticky Notes always
-      // begin at the top-left, so existing notes migrate to that behavior.
-      textAlign: "left",
+      // The bound text is the on-canvas source of truth. Reading its current
+      // alignment keeps the closed rich-text layer on exactly the same anchor
+      // as Excalidraw's inline editor.
+      textAlign:
+        textElement?.type === "text" &&
+        (textElement.textAlign === "center" || textElement.textAlign === "right")
+          ? textElement.textAlign
+          : "left",
     },
     collaboration: normalizeProjectStickyNoteCollaboration(
       reference.collaboration,
@@ -2935,7 +2940,21 @@ export function ProjectPlayground({
   const [shapePlacement, setShapePlacement] = useState<CanvasShapeOption>();
   const shapePlacementPointerRef = useRef<{ x: number; y: number }>();
   const [shapeColor, setShapeColor] = useState(defaultSectionFill);
+  /* Connectors should start as readable ink, while filled shapes keep their
+     own white default. Keeping the two values separate also means changing an
+     arrow to blue does not unexpectedly turn the next rectangle blue. */
+  const [connectorColor, setConnectorColor] = useState(defaultConnectorStroke);
   const [shapeColorPickerOpen, setShapeColorPickerOpen] = useState(false);
+  const activeCanvasShape = canvasShapeOptions.find(
+    (shape) => shape.id === activeShapeOptionId,
+  );
+  const activeCanvasShapeIsFilled =
+    activeCanvasShape?.tool === "rectangle" ||
+    activeCanvasShape?.tool === "ellipse" ||
+    activeCanvasShape?.tool === "diamond";
+  const activeCanvasToolColor = activeCanvasShapeIsFilled
+    ? shapeColor
+    : connectorColor;
   const [stickyPickerOpen, setStickyPickerOpen] = useState(false);
   const [stickyToolColor, setStickyToolColor] = useState(
     defaultProjectStickyNoteColor,
@@ -4014,7 +4033,9 @@ export function ProjectPlayground({
       });
       /* Keep imported and already-created Sticky Notes on the same FigJam
        * baseline as new notes. This runs only outside inline editing so a
-       * position correction never moves the user's live caret. */
+       * position correction never moves the user's live caret. Preserve the
+       * bound label's alignment: forcing left here made the closed note jump
+       * horizontally when its inline editor opened. */
       const positionedStickyTextElements = appState.editingTextElement
         ? richStickyTextElements
         : richStickyTextElements.map((element) => {
@@ -4033,10 +4054,7 @@ export function ProjectPlayground({
                 )
               : undefined;
             if (!sticky || !container) return element;
-            const position = stickyNoteBoundTextPosition(container, {
-              ...element,
-              textAlign: "left",
-            });
+            const position = stickyNoteBoundTextPosition(container, element);
             return element.x === position.x && element.y === position.y
               ? element
               : withCanvasElementUpdate(element, position);
@@ -5403,11 +5421,12 @@ export function ProjectPlayground({
         shape.tool === "rectangle" ||
         shape.tool === "ellipse" ||
         shape.tool === "diamond";
+      const color = isFilledShape ? shapeColor : connectorColor;
       editor?.updateScene({
         appState: {
-          currentItemStrokeColor: isFilledShape ? "#757575" : shapeColor,
+          currentItemStrokeColor: isFilledShape ? "#757575" : color,
           currentItemBackgroundColor: isFilledShape
-            ? shapeColor
+            ? color
             : "transparent",
           currentItemFillStyle: "solid",
           currentItemStrokeWidth: 2,
@@ -5440,12 +5459,11 @@ export function ProjectPlayground({
       setCommentPlacement(false);
       deactivateTableTool();
     },
-    [deactivateStickyTool, deactivateTableTool, shapeColor],
+    [connectorColor, deactivateStickyTool, deactivateTableTool, shapeColor],
   );
 
   const selectCanvasShapeColor = useCallback(
     (color: string) => {
-      setShapeColor(color);
       setShapeColorPickerOpen(false);
       const activeShape = canvasShapeOptions.find(
         (shape) => shape.id === activeShapeOptionId,
@@ -5454,6 +5472,8 @@ export function ProjectPlayground({
         activeShape?.tool === "rectangle" ||
         activeShape?.tool === "ellipse" ||
         activeShape?.tool === "diamond";
+      if (isFilledShape) setShapeColor(color);
+      else setConnectorColor(color);
       editorRef.current?.updateScene({
         appState: {
           currentItemStrokeColor: isFilledShape ? "#757575" : color,
@@ -5734,7 +5754,7 @@ export function ProjectPlayground({
           const updatedText = withCanvasElementUpdate(textElement, {
             text,
             originalText: text,
-            textAlign: "left",
+            textAlign: stickyDraft.format.textAlign,
           } as Partial<ExcalidrawElement>);
           // Updating only `text` leaves the previous glyph measurements on
           // the element. Recalculate against its bound sticker before putting
@@ -5751,7 +5771,7 @@ export function ProjectPlayground({
           const position = stickyNoteBoundTextPosition(nextContainer, {
             ...updatedText,
             ...dimensions,
-            textAlign: "left",
+            textAlign: stickyDraft.format.textAlign,
           });
           editor.updateScene({
             elements: elements.map((element) => {
@@ -6090,6 +6110,7 @@ export function ProjectPlayground({
     const height = noteHeight * zoom;
     const noteLeft = (stickyDraft.x - noteWidth / 2 + scrollX) * zoom;
     const noteTop = (stickyDraft.y - noteHeight / 2 + scrollY) * zoom;
+    const editingExistingNote = Boolean(stickyDraft.editingElementId);
     /* Clamp inside the canvas when it has been measured; before that, place it
        where asked rather than withholding the composer entirely. */
     const maxLeft = root
@@ -6099,8 +6120,11 @@ export function ProjectPlayground({
       ? Math.max(96, root.clientHeight - height - 16)
       : noteTop;
     return {
-      left: `${Math.min(Math.max(76, noteLeft), Math.max(76, maxLeft))}px`,
-      top: `${Math.min(Math.max(96, noteTop), Math.max(96, maxTop))}px`,
+      // A new note needs to remain reachable on a narrow viewport. An existing
+      // note must instead stay exactly over its saved rectangle: clamping it
+      // here was the remaining cause of text jumping on double-click.
+      left: `${editingExistingNote ? noteLeft : Math.min(Math.max(76, noteLeft), Math.max(76, maxLeft))}px`,
+      top: `${editingExistingNote ? noteTop : Math.min(Math.max(96, noteTop), Math.max(96, maxTop))}px`,
       /* min() keeps the narrow-screen guard the stylesheet used to provide. */
       width: `min(${width}px, calc(100vw - 24px))`,
       height: `min(${height}px, calc(100vw - 24px))`,
@@ -6116,6 +6140,11 @@ export function ProjectPlayground({
               ? '"Lilita One", "Arial Rounded MT Bold", cursive'
               : 'var(--reference-font-family, "Figtree", system-ui, sans-serif)',
       "--sticky-font-size": `${stickyDraft.format.fontSize * zoom}px`,
+      "--sticky-font-weight": stickyDraft.format.bold ? "700" : "400",
+      "--sticky-text-decoration": stickyDraft.format.strikethrough
+        ? "line-through"
+        : "none",
+      "--sticky-text-align": stickyDraft.format.textAlign,
       "--sticky-padding-horizontal": `${stickyNoteTextHorizontalInset * zoom}px`,
       "--sticky-padding-top": `${stickyNoteTextVerticalInset * zoom}px`,
       // The board is intentionally light regardless of the surrounding app
@@ -6827,19 +6856,6 @@ export function ProjectPlayground({
     preserveCanvasTableCellSelection,
   ]);
 
-  const stickyNoteMetadataStyle = useCallback(
-    (note: AstryxStickyNoteReference) =>
-      ({
-        // FigJam keeps the author inside the note, aligned with its text
-        // inset rather than presenting it as an external collaboration pill.
-        left: `${(note.x + stickyNoteTextHorizontalInset + canvasViewport.scrollX) * canvasViewport.zoom}px`,
-        top: `${(note.y + note.height - 30 + canvasViewport.scrollY) * canvasViewport.zoom}px`,
-        maxWidth: `${stickyNoteTextContentWidth(note.width) * canvasViewport.zoom}px`,
-        opacity: canvasViewport.zoom < 0.35 ? 0 : 1,
-      }) as CSSProperties,
-    [canvasViewport],
-  );
-
   const stickyNotePlaceholderStyle = useCallback(
     (note: AstryxStickyNoteReference) =>
       ({
@@ -6847,6 +6863,7 @@ export function ProjectPlayground({
         top: `${(note.y + stickyNoteTextVerticalInset + canvasViewport.scrollY) * canvasViewport.zoom}px`,
         width: `${stickyNoteTextContentWidth(note.width) * canvasViewport.zoom}px`,
         fontSize: `${note.format.fontSize * canvasViewport.zoom}px`,
+        textAlign: note.format.textAlign,
         opacity: canvasViewport.zoom < 0.35 ? 0 : 1,
       }) as CSSProperties,
     [canvasViewport],
@@ -6862,6 +6879,7 @@ export function ProjectPlayground({
         fontSize: `${note.format.fontSize * canvasViewport.zoom}px`,
         fontWeight: note.format.bold ? 700 : 400,
         textDecoration: note.format.strikethrough ? "line-through" : "none",
+        textAlign: note.format.textAlign,
         "--sticky-rich-font-family":
           note.format.font === "cute"
             ? '"Virgil", "Comic Sans MS", cursive'
@@ -7725,7 +7743,10 @@ export function ProjectPlayground({
                   title="Shapes and connectors"
                   onClick={toggleShapePicker}
                 >
-                  <CanvasShapesCollageGlyph color={shapeColor} />
+                  <CanvasShapesCollageGlyph
+                    shapeColor={shapeColor}
+                    connectorColor={connectorColor}
+                  />
                 </button>
                 <span
                   className="project-playground__sticky-tools-divider"
@@ -8204,13 +8225,13 @@ export function ProjectPlayground({
                 type="button"
                 className="project-canvas-shape-library__color-trigger"
                 role="combobox"
-                aria-label={`Shape color, ${canvasShapeColors.find((color) => color.value === shapeColor)?.label ?? "custom"}`}
+                aria-label={`Shape color, ${canvasShapeColors.find((color) => color.value === activeCanvasToolColor)?.label ?? "custom"}`}
                 aria-expanded={shapeColorPickerOpen}
                 title="Shape color"
                 onClick={() => setShapeColorPickerOpen((open) => !open)}
               >
                 <span
-                  style={{ "--shape-color": shapeColor } as CSSProperties}
+                  style={{ "--shape-color": activeCanvasToolColor } as CSSProperties}
                 />
                 <ChevronSmallDownIcon aria-hidden="true" />
               </button>
@@ -8226,7 +8247,7 @@ export function ProjectPlayground({
                       type="button"
                       className="project-canvas-shape-library__color-swatch"
                       aria-label={`Use ${color.label}`}
-                      aria-pressed={shapeColor === color.value}
+                      aria-pressed={activeCanvasToolColor === color.value}
                       style={{ "--shape-color": color.value } as CSSProperties}
                       onClick={() => selectCanvasShapeColor(color.value)}
                     />
@@ -8238,7 +8259,7 @@ export function ProjectPlayground({
                   >
                     <input
                       type="color"
-                      value={shapeColor}
+                      value={activeCanvasToolColor}
                       aria-label="Custom shape color"
                       onChange={(event) =>
                         selectCanvasShapeColor(event.currentTarget.value)
@@ -8267,7 +8288,14 @@ export function ProjectPlayground({
                     title={shape.label}
                     onClick={() => selectCanvasShape(shape)}
                   >
-                    <ShapeLibraryGlyph shape={shape} color={shapeColor} />
+                    <ShapeLibraryGlyph
+                      shape={shape}
+                      color={
+                        shape.tool === "arrow" || shape.tool === "line"
+                          ? connectorColor
+                          : shapeColor
+                      }
+                    />
                   </button>
                 ))}
               </div>
@@ -8339,7 +8367,14 @@ export function ProjectPlayground({
                         title={shape.label}
                         onClick={() => selectCanvasShape(shape)}
                       >
-                        <ShapeLibraryGlyph shape={shape} color={shapeColor} />
+                        <ShapeLibraryGlyph
+                          shape={shape}
+                          color={
+                            shape.tool === "arrow" || shape.tool === "line"
+                              ? connectorColor
+                              : shapeColor
+                          }
+                        />
                       </button>
                     ))}
                   </div>
@@ -9340,13 +9375,6 @@ export function ProjectPlayground({
             </>,
             canvasOverlayHost,
           )}
-        {stickyNotes.map((note) => (
-          <ProjectStickyNoteMetadata
-            key={note.noteId}
-            collaboration={note.collaboration}
-            style={stickyNoteMetadataStyle(note)}
-          />
-        ))}
         {stickyNotes
           // Legacy imported notes can lack a reliable bound-text relationship.
           // Do not put an empty-state prompt over those notes because an

@@ -47,6 +47,7 @@ test('redirects authenticated landing and sign-in routes to Apps', () => {
 test('keeps catalogs and the bounded app preview public while sending private guest routes to sign-in', () => {
   assert.deepEqual(decideRootRoute({ name: 'apps' }, guest), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'sites' }, guest), { kind: 'application' });
+  assert.deepEqual(decideRootRoute({ name: 'sites-motion' }, guest), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'flows' }, guest), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'app', appId: 'linear' }, guest), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'collections' }, guest), { kind: 'signin' });
@@ -71,6 +72,7 @@ test('uses the same application renderer for members and admins on normal routes
   const routes: Route[] = [
     { name: 'apps' },
     { name: 'sites' },
+    { name: 'sites-motion' },
     { name: 'flows' },
     { name: 'app', appId: 'linear' },
     { name: 'site-version', siteSlug: 'v7' },

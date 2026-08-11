@@ -691,6 +691,54 @@ test("creates and inspects an admin-only autonomous crawl without exposing sessi
   assert.equal(JSON.stringify(await inspected.json()).includes("encrypted_storage_state"), false);
 });
 
+test("creates Stage 1 App information without starting a crawl", async (t) => {
+  const calls: unknown[] = [];
+  const ingest = async (input: unknown) => {
+    calls.push(input);
+    return {
+      id: 81,
+      app: "linear",
+      displayName: "Linear",
+      description: "Linear is a product development platform for teams that plan and build software.",
+      websiteUrl: "https://linear.app/",
+      iconUrl: "/assets/apps/81/icon.webp",
+      categories: [{ id: 7, name: "Developer Tools", slug: "developer-tools" }],
+      categoryAnalysis: { rationale: "Software product development tooling.", provider: "test" },
+      created: true,
+      complete: true,
+      issues: [],
+    };
+  };
+  const deniedServer = await serve(createApiApp({
+    verifyAuthToken: async () => user,
+    objectStore: localObjectStore,
+    ingestAppMetadata: ingest as never,
+  }));
+  const adminServer = await serve(createApiApp({
+    verifyAuthToken: async () => admin,
+    objectStore: localObjectStore,
+    ingestAppMetadata: ingest as never,
+  }));
+  t.after(() => Promise.all([close(deniedServer.server), close(adminServer.server)]).then(() => undefined));
+
+  const request = { homepageUrl: "https://linear.app" };
+  const denied = await fetch(`${deniedServer.base}/crawl/apps/linear/metadata`, {
+    method: "POST",
+    headers: { authorization: "Bearer user", "content-type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  assert.equal(denied.status, 403);
+
+  const created = await fetch(`${adminServer.base}/crawl/apps/linear/metadata`, {
+    method: "POST",
+    headers: { ...adminAuth, "content-type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  assert.equal(created.status, 201);
+  assert.equal((await created.json()).complete, true);
+  assert.deepEqual(calls, [{ app: "linear", sourceUrl: "https://linear.app/" }]);
+});
+
 test("rejects unsafe autonomous inputs before creating a parent run", async (t) => {
   let creates = 0;
   const { base, server } = await serve(createApiApp({
@@ -711,6 +759,7 @@ test("rejects unsafe autonomous inputs before creating a parent run", async (t) 
     { ...valid, ceilings: { ...valid.ceilings, actions: 0 } },
     { ...valid, agentConcurrency: 9 },
     { ...valid, requiredSecrets: ["secret-value@example.com"] },
+    { ...valid, platform: "ios" },
   ]) {
     const response = await fetch(`${base}/crawl/apps/linear/autonomous-runs`, {
       method: "POST", headers: { ...adminAuth, "content-type": "application/json" }, body: JSON.stringify(body),
@@ -2340,8 +2389,15 @@ test("serves dynamic Screen-pattern media and quick previews from the normalized
 
 test("serves bounded public Flow catalog media without an App detail request", async (t) => {
   const inputs: unknown[] = [];
+  let signedUrlCalls = 0;
   const { base, server } = await serve(createApiApp({
-    objectStore: localObjectStore,
+    objectStore: {
+      ...localObjectStore,
+      signedGetUrl: async () => {
+        signedUrlCalls += 1;
+        return undefined;
+      },
+    },
     publishedFlowCatalogPreviewObject: async (input: unknown) => {
       inputs.push(input);
       return previewMetadata;
@@ -2377,10 +2433,25 @@ test("serves bounded public Flow catalog media without an App detail request", a
     variant: "thumb",
   });
 
+  const inline = await fetch(
+    `${base}/catalog/flow-media/linear/web/7/71/2?inline=1`,
+  );
+  assert.equal(inline.status, 200);
+  assert.equal(await inline.text(), "image");
+  assert.equal(signedUrlCalls, 2);
+  assert.deepEqual(inputs[2], {
+    app: "linear",
+    platform: "web",
+    versionId: 7,
+    versionFlowId: 71,
+    rank: 2,
+    variant: "full",
+  });
+
   assert.equal((await fetch(
     `${base}/catalog/flow-media/linear/web/7/71/7`,
   )).status, 400);
-  assert.equal(inputs.length, 2);
+  assert.equal(inputs.length, 3);
 });
 
 test("rejects unknown taxonomy preview inputs before dependencies run", async (t) => {

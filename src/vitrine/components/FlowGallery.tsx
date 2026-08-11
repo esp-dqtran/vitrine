@@ -213,7 +213,9 @@ export function FlowGallery({
                     sourceAppName={cardProps?.sourceAppName ?? sourceAppName}
                     sourceAppIconUrl={cardProps?.sourceAppIconUrl ?? sourceAppIconUrl}
                     onOpenSourceApp={cardProps?.onOpenSourceApp}
-                    syncPreviewUrl={app === undefined}
+                    // App-detail flow links include flow, tab, and screen. Keep the
+                    // selected FlowCard in sync so those shared URLs open the preview.
+                    syncPreviewUrl
                     iconTooltips={Boolean(app)}
                     onOpen={() => onSelectFlow(flow.id)}
                   />

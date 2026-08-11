@@ -189,6 +189,20 @@ async function prepareGeneration(
         ...(step.interaction ? { interaction: step.interaction } : {}),
         description: image.description,
         ...(image.captured_at ? { capturedAt: new Date(image.captured_at).toISOString() } : {}),
+        ...(step.observation?.source === "crawl_observed" ? {
+          observation: {
+            evidenceId: identity,
+            visibleUi: step.observation.visibleUi,
+            visibleText: step.observation.visibleText,
+            likelyIntent: step.observation.likelyIntent,
+            availableActions: step.observation.availableActions,
+            systemFeedback: step.observation.systemFeedback,
+            friction: step.observation.friction,
+            missingOrUncertainStates: step.observation.missingOrUncertainStates,
+            accessibility: step.observation.accessibility,
+            confidence: step.observation.confidence,
+          },
+        } : {}),
       });
     }
   }

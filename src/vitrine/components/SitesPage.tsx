@@ -355,6 +355,7 @@ interface SitesPageProps {
   isAdmin: boolean;
   query: string;
   onQueryChange: (value: string) => void;
+  onOpen?: (site: SiteSummary) => void;
   onOpenSearch?: (seed?: Partial<SearchFilters>) => void;
   searchMode?: 'legacy' | 'advanced';
   activeFilterCount?: number;
@@ -421,6 +422,7 @@ export function SitesPage({
   isAdmin,
   query,
   onQueryChange,
+  onOpen,
   onOpenSearch,
   searchMode,
   activeFilterCount,
@@ -443,6 +445,7 @@ export function SitesPage({
     <SitesPageView
       controller={controller}
       isAdmin={isAdmin}
+      onOpen={onOpen}
       onOpenSearch={onOpenSearch}
       searchMode={searchMode}
       activeFilterCount={activeFilterCount}

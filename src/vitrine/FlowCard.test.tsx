@@ -23,15 +23,15 @@ const flow = {
   }],
 };
 
-test('renders a flow strip with responsive observed screen media', () => {
+test('renders a flow strip with full-resolution observed screen media', () => {
   const html = renderToStaticMarkup(<FlowCard flow={flow} onOpen={() => {}} />);
   assert.match(html, /data-flow-strip-card="true"/);
   assert.match(html, /flow-strip-card__stage" data-platform="web"/);
   assert.match(html, /aria-label="Preview Login flow screens"/);
   assert.match(html, /data-flow-preview-index="0"/);
-  assert.match(html, /src="\/flow-thumb.webp"/);
-  assert.match(html, /srcSet="\/flow-thumb.webp 1x,\/flow.png 2x"/);
-  assert.match(html, /object-fit:cover/);
+  assert.match(html, /src="\/flow.png"/);
+  assert.doesNotMatch(html, /flow-thumb.webp/);
+  assert.match(html, /object-fit:contain/);
   assert.doesNotMatch(html, /background:#fff/);
   assert.match(html, /<h2>Login<\/h2>/);
   assert.match(html, />1 screen</);

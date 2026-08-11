@@ -166,6 +166,30 @@ test("hydrates Flow insight evidence with the same captured images", () => {
   }]);
 });
 
+test("ignores malformed legacy Flow insights instead of failing Flow hydration", () => {
+  const hydrated = hydrateDesignSystem({
+    app: "kilo",
+    generatedAt: "2026-08-09T00:00:00.000Z",
+    tokens: [],
+    components: [],
+    flows: [{
+      id: "scheduled-trigger",
+      title: "Create a scheduled trigger",
+      description: "Create and pause a schedule",
+      tags: ["Automation"],
+      steps: [{ label: "Open Create Trigger", evidence: [7] }],
+      insights: {
+        execution: "not-run",
+        creditCost: 0,
+        finalStatus: "inactive",
+      } as unknown as NonNullable<DesignSystemSnapshot["flows"][number]["insights"]>,
+    }],
+  }, [{ id: 7, image_url: "capture:0123456789abcdef", description: "Create Trigger" }]);
+
+  assert.equal(hydrated.flows[0].insights, undefined);
+  assert.equal(hydrated.flows[0].steps[0].evidence[0].imageId, 7);
+});
+
 test("preserves autonomous flow provenance while hydrating evidence", () => {
   const hydrated = hydrateDesignSystem({
     app: "linear",

@@ -256,15 +256,13 @@ export function FlowCard({
                 data-flow-preview-index={index}
                 key={`${flow.id}-${stepNumber}-${evidence?.imageId ?? label}`}
               >
-                <PlaceholderImage
-                  src={evidence?.thumbnailUrl ?? evidence?.imageUrl}
-                  srcSet={evidence?.thumbnailUrl && evidence.imageUrl
-                    && evidence.thumbnailUrl !== evidence.imageUrl
-                    ? `${evidence.thumbnailUrl} 1x,${evidence.imageUrl} 2x`
-                    : undefined}
-                  accent="#111"
-                  style={{ objectFit: platform === 'web' ? 'cover' : 'contain' }}
-                />
+              <PlaceholderImage
+                src={evidence?.imageUrl ?? evidence?.thumbnailUrl}
+                accent="#111"
+                // Flow cards show captured evidence. Keeping the full Web viewport
+                // is more useful than cropping it to fill the 8:5 card frame.
+                style={{ objectFit: 'contain' }}
+              />
               </span>
             ))}
           </Button>

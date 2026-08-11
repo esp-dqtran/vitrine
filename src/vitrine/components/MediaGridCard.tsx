@@ -14,6 +14,8 @@ interface MediaGridCardProps {
   preserveNaturalAspectRatio?: boolean;
   preferFullImage?: boolean;
   deferMedia?: boolean;
+  autoPlay?: boolean;
+  loop?: boolean;
   title?: string;
   overlay?: ReactNode;
   delay?: number;
@@ -32,6 +34,8 @@ export function MediaGridCard({
   preserveNaturalAspectRatio = false,
   preferFullImage = false,
   deferMedia = false,
+  autoPlay = false,
+  loop = false,
   title,
   overlay,
   delay = 0,
@@ -90,13 +94,15 @@ export function MediaGridCard({
         <video
           src={url}
           poster={posterUrl}
-          controls
+          autoPlay={autoPlay}
+          loop={loop}
+          controls={!autoPlay}
           muted
           playsInline
           preload="metadata"
           onError={() => setMediaFailed(true)}
-          onClick={(event) => event.stopPropagation()}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#111' }}
+          onClick={autoPlay ? undefined : (event) => event.stopPropagation()}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: imageFit, background: '#111' }}
         />
       ) : (
         <img

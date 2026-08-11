@@ -112,7 +112,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /className="project-canvas-focus-container"/);
   assert.match(
     css,
-    /\.project-canvas-focus-container \{[^}]*border:\s*2px dashed rgb\(31 31 31 \/ 58%\);/,
+    /\.project-canvas-focus-container \{[^}]*border:\s*2px solid #0d99ff;/,
   );
   assert.match(
     css,
@@ -165,7 +165,10 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /const canvasShapeColors = canvasSectionColors/);
   assert.match(source, /aria-label="Custom shape color"/);
   assert.match(source, /selectCanvasShapeColor\(event\.currentTarget\.value\)/);
-  assert.match(source, /<CanvasShapesCollageGlyph color=\{shapeColor\} \/>/);
+  assert.match(
+    source,
+    /<CanvasShapesCollageGlyph[\s\S]*shapeColor=\{shapeColor\}[\s\S]*connectorColor=\{connectorColor\}/,
+  );
   assert.match(
     css,
     /\.project-playground__screens-trigger--apps\s*\{[\s\S]*?width:\s*64px;[\s\S]*?overflow:\s*visible;/,
@@ -193,11 +196,11 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     )?.[0] ?? "";
   assert.match(
     shapesCollageSource,
-    /<ShapeLibraryGlyph[\s\S]*?shape=\{canvasShapePreviewOptions\.rectangle\}[\s\S]*?color=\{color\}/,
+    /<ShapeLibraryGlyph[\s\S]*?shape=\{canvasShapePreviewOptions\.rectangle\}[\s\S]*?color=\{shapeColor\}/,
   );
   assert.match(
     shapesCollageSource,
-    /<ShapeLibraryGlyph[\s\S]*?shape=\{canvasShapePreviewOptions\.ellipse\}[\s\S]*?color=\{color\}/,
+    /<ShapeLibraryGlyph[\s\S]*?shape=\{canvasShapePreviewOptions\.ellipse\}[\s\S]*?color=\{shapeColor\}/,
   );
   assert.match(
     source,
@@ -262,13 +265,19 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     /--project-canvas-shape-icon-color": color \?\? "#1e1e1e"/,
   );
   assert.match(source, /editor\?\.setActiveTool\(\{ type: shape\.tool \}\)/);
+  assert.match(source, /const defaultConnectorStroke = "#1e1e1e"/);
+  assert.match(source, /useState\(defaultConnectorStroke\)/);
   assert.match(
     source,
-    /currentItemStrokeColor: isFilledShape \? "#757575" : shapeColor/,
+    /<CanvasShapesCollageGlyph[\s\S]*shapeColor=\{shapeColor\}[\s\S]*connectorColor=\{connectorColor\}/,
   );
   assert.match(
     source,
-    /currentItemBackgroundColor: isFilledShape[\s\S]*?\? shapeColor[\s\S]*?: "transparent"/,
+    /currentItemStrokeColor: isFilledShape \? "#757575" : color/,
+  );
+  assert.match(
+    source,
+    /currentItemBackgroundColor: isFilledShape[\s\S]*?\? color[\s\S]*?: "transparent"/,
   );
   assert.match(source, /currentItemArrowType: shape\.arrowType \?\? "sharp"/);
   assert.match(source, /currentItemRoundness: shape\.roundness \?\? "sharp"/);
@@ -280,10 +289,13 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     source,
     /function ShapeLibraryGlyph\([\s\S]*?--project-canvas-shape-source-color": color[\s\S]*?<img src=\{shape\.icon\}/,
   );
-  assert.match(source, /<CanvasShapesCollageGlyph color=\{shapeColor\} \/>/);
   assert.match(
     source,
-    /<ShapeLibraryGlyph shape=\{shape\} color=\{shapeColor\} \/>/,
+    /<CanvasShapesCollageGlyph[\s\S]*shapeColor=\{shapeColor\}[\s\S]*connectorColor=\{connectorColor\}/,
+  );
+  assert.match(
+    source,
+    /<ShapeLibraryGlyph[\s\S]*shape=\{shape\}[\s\S]*shape\.tool === "arrow" \|\| shape\.tool === "line"[\s\S]*? connectorColor[\s\S]*?: shapeColor/,
   );
   assert.match(
     source,
@@ -787,7 +799,10 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     source,
     /`\$\{saveLabels\[saveState\]\}: \$\{saveErrorMessage\}`/,
   );
-  assert.match(source, /<CanvasShapesCollageGlyph color=\{shapeColor\} \/>/);
+  assert.match(
+    source,
+    /<CanvasShapesCollageGlyph[\s\S]*shapeColor=\{shapeColor\}[\s\S]*connectorColor=\{connectorColor\}/,
+  );
   assert.match(source, /searchParams\.set\("inline", "1"\)/);
   /* Screen bytes still come through the media proxy — the fetch just moved
      into the shared card-image loader. */
@@ -983,7 +998,7 @@ test("gives the infinite canvas the full available viewport", () => {
   );
   assert.match(
     css,
-    /\.project-sticky-note-composer \[role="textbox"\]\s*\{[^}]*cursor:\s*text;[^}]*text-align:\s*left;/s,
+    /\.project-sticky-note-composer \[role="textbox"\]\s*\{[^}]*cursor:\s*text;[^}]*font-weight:\s*var\(--sticky-font-weight, 400\);[^}]*text-align:\s*var\(--sticky-text-align, left\);[^}]*text-decoration:\s*var\(--sticky-text-decoration, none\);/s,
   );
   assert.doesNotMatch(
     css,
@@ -1108,12 +1123,20 @@ test("gives the infinite canvas the full available viewport", () => {
   );
   assert.match(
     css,
-    /@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.project-canvas-header__group--left\s*\{[^}]*max-width:\s*calc\(100% - 80px\);/s,
+    /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.project-canvas-header__group--left\s*\{[^}]*max-width:\s*calc\(100% - 80px\);/s,
   );
   assert.doesNotMatch(css, /project-sticky-note-placement-hint/);
   assert.match(
     css,
-    /@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.project-playground__canvas \.excalidraw--mobile \.App-bottom-bar\s*\{[^}]*position:\s*fixed;[^}]*bottom:\s*8px;[^}]*width:\s*96px;/s,
+    /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.project-playground__canvas \.excalidraw--mobile \.App-bottom-bar\s*\{[^}]*position:\s*fixed;[^}]*bottom:\s*8px;[^}]*width:\s*96px;/s,
+  );
+  assert.match(
+    css,
+    /\.project-playground__canvas \.excalidraw--mobile \.App-toolbar--mobile\s*\{[^}]*position:\s*fixed;[^}]*bottom:\s*8px;[^}]*width:\s*calc\(100vw - 120px\);[^}]*overflow-x:\s*auto;[^}]*touch-action:\s*pan-x;/s,
+  );
+  assert.match(
+    css,
+    /\.project-playground__canvas \.excalidraw--mobile \.App-bottom-bar\s*\{[^}]*right:\s*8px !important;[^}]*left:\s*auto !important;[^}]*transform:\s*none;/s,
   );
 });
 
@@ -1317,8 +1340,7 @@ test("gives a selected sticky note its own formatting toolbar", () => {
    * mounted. The panel existed, fully built and styled, but nothing rendered it,
    * while the stylesheet hid Excalidraw's own panel on --sticky-selected. A
    * selected note therefore had no properties UI at all, and collaboration was
-   * display-only: ProjectStickyNoteMetadata shows tags, reactions and comments,
-   * and only this toolbar can add them.
+   * display-only: only this toolbar can add and edit its shared state.
    */
   assert.match(playgroundSource, /<ProjectObjectToolbar/);
   assert.match(
@@ -1369,7 +1391,7 @@ test("gives a selected sticky note its own formatting toolbar", () => {
     playgroundSource,
     /collaboration:\s*normalizeProjectStickyNoteCollaboration\(\s*reference\.collaboration,?\s*\)/,
   );
-  assert.match(playgroundSource, /<ProjectStickyNoteMetadata/);
+  assert.doesNotMatch(playgroundSource, /<ProjectStickyNoteMetadata/);
   assert.match(playgroundSource, /astryxReference:[\s\S]*collaboration/);
 
   /* Text shares this shell without inheriting sticky-note collaboration. */
@@ -1386,6 +1408,18 @@ test("gives a selected sticky note its own formatting toolbar", () => {
     /objectLabel="Text"[\s\S]*?showTextStyling/,
   );
   assert.match(playgroundSource, /project-canvas-text-rich-text/);
+
+  // A Sticky Note has one bound Excalidraw label. Its rich closed-state layer
+  // must preserve that label's alignment so opening the inline editor never
+  // moves the text from a centred or right-aligned anchor back to the left.
+  assert.match(
+    playgroundSource,
+    /stickyNoteBoundTextPosition\(container, element\)/,
+  );
+  assert.match(
+    playgroundSource,
+    /stickyNoteRichTextStyle[\s\S]{0,1000}textAlign: note\.format\.textAlign/,
+  );
 
   const toolbarSource = readFileSync(
     new URL("./components/ProjectStickyNoteToolbar.tsx", import.meta.url),
@@ -1628,7 +1662,9 @@ test("offers a data-aware Screens tool for the designer canvas", () => {
   assert.match(source, /project-screen-library__card--screen/);
   assert.match(source, /project-screen-library__app-icon--overlay/);
   assert.match(source, /<h2>Inspiration<\/h2>/);
-  assert.match(source, /Explore references/);
+  assert.match(source, /Explore by task/);
+  assert.match(source, /inspirationPrompts/);
+  assert.doesNotMatch(source, /aria-label="Refine screens"/);
   assert.match(source, /project-screen-library__grid--inspiration/);
   assert.match(source, /<AppsPlatformSwitcher[\s\S]*ariaLabel="Screen platform"/);
   assert.match(source, /project-screen-library__card--flow/);
@@ -1957,11 +1993,6 @@ test("keeps the sticky composer reachable and glued to the board", () => {
   assert.equal((memo[1].match(/return undefined;/g) ?? []).length, 1);
   assert.match(memo[1], /if \(!stickyDraft\) return undefined;/);
 
-  // The sibling overlay already positioned itself this way; both now agree.
-  assert.match(
-    source,
-    /stickyNoteMetadataStyle[\s\S]{0,400}canvasViewport\.scrollX/,
-  );
 });
 
 test("scales the sticky composer with the board it stands in for", () => {
@@ -2001,6 +2032,9 @@ test("scales the sticky composer with the board it stands in for", () => {
     memo[1],
     /"--sticky-padding-top": `\$\{stickyNoteTextVerticalInset \* zoom\}px`/,
   );
+  assert.match(memo[1], /const editingExistingNote = Boolean\(stickyDraft\.editingElementId\)/);
+  assert.match(memo[1], /"--sticky-font-weight": stickyDraft\.format\.bold \? "700" : "400"/);
+  assert.match(memo[1], /"--sticky-text-align": stickyDraft\.format\.textAlign/);
   // The narrow-screen guard the stylesheet gave us must survive the inline size.
   assert.match(memo[1], /width: `min\(\$\{width\}px, calc\(100vw - 24px\)\)`/);
   assert.doesNotMatch(memo[1], /const width = stickyNoteSize;/);

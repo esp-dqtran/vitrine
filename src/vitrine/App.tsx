@@ -36,6 +36,8 @@ import { ApplicationHeader } from "./components/ApplicationHeader.tsx";
 import { SearchTrigger } from "./components/SearchTrigger.tsx";
 import { ScreenDetail } from "./components/ScreenDetail";
 import { SitesPage } from "./components/SitesPage.tsx";
+import { MotionPromptsPage } from "./components/MotionPromptsPage.tsx";
+import { PublicSitePreviewModal } from "./components/PublicSitePreviewModal.tsx";
 import { SiteVersionPage } from "./components/SiteVersionPage";
 import type { AppsFacet, AppsPlatform } from "./appsDiscovery.ts";
 import { createAppsDiscoveryAdapter } from "./appsDiscoveryAdapter.ts";
@@ -57,6 +59,7 @@ import { navigate, updateLocation, useRoute } from "./router";
 import { loadSubscription, type SubscriptionView } from "./billingApi";
 import type { CatalogSearchResult } from "../catalogResearch";
 import type { SearchResultItem } from "../searchTypes.ts";
+import type { SiteSummary } from './types.ts';
 import type {
   SearchFilters as AdvancedSearchFilters,
   SearchScope,
@@ -107,7 +110,10 @@ export function App() {
   const isGuest = user === null;
   const route = useRoute();
   const stickyChromeEnabled =
-    route.name === "apps" || route.name === "sites" || route.name === "flows";
+    route.name === "apps"
+    || route.name === "sites"
+    || route.name === "sites-motion"
+    || route.name === "flows";
   const [stickyChromeMerged, setStickyChromeMerged] = useState(false);
   const [flowsDiscoveryAdapter] = useState(() => createFlowsDiscoveryAdapter());
   const flowDiscoveryState =
@@ -204,6 +210,7 @@ export function App() {
   const [entitlementsRevision, setEntitlementsRevision] = useState(0);
   const [unlockTarget, setUnlockTarget] = useState<string | null>(null);
   const [previewTarget, setPreviewTarget] = useState<string | null>(null);
+  const [sitePreviewTarget, setSitePreviewTarget] = useState<SiteSummary | null>(null);
   const researchProjectsEnabled =
     (import.meta as ImportMeta & { env?: Record<string, string> }).env
       ?.VITE_RESEARCH_PROJECTS_ENABLED === "true";
@@ -304,6 +311,7 @@ export function App() {
     setLoginOpen(false);
     setAdvancedPreview(null);
     setPreviewTarget(null);
+    setSitePreviewTarget(null);
     searchSession.close();
   };
 
@@ -327,6 +335,11 @@ export function App() {
       return;
     }
     const controller = new AbortController();
+    let timedOut = false;
+    const timeout = window.setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, 8_000);
     const timer = window.setTimeout(() => {
       setSearchLoading(true);
       searchCatalog(q, filters, controller.signal)
@@ -335,14 +348,21 @@ export function App() {
           setSearchError("");
         })
         .catch((error: Error) => {
-          if (error.name !== "AbortError") setSearchError(error.message);
+          if (error.name === "AbortError" && timedOut) {
+            setSearchError("Search is taking longer than expected. Try again or keep browsing the library.");
+          } else if (error.name !== "AbortError") {
+            setSearchError(error.message);
+          }
         })
         .finally(() => {
+          window.clearTimeout(timeout);
           if (!controller.signal.aborted) setSearchLoading(false);
+          else if (timedOut) setSearchLoading(false);
         });
     }, 180);
     return () => {
       window.clearTimeout(timer);
+      window.clearTimeout(timeout);
       controller.abort();
     };
   }, [advancedSearchEnabled, canUseProResearch, q, filters, searchRetry]);
@@ -606,7 +626,9 @@ export function App() {
     route.name === "project-playground" ||
     route.name === "project-document"
       ? "projects"
-      : route.name === "apps" ||
+      : route.name === "sites-motion"
+        ? "sites"
+        : route.name === "apps" ||
           route.name === "sites" ||
           route.name === "flows" ||
           route.name === "projects"
@@ -678,9 +700,13 @@ export function App() {
           onOpenSearch={(seed) => void openPalette("sites", seed)}
           searchMode={canUseAdvancedSearch ? "advanced" : "legacy"}
           activeFilterCount={activeFilterCount(searchSnapshot.state.filters)}
+          onOpen={setSitePreviewTarget}
           memberControls={accountControls}
         />
       );
+      break;
+    case "sites-motion":
+      page = <MotionPromptsPage />;
       break;
     case "site-version":
       page = (
@@ -955,11 +981,13 @@ export function App() {
           onOpenApp={(appId) => void openApp(appId)}
           accountControls={accountControls}
           beforeGrid={
-            searchError ? (
-              <div role="alert" className="apps-discovery__search-error">
-                {searchError}
-              </div>
-            ) : null
+            <>
+              {searchError ? (
+                <div role="alert" className="apps-discovery__search-error">
+                  {searchError}
+                </div>
+              ) : null}
+            </>
           }
         />
       );
@@ -1008,6 +1036,17 @@ export function App() {
           isGuest={isGuest}
           onUnlock={() => requestFullAppAnalysis(previewTarget)}
           onClose={() => setPreviewTarget(null)}
+        />
+      ) : null}
+      {sitePreviewTarget ? (
+        <PublicSitePreviewModal
+          site={sitePreviewTarget}
+          onClose={() => setSitePreviewTarget(null)}
+          onOpenDetail={() => {
+            const { routeSlug } = sitePreviewTarget;
+            setSitePreviewTarget(null);
+            navigate({ name: 'site-version', siteSlug: routeSlug });
+          }}
         />
       ) : null}
       {unlockTarget && entitlements ? (
@@ -1082,7 +1121,9 @@ export function App() {
               discoveryRoute === "apps"
                 ? "Search Apps…"
                 : discoveryRoute === "sites"
-                  ? "Search Sites…"
+                  ? route.name === "sites-motion"
+                    ? "Search Motion prompts…"
+                    : "Search Sites…"
                   : discoveryRoute === "flows"
                     ? "Search Flows…"
                     : discoveryRoute === "projects"
@@ -1094,12 +1135,12 @@ export function App() {
                 ? flowDiscoveryState?.query || null
                 : null
             }
-            onOpen={() =>
+            onOpen={() => {
               void openPalette(
                 discoveryRoute === "sites" ? "sites" : "apps",
                 discoverySearchSeed,
-              )
-            }
+              );
+            }}
             onClearCategory={() => {
               if (discoveryRoute !== "flows" || !flowDiscoveryState) return;
               updateLocation(
