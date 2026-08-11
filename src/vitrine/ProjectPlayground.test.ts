@@ -109,15 +109,9 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     source,
     /function canvasObjectFocusBounds[\s\S]*?canvasFreeLineReferenceForElement\(element\)/,
   );
-  assert.match(source, /className="project-canvas-focus-container"/);
-  assert.match(
-    css,
-    /\.project-canvas-focus-container \{[^}]*border:\s*2px solid #0d99ff;/,
-  );
-  assert.match(
-    css,
-    /--color-selection: #0d99ff00;/,
-  );
+  assert.doesNotMatch(source, /project-canvas-focus-container/);
+  assert.doesNotMatch(css, /project-canvas-focus-container/);
+  assert.match(css, /--color-selection: #0d99ff;/);
   assert.match(source, /<ProjectTemplateLibrary/);
   assert.match(source, /<ProjectStickyNotePicker/);
   assert.match(source, /<ProjectCanvasDocumentEditor/);

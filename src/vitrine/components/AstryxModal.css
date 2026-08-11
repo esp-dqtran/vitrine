@@ -45,6 +45,13 @@ dialog.astryx-modal--drawer-right {
   box-shadow: 0 28px 80px color-mix(in srgb, var(--color-shadow) 72%, transparent);
 }
 
+/* The fullscreen search preview owns a scrollable detail pane. This rule must
+ * follow the shared surface's overflow shorthand, which otherwise resets its
+ * overflow-y declaration when the two classes are combined. */
+.astryx-modal__surface.advanced-search-preview__panel {
+  overflow-y: auto;
+}
+
 .astryx-modal__icon-action {
   width: 36px !important;
   min-width: 36px !important;

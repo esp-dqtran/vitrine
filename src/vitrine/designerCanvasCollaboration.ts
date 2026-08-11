@@ -6,6 +6,9 @@ import { getAuthToken } from './apiFetch.ts';
 
 export type DesignerCanvasCollaborationStatus = "connecting" | "live" | "offline";
 
+const scenePublishDebounceMs = 120;
+const cursorPublishIntervalMs = 33;
+
 export interface DesignerCanvasCollaborator {
   clientId: string;
   userId: number;
@@ -144,6 +147,13 @@ export function openDesignerCanvasCollaboration(
   let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
   let publishTimer: ReturnType<typeof setTimeout> | undefined;
   let pendingScene: DesignerCanvasSnapshot | undefined;
+  let cursorTimer: ReturnType<typeof setTimeout> | undefined;
+  let pendingCursor: {
+    pointer: { x: number; y: number } | null;
+    button: "up" | "down";
+    selectedElementIds?: readonly string[];
+  } | undefined;
+  let lastCursorPublishedAt = 0;
   let sequence = 0;
   let clientId: string | undefined;
 
@@ -155,6 +165,15 @@ export function openDesignerCanvasCollaboration(
     const snapshot = pendingScene;
     pendingScene = undefined;
     socket.send(JSON.stringify({ type: "scene", sequence: ++sequence, snapshot }));
+  };
+
+  const sendPendingCursor = () => {
+    cursorTimer = undefined;
+    if (!pendingCursor || socket?.readyState !== 1) return;
+    const cursor = pendingCursor;
+    pendingCursor = undefined;
+    lastCursorPublishedAt = Date.now();
+    socket.send(JSON.stringify({ type: "cursor", ...cursor }));
   };
 
   const scheduleReconnect = () => {
@@ -237,18 +256,32 @@ export function openDesignerCanvasCollaboration(
       if (!snapshot) return;
       pendingScene = snapshot;
       if (publishTimer) return;
-      publishTimer = setTimeout(sendPendingScene, 50);
+      publishTimer = setTimeout(sendPendingScene, scenePublishDebounceMs);
     },
     publishCursor(input) {
       if (socket?.readyState !== 1) return;
-      socket.send(JSON.stringify({ type: "cursor", ...input }));
+      pendingCursor = input;
+      if (input.button === "up") {
+        if (cursorTimer) clearTimeout(cursorTimer);
+        sendPendingCursor();
+        return;
+      }
+      if (cursorTimer) return;
+      const delay = Math.max(
+        0,
+        cursorPublishIntervalMs - (Date.now() - lastCursorPublishedAt),
+      );
+      cursorTimer = setTimeout(sendPendingCursor, delay);
     },
     close() {
       disposed = true;
       if (reconnectTimer) clearTimeout(reconnectTimer);
       if (publishTimer) clearTimeout(publishTimer);
+      if (cursorTimer) clearTimeout(cursorTimer);
       reconnectTimer = undefined;
       publishTimer = undefined;
+      cursorTimer = undefined;
+      pendingCursor = undefined;
       options.onPresence?.([]);
       socket?.close(1000, "Canvas closed");
     },

@@ -86,3 +86,16 @@ test('enforces Escape and backdrop dismissal for every shared modal', async () =
   assert.match(source, /onOpenChange\(false\)/);
   assert.match(source, /dialog\.addEventListener\('click', closeFromBackdrop\)/);
 });
+
+test('preserves scrolling for the fullscreen advanced-search preview', async () => {
+  const [modalCss, preview] = await Promise.all([
+    readFile(new URL('./components/AstryxModal.css', import.meta.url), 'utf8'),
+    readFile(new URL('./components/AdvancedSearchPreview.tsx', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(preview, /className="advanced-search-preview__panel"/);
+  assert.match(
+    modalCss,
+    /\.astryx-modal__surface\.advanced-search-preview__panel\s*\{\s*overflow-y:\s*auto;/,
+  );
+});

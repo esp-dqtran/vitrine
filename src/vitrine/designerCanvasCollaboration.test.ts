@@ -79,7 +79,7 @@ test("coalesces local scenes and applies remote scenes without owning persistenc
   });
   session.publishScene(snapshot);
   session.publishScene({ ...snapshot, elements: [{ id: "shape-2" }] });
-  await new Promise((resolve) => setTimeout(resolve, 70));
+  await new Promise((resolve) => setTimeout(resolve, 140));
   assert.equal(socket.sent.length, 1);
   const sent = JSON.parse(socket.sent[0]) as { sequence: number; snapshot: typeof snapshot };
   assert.equal(sent.sequence, 1);
@@ -128,4 +128,47 @@ test("coalesces local scenes and applies remote scenes without owning persistenc
   session.close();
   assert.equal(socket.closed, true);
   assert.deepEqual(presence.at(-1), []);
+});
+
+test("coalesces cursor moves while delivering the final pointer state", async () => {
+  const socket = new FakeSocket();
+  const session = openDesignerCanvasCollaboration({
+    projectId: "11111111-1111-4111-8111-111111111111",
+    location: { protocol: "http:", host: "localhost:5174" },
+    reconnect: false,
+    createSocket: () => socket,
+  });
+  socket.open();
+
+  session.publishCursor({
+    pointer: { x: 12, y: 18 },
+    button: "down",
+    selectedElementIds: ["shape-1"],
+  });
+  session.publishCursor({
+    pointer: { x: 48, y: 64 },
+    button: "down",
+    selectedElementIds: ["shape-2"],
+  });
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  assert.deepEqual(JSON.parse(socket.sent[0]), {
+    type: "cursor",
+    pointer: { x: 48, y: 64 },
+    button: "down",
+    selectedElementIds: ["shape-2"],
+  });
+
+  session.publishCursor({
+    pointer: { x: 72, y: 96 },
+    button: "up",
+    selectedElementIds: [],
+  });
+  assert.deepEqual(JSON.parse(socket.sent[1]), {
+    type: "cursor",
+    pointer: { x: 72, y: 96 },
+    button: "up",
+    selectedElementIds: [],
+  });
+  session.close();
 });

@@ -7653,22 +7653,6 @@ export function ProjectPlayground({
               tools: { image: true },
             }}
           />
-          {selectedCanvasFocusBounds ? (
-            <div
-              aria-hidden="true"
-              className="project-canvas-focus-container"
-              style={selectedCanvasFocusBounds}
-            >
-              <span className="project-canvas-focus-container__corner project-canvas-focus-container__corner--top-left" />
-              <span className="project-canvas-focus-container__corner project-canvas-focus-container__corner--top-right" />
-              <span className="project-canvas-focus-container__corner project-canvas-focus-container__corner--bottom-right" />
-              <span className="project-canvas-focus-container__corner project-canvas-focus-container__corner--bottom-left" />
-              <span className="project-canvas-focus-container__edge project-canvas-focus-container__edge--top" />
-              <span className="project-canvas-focus-container__edge project-canvas-focus-container__edge--right" />
-              <span className="project-canvas-focus-container__edge project-canvas-focus-container__edge--bottom" />
-              <span className="project-canvas-focus-container__edge project-canvas-focus-container__edge--left" />
-            </div>
-          ) : null}
           {stampPlacement && stampPreviewPoint ? (
             stampPlacement.id === "profile" ? (
               <span

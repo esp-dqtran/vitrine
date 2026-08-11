@@ -6,7 +6,10 @@ const source = readFileSync(new URL("./db.ts", import.meta.url), "utf8");
 
 test("app versions persist and return the compact provider code", () => {
   assert.match(source, /provider: AppVersionProvider/);
-  assert.match(source, /av\.source_url, av\.provider, av\.status/);
+  assert.match(
+    source,
+    /COALESCE\(av\.source_url, apple_listing\.source_url\) AS source_url,[\s\S]*?av\.provider, av\.status/,
+  );
   assert.match(source, /provider: AppVersionProvider = "m"/);
   assert.match(source, /created_by, provider\)/);
 });
