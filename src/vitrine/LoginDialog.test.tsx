@@ -18,6 +18,8 @@ test('renders shared authentication inside the catalog login dialog', () => {
   assert.match(html, /data-login-dialog="true"/);
   assert.match(html, /width:460px/);
   assert.match(html, /min-height:min\(600px, 68vh\)/);
+  assert.match(html, /See more of the Vitrines catalog/);
+  assert.match(html, /Create a free account or sign in to continue beyond the first 32/);
   assert.match(html, /data-sign-in-layout="embedded"/);
   assert.match(html, /Sign in to Vitrines/);
   assert.match(html, /Access your saved apps, sites, screens, and collections\./);

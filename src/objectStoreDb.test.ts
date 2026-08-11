@@ -459,23 +459,36 @@ test("Flow catalog preview resolves ordered evidence from one published Flow", a
   assert.match(sql, /so\.object_key = i\.object_key/);
 });
 
-test("Flow catalog preview rejects ranks outside one to six without querying", async () => {
+test("Flow catalog preview accepts every positive screen rank", async () => {
   let calls = 0;
   const query: DatabaseQuery = async () => {
     calls += 1;
-    return result();
+    return result([{
+      object_key: metadata.key,
+      sha256: metadata.sha256,
+      byte_size: metadata.byteSize,
+      content_type: metadata.contentType,
+      access_class: metadata.accessClass,
+    }]);
   };
+  assert.deepEqual(await publishedFlowCatalogPreviewObject({
+    app: "linear",
+    platform: "web",
+    versionId: 7,
+    versionFlowId: 71,
+    rank: 7,
+  }, query), metadata);
   await assert.rejects(
     publishedFlowCatalogPreviewObject({
       app: "linear",
       platform: "web",
       versionId: 7,
       versionFlowId: 71,
-      rank: 7,
+      rank: 0,
     }, query),
     /rank/i,
   );
-  assert.equal(calls, 0);
+  assert.equal(calls, 1);
 });
 
 test("legacy lookup returns only image rows that have no object association", async () => {

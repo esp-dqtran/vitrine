@@ -7,7 +7,6 @@ import {
   FlowPreviewDialog,
   type FlowPreviewDocumentSource,
   type FlowPreviewMode,
-  type FlowPreviewVariant,
 } from './FlowPreviewDialog.tsx';
 import { copyShareLink, flowShareUrl } from '../screenActions.ts';
 import { CopyButton } from './CopyButton.tsx';
@@ -18,12 +17,12 @@ import {
 } from './flowCarousel';
 
 function flowScreenItems(flow: DesignFlow<EvidenceView>) {
-  return flow.steps.flatMap((step, index) => {
-    const evidence = step.evidence[0];
-    return evidence
-      ? [{ evidence, label: step.label, stepNumber: index + 1 }]
-      : [];
-  });
+  let screenNumber = 0;
+  return flow.steps.flatMap((step) => step.evidence.map((evidence) => ({
+    evidence,
+    label: step.label,
+    stepNumber: ++screenNumber,
+  })));
 }
 
 function flowTitle(title: string) {
@@ -116,9 +115,6 @@ export function FlowCard({
   documentSource,
   userRole = 'user',
   onOpenSourceApp,
-  previewVariant = 'full',
-  fullAccessLabel,
-  onRequestFullAccess,
   syncPreviewUrl = true,
   iconTooltips = false,
 }: {
@@ -134,9 +130,6 @@ export function FlowCard({
   documentSource?: FlowPreviewDocumentSource;
   userRole?: 'admin' | 'user';
   onOpenSourceApp?: () => void;
-  previewVariant?: FlowPreviewVariant | 'none';
-  fullAccessLabel?: string;
-  onRequestFullAccess?: () => void;
   syncPreviewUrl?: boolean;
   iconTooltips?: boolean;
 }) {
@@ -197,10 +190,6 @@ export function FlowCard({
   };
 
   const openPreview = (event: MouseEvent<HTMLButtonElement>) => {
-    if (previewVariant === 'none') {
-      onOpen();
-      return;
-    }
     const indexedItem = event.target instanceof Element
       ? event.target.closest<HTMLElement>('[data-flow-preview-index]')
       : null;
@@ -363,16 +352,12 @@ export function FlowCard({
           flow={flow}
           screens={screens}
           activeIndex={previewIndex}
-          activeMode={previewVariant === 'public' ? 'screens' : previewMode}
+          activeMode={previewMode}
           platform={platform}
           sourceAppName={sourceAppName}
           sourceAppIconUrl={sourceAppIconUrl}
           documentSource={documentSource}
           userRole={userRole}
-          previewVariant={previewVariant}
-          totalScreenCount={screenCount}
-          fullAccessLabel={fullAccessLabel}
-          onRequestFullAccess={onRequestFullAccess}
           onActiveIndexChange={updatePreviewIndex}
           onModeChange={updatePreviewMode}
           onClose={closePreview}

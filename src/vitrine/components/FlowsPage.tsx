@@ -22,7 +22,6 @@ import {
 } from './AppsFilterBar.tsx';
 import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
 import { FlowGallery } from './FlowGallery.tsx';
-import type { FlowPreviewVariant } from './FlowPreviewDialog.tsx';
 import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
 import type { FlowTreeGroup } from '../flowTree.ts';
 import { PUBLIC_CATALOG_GUEST_LIMIT } from '../../publicCatalogAccess.ts';
@@ -96,10 +95,6 @@ interface FlowsPageViewProps {
   onSelectApp: (appId: string) => void;
   accountControls?: ReactNode;
   userRole?: 'admin' | 'user';
-  previewVariant?: FlowPreviewVariant | 'none';
-  fullAccessLabel?: string;
-  onRequestFullAccess?: (appId: string) => void;
-  onOpenFullFlow?: (item: FlowCatalogItem, platform: Platform) => void;
   isGuest?: boolean;
   onGuestLimitReached?: () => void;
 }
@@ -109,10 +104,6 @@ export function FlowsPageView({
   onSelectFlow,
   onSelectApp,
   userRole = 'user',
-  previewVariant = 'full',
-  fullAccessLabel,
-  onRequestFullAccess,
-  onOpenFullFlow,
   isGuest = false,
   onGuestLimitReached,
 }: FlowsPageViewProps) {
@@ -225,14 +216,6 @@ export function FlowsPageView({
               flowId: item.preview.sourceFlowId,
             },
             onOpenSourceApp: () => onSelectApp(item.preview.appId),
-            previewVariant,
-            fullAccessLabel,
-            onRequestFullAccess: onRequestFullAccess
-              ? () => onRequestFullAccess(item.preview.appId)
-              : undefined,
-            onOpen: () => onOpenFullFlow
-              ? onOpenFullFlow(item, controller.state.platform)
-              : onSelectFlow(item.title, controller.state.platform),
           };
         }}
         onSelectFlow={(flowId) => {
@@ -249,10 +232,6 @@ interface FlowsPageProps {
   onSelectApp: (appId: string) => void;
   accountControls?: ReactNode;
   userRole?: 'admin' | 'user';
-  previewVariant?: FlowPreviewVariant | 'none';
-  fullAccessLabel?: string;
-  onRequestFullAccess?: (appId: string) => void;
-  onOpenFullFlow?: (item: FlowCatalogItem, platform: Platform) => void;
   isGuest?: boolean;
   onGuestLimitReached?: () => void;
 }
@@ -262,10 +241,6 @@ export function FlowsPage({
   onSelectApp,
   accountControls,
   userRole = 'user',
-  previewVariant,
-  fullAccessLabel,
-  onRequestFullAccess,
-  onOpenFullFlow,
   isGuest = false,
   onGuestLimitReached,
 }: FlowsPageProps) {
@@ -288,10 +263,6 @@ export function FlowsPage({
       onSelectApp={onSelectApp}
       accountControls={accountControls}
       userRole={userRole}
-      previewVariant={previewVariant}
-      fullAccessLabel={fullAccessLabel}
-      onRequestFullAccess={onRequestFullAccess}
-      onOpenFullFlow={onOpenFullFlow}
       isGuest={isGuest}
       onGuestLimitReached={onGuestLimitReached}
     />

@@ -396,38 +396,34 @@ export async function publishedFlowCatalogPreviewObject(
   },
   runQuery: DatabaseQuery = query,
 ): Promise<ObjectMetadata | undefined> {
-  if (!Number.isInteger(input.rank) || input.rank < 1 || input.rank > 6) {
-    throw new Error("Flow catalog preview rank is outside its declared media bound");
+  if (!Number.isInteger(input.rank) || input.rank < 1) {
+    throw new Error("Flow catalog preview rank must be positive");
   }
   const result = await runQuery(
     `WITH observed_steps AS (
        SELECT
          step.position AS step_position,
-         (
-           SELECT evidence.value::integer
-           FROM jsonb_array_elements_text(
-             COALESCE(step.value->'evidence', '[]'::jsonb)
-           ) WITH ORDINALITY AS evidence(value, position)
-           WHERE evidence.value ~ '^[1-9][0-9]*$'
-           ORDER BY evidence.position
-           LIMIT 1
-         ) AS image_id
+         evidence.value::integer AS image_id,
+         evidence.position AS evidence_position
        FROM app_versions av
        JOIN apps a ON a.id = av.app_id
        JOIN app_flow_versions afv ON afv.version_id = av.id
        CROSS JOIN LATERAL jsonb_array_elements(afv.steps)
          WITH ORDINALITY AS step(value, position)
+       CROSS JOIN LATERAL jsonb_array_elements_text(
+         COALESCE(step.value->'evidence', '[]'::jsonb)
+       ) WITH ORDINALITY AS evidence(value, position)
        WHERE a.name = $1
          AND av.platform = $2
          AND av.id = $3
          AND av.status = 'published'
-         AND afv.id = $4
+       AND afv.id = $4
+       AND evidence.value ~ '^[1-9][0-9]*$'
      ), ranked AS (
        SELECT
          image_id,
-         ROW_NUMBER() OVER (ORDER BY step_position) AS preview_rank
+       ROW_NUMBER() OVER (ORDER BY step_position, evidence_position) AS preview_rank
        FROM observed_steps
-       WHERE image_id IS NOT NULL
      )
      SELECT ${METADATA_COLUMNS}
      FROM ranked

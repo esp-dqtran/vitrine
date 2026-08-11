@@ -18,6 +18,7 @@ import { AdvancedSearchPreview } from "./components/AdvancedSearchPreview.tsx";
 import { QuickSearch, quickSearchHandoff } from "./components/QuickSearch.tsx";
 import { GuestCatalogControls } from "./components/GuestCatalogControls.tsx";
 import { LoginDialog } from "./components/LoginDialog.tsx";
+import { AstryxModal } from "./components/AstryxModal.tsx";
 import { AppDetailLoadingPage } from "./components/AppDetailLoadingPage.tsx";
 import {
   PublicAppPreviewModal,
@@ -131,6 +132,7 @@ export function App() {
       : null;
   const isAdmin = user?.role === "admin";
   const [loginOpen, setLoginOpen] = useState(false);
+  const [catalogLimitOpen, setCatalogLimitOpen] = useState(false);
   const [appFacet, setAppFacet] = useState<AppsFacet | null>(null);
   const [appPlatform, setAppPlatform] = useState<AppsPlatform>("web");
   const [siteQuery, setSiteQuery] = useState("");
@@ -227,6 +229,7 @@ export function App() {
   const customerPlan: "free" | "pro" = isAdmin
     ? "pro"
     : (entitlements?.plan ?? "free");
+  const isCatalogLimited = !isAdmin && customerPlan === "free";
   const canUseProResearch = isAdmin || customerPlan === "pro";
   const canUseAdvancedSearch = advancedSearchEnabled && user !== null;
   const legacyAppSearch = route.name === "apps" && !canUseAdvancedSearch;
@@ -530,6 +533,33 @@ export function App() {
       onSignedIn={completeLogin}
     />
   ) : null;
+  const catalogLimitDialog = !isGuest ? (
+    <AstryxModal
+      isOpen={catalogLimitOpen}
+      onOpenChange={(open) => { if (!open) setCatalogLimitOpen(false); }}
+      purpose="info"
+      width={440}
+    >
+      <div style={{ padding: 24, display: "grid", gap: 16 }}>
+        <h2 style={{ margin: 0 }}>Keep exploring Vitrines</h2>
+        <p style={{ margin: 0 }}>
+          You’ve reached the 32-item Free preview. Upgrade to Pro to browse the full catalog.
+        </p>
+        <Button
+          label="View Pro plans"
+          variant="primary"
+          clickAction={() => {
+            setCatalogLimitOpen(false);
+            navigate({ name: "pricing" });
+          }}
+        />
+      </div>
+    </AstryxModal>
+  ) : null;
+  const openCatalogLimit = () => {
+    if (isGuest) setLoginOpen(true);
+    else setCatalogLimitOpen(true);
+  };
 
   const discoveryOverlays = (
     <AnimatePresence>
@@ -711,21 +741,8 @@ export function App() {
     case "flows":
       page = (
         <FlowsPage
-          isGuest={isGuest}
-          onGuestLimitReached={() => setLoginOpen(true)}
-          previewVariant={canShowPublicSitePreview(isGuest, entitlements?.plan) ? "public" : "none"}
-          fullAccessLabel={isGuest ? "Sign in to view full flow" : "View full flow"}
-          onRequestFullAccess={(appId) => requestFullAppAnalysis(appId)}
-          onOpenFullFlow={(item, platform) => {
-            closeDiscoveryOverlays();
-            navigate({
-              name: "app",
-              appId: item.preview.appId,
-              section: "flows",
-              platform,
-              flow: item.preview.sourceFlowId,
-            });
-          }}
+          isGuest={isCatalogLimited}
+          onGuestLimitReached={openCatalogLimit}
           onSelectFlow={(title, platform) => {
             setQ("");
             setSearchResult(null);
@@ -745,8 +762,8 @@ export function App() {
       page = (
         <SitesPage
           isAdmin={isAdmin}
-          isGuest={isGuest}
-          onGuestLimitReached={() => setLoginOpen(true)}
+          isGuest={isCatalogLimited}
+          onGuestLimitReached={openCatalogLimit}
           query={siteQuery}
           onQueryChange={setSiteQuery}
           onOpenSearch={(seed) => void openPalette("sites", seed)}
@@ -1024,8 +1041,8 @@ export function App() {
       page = (
         <AppsDiscoveryPage
           isAdmin={isAdmin}
-          isGuest={isGuest}
-          onGuestLimitReached={() => setLoginOpen(true)}
+          isGuest={isCatalogLimited}
+          onGuestLimitReached={openCatalogLimit}
           facet={appFacet}
           initialPlatform={appPlatform}
           onFacetChange={setAppFacet}
@@ -1079,6 +1096,7 @@ export function App() {
   const dialogs = (
     <>
       {catalogLoginDialog}
+      {catalogLimitDialog}
       {previewTarget ? (
         <PublicAppPreviewModal
           preview={modalPublicPreview}

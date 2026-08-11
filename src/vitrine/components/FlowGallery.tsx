@@ -26,10 +26,6 @@ type FlowGalleryCardProps = Partial<Pick<
   | 'sourceAppIconUrl'
   | 'documentSource'
   | 'onOpenSourceApp'
-  | 'previewVariant'
-  | 'fullAccessLabel'
-  | 'onRequestFullAccess'
-  | 'onOpen'
 >>;
 
 export function activeFlowIdFromEntries(
@@ -217,14 +213,11 @@ export function FlowGallery({
                     sourceAppName={cardProps?.sourceAppName ?? sourceAppName}
                     sourceAppIconUrl={cardProps?.sourceAppIconUrl ?? sourceAppIconUrl}
                     onOpenSourceApp={cardProps?.onOpenSourceApp}
-                    previewVariant={cardProps?.previewVariant}
-                    fullAccessLabel={cardProps?.fullAccessLabel}
-                    onRequestFullAccess={cardProps?.onRequestFullAccess}
                     // App-detail flow links include flow, tab, and screen. Keep the
                     // selected FlowCard in sync so those shared URLs open the preview.
                     syncPreviewUrl
                     iconTooltips={Boolean(app)}
-                    onOpen={cardProps?.onOpen ?? (() => onSelectFlow(flow.id))}
+                    onOpen={() => onSelectFlow(flow.id)}
                   />
                 );
               })}

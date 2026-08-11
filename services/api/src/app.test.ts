@@ -1713,21 +1713,19 @@ test("prevents active Pro from banking permanent Free unlocks", async (t) => {
 test("reviews and publishes an existing admin draft while hiding drafts from designers", async (t) => {
   const version = { id: 12, app: "linear", platform: "web", version_number: 2, label: "v2", source_url: null, provider: "m" as const, status: "draft" as const, notes: "", captured_at: "2026-07-11T00:00:00.000Z", submitted_at: null, published_at: null, screen_count: 7, analyzed_count: 7, component_count: 2, token_count: 4, flow_count: 1 };
   let publishedOnly: boolean | undefined;
-  let queuedSearchSync = 0;
   let appSync: unknown;
-  let releaseSearchSync: (() => void) | undefined;
-  const pendingSearchSync = new Promise<void>((resolve) => { releaseSearchSync = resolve; });
+  let releaseAppSync: (() => void) | undefined;
+  const pendingAppSync = new Promise<void>((resolve) => { releaseAppSync = resolve; });
   const { base, server } = await serve(createApiApp({
     verifyAuthToken: async (token) => token === "admin" ? admin : user,
     listAppVersions: async (_app, _platform, only) => { publishedOnly = only; return only ? [] : [version]; },
     getVersionPublicationBlockers: async () => [],
     submitAppVersionForReview: async () => ({ ...version, status: "in_review" as const }),
     publishAppVersion: async () => ({ ...version, status: "published" as const, published_at: "2026-07-11T01:00:00.000Z" }),
-    syncTypesenseCatalog: async () => {
-      queuedSearchSync += 1;
-      await pendingSearchSync;
+    syncTypesenseAppCatalog: async (...input) => {
+      appSync = input;
+      await pendingAppSync;
     },
-    syncTypesenseAppCatalog: async (...input) => { appSync = input; },
   }));
   t.after(() => close(server));
   assert.equal((await fetch(`${base}/versions/12/blockers`, { headers: adminAuth })).status, 200);
@@ -1735,12 +1733,11 @@ test("reviews and publishes an existing admin draft while hiding drafts from des
   const publish = fetch(`${base}/versions/12/publish`, { method: "POST", headers: adminAuth });
   const response = await Promise.race([
     publish,
-    new Promise<Response>((_, reject) => setTimeout(() => reject(new Error("publish waited for Typesense sync")), 250)),
+    new Promise<Response>((_, reject) => setTimeout(() => reject(new Error("publish waited for Typesense App sync")), 250)),
   ]);
   assert.equal((await response.json()).status, "published");
-  assert.equal(queuedSearchSync, 1);
   assert.deepEqual(appSync, ["linear", "web"]);
-  releaseSearchSync?.();
+  releaseAppSync?.();
 
   const designerVersions = await fetch(`${base}/apps/linear/versions?platform=web`, { headers: { authorization: "Bearer user" } });
   assert.equal(designerVersions.status, 200);
@@ -2149,6 +2146,8 @@ test("requires an account before a catalog cursor can fetch Apps, Sites, or Flow
     publishedFlowCatalogPage: async () => {
       throw new Error("anonymous Flow cursor reached the store");
     },
+    verifyAuthToken: async (token: string) => token === "free" ? user : undefined,
+    getAccountEntitlements: async () => freeEntitlements,
   } as never));
   t.after(() => close(server));
 
@@ -2164,6 +2163,15 @@ test("requires an account before a catalog cursor can fetch Apps, Sites, or Flow
       code: "guest_catalog_limit",
     });
   }
+
+  const freeResponse = await fetch(`${base}/sites?cursor=next-page`, {
+    headers: { authorization: "Bearer free" },
+  });
+  assert.equal(freeResponse.status, 403);
+  assert.deepEqual(await freeResponse.json(), {
+    error: "Create an account or sign in to continue browsing the catalog",
+    code: "guest_catalog_limit",
+  });
 });
 
 test("passes valid category and flow facets to public catalog pagination", async (t) => {
@@ -2597,7 +2605,7 @@ test("serves bounded public Flow catalog media without an App detail request", a
   t.after(() => close(server));
 
   const media = await fetch(
-    `${base}/flows/media/linear/web/7/71/1`,
+    `${base}/flows/media/linear/web/7/71/2`,
   );
   assert.equal(media.status, 200);
   assert.equal(media.headers.get("content-type"), "image/webp");
@@ -2607,12 +2615,12 @@ test("serves bounded public Flow catalog media without an App detail request", a
     platform: "web",
     versionId: 7,
     versionFlowId: 71,
-    rank: 1,
+    rank: 2,
     variant: "full",
   }]);
 
   const thumbnail = await fetch(
-    `${base}/flows/media/linear/web/7/71/1?variant=thumb`,
+    `${base}/flows/media/linear/web/7/71/2?variant=thumb`,
   );
   assert.equal(thumbnail.status, 200);
   assert.deepEqual(inputs[1], {
@@ -2620,12 +2628,12 @@ test("serves bounded public Flow catalog media without an App detail request", a
     platform: "web",
     versionId: 7,
     versionFlowId: 71,
-    rank: 1,
+    rank: 2,
     variant: "thumb",
   });
 
   const inline = await fetch(
-    `${base}/flows/media/linear/web/7/71/1?inline=1`,
+    `${base}/flows/media/linear/web/7/71/2?inline=1`,
   );
   assert.equal(inline.status, 200);
   assert.equal(await inline.text(), "image");
@@ -2635,12 +2643,12 @@ test("serves bounded public Flow catalog media without an App detail request", a
     platform: "web",
     versionId: 7,
     versionFlowId: 71,
-    rank: 1,
+    rank: 2,
     variant: "full",
   });
 
   assert.equal((await fetch(
-    `${base}/flows/media/linear/web/7/71/2`,
+    `${base}/flows/media/linear/web/7/71/0`,
   )).status, 400);
   assert.equal(inputs.length, 3);
 });

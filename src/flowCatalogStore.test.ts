@@ -70,6 +70,36 @@ test("freezes published App versions and canonical taxonomy at one snapshot", as
   assert.equal(calls[0]!.values?.[1], timestamp);
 });
 
+test("returns every observed screen for a catalog Flow", async () => {
+  let calls = 0;
+  const page = await publishedFlowCatalogPage({
+    platform: "web",
+    sort: "grouped",
+    cursorSecret: secret,
+    now: () => new Date(timestamp),
+  }, async () => {
+    calls += 1;
+    return result(calls === 1 ? [row({
+      steps: [
+        { label: "Open profile", evidence: [10, 11] },
+        { label: "Save profile", evidence: [12] },
+      ],
+    })] : [{ total_count: 1, facets: [] }]);
+  });
+
+  const preview = page.items[0]!.preview;
+  assert.equal(preview.screenCount, 3);
+  assert.equal(preview.flow.steps.length, 3);
+  assert.deepEqual(
+    preview.flow.steps.map(({ evidence }) => evidence[0]!.imageUrl),
+    [
+      "/api/flows/media/linear/web/7/71/1?variant=full",
+      "/api/flows/media/linear/web/7/71/2?variant=full",
+      "/api/flows/media/linear/web/7/71/3?variant=full",
+    ],
+  );
+});
+
 test("deduplicates mapped Flows before attaching taxonomy labels", async () => {
   const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
   await publishedFlowCatalogPage({

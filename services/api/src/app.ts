@@ -98,7 +98,6 @@ import { publishedFacetPreviews } from "../../../src/publicFacetPreviewStore.ts"
 import {
   FlowCatalogCursorError,
   publishedFlowCatalogPage,
-  type FlowCatalogPage,
 } from "../../../src/flowCatalogStore.ts";
 import { createCategoryStore } from "../../../src/categoryStore.ts";
 import {
@@ -512,9 +511,7 @@ const defaults = {
   typesenseAppCatalog: undefined as TypesenseAppCatalogClient | undefined,
   typesenseFlowCatalog: undefined as TypesenseFlowCatalogClient | undefined,
   typesenseSiteCatalog: undefined as TypesenseSiteCatalogClient | undefined,
-  syncTypesenseCatalog: undefined as (() => Promise<void>) | undefined,
   syncTypesenseAppCatalog: undefined as ((app: string, platform: Platform) => Promise<void>) | undefined,
-  syncTypesenseFlowCatalog: undefined as (() => Promise<void>) | undefined,
   acquireAppKnowledgeNotificationClient: async () =>
     pool.connect() as unknown as AppKnowledgeNotificationClient,
 };
@@ -630,30 +627,6 @@ function flowCatalogFilters(value: unknown): string[] | null {
     values.push(filterValue);
   }
   return values;
-}
-
-/** The unauthenticated catalog intentionally exposes one visual sample only. */
-function publicFlowPreviewPage(page: FlowCatalogPage): FlowCatalogPage {
-  return {
-    ...page,
-    items: page.items.map((item) => {
-      // Keep this defensive for callers that use a lightweight catalog test stub.
-      if (!item.preview?.flow) return item;
-      return {
-        ...item,
-        preview: {
-          ...item.preview,
-          flow: {
-            ...item.preview.flow,
-            steps: item.preview.flow.steps.slice(0, 1).map((step) => ({
-              ...step,
-              evidence: step.evidence.slice(0, 1),
-            })),
-          },
-        },
-      };
-    }),
-  };
 }
 
 function facetSearchValues(value: unknown, maximumItems = 40): string[] | null {
@@ -909,6 +882,12 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const token = bearerToken(req.headers.authorization);
     return token ? deps.verifyAuthToken(token) : undefined;
   };
+  const isCatalogLimitedRequest = async (req: express.Request): Promise<boolean> => {
+    const user = await resolveRequestUser(req);
+    if (!user) return true;
+    if (user.role === "admin") return false;
+    return (await deps.getAccountEntitlements(user.id)).plan === "free";
+  };
   app.use(compression());
   const generalLimiter = createFixedWindowLimiter({ limit: deps.generalRateLimit, windowMs: 5 * 60_000 });
   const traversalLimiter = createDistinctValueLimiter({ limit: deps.appTraversalLimit, windowMs: 10 * 60_000 });
@@ -1032,8 +1011,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   });
 
   const listApps = async (req: express.Request, res: express.Response) => {
-    const requestUser = await resolveRequestUser(req);
-    const isGuest = !requestUser;
+    const isCatalogLimited = await isCatalogLimitedRequest(req);
     const isSearchRequest = req.path === "/apps/search";
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
@@ -1074,14 +1052,14 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "invalid catalog query" });
       return;
     }
-    if (isGuest && cursor) {
+    if (isCatalogLimited && cursor) {
       res.status(403).json({
         error: "Create an account or sign in to continue browsing the catalog",
         code: "guest_catalog_limit",
       });
       return;
     }
-    const pageLimit = isGuest
+    const pageLimit = isCatalogLimited
       ? Math.min(limit ?? PUBLIC_CATALOG_GUEST_LIMIT, PUBLIC_CATALOG_GUEST_LIMIT)
       : limit;
     const typesenseCursorPrefix = "typesense-app:";
@@ -1119,8 +1097,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         }));
         res.json({
           items: result.apps,
-          nextCursor: isGuest ? null : result.nextPage ? `${typesenseCursorPrefix}${result.nextPage}` : null,
-          totalCount: isGuest ? Math.min(result.totalCount, PUBLIC_CATALOG_GUEST_LIMIT) : result.totalCount,
+          nextCursor: isCatalogLimited ? null : result.nextPage ? `${typesenseCursorPrefix}${result.nextPage}` : null,
+          totalCount: isCatalogLimited ? Math.min(result.totalCount, PUBLIC_CATALOG_GUEST_LIMIT) : result.totalCount,
           facets: includeFacets ? result.facets : [],
         });
         return;
@@ -1151,8 +1129,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       const catalog = buildPublishedCatalogPage(page);
       res.json({
         items: catalog.apps,
-        nextCursor: isGuest ? null : page.nextCursor,
-        totalCount: isGuest
+        nextCursor: isCatalogLimited ? null : page.nextCursor,
+        totalCount: isCatalogLimited
           ? Math.min(page.totalCount ?? catalog.apps.length, PUBLIC_CATALOG_GUEST_LIMIT)
           : page.totalCount ?? catalog.apps.length,
         facets: page.facets ?? [],
@@ -1217,8 +1195,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   });
 
   const listFlows = async (req: express.Request, res: express.Response) => {
-    const requestUser = await resolveRequestUser(req);
-    const isGuest = !requestUser;
+    const isCatalogLimited = await isCatalogLimitedRequest(req);
     const isSearchRequest = req.path === "/flows/search";
     const platform = platformQuery(req.query.platform);
     const cursor = req.query.cursor === undefined
@@ -1261,14 +1238,14 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "invalid Flow catalog query" });
       return;
     }
-    if (isGuest && cursor) {
+    if (isCatalogLimited && cursor) {
       res.status(403).json({
         error: "Create an account or sign in to continue browsing the catalog",
         code: "guest_catalog_limit",
       });
       return;
     }
-    const pageLimit = isGuest
+    const pageLimit = isCatalogLimited
       ? Math.min(limit ?? PUBLIC_CATALOG_GUEST_LIMIT, PUBLIC_CATALOG_GUEST_LIMIT)
       : limit;
     const typesenseCursorPrefix = "typesense-flow:";
@@ -1302,11 +1279,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         }));
         const page = {
           items: result.items,
-          nextCursor: isGuest ? null : result.nextPage ? `${typesenseCursorPrefix}${result.nextPage}` : null,
-          totalCount: isGuest ? Math.min(result.totalCount, PUBLIC_CATALOG_GUEST_LIMIT) : result.totalCount,
+          nextCursor: isCatalogLimited ? null : result.nextPage ? `${typesenseCursorPrefix}${result.nextPage}` : null,
+          totalCount: isCatalogLimited ? Math.min(result.totalCount, PUBLIC_CATALOG_GUEST_LIMIT) : result.totalCount,
           facets: includeFacets ? result.facets : [],
         };
-        res.json(isGuest ? publicFlowPreviewPage(page) : page);
+        res.json(page);
         return;
       } catch {
         const durationMs = Math.round((performance.now() - startedAt) * 100) / 100;
@@ -1332,13 +1309,14 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         cursorSecret: deps.mediaSigningSecret,
       });
       res.setHeader("Cache-Control", "public, max-age=300");
-      res.json(isGuest
-        ? publicFlowPreviewPage({
-          ...page,
-          nextCursor: null,
-          totalCount: Math.min(page.totalCount, PUBLIC_CATALOG_GUEST_LIMIT),
-        })
-        : page);
+      res.json({
+        items: page.items,
+        nextCursor: isCatalogLimited ? null : page.nextCursor,
+        totalCount: isCatalogLimited
+          ? Math.min(page.totalCount, PUBLIC_CATALOG_GUEST_LIMIT)
+          : page.totalCount,
+        facets: page.facets,
+      });
     } catch (error) {
       if (error instanceof FlowCatalogCursorError) {
         res.status(400).json({ error: error.message });
@@ -1395,7 +1373,6 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       || !versionFlowId
       || !Number.isInteger(rank)
       || rank < 1
-      || rank !== 1
     ) {
       res.status(400).json({ error: "invalid Flow catalog media reference" });
       return;
@@ -1625,7 +1602,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   const sitesRouteDependencies = {
     store: deps.sitesStore,
     cursorSecret: deps.mediaSigningSecret,
-    isGuestRequest: async (req: express.Request) => !(await resolveRequestUser(req)),
+    isCatalogLimitedRequest,
     ...(deps.typesenseSiteCatalog ? { typesenseSiteCatalog: deps.typesenseSiteCatalog } : {}),
     sendObject: async (metadata: ObjectMetadata, res: express.Response) => {
       if (!deps.objectStore) throw new Error("Object storage is unavailable");
@@ -2462,16 +2439,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     try {
       const published = await deps.publishAppVersion(versionId, res.locals.user.id);
-      const syncs = [
-        deps.syncTypesenseCatalog?.(),
-        deps.syncTypesenseAppCatalog?.(published.app, published.platform as Platform),
-        deps.syncTypesenseFlowCatalog?.(),
-      ].filter((sync): sync is Promise<void> => Boolean(sync));
-      void Promise.allSettled(syncs).then((results) => {
-        if (results.some((result) => result.status === "rejected")) {
-          console.warn("[api] Typesense catalog sync failed");
-        }
-      });
+      void deps.syncTypesenseAppCatalog?.(published.app, published.platform as Platform)
+        .catch(() => { console.warn("[api] Typesense App document sync failed"); });
       res.json(published);
     }
     catch (error) { res.status(409).json({ error: (error as Error).message }); }

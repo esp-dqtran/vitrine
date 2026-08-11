@@ -4,7 +4,6 @@ import { startApi } from "./start.ts";
 import { seedAdmin } from "../../../src/authStore.ts";
 import {
   pool,
-  publishedCatalogSearchSource,
 } from "../../../src/db.ts";
 import { assertMigrationsCurrent } from "../../../src/migrations.ts";
 import Stripe from "stripe";
@@ -35,9 +34,6 @@ import {
 import {
   publishedAppCatalogDocument,
 } from "../../../src/typesenseAppCatalogSource.ts";
-import { publishedFlowCatalogDocuments } from "../../../src/typesenseFlowCatalogSource.ts";
-import { publishedSiteCatalogDocuments } from "../../../src/typesenseSiteCatalogSource.ts";
-import { createSitesStore } from "../../../src/sitesStore.ts";
 import type { Platform } from "../../../src/platformFromUrl.ts";
 
 const PORT = Number(process.env.PORT ?? DEFAULT_API_PORT);
@@ -59,56 +55,12 @@ await startApi({
     const typesenseSiteCatalog = typesenseConfig
       ? createTypesenseSiteCatalogClient({ ...typesenseConfig, collection: TYPESENSE_SITE_CATALOG_COLLECTION })
       : undefined;
-    let typesenseSync: Promise<void> | undefined;
-    const syncTypesenseCatalog = (): Promise<void> => {
-      if (typesenseSync) return typesenseSync;
-      typesenseSync = (async () => {
-      if (typesenseCatalog) {
-        const indexed = await typesenseCatalog.index(await publishedCatalogSearchSource());
-        console.log(`[api] Indexed ${indexed} Typesense research documents.`);
-      }
-      })().finally(() => {
-        typesenseSync = undefined;
-      });
-      return typesenseSync;
-    };
     const syncTypesenseAppCatalog = async (app: string, platform: Platform): Promise<void> => {
       if (!typesenseAppCatalog) return;
       const document = await publishedAppCatalogDocument(app, platform);
       if (!document) return;
       await typesenseAppCatalog.upsert(document);
       console.log(`[api] Updated Typesense App document ${document.id}.`);
-    };
-    let typesenseFlowSync: Promise<void> | undefined;
-    const syncTypesenseFlowCatalog = (): Promise<void> => {
-      if (typesenseFlowSync) return typesenseFlowSync;
-      typesenseFlowSync = (async () => {
-        if (typesenseFlowCatalog) {
-          const indexed = await typesenseFlowCatalog.index(await publishedFlowCatalogDocuments({
-            cursorSecret: config.mediaSigningSecret,
-            loadPage: publishedFlowCatalogPage,
-          }));
-          console.log(`[api] Indexed ${indexed} Typesense Flow documents.`);
-        }
-      })().finally(() => {
-        typesenseFlowSync = undefined;
-      });
-      return typesenseFlowSync;
-    };
-    let typesenseSiteSync: Promise<void> | undefined;
-    const syncTypesenseSiteCatalog = (): Promise<void> => {
-      if (typesenseSiteSync) return typesenseSiteSync;
-      typesenseSiteSync = (async () => {
-        if (typesenseSiteCatalog) {
-          const indexed = await typesenseSiteCatalog.index(
-            await publishedSiteCatalogDocuments(createSitesStore()),
-          );
-          console.log(`[api] Indexed ${indexed} Typesense Site documents.`);
-        }
-      })().finally(() => {
-        typesenseSiteSync = undefined;
-      });
-      return typesenseSiteSync;
     };
     const referralCampaign = referralCampaignFromEnv(process.env);
     await seedAdmin(seed.email, seed.password);
@@ -154,33 +106,13 @@ await startApi({
       appTraversalLimit: config.appTraversalLimit,
       appUrl: config.appUrl,
       referralCampaign,
-      ...(typesenseCatalog ? {
-        typesenseCatalog,
-        syncTypesenseCatalog,
-      } : {}),
+      ...(typesenseCatalog ? { typesenseCatalog } : {}),
       ...(typesenseAppCatalog ? { typesenseAppCatalog, syncTypesenseAppCatalog } : {}),
-      ...(typesenseFlowCatalog ? { typesenseFlowCatalog, syncTypesenseFlowCatalog } : {}),
+      ...(typesenseFlowCatalog ? { typesenseFlowCatalog } : {}),
       ...(typesenseSiteCatalog ? { typesenseSiteCatalog } : {}),
     });
     app.listen(PORT, () => {
       console.log(`[api] listening on :${PORT}`);
-      // Rebuild through an alias swap so a schema change (such as Flow platform
-      // and tag facets) never leaves the live search collection half-updated.
-      if (typesenseCatalog) {
-        void syncTypesenseCatalog().catch((error) => {
-          console.warn(`[api] Typesense catalog reindex failed: ${error instanceof Error ? error.message : String(error)}`);
-        });
-      }
-      if (typesenseSiteCatalog) {
-        void syncTypesenseSiteCatalog().catch((error) => {
-          console.warn(`[api] Typesense Site reindex failed: ${error instanceof Error ? error.message : String(error)}`);
-        });
-      }
-      if (typesenseFlowCatalog) {
-        void syncTypesenseFlowCatalog().catch((error) => {
-          console.warn(`[api] Typesense Flow reindex failed: ${error instanceof Error ? error.message : String(error)}`);
-        });
-      }
     });
   },
 });

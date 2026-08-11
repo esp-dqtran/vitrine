@@ -34,9 +34,21 @@ export function LoginDialog({
         style={{
           minHeight: 'min(600px, 68vh)',
           display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          gap: 12,
           alignItems: 'center',
         }}
       >
+        <div
+          data-catalog-login-message="true"
+          style={{ textAlign: 'center', paddingInline: 24 }}
+        >
+          <strong>See more of the Vitrines catalog</strong>
+          <p style={{ margin: '8px 0 0' }}>
+            Create a free account or sign in to continue beyond the first 32 Apps, Sites, and Flows.
+          </p>
+        </div>
         <SignIn
           embedded
           authenticate={authenticate}

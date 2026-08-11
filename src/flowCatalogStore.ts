@@ -211,8 +211,6 @@ const query: FlowCatalogQuery = (sql, values) =>
   databaseQuery(sql, values ? [...values] : undefined);
 const defaultFacetCache = new FlowCatalogFacetCache();
 const defaultPageCache = new FlowCatalogPageCache();
-const FLOW_PREVIEW_LIMIT = 6;
-
 function pageLimit(requested = 80): number {
   if (!Number.isFinite(requested)) return 80;
   return Math.min(Math.max(Math.trunc(requested), 1), 100);
@@ -530,21 +528,31 @@ function itemFromRow(row: Record<string, unknown>, platform: Platform): FlowCata
   const version = Number(row.version_number);
   const versionFlowId = Number(row.version_flow_id);
   const rawSteps = Array.isArray(row.steps) ? row.steps : [];
-  const observedSteps = rawSteps.filter((step) =>
-    step
-    && typeof step === "object"
-    && Array.isArray((step as { evidence?: unknown }).evidence)
-    && (step as { evidence: unknown[] }).evidence.length > 0
-  );
-  const steps = observedSteps.slice(0, FLOW_PREVIEW_LIMIT).map((step, index) => {
+  const observedScreens = rawSteps.flatMap((step, stepIndex) => {
+    if (
+      !step
+      || typeof step !== "object"
+      || !Array.isArray((step as { evidence?: unknown }).evidence)
+    ) return [];
     const label = typeof (step as { label?: unknown }).label === "string"
       ? String((step as { label: string }).label)
-      : `Step ${index + 1}`;
+      : `Step ${stepIndex + 1}`;
+    const evidence = (step as { evidence: unknown[] }).evidence;
+    return evidence.flatMap((value, evidenceIndex) => {
+      const imageId = Number(value);
+      if (!Number.isSafeInteger(imageId) || imageId < 1) return [];
+      return [{
+        imageId,
+        label: evidence.length > 1 ? `${label} (${evidenceIndex + 1})` : label,
+      }];
+    });
+  });
+  const steps = observedScreens.map(({ imageId, label }, index) => {
     const mediaUrl = `/api/flows/media/${encodeURIComponent(appId)}/${platform}/${versionId}/${versionFlowId}/${index + 1}`;
     return {
       label,
       evidence: [{
-        imageId: Number((step as { evidence: unknown[] }).evidence[0]),
+        imageId,
         imageUrl: `${mediaUrl}?variant=full`,
         thumbnailUrl: `${mediaUrl}?variant=thumb`,
         description: label,
@@ -561,7 +569,7 @@ function itemFromRow(row: Record<string, unknown>, platform: Platform): FlowCata
       versionId,
       version,
       sourceFlowId: String(row.source_flow_id),
-      screenCount: observedSteps.length,
+      screenCount: observedScreens.length,
       flow: {
         id: `${appId}:${versionFlowId}`,
         title: String(row.title),
