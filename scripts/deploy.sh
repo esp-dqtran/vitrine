@@ -209,7 +209,7 @@ deploy_api() {
     docker stop '$CANVAS_COLLAB_CONTAINER' >/dev/null 2>&1 || true
     docker rename '$CANVAS_COLLAB_CONTAINER' '$CANVAS_COLLAB_CONTAINER-rollback-$stamp' 2>/dev/null || true
     docker run -d --name '$CANVAS_COLLAB_CONTAINER' --restart unless-stopped \
-      --env-file '$ENV_FILE' -p '$CANVAS_COLLAB_PORT_BIND' '$CANVAS_COLLAB_IMAGE:$sha' >/dev/null
+      --env-file '$ENV_FILE' -e PORT=3012 -p '$CANVAS_COLLAB_PORT_BIND' '$CANVAS_COLLAB_IMAGE:$sha' >/dev/null
   "
 
   code=""

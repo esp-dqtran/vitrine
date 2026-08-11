@@ -61,6 +61,7 @@ test("production deploy commands use the guarded release script", async () => {
   assert.match(deployScript, /preflight_migrations/);
   assert.match(deployScript, /vitrines-designer-canvas-collab/);
   assert.match(deployScript, /CANVAS_COLLAB_HEALTH_URL/);
+  assert.match(deployScript, /--env-file '\$ENV_FILE' -e PORT=3012 -p '\$CANVAS_COLLAB_PORT_BIND'/);
   assert.match(deployScript, /caddy validate/);
 
   const caddyfile = await readDeploymentFile("deploy/vitrines-api.Caddyfile");
