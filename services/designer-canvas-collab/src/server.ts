@@ -2,12 +2,14 @@ import { randomUUID } from "node:crypto";
 import { createServer, type IncomingMessage, type Server } from "node:http";
 import type { Duplex } from "node:stream";
 import { WebSocket, WebSocketServer } from "ws";
+import type { DesignerCanvasSnapshot } from "../../../src/designerCanvas.ts";
 import { normalizeResearchProjectId } from "../../../src/researchProject.ts";
 import {
   DESIGNER_CANVAS_COLLAB_MAX_BYTES,
   DESIGNER_CANVAS_COLLAB_PATH,
   parseDesignerCanvasClientMessage,
   type DesignerCanvasIdentity,
+  type DesignerCanvasScenePatch,
   type DesignerCanvasServerMessage,
 } from "./protocol.ts";
 
@@ -18,6 +20,12 @@ interface RoomClient {
   roomId: string;
   sequence: number;
   socket: WebSocket;
+}
+
+interface CollaborationRoom {
+  clients: Set<RoomClient>;
+  revision: number;
+  snapshot?: DesignerCanvasSnapshot;
 }
 
 export interface DesignerCanvasCollaborationDependencies {
@@ -51,10 +59,34 @@ function send(socket: WebSocket, message: DesignerCanvasServerMessage): void {
   if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(message));
 }
 
+function applyPatch(
+  snapshot: DesignerCanvasSnapshot,
+  patch: DesignerCanvasScenePatch,
+): DesignerCanvasSnapshot {
+  const updates = new Map(patch.elements.map((element) => [element.id, element]));
+  const seen = new Set<string>();
+  const elements = snapshot.elements.map((element) => {
+    if (!element || typeof element !== "object" || Array.isArray(element)) return element;
+    const id = (element as Record<string, unknown>).id;
+    if (typeof id !== "string") return element;
+    seen.add(id);
+    return updates.get(id) ?? element;
+  });
+  for (const element of patch.elements) {
+    if (!seen.has(element.id)) elements.push(element);
+  }
+  return {
+    ...snapshot,
+    elements,
+    files: { ...snapshot.files, ...patch.files },
+    ...(patch.comments === undefined ? {} : { comments: patch.comments }),
+  };
+}
+
 export function createDesignerCanvasCollaborationService(
   dependencies: DesignerCanvasCollaborationDependencies,
 ): DesignerCanvasCollaborationService {
-  const rooms = new Map<string, Set<RoomClient>>();
+  const rooms = new Map<string, CollaborationRoom>();
   const clients = new Set<RoomClient>();
   const maxRoomConnections = dependencies.maxRoomConnections ?? 32;
   const webSockets = new WebSocketServer({
@@ -72,11 +104,11 @@ export function createDesignerCanvasCollaborationService(
   });
 
   const collaboratorIds = (roomId: string): string[] => [
-    ...(rooms.get(roomId) ?? []),
+    ...(rooms.get(roomId)?.clients ?? []),
   ].map((client) => client.id);
 
   const collaborators = (roomId: string) => [
-    ...(rooms.get(roomId) ?? []),
+    ...(rooms.get(roomId)?.clients ?? []),
   ].map((client) => ({
     clientId: client.id,
     userId: client.identity.userId,
@@ -88,9 +120,10 @@ export function createDesignerCanvasCollaborationService(
     message: DesignerCanvasServerMessage,
     sender?: RoomClient,
     volatile = false,
+    includeSender = false,
   ) => {
-    for (const client of rooms.get(roomId) ?? []) {
-      if (client === sender || client.socket.readyState !== WebSocket.OPEN) continue;
+    for (const client of rooms.get(roomId)?.clients ?? []) {
+      if ((!includeSender && client === sender) || client.socket.readyState !== WebSocket.OPEN) continue;
       if (volatile && client.socket.bufferedAmount > 64 * 1024) continue;
       send(client.socket, message);
     }
@@ -105,8 +138,8 @@ export function createDesignerCanvasCollaborationService(
   const removeClient = (client: RoomClient) => {
     if (!clients.delete(client)) return;
     const room = rooms.get(client.roomId);
-    room?.delete(client);
-    if (!room?.size) rooms.delete(client.roomId);
+    room?.clients.delete(client);
+    if (!room?.clients.size) rooms.delete(client.roomId);
     else broadcastPresence(client.roomId);
   };
 
@@ -124,8 +157,9 @@ export function createDesignerCanvasCollaborationService(
       sequence: 0,
       socket,
     };
-    const room = rooms.get(roomId) ?? new Set<RoomClient>();
-    room.add(client);
+    const room: CollaborationRoom = rooms.get(roomId)
+      ?? { clients: new Set<RoomClient>(), revision: 0 };
+    room.clients.add(client);
     rooms.set(roomId, room);
     clients.add(client);
 
@@ -133,8 +167,10 @@ export function createDesignerCanvasCollaborationService(
       type: "ready",
       projectId,
       clientId: client.id,
+      revision: room.revision,
       collaboratorIds: collaboratorIds(roomId),
       collaborators: collaborators(roomId),
+      ...(room.snapshot ? { snapshot: room.snapshot } : {}),
     });
     broadcastPresence(roomId);
 
@@ -151,12 +187,30 @@ export function createDesignerCanvasCollaborationService(
       if (message.type === "scene") {
         if (message.sequence <= client.sequence) return;
         client.sequence = message.sequence;
+        const revision = ++room.revision;
+        room.snapshot = message.snapshot;
         broadcast(roomId, {
           type: "scene",
           clientId: client.id,
+          revision,
           sequence: message.sequence,
           snapshot: message.snapshot,
-        }, client);
+        }, client, false, true);
+        return;
+      }
+      if (message.type === "patch") {
+        if (message.sequence <= client.sequence) return;
+        client.sequence = message.sequence;
+        const revision = ++room.revision;
+        const patch: DesignerCanvasScenePatch = message.patch;
+        if (room.snapshot) room.snapshot = applyPatch(room.snapshot, patch);
+        broadcast(roomId, {
+          type: "patch",
+          clientId: client.id,
+          revision,
+          sequence: message.sequence,
+          patch,
+        }, client, false, true);
         return;
       }
       broadcast(roomId, {
@@ -205,7 +259,7 @@ export function createDesignerCanvasCollaborationService(
         rejectUpgrade(socket, 403, "Project access denied");
         return;
       }
-      if ((rooms.get(roomId)?.size ?? 0) >= maxRoomConnections) {
+      if ((rooms.get(roomId)?.clients.size ?? 0) >= maxRoomConnections) {
         rejectUpgrade(socket, 429, "Room capacity reached");
         return;
       }

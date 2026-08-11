@@ -86,6 +86,7 @@ import {
   type DesignerCanvasCollaborationStatus,
   type DesignerCanvasRemoteCursor,
 } from "../designerCanvasCollaboration.ts";
+import type { DesignerCanvasScenePatch } from "../../services/designer-canvas-collab/src/protocol.ts";
 import {
   projectCanvasAssetUrl,
   uploadProjectCanvasAsset,
@@ -2836,6 +2837,31 @@ const canvasSaveKey = (snapshot: ExcalidrawProjectSnapshot): string => {
   ].join(":");
 };
 
+/**
+ * Excalidraw calls `onChange` for selection, panning, and pointer state too.
+ * Those events must not serialize a whole canvas or enter the collaboration
+ * pipeline; only durable scene/file configuration changes belong there.
+ */
+function canvasMutationKey(
+  elements: readonly ExcalidrawElement[],
+  appState: Pick<Partial<AppState>, "gridModeEnabled" | "gridSize" | "gridStep" | "theme" | "viewBackgroundColor">,
+  files: BinaryFiles,
+): string {
+  const fileRevisions = Object.entries(files)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([id, file]) => `${id}:${file.version ?? 0}:${file.dataURL?.length ?? 0}`)
+    .join("|");
+  return [
+    hashElementsVersion(elements),
+    hashString(fileRevisions),
+    appState.gridModeEnabled,
+    appState.gridSize,
+    appState.gridStep,
+    appState.theme,
+    appState.viewBackgroundColor,
+  ].join(":");
+}
+
 function imageDimensions(
   blob: Blob,
 ): Promise<{ width: number; height: number }> {
@@ -3060,6 +3086,7 @@ export function ProjectPlayground({
     undefined,
   );
   const lastQueuedSnapshotKeyRef = useRef<string | undefined>(undefined);
+  const lastCanvasMutationKeyRef = useRef<string | undefined>(undefined);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -3077,6 +3104,10 @@ export function ProjectPlayground({
   );
   const remoteElementsVersionRef = useRef<number | undefined>(undefined);
   const remoteBroadcastSuppressedUntilRef = useRef(0);
+  const collaboratorSyncFrameRef = useRef<number | undefined>(undefined);
+  const remotePatchFrameRef = useRef<number | undefined>(undefined);
+  const pendingRemotePatchesRef = useRef<DesignerCanvasScenePatch[]>([]);
+  const pendingRemoteSceneRef = useRef<ExcalidrawProjectSnapshot | undefined>(undefined);
 
   useEffect(() => {
     const canvas =
@@ -3144,6 +3175,91 @@ export function ProjectPlayground({
     }
     editorRef.current?.updateScene({ collaborators });
   }, [canvasRemoteCursorsVisible]);
+
+  const scheduleCanvasCollaborators = useCallback(() => {
+    if (collaboratorSyncFrameRef.current !== undefined) return;
+    collaboratorSyncFrameRef.current = window.requestAnimationFrame(() => {
+      collaboratorSyncFrameRef.current = undefined;
+      syncCanvasCollaborators();
+    });
+  }, [syncCanvasCollaborators]);
+
+  const applyRemotePatches = useCallback((patch: DesignerCanvasScenePatch) => {
+    pendingRemotePatchesRef.current.push(patch);
+    if (remotePatchFrameRef.current !== undefined) return;
+    remotePatchFrameRef.current = window.requestAnimationFrame(() => {
+      remotePatchFrameRef.current = undefined;
+      const patches = pendingRemotePatchesRef.current.splice(0);
+      const editor = editorRef.current;
+      if (!editor || !patches.length) return;
+
+      const updates = new Map<string, ExcalidrawElement>();
+      const files: BinaryFiles = {};
+      let comments: readonly DesignerCanvasCommentThread[] | undefined;
+      for (const incoming of patches) {
+        for (const element of incoming.elements) {
+          updates.set(element.id, element as unknown as ExcalidrawElement);
+        }
+        Object.assign(files, incoming.files as BinaryFiles);
+        if (incoming.comments !== undefined) comments = incoming.comments;
+      }
+
+      const existing = editor.getSceneElementsIncludingDeleted();
+      const seen = new Set<string>();
+      const elements = existing.map((element) => {
+        seen.add(element.id);
+        return updates.get(element.id) ?? element;
+      });
+      for (const [id, element] of updates) {
+        if (!seen.has(id)) elements.push(element);
+      }
+
+      remoteElementsVersionRef.current = hashElementsVersion(elements);
+      remoteBroadcastSuppressedUntilRef.current = Date.now() + 500;
+      lastCanvasMutationKeyRef.current = canvasMutationKey(
+        elements,
+        editor.getAppState(),
+        editor.getFiles(),
+      );
+      if (Object.keys(files).length) editor.addFiles(Object.values(files));
+      if (comments !== undefined) {
+        canvasCommentsRef.current = comments;
+        setCanvasComments(comments);
+      }
+      editor.updateScene({
+        elements,
+        appState: { selectedElementIds: editor.getAppState().selectedElementIds },
+        captureUpdate: CaptureUpdateAction.NEVER,
+      });
+    });
+  }, []);
+
+  const applyRemoteScene = useCallback((value: unknown) => {
+    if (!isExcalidrawSnapshot(value)) return;
+    const editor = editorRef.current;
+    if (!editor) {
+      pendingRemoteSceneRef.current = value;
+      return;
+    }
+    pendingRemoteSceneRef.current = undefined;
+    remoteElementsVersionRef.current = hashElementsVersion(value.elements);
+    remoteBroadcastSuppressedUntilRef.current = Date.now() + 500;
+    const comments = normalizeDesignerCanvasComments(value.comments);
+    canvasCommentsRef.current = comments;
+    setCanvasComments(comments);
+    const selectedElementIds = editor.getAppState().selectedElementIds;
+    editor.addFiles(Object.values(value.files));
+    lastCanvasMutationKeyRef.current = canvasMutationKey(
+      value.elements,
+      editor.getAppState(),
+      { ...editor.getFiles(), ...value.files },
+    );
+    editor.updateScene({
+      elements: value.elements,
+      appState: { selectedElementIds },
+      captureUpdate: CaptureUpdateAction.NEVER,
+    });
+  }, []);
 
   useEffect(() => {
     syncCanvasCollaborators();
@@ -3344,6 +3460,11 @@ export function ProjectPlayground({
       canvasCommentsRef.current = snapshot.comments;
       if (activeRef.current) setCanvasComments(snapshot.comments);
       lastQueuedSnapshotKeyRef.current = canvasSaveKey(snapshot);
+      lastCanvasMutationKeyRef.current = canvasMutationKey(
+        snapshot.elements,
+        snapshot.appState,
+        snapshot.files,
+      );
       writeLocalCanvas(snapshot);
       if (
         !remote ||
@@ -3364,6 +3485,11 @@ export function ProjectPlayground({
         canvasTheme,
       );
       lastQueuedSnapshotKeyRef.current = canvasSaveKey(snapshot);
+      lastCanvasMutationKeyRef.current = canvasMutationKey(
+        snapshot.elements,
+        snapshot.appState,
+        snapshot.files,
+      );
       canvasCommentsRef.current = snapshot.comments;
       if (activeRef.current) setCanvasComments(snapshot.comments);
       loadedRef.current = true;
@@ -4084,6 +4210,21 @@ export function ProjectPlayground({
           : nextViewport,
       );
       if (!loadedRef.current) return;
+      const mutationKey = canvasMutationKey(elements, appState, files);
+      if (mutationKey === lastCanvasMutationKeyRef.current) {
+        persistEmbeddedFiles(files);
+        return;
+      }
+      lastCanvasMutationKeyRef.current = mutationKey;
+      const elementsVersion = hashElementsVersion(elements);
+      const isRemoteApplication =
+        remoteElementsVersionRef.current === elementsVersion &&
+        Date.now() <= remoteBroadcastSuppressedUntilRef.current;
+      if (isRemoteApplication) {
+        remoteElementsVersionRef.current = undefined;
+        persistEmbeddedFiles(files);
+        return;
+      }
       const snapshot = serializeCanvas(
         elements,
         appState,
@@ -4091,15 +4232,7 @@ export function ProjectPlayground({
         canvasCommentsRef.current,
       );
       queueSnapshot(snapshot);
-      const elementsVersion = hashElementsVersion(elements);
-      const isRemoteApplication =
-        remoteElementsVersionRef.current === elementsVersion &&
-        Date.now() <= remoteBroadcastSuppressedUntilRef.current;
-      if (isRemoteApplication) {
-        remoteElementsVersionRef.current = undefined;
-      } else {
-        collaborationRef.current?.publishScene(snapshot);
-      }
+      collaborationRef.current?.publishScene(snapshot);
       persistEmbeddedFiles(files);
     },
     [deactivateStickyTool, markerMode, persistEmbeddedFiles, queueSnapshot],
@@ -4123,45 +4256,35 @@ export function ProjectPlayground({
           }
         }
         setRemoteCollaborators(collaborators);
-        syncCanvasCollaborators();
+        scheduleCanvasCollaborators();
       },
       onCursor(cursor) {
         remoteCursorsRef.current.set(cursor.clientId, cursor);
-        syncCanvasCollaborators();
+        scheduleCanvasCollaborators();
       },
       onScene(value) {
-        if (!isExcalidrawSnapshot(value)) return;
-        const editor = editorRef.current;
-        if (!editor) return;
-        remoteElementsVersionRef.current = hashElementsVersion(value.elements);
-        remoteBroadcastSuppressedUntilRef.current = Date.now() + 500;
-        const files = { ...editor.getFiles(), ...value.files };
-        const comments = normalizeDesignerCanvasComments(value.comments);
-        canvasCommentsRef.current = comments;
-        setCanvasComments(comments);
-        const selectedElementIds = editor.getAppState().selectedElementIds;
-        editor.addFiles(Object.values(value.files));
-        editor.updateScene({
-          elements: value.elements,
-          appState: { selectedElementIds },
-        });
-        queueSnapshot(
-          serializeCanvas(
-            value.elements,
-            editor.getAppState(),
-            files,
-            comments,
-          ),
-        );
+        applyRemoteScene(value);
+      },
+      onPatch(patch) {
+        applyRemotePatches(patch);
       },
     });
     collaborationRef.current = collaboration;
     return () => {
       collaboration.close();
+      if (collaboratorSyncFrameRef.current !== undefined) {
+        window.cancelAnimationFrame(collaboratorSyncFrameRef.current);
+        collaboratorSyncFrameRef.current = undefined;
+      }
+      if (remotePatchFrameRef.current !== undefined) {
+        window.cancelAnimationFrame(remotePatchFrameRef.current);
+        remotePatchFrameRef.current = undefined;
+      }
+      pendingRemotePatchesRef.current = [];
       if (collaborationRef.current === collaboration)
         collaborationRef.current = null;
     };
-  }, [canvasId, projectId, queueSnapshot, syncCanvasCollaborators]);
+  }, [applyRemotePatches, applyRemoteScene, canvasId, projectId, scheduleCanvasCollaborators]);
 
   const canvasImagePlacement = useCallback((width: number, height: number) => {
     const editor = editorRef.current;
@@ -6994,6 +7117,11 @@ export function ProjectPlayground({
           canvasCommentsRef.current = comments;
           setCanvasComments(comments);
           lastQueuedSnapshotKeyRef.current = canvasSaveKey(canvas.snapshot);
+          lastCanvasMutationKeyRef.current = canvasMutationKey(
+            canvas.snapshot.elements,
+            canvas.snapshot.appState,
+            canvas.snapshot.files,
+          );
           editor.addFiles(Object.values(canvas.snapshot.files));
           editor.updateScene({
             elements: canvas.snapshot.elements,
@@ -7631,6 +7759,9 @@ export function ProjectPlayground({
                   gridModeEnabled: true,
                 },
               });
+              if (pendingRemoteSceneRef.current) {
+                applyRemoteScene(pendingRemoteSceneRef.current);
+              }
               syncCanvasCollaborators();
             }}
             isCollaborating={collaborationStatus === "live"}

@@ -1,13 +1,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  applyDesignerCanvasScenePatch,
   collaborationSafeSnapshot,
+  designerCanvasScenePatch,
   designerCanvasCollaborationUrl,
   openDesignerCanvasCollaboration,
 } from "./designerCanvasCollaboration.ts";
 
 class FakeSocket {
   readyState = 0;
+  bufferedAmount = 0;
   onopen: ((event: Event) => void) | null = null;
   onmessage: ((event: MessageEvent) => void) | null = null;
   onclose: ((event: CloseEvent) => void) | null = null;
@@ -88,11 +91,30 @@ test("coalesces local scenes and applies remote scenes without owning persistenc
 
   socket.receive({
     type: "scene",
+    clientId: "local-client",
+    revision: 1,
+    sequence: 1,
+    snapshot: { ...snapshot, elements: [{ id: "shape-2" }], files: {} },
+  });
+  session.publishScene({ ...snapshot, elements: [{ id: "shape-3" }], files: {} });
+  await new Promise((resolve) => setTimeout(resolve, 140));
+  const patch = JSON.parse(socket.sent.at(-1)!) as {
+    type: string;
+    sequence: number;
+    patch: { elements: Array<{ id: string }> };
+  };
+  assert.equal(patch.type, "patch");
+  assert.equal(patch.sequence, 2);
+  assert.deepEqual(patch.patch.elements, [{ id: "shape-3" }]);
+
+  socket.receive({
+    type: "scene",
     clientId: "remote-client",
+    revision: 2,
     sequence: 4,
     snapshot: { ...snapshot, files: {} },
   });
-  assert.equal(received.length, 1);
+  assert.equal(received.length, 2);
   assert.deepEqual(presence, [[{
     clientId: "remote-client",
     userId: 8,
@@ -128,6 +150,40 @@ test("coalesces local scenes and applies remote scenes without owning persistenc
   session.close();
   assert.equal(socket.closed, true);
   assert.deepEqual(presence.at(-1), []);
+});
+
+test("diffs and applies element-level scene patches without replacing untouched elements", () => {
+  const before = {
+    ...snapshot,
+    elements: [{ id: "one", x: 0 }, { id: "two", x: 10 }],
+    files: {},
+    comments: [],
+  };
+  const after = {
+    ...before,
+    elements: [{ id: "one", x: 4 }, { id: "two", x: 10 }, { id: "three", x: 20 }],
+  };
+  const patch = designerCanvasScenePatch(before, after);
+  assert.deepEqual(patch.elements, [{ id: "one", x: 4 }, { id: "three", x: 20 }]);
+  assert.deepEqual(applyDesignerCanvasScenePatch(before, patch).elements, after.elements);
+});
+
+test("keeps a one-element realtime update materially smaller than a large canvas snapshot", () => {
+  const elements = Array.from({ length: 120 }, (_, index) => ({
+    id: `shape-${index}`,
+    version: 1,
+    text: "x".repeat(500),
+  }));
+  const before = { ...snapshot, elements, files: {}, comments: [] };
+  const after = {
+    ...before,
+    elements: elements.map((element) => element.id === "shape-64"
+      ? { ...element, version: 2, x: 64 }
+      : element),
+  };
+  const patch = designerCanvasScenePatch(before, after);
+  assert.equal(patch.elements.length, 1);
+  assert.ok(JSON.stringify(patch).length < JSON.stringify(after).length / 50);
 });
 
 test("coalesces cursor moves while delivering the final pointer state", async () => {
@@ -170,5 +226,25 @@ test("coalesces cursor moves while delivering the final pointer state", async ()
     button: "up",
     selectedElementIds: [],
   });
+  session.close();
+});
+
+test("holds the newest scene while the WebSocket send buffer is saturated", async () => {
+  const socket = new FakeSocket();
+  const session = openDesignerCanvasCollaboration({
+    projectId: "11111111-1111-4111-8111-111111111111",
+    location: { protocol: "http:", host: "localhost:5174" },
+    reconnect: false,
+    createSocket: () => socket,
+  });
+  socket.open();
+  socket.bufferedAmount = 64 * 1024 + 1;
+  session.publishScene(snapshot);
+  await new Promise((resolve) => setTimeout(resolve, 45));
+  assert.equal(socket.sent.length, 0);
+
+  socket.bufferedAmount = 0;
+  await new Promise((resolve) => setTimeout(resolve, 45));
+  assert.deepEqual(JSON.parse(socket.sent[0]).snapshot.elements, snapshot.elements);
   session.close();
 });

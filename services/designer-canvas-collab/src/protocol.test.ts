@@ -46,3 +46,26 @@ test("accepts bounded cursor presence and rejects malformed messages", () => {
     snapshot,
   })), undefined);
 });
+
+test("accepts compact element patches and rejects malformed patch elements", () => {
+  assert.deepEqual(parseDesignerCanvasClientMessage(JSON.stringify({
+    type: "patch",
+    sequence: 2,
+    patch: {
+      elements: [{ id: "shape-1", x: 16 }],
+      files: { image: { dataURL: "/assets/image" } },
+    },
+  })), {
+    type: "patch",
+    sequence: 2,
+    patch: {
+      elements: [{ id: "shape-1", x: 16 }],
+      files: { image: { dataURL: "/assets/image" } },
+    },
+  });
+  assert.equal(parseDesignerCanvasClientMessage(JSON.stringify({
+    type: "patch",
+    sequence: 3,
+    patch: { elements: [{ x: 16 }], files: {} },
+  })), undefined);
+});

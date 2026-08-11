@@ -1,13 +1,16 @@
 import {
+  normalizeDesignerCanvasComments,
   normalizeDesignerCanvasSnapshot,
   type DesignerCanvasSnapshot,
 } from "../designerCanvas.ts";
 import { getAuthToken } from './apiFetch.ts';
+import type { DesignerCanvasScenePatch } from "../services/designer-canvas-collab/src/protocol.ts";
 
 export type DesignerCanvasCollaborationStatus = "connecting" | "live" | "offline";
 
-const scenePublishDebounceMs = 120;
+const scenePublishIntervalMs = 33;
 const cursorPublishIntervalMs = 33;
+const maxBufferedRealtimeBytes = 64 * 1024;
 
 export interface DesignerCanvasCollaborator {
   clientId: string;
@@ -24,6 +27,7 @@ export interface DesignerCanvasRemoteCursor {
 
 interface CollaborationSocket {
   readyState: number;
+  bufferedAmount?: number;
   onopen: ((event: Event) => void) | null;
   onmessage: ((event: MessageEvent) => void) | null;
   onclose: ((event: CloseEvent) => void) | null;
@@ -46,6 +50,7 @@ export interface DesignerCanvasCollaborationOptions {
   projectId: string;
   canvasId?: string;
   onScene(snapshot: DesignerCanvasSnapshot): void;
+  onPatch?(patch: DesignerCanvasScenePatch): void;
   onStatus?(status: DesignerCanvasCollaborationStatus): void;
   onPresence?(collaborators: readonly DesignerCanvasCollaborator[]): void;
   onCursor?(cursor: DesignerCanvasRemoteCursor): void;
@@ -59,6 +64,91 @@ const record = (value: unknown): Record<string, unknown> | undefined => value
   && !Array.isArray(value)
   ? value as Record<string, unknown>
   : undefined;
+
+const jsonEqual = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
+
+const canvasElementEqual = (
+  left: Record<string, unknown> | undefined,
+  right: Record<string, unknown>,
+) => {
+  if (left === right) return true;
+  const leftVersion = left?.version;
+  const rightVersion = right.version;
+  return typeof leftVersion === "number" && typeof rightVersion === "number"
+    ? leftVersion === rightVersion
+    : jsonEqual(left, right);
+};
+
+/** Creates a compact, element-level update from two durable canvas snapshots. */
+export function designerCanvasScenePatch(
+  previous: DesignerCanvasSnapshot,
+  next: DesignerCanvasSnapshot,
+): DesignerCanvasScenePatch {
+  const previousElements = new Map(
+    previous.elements.flatMap((candidate) => {
+      const element = record(candidate);
+      return typeof element?.id === "string" ? [[element.id, element] as const] : [];
+    }),
+  );
+  const elements = next.elements.flatMap((candidate) => {
+    const element = record(candidate);
+    return typeof element?.id === "string" && !canvasElementEqual(previousElements.get(element.id), element)
+      ? [element]
+      : [];
+  });
+  const files = Object.fromEntries(
+    Object.entries(next.files).filter(([id, file]) => !jsonEqual(previous.files[id], file)),
+  );
+  return {
+    elements,
+    files,
+    ...(!jsonEqual(previous.comments, next.comments)
+      ? { comments: normalizeDesignerCanvasComments(next.comments) }
+      : {}),
+  };
+}
+
+export function applyDesignerCanvasScenePatch(
+  snapshot: DesignerCanvasSnapshot,
+  patch: DesignerCanvasScenePatch,
+): DesignerCanvasSnapshot {
+  const updates = new Map(patch.elements.map((element) => [element.id, element]));
+  const seen = new Set<string>();
+  const elements = snapshot.elements.map((candidate) => {
+    const element = record(candidate);
+    if (!element || typeof element.id !== "string") return candidate;
+    seen.add(element.id);
+    return updates.get(element.id) ?? candidate;
+  });
+  for (const element of patch.elements) {
+    if (!seen.has(element.id)) elements.push(element);
+  }
+  return {
+    ...snapshot,
+    elements,
+    files: { ...snapshot.files, ...patch.files },
+    ...(patch.comments === undefined ? {} : { comments: patch.comments }),
+  };
+}
+
+function normalizeScenePatch(value: unknown): DesignerCanvasScenePatch | undefined {
+  const patch = record(value);
+  if (!patch || !Array.isArray(patch.elements)) return undefined;
+  const elements = patch.elements.flatMap((candidate) => {
+    const element = record(candidate);
+    return typeof element?.id === "string" ? [element] : [];
+  });
+  if (elements.length !== patch.elements.length) return undefined;
+  const files = patch.files === undefined ? {} : record(patch.files);
+  if (!files) return undefined;
+  return {
+    elements,
+    files,
+    ...(Object.prototype.hasOwnProperty.call(patch, "comments")
+      ? { comments: normalizeDesignerCanvasComments(patch.comments) }
+      : {}),
+  };
+}
 
 const finiteCoordinate = (value: unknown): number | undefined => typeof value === "number"
   && Number.isFinite(value)
@@ -147,6 +237,7 @@ export function openDesignerCanvasCollaboration(
   let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
   let publishTimer: ReturnType<typeof setTimeout> | undefined;
   let pendingScene: DesignerCanvasSnapshot | undefined;
+  let lastPublishedScene: DesignerCanvasSnapshot | undefined;
   let cursorTimer: ReturnType<typeof setTimeout> | undefined;
   let pendingCursor: {
     pointer: { x: number; y: number } | null;
@@ -156,15 +247,30 @@ export function openDesignerCanvasCollaboration(
   let lastCursorPublishedAt = 0;
   let sequence = 0;
   let clientId: string | undefined;
+  let lastServerRevision = 0;
 
   const report = (status: DesignerCanvasCollaborationStatus) => options.onStatus?.(status);
 
   const sendPendingScene = () => {
     publishTimer = undefined;
     if (!pendingScene || socket?.readyState !== 1) return;
+    if ((socket.bufferedAmount ?? 0) > maxBufferedRealtimeBytes) {
+      publishTimer = setTimeout(sendPendingScene, scenePublishIntervalMs);
+      return;
+    }
     const snapshot = pendingScene;
     pendingScene = undefined;
-    socket.send(JSON.stringify({ type: "scene", sequence: ++sequence, snapshot }));
+    if (!lastPublishedScene) {
+      socket.send(JSON.stringify({ type: "scene", sequence: ++sequence, snapshot }));
+      lastPublishedScene = snapshot;
+      return;
+    }
+    const patch = designerCanvasScenePatch(lastPublishedScene, snapshot);
+    lastPublishedScene = snapshot;
+    if (!patch.elements.length && !Object.keys(patch.files).length && patch.comments === undefined) {
+      return;
+    }
+    socket.send(JSON.stringify({ type: "patch", sequence: ++sequence, patch }));
   };
 
   const sendPendingCursor = () => {
@@ -213,6 +319,13 @@ export function openDesignerCanvasCollaboration(
       const message = record(parsed);
       if (message?.type === "ready") {
         clientId = typeof message.clientId === "string" ? message.clientId : undefined;
+        const snapshot = normalizeDesignerCanvasSnapshot(message.snapshot);
+        const revision = message.revision;
+        if (snapshot && typeof revision === "number" && Number.isSafeInteger(revision)) {
+          lastServerRevision = revision;
+          lastPublishedScene = snapshot;
+          options.onScene(snapshot);
+        }
         options.onPresence?.(
           normalizeCollaborators(message.collaborators)
             .filter((collaborator) => collaborator.clientId !== clientId),
@@ -233,7 +346,27 @@ export function openDesignerCanvasCollaboration(
       }
       if (message?.type === "scene") {
         const snapshot = normalizeDesignerCanvasSnapshot(message.snapshot);
-        if (snapshot) options.onScene(snapshot);
+        const revision = message.revision;
+        if (typeof revision === "number") {
+          if (!Number.isSafeInteger(revision) || revision <= lastServerRevision) return;
+          lastServerRevision = revision;
+        }
+        if (snapshot) {
+          lastPublishedScene = snapshot;
+          options.onScene(snapshot);
+        }
+        return;
+      }
+      if (message?.type === "patch") {
+        const patch = normalizeScenePatch(message.patch);
+        const revision = message.revision;
+        if (!patch || typeof revision !== "number" || !Number.isSafeInteger(revision)
+          || revision <= lastServerRevision) return;
+        lastServerRevision = revision;
+        if (lastPublishedScene) {
+          lastPublishedScene = applyDesignerCanvasScenePatch(lastPublishedScene, patch);
+        }
+        options.onPatch?.(patch);
       }
     };
     socket.onerror = () => {
@@ -256,7 +389,7 @@ export function openDesignerCanvasCollaboration(
       if (!snapshot) return;
       pendingScene = snapshot;
       if (publishTimer) return;
-      publishTimer = setTimeout(sendPendingScene, scenePublishDebounceMs);
+      publishTimer = setTimeout(sendPendingScene, scenePublishIntervalMs);
     },
     publishCursor(input) {
       if (socket?.readyState !== 1) return;

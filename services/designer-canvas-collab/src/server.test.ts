@@ -117,6 +117,33 @@ test("authenticates project rooms and relays reliable and volatile updates", asy
   assert.equal(scene.type, "scene");
   assert.equal(scene.sequence, 1);
   assert.equal(scene.clientId, firstReady.clientId);
+  assert.equal(scene.revision, 1);
+
+  first.socket.send(JSON.stringify({
+    type: "patch",
+    sequence: 2,
+    patch: {
+      elements: [{ id: "shape-1", type: "rectangle", x: 40 }],
+      files: {},
+    },
+  }));
+  const firstPatch = await first.next("patch");
+  const secondPatch = await second.next("patch");
+  assert.equal(firstPatch.type, "patch");
+  assert.equal(secondPatch.type, "patch");
+  assert.equal(firstPatch.revision, 2);
+  assert.equal(secondPatch.revision, 2);
+  assert.deepEqual(secondPatch.patch.elements, [{ id: "shape-1", type: "rectangle", x: 40 }]);
+
+  const third = await connect(roomUrl);
+  const thirdReady = await third.next("ready");
+  assert.equal(thirdReady.type, "ready");
+  assert.equal(thirdReady.revision, 2);
+  assert.deepEqual(thirdReady.snapshot?.elements, [{
+    id: "shape-1",
+    type: "rectangle",
+    x: 40,
+  }]);
 
   second.socket.send(JSON.stringify({
     type: "cursor",
@@ -132,7 +159,7 @@ test("authenticates project rooms and relays reliable and volatile updates", asy
   });
 
   const health = await fetch(`${httpBase}/healthz`).then((response) => response.json());
-  assert.deepEqual(health, { status: "ok", rooms: 1, clients: 2 });
+  assert.deepEqual(health, { status: "ok", rooms: 1, clients: 3 });
 });
 
 test("rejects unauthenticated, unauthorized, cross-origin, and invalid project upgrades", async (t) => {
