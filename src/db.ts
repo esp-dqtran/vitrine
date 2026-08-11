@@ -1910,22 +1910,36 @@ export async function publishedImages(): Promise<CrawledImage[]> {
 
 async function publishedImagesFrom(client: Pick<pg.PoolClient, "query">): Promise<CrawledImage[]> {
   const res = await client.query<CrawledImage>(
-    `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
-       COALESCE((
-         SELECT jsonb_agg(
+    `WITH latest_published_versions AS (
+       SELECT app_id, MAX(version_number) AS version_number
+       FROM app_versions
+       WHERE status = 'published'
+       GROUP BY app_id
+     ), categories_by_app AS (
+       SELECT ac.app_id,
+         jsonb_agg(
            jsonb_build_object('id', c.id, 'name', c.name, 'slug', c.slug)
            ORDER BY lower(c.name), c.id
-         )
-         FROM app_categories ac JOIN categories c ON c.id = ac.category_id
-         WHERE ac.app_id = a.id
-       ), '[]'::jsonb) AS categories,
+         ) AS categories
+       FROM app_categories ac
+       JOIN categories c ON c.id = ac.category_id
+       GROUP BY ac.app_id
+     )
+     SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
+       COALESCE(categories_by_app.categories, '[]'::jsonb) AS categories,
        vi.source_url AS capture_url, vi.viewport_width, vi.viewport_height, vi.state_context, vi.captured_at
-     FROM apps a JOIN app_versions av ON av.app_id = a.id
-     JOIN version_images vi ON vi.version_id = av.id JOIN images i ON i.id = vi.image_id
+     FROM latest_published_versions latest
+     JOIN apps a ON a.id = latest.app_id
+     JOIN app_versions av
+       ON av.app_id = latest.app_id
+      AND av.version_number = latest.version_number
+      AND av.status = 'published'
+     JOIN version_images vi ON vi.version_id = av.id
+     JOIN images i ON i.id = vi.image_id
      JOIN platforms p ON p.id = i.platform_id
-     WHERE i.kind = 'screen' AND av.status = 'published' AND av.version_number = (
-       SELECT MAX(latest.version_number) FROM app_versions latest WHERE latest.app_id = a.id AND latest.status = 'published'
-     ) ORDER BY i.created_at`,
+     LEFT JOIN categories_by_app ON categories_by_app.app_id = a.id
+     WHERE i.kind = 'screen'
+     ORDER BY i.created_at`,
   );
   return res.rows;
 }
