@@ -1905,7 +1905,11 @@ export async function publishedSiteSearchSource(
 }
 
 export async function publishedImages(): Promise<CrawledImage[]> {
-  const res = await query<CrawledImage>(
+  return publishedImagesFrom(pool);
+}
+
+async function publishedImagesFrom(client: Pick<pg.PoolClient, "query">): Promise<CrawledImage[]> {
+  const res = await client.query<CrawledImage>(
     `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
        COALESCE((
          SELECT jsonb_agg(
@@ -2069,7 +2073,11 @@ export async function catalogStats(
 }
 
 export async function listPublishedDesignSystems(): Promise<DesignSystemSnapshot[]> {
-  const res = await query<{ snapshot: DesignSystemSnapshot }>(
+  return publishedDesignSystemsFrom(pool);
+}
+
+async function publishedDesignSystemsFrom(client: Pick<pg.PoolClient, "query">): Promise<DesignSystemSnapshot[]> {
+  const res = await client.query<{ snapshot: DesignSystemSnapshot }>(
     `SELECT dsv.snapshot FROM design_system_versions dsv JOIN app_versions av ON av.id = dsv.version_id
      WHERE av.status = 'published' AND av.version_number = (
        SELECT MAX(latest.version_number) FROM app_versions latest
@@ -2080,21 +2088,51 @@ export async function listPublishedDesignSystems(): Promise<DesignSystemSnapshot
 }
 
 export async function listPublishedFlowSets(): Promise<Array<{ app: string; flows: DesignFlow[] }>> {
-  return withTransaction(async (client) => {
-    const versions = await client.query<{ id: number; app: string; platform: string }>(
-      `SELECT av.id, a.name AS app, av.platform
-       FROM app_versions av JOIN apps a ON a.id = av.app_id
-       WHERE av.status = 'published' AND av.version_number = (
-         SELECT MAX(latest.version_number) FROM app_versions latest
-         WHERE latest.app_id = av.app_id AND latest.platform = av.platform
-           AND latest.status = 'published'
-       )
-       ORDER BY a.name, av.platform`,
-    );
-    return Promise.all(versions.rows.map(async (version) => ({
+  return withTransaction(publishedFlowSetsFrom);
+}
+
+async function publishedFlowSetsFrom(client: pg.PoolClient): Promise<Array<{ app: string; flows: DesignFlow[] }>> {
+  const versions = await client.query<{ id: number; app: string; platform: string }>(
+    `SELECT av.id, a.name AS app, av.platform
+     FROM app_versions av JOIN apps a ON a.id = av.app_id
+     WHERE av.status = 'published' AND av.version_number = (
+       SELECT MAX(latest.version_number) FROM app_versions latest
+       WHERE latest.app_id = av.app_id AND latest.platform = av.platform
+         AND latest.status = 'published'
+     )
+     ORDER BY a.name, av.platform`,
+  );
+  const flowSets: Array<{ app: string; flows: DesignFlow[] }> = [];
+  for (const version of versions.rows) {
+    flowSets.push({
       app: version.app,
       flows: await readVersionFlows(client, { versionId: Number(version.id) }),
-    })));
+    });
+  }
+  return flowSets;
+}
+
+/**
+ * Loads the full published catalog for the external search index. This is deliberately
+ * isolated from regular request queries: its larger snapshot can run for up to ten
+ * minutes without weakening the two-minute application statement timeout.
+ */
+export async function publishedCatalogSearchSource(): Promise<{
+  images: CrawledImage[];
+  systems: DesignSystemSnapshot[];
+  flows: Array<{ app: string; flows: DesignFlow[] }>;
+  appCategories: Record<string, string[]>;
+}> {
+  return withTransaction(async (client) => {
+    await client.query("SET LOCAL statement_timeout = 600000");
+    const images = await publishedImagesFrom(client);
+    const systems = await publishedDesignSystemsFrom(client);
+    const flows = await publishedFlowSetsFrom(client);
+    const appCategories = Object.fromEntries(images.map((image) => [
+      image.app,
+      image.categories?.map(({ name }) => name) ?? [],
+    ]));
+    return { images, systems, flows, appCategories };
   });
 }
 

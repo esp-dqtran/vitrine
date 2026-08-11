@@ -1,5 +1,6 @@
 import type { CrawledImage } from "./db.ts";
 import type { DesignFlow, DesignSystemSnapshot, TokenKind } from "./designSystem.ts";
+import { publicImageUrl } from "./imageSource.ts";
 
 export type CatalogEntityKind = "app" | "screen" | "component" | "token" | "flow" | "pattern";
 
@@ -69,8 +70,17 @@ const evidenceForComponent = (component: DesignSystemSnapshot["components"][numb
   unique(component.variants.flatMap(({ evidence }) => evidence));
 const evidenceForFlow = (flow: DesignFlow): number[] => unique(flow.steps.flatMap(({ evidence }) => evidence));
 
-function indexCatalog({ images, systems, flows, appCategories = {} }: CatalogResearchSource): CatalogSearchItem[] {
+export function catalogSearchItems({ images, systems, flows, appCategories = {} }: CatalogResearchSource): CatalogSearchItem[] {
   const items: CatalogSearchItem[] = [];
+  const imagesById = new Map(images.map((image) => [image.id, image]));
+  const mediaForEvidence = (evidenceIds: number[]) => {
+    const image = evidenceIds.map((id) => imagesById.get(id)).find((value) => value !== undefined);
+    if (!image) return {};
+    return {
+      imageUrl: publicImageUrl(image.app, image.image_url),
+      thumbnailUrl: publicImageUrl(image.app, image.image_url, "thumb"),
+    };
+  };
   const appNames = unique([
     ...images.map(({ app }) => app),
     ...systems.map(({ app }) => app),
@@ -86,6 +96,7 @@ function indexCatalog({ images, systems, flows, appCategories = {} }: CatalogRes
       title: app,
       description: `${appImages.length} observed web screens`,
       evidenceIds: appImages.map(({ id }) => id),
+      ...mediaForEvidence(appImages.map(({ id }) => id)),
       states: [],
       layoutPatterns: [], componentNames: [], appCategories: appCategories[app] ?? [],
       searchText: [
@@ -106,6 +117,7 @@ function indexCatalog({ images, systems, flows, appCategories = {} }: CatalogRes
       title,
       description: analysis?.description ?? image.description ?? "Observed screen",
       evidenceIds: [image.id],
+      ...mediaForEvidence([image.id]),
       pageType: analysis?.pageType,
       productArea: analysis?.productArea,
       theme: analysis?.theme,
@@ -126,13 +138,15 @@ function indexCatalog({ images, systems, flows, appCategories = {} }: CatalogRes
 
   for (const system of systems) {
     for (const component of system.components) {
+      const evidenceIds = evidenceForComponent(component);
       items.push({
         id: `component:${system.app}:${component.id}`,
         kind: "component",
         app: system.app,
         title: component.name,
         description: component.description,
-        evidenceIds: evidenceForComponent(component),
+        evidenceIds,
+        ...mediaForEvidence(evidenceIds),
         states: component.variants.map(({ name }) => name),
         layoutPatterns: [], componentNames: [component.name], appCategories: appCategories[system.app] ?? [],
         searchText: [system.app, ...(appCategories[system.app] ?? []), component.name, component.category, component.description,
@@ -147,25 +161,28 @@ function indexCatalog({ images, systems, flows, appCategories = {} }: CatalogRes
         title: token.name,
         description: `${token.value} · ${token.role}`,
         evidenceIds: token.evidence,
+        ...mediaForEvidence(token.evidence),
         states: [],
         layoutPatterns: [], componentNames: [], appCategories: appCategories[system.app] ?? [],
         searchText: [system.app, ...(appCategories[system.app] ?? []), token.kind, token.name, token.value, token.role].join(" "),
       });
     }
     for (const rule of system.rules ?? []) {
-      items.push({ id: `pattern:${system.app}:${rule.id}`, kind: 'pattern', app: system.app, title: rule.name, description: rule.description, evidenceIds: rule.evidence, states: [], layoutPatterns: rule.kind === 'layout' ? [rule.name] : [], componentNames: [], appCategories: appCategories[system.app] ?? [], searchText: [system.app, ...(appCategories[system.app] ?? []), rule.kind, rule.name, rule.description].join(' ') });
+      items.push({ id: `pattern:${system.app}:${rule.id}`, kind: 'pattern', app: system.app, title: rule.name, description: rule.description, evidenceIds: rule.evidence, ...mediaForEvidence(rule.evidence), states: [], layoutPatterns: rule.kind === 'layout' ? [rule.name] : [], componentNames: [], appCategories: appCategories[system.app] ?? [], searchText: [system.app, ...(appCategories[system.app] ?? []), rule.kind, rule.name, rule.description].join(' ') });
     }
   }
 
   for (const entry of flows) {
     for (const flow of entry.flows) {
+      const evidenceIds = evidenceForFlow(flow);
       items.push({
         id: `flow:${entry.app}:${flow.id}`,
         kind: "flow",
         app: entry.app,
         title: flow.title,
         description: flow.description,
-        evidenceIds: evidenceForFlow(flow),
+        evidenceIds,
+        ...mediaForEvidence(evidenceIds),
         states: [],
         layoutPatterns: [], componentNames: [], appCategories: appCategories[entry.app] ?? [],
         searchText: [entry.app, ...(appCategories[entry.app] ?? []), flow.title, flow.description, ...flow.tags, ...flow.steps.map(({ label }) => label)].join(" "),
@@ -185,7 +202,7 @@ function matchScore(item: CatalogSearchItem, query: string): number {
 }
 
 export function searchCatalog(source: CatalogResearchSource, options: CatalogSearchOptions): CatalogSearchResult {
-  const index = indexCatalog(source);
+  const index = catalogSearchItems(source);
   const facets = {
     kinds: { app: 0, screen: 0, component: 0, token: 0, flow: 0, pattern: 0 } as Record<CatalogEntityKind, number>,
     themes: unique(index.flatMap(({ theme }) => theme ? [theme] : [])).sort(),

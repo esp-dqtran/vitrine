@@ -18,6 +18,8 @@
     "db:check": "node --experimental-strip-types scripts/check-migrations.ts",
     "db:backup": "node --experimental-strip-types scripts/db-backup.ts",
     "db:restore-verify": "node --experimental-strip-types scripts/db-restore-verify.ts",
+    "search:typesense:plan": "node --env-file=.env --import tsx scripts/index-typesense-catalog.ts",
+    "search:typesense:backfill": "node --env-file=.env --import tsx scripts/index-typesense-catalog.ts --apply",
     "catalog-db:audit": "node --env-file=.env --import tsx scripts/merge-catalog-databases.ts --dry-run",
     "catalog-db:merge": "node --env-file=.env --import tsx scripts/merge-catalog-databases.ts --apply",
     "catalog:verify": "node --env-file=.env --import tsx scripts/verify-catalog-import.ts",

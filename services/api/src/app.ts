@@ -117,6 +117,7 @@ import {
 import type { BillingService } from "./billing.ts";
 import { createDistinctValueLimiter, createFixedWindowLimiter, ipPrefix } from "./rateLimit.ts";
 import { buildComparison, searchCatalog, type CatalogEntityKind } from "../../../src/catalogResearch.ts";
+import type { TypesenseCatalogClient } from "../../../src/typesenseCatalog.ts";
 import { buildExportArtifact, type ExportFormat, type ExportScope } from "../../../src/exportEngine.ts";
 import { applyCuratorAction, type CuratorAction } from "../../../src/curatorReview.ts";
 import { exportObjectKey, type ObjectMetadata, type ObjectStore, type StoredContentType } from "../../../src/objectStore.ts";
@@ -501,6 +502,8 @@ const defaults = {
   appKnowledgeCurrentSourceSha256: undefined as
     | ((target: AppKnowledgeTarget) => Promise<string | undefined>)
     | undefined,
+  typesenseCatalog: undefined as TypesenseCatalogClient | undefined,
+  syncTypesenseCatalog: undefined as (() => Promise<void>) | undefined,
   acquireAppKnowledgeNotificationClient: async () =>
     pool.connect() as unknown as AppKnowledgeNotificationClient,
 };
@@ -2327,7 +2330,15 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "invalid version id" });
       return;
     }
-    try { res.json(await deps.publishAppVersion(versionId, res.locals.user.id)); }
+    try {
+      const published = await deps.publishAppVersion(versionId, res.locals.user.id);
+      try {
+        await deps.syncTypesenseCatalog?.();
+      } catch {
+        console.warn("[api] Typesense catalog sync failed");
+      }
+      res.json(published);
+    }
     catch (error) { res.status(409).json({ error: (error as Error).message }); }
   });
 
@@ -2388,29 +2399,6 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
       return;
     }
-    const [images, systems, flows] = await Promise.all([
-      res.locals.user.role === "admin" ? deps.allImages() : deps.publishedImages(),
-      res.locals.user.role === "admin" ? deps.listDesignSystems() : deps.listPublishedDesignSystems(),
-      res.locals.user.role === "admin" ? deps.listAppFlowSets() : deps.listPublishedFlowSets(),
-    ]);
-    const appNames = [...new Set([
-      ...images.map(({ app }) => app),
-      ...systems.map(({ app }) => app),
-      ...flows.map(({ app }) => app),
-    ])];
-    const allowed = new Set<string>();
-    for (const appName of appNames) {
-      // Catalog discovery is public-to-members; entitlement gates the detailed system,
-      // protected media, comparison, and exports after a result is opened.
-      allowed.add(appName);
-    }
-    const allowedImages = images.filter(({ app }) => allowed.has(app));
-    const appCategories = Object.fromEntries(
-      allowedImages.map((image) => [
-        image.app,
-        image.categories?.map(({ name }) => name) ?? [],
-      ]),
-    );
     const searchOptions = {
       query: optionalQuery(req.query.q) ?? "",
       kind: requestedKind as CatalogEntityKind | "all",
@@ -2423,13 +2411,42 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       appCategory: optionalQuery(req.query.appCategory),
       limit: optionalQuery(req.query.limit) ? Number(req.query.limit) : undefined,
     };
-    const result = searchCatalog({
-      images: allowedImages,
-      systems: systems.filter(({ app }) => allowed.has(app)),
-      flows: flows.filter(({ app }) => allowed.has(app)),
-      appCategories,
-    }, searchOptions);
-    const imagesById = new Map(allowedImages.map((image) => [image.id, image]));
+    let result;
+    if (res.locals.user.role !== "admin" && deps.typesenseCatalog) {
+      try {
+        result = await deps.typesenseCatalog.search(searchOptions);
+      } catch {
+        console.warn("[api] Typesense search fallback");
+      }
+    }
+    let imagesById: Map<number, Awaited<ReturnType<typeof deps.publishedImages>>[number]> | undefined;
+    if (!result) {
+      const [images, systems, flows] = await Promise.all([
+        res.locals.user.role === "admin" ? deps.allImages() : deps.publishedImages(),
+        res.locals.user.role === "admin" ? deps.listDesignSystems() : deps.listPublishedDesignSystems(),
+        res.locals.user.role === "admin" ? deps.listAppFlowSets() : deps.listPublishedFlowSets(),
+      ]);
+      const appNames = [...new Set([
+        ...images.map(({ app }) => app),
+        ...systems.map(({ app }) => app),
+        ...flows.map(({ app }) => app),
+      ])];
+      const allowed = new Set(appNames);
+      const allowedImages = images.filter(({ app }) => allowed.has(app));
+      const appCategories = Object.fromEntries(
+        allowedImages.map((image) => [
+          image.app,
+          image.categories?.map(({ name }) => name) ?? [],
+        ]),
+      );
+      result = searchCatalog({
+        images: allowedImages,
+        systems: systems.filter(({ app }) => allowed.has(app)),
+        flows: flows.filter(({ app }) => allowed.has(app)),
+        appCategories,
+      }, searchOptions);
+      imagesById = new Map(allowedImages.map((image) => [image.id, image]));
+    }
     await deps.recordAccessEvent({
       userId: res.locals.user.id,
       featureKey: "search",
@@ -2438,7 +2455,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     });
     res.json({
       ...result,
-      items: result.items.map((item) => {
+      items: imagesById ? result.items.map((item) => {
         const evidence = item.evidenceIds.map((id) => imagesById.get(id)).find((image) => image !== undefined);
         if (!evidence) return item;
         return {
@@ -2446,7 +2463,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           imageUrl: publicImageUrl(evidence.app, evidence.image_url),
           thumbnailUrl: publicImageUrl(evidence.app, evidence.image_url, "thumb"),
         };
-      }),
+      }) : result.items,
     });
   });
 

@@ -2,7 +2,10 @@ import { createApiApp, DEFAULT_API_PORT } from "./app.ts";
 import { adminSeedFromEnv, billingConfigFromEnv, referralCampaignFromEnv } from "./config.ts";
 import { startApi } from "./start.ts";
 import { seedAdmin } from "../../../src/authStore.ts";
-import { pool } from "../../../src/db.ts";
+import {
+  pool,
+  publishedCatalogSearchSource,
+} from "../../../src/db.ts";
 import { assertMigrationsCurrent } from "../../../src/migrations.ts";
 import Stripe from "stripe";
 import { createBillingService, type StripePort } from "./billing.ts";
@@ -16,6 +19,7 @@ import {
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../../../src/objectStoreConfig.ts";
 import { publishedFlowCatalogPage } from "../../../src/flowCatalogStore.ts";
 import { createJwtAuth, jwtAuthConfigFromEnv } from "../../../src/jwtAuth.ts";
+import { createTypesenseCatalogClient, typesenseCatalogConfigFromEnv } from "../../../src/typesenseCatalog.ts";
 
 const PORT = Number(process.env.PORT ?? DEFAULT_API_PORT);
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
@@ -25,6 +29,13 @@ await startApi({
     const seed = adminSeedFromEnv(process.env);
     const config = billingConfigFromEnv(process.env);
     const auth = createJwtAuth(jwtAuthConfigFromEnv(process.env));
+    const typesenseConfig = typesenseCatalogConfigFromEnv(process.env);
+    const typesenseCatalog = typesenseConfig ? createTypesenseCatalogClient(typesenseConfig) : undefined;
+    const syncTypesenseCatalog = async (): Promise<void> => {
+      if (!typesenseCatalog) return;
+      const indexed = await typesenseCatalog.index(await publishedCatalogSearchSource());
+      console.log(`[api] Indexed ${indexed} Typesense catalog documents.`);
+    };
     const referralCampaign = referralCampaignFromEnv(process.env);
     await seedAdmin(seed.email, seed.password);
     const stripe = new Stripe(config.stripeSecretKey);
@@ -39,7 +50,7 @@ await startApi({
         markStripeEventProcessed,
       },
     });
-    const flowWarmups = await Promise.allSettled(
+    void Promise.allSettled(
       (["web", "ios", "android"] as const).map((platform) =>
         publishedFlowCatalogPage({
           platform,
@@ -49,13 +60,14 @@ await startApi({
           cursorSecret: config.mediaSigningSecret,
         })
       ),
-    );
-    const failedFlowWarmups = flowWarmups.filter(
-      (result) => result.status === "rejected",
-    ).length;
-    if (failedFlowWarmups > 0) {
-      console.warn(`[api] ${failedFlowWarmups} Flow catalog warmup(s) failed`);
-    }
+    ).then((flowWarmups) => {
+      const failedFlowWarmups = flowWarmups.filter(
+        (result) => result.status === "rejected",
+      ).length;
+      if (failedFlowWarmups > 0) {
+        console.warn(`[api] ${failedFlowWarmups} Flow catalog warmup(s) failed`);
+      }
+    });
     const app = createApiApp({
       billing,
       objectStore,
@@ -67,6 +79,10 @@ await startApi({
       appTraversalLimit: config.appTraversalLimit,
       appUrl: config.appUrl,
       referralCampaign,
+      ...(typesenseCatalog ? {
+        typesenseCatalog,
+        syncTypesenseCatalog,
+      } : {}),
     });
     app.listen(PORT, () => console.log(`[api] listening on :${PORT}`));
   },

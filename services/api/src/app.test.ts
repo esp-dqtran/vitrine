@@ -1464,6 +1464,36 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
   assert.equal((await fetch(`${base}/compare?apps=linear`, { headers: { authorization: "Bearer user" } })).status, 400);
 });
 
+test("uses the Typesense catalog before loading the PostgreSQL search source", async (t) => {
+  const calls: unknown[] = [];
+  const typesenseResult: CatalogSearchResult = {
+    items: [{
+      id: "screen:7", kind: "screen", app: "linear", title: "Workspace", description: "Issue tracker",
+      evidenceIds: [7], imageUrl: "/api/media/linear/0123456789abcdef", thumbnailUrl: "/api/media/linear/0123456789abcdef?variant=thumb",
+      states: ["default"], layoutPatterns: [], componentNames: ["Button"], appCategories: ["Productivity"],
+    }],
+    facets: { kinds: { app: 0, screen: 1, component: 0, token: 0, flow: 0, pattern: 0 }, themes: [], pageTypes: [], productAreas: [], states: ["default"], layouts: [], components: ["Button"], appCategories: ["Productivity"] },
+  };
+  const { base, server } = await serve(createApiApp({
+    verifyAuthToken: async () => user,
+    getAccountEntitlements: async () => proEntitlements,
+    typesenseCatalog: {
+      index: async () => 0,
+      search: async (input) => { calls.push(input); return typesenseResult; },
+    },
+    publishedImages: async () => { throw new Error("legacy source should not load"); },
+    listPublishedDesignSystems: async () => { throw new Error("legacy source should not load"); },
+    listPublishedFlowSets: async () => { throw new Error("legacy source should not load"); },
+    recordAccessEvent: async () => undefined,
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/search?q=workspace&kind=screen`, { headers: { authorization: "Bearer user" } });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), typesenseResult);
+  assert.deepEqual(calls, [{ query: "workspace", kind: "screen", theme: undefined, pageType: undefined, productArea: undefined, state: undefined, layout: undefined, component: undefined, appCategory: undefined, limit: undefined }]);
+});
+
 test("creates user-owned collections and edits item notes", async (t) => {
   const now = "2026-07-11T00:00:00.000Z";
   const collection = { id: 4, name: "Onboarding", description: "", created_at: now, updated_at: now, items: [] };
@@ -1583,17 +1613,20 @@ test("prevents active Pro from banking permanent Free unlocks", async (t) => {
 test("reviews and publishes an existing admin draft while hiding drafts from designers", async (t) => {
   const version = { id: 12, app: "linear", platform: "web", version_number: 2, label: "v2", source_url: null, provider: "m" as const, status: "draft" as const, notes: "", captured_at: "2026-07-11T00:00:00.000Z", submitted_at: null, published_at: null, screen_count: 7, analyzed_count: 7, component_count: 2, token_count: 4, flow_count: 1 };
   let publishedOnly: boolean | undefined;
+  let queuedSearchSync = 0;
   const { base, server } = await serve(createApiApp({
     verifyAuthToken: async (token) => token === "admin" ? admin : user,
     listAppVersions: async (_app, _platform, only) => { publishedOnly = only; return only ? [] : [version]; },
     getVersionPublicationBlockers: async () => [],
     submitAppVersionForReview: async () => ({ ...version, status: "in_review" as const }),
     publishAppVersion: async () => ({ ...version, status: "published" as const, published_at: "2026-07-11T01:00:00.000Z" }),
+    syncTypesenseCatalog: async () => { queuedSearchSync += 1; },
   }));
   t.after(() => close(server));
   assert.equal((await fetch(`${base}/versions/12/blockers`, { headers: adminAuth })).status, 200);
   assert.equal((await fetch(`${base}/versions/12/submit`, { method: "POST", headers: adminAuth })).status, 200);
   assert.equal((await (await fetch(`${base}/versions/12/publish`, { method: "POST", headers: adminAuth })).json()).status, "published");
+  assert.equal(queuedSearchSync, 1);
 
   const designerVersions = await fetch(`${base}/apps/linear/versions?platform=web`, { headers: { authorization: "Bearer user" } });
   assert.equal(designerVersions.status, 200);
