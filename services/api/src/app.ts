@@ -118,6 +118,7 @@ import type { BillingService } from "./billing.ts";
 import { createDistinctValueLimiter, createFixedWindowLimiter, ipPrefix } from "./rateLimit.ts";
 import { buildComparison, searchCatalog, type CatalogEntityKind } from "../../../src/catalogResearch.ts";
 import type { TypesenseCatalogClient } from "../../../src/typesenseCatalog.ts";
+import type { TypesenseAppCatalogClient } from "../../../src/typesenseAppCatalog.ts";
 import { buildExportArtifact, type ExportFormat, type ExportScope } from "../../../src/exportEngine.ts";
 import { applyCuratorAction, type CuratorAction } from "../../../src/curatorReview.ts";
 import { exportObjectKey, type ObjectMetadata, type ObjectStore, type StoredContentType } from "../../../src/objectStore.ts";
@@ -505,6 +506,7 @@ const defaults = {
     | ((target: AppKnowledgeTarget) => Promise<string | undefined>)
     | undefined,
   typesenseCatalog: undefined as TypesenseCatalogClient | undefined,
+  typesenseAppCatalog: undefined as TypesenseAppCatalogClient | undefined,
   syncTypesenseCatalog: undefined as (() => Promise<void>) | undefined,
   acquireAppKnowledgeNotificationClient: async () =>
     pool.connect() as unknown as AppKnowledgeNotificationClient,
@@ -1121,6 +1123,37 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       || filters === null) {
       res.status(400).json({ error: "invalid catalog query" });
       return;
+    }
+    const typesenseCursorPrefix = "typesense-app:";
+    const typesensePage = cursor?.startsWith(typesenseCursorPrefix)
+      ? Number(cursor.slice(typesenseCursorPrefix.length))
+      : 1;
+    const supportsTypesenseAppSearch = sort === "latest"
+      && filters.every(({ group }) => group === "categories")
+      && Number.isInteger(typesensePage)
+      && typesensePage >= 1
+      && (!cursor || cursor.startsWith(typesenseCursorPrefix));
+    if (deps.typesenseAppCatalog && platform && supportsTypesenseAppSearch) {
+      try {
+        const result = await deps.typesenseAppCatalog.search({
+          ...(search ? { query: search } : {}),
+          platform,
+          filters,
+          sort,
+          page: typesensePage,
+          ...(limit ? { limit } : {}),
+        });
+        res.setHeader("Cache-Control", "private, max-age=280");
+        res.json({
+          items: result.apps,
+          nextCursor: result.nextPage ? `${typesenseCursorPrefix}${result.nextPage}` : null,
+          totalCount: result.totalCount,
+          facets: includeFacets ? result.facets : [],
+        });
+        return;
+      } catch {
+        console.warn("[api] Typesense App catalog fallback");
+      }
     }
     try {
       const page = await deps.publishedCatalogPage({

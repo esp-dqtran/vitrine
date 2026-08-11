@@ -20,6 +20,11 @@ import { createObjectStore, objectStoreConfigFromEnvironment } from "../../../sr
 import { publishedFlowCatalogPage } from "../../../src/flowCatalogStore.ts";
 import { createJwtAuth, jwtAuthConfigFromEnv } from "../../../src/jwtAuth.ts";
 import { createTypesenseCatalogClient, typesenseCatalogConfigFromEnv } from "../../../src/typesenseCatalog.ts";
+import {
+  TYPESENSE_APP_CATALOG_COLLECTION,
+  createTypesenseAppCatalogClient,
+} from "../../../src/typesenseAppCatalog.ts";
+import { publishedAppCatalogDocuments } from "../../../src/typesenseAppCatalogSource.ts";
 
 const PORT = Number(process.env.PORT ?? DEFAULT_API_PORT);
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
@@ -31,10 +36,18 @@ await startApi({
     const auth = createJwtAuth(jwtAuthConfigFromEnv(process.env));
     const typesenseConfig = typesenseCatalogConfigFromEnv(process.env);
     const typesenseCatalog = typesenseConfig ? createTypesenseCatalogClient(typesenseConfig) : undefined;
+    const typesenseAppCatalog = typesenseConfig
+      ? createTypesenseAppCatalogClient({ ...typesenseConfig, collection: TYPESENSE_APP_CATALOG_COLLECTION })
+      : undefined;
     const syncTypesenseCatalog = async (): Promise<void> => {
-      if (!typesenseCatalog) return;
-      const indexed = await typesenseCatalog.index(await publishedCatalogSearchSource());
-      console.log(`[api] Indexed ${indexed} Typesense catalog documents.`);
+      if (typesenseCatalog) {
+        const indexed = await typesenseCatalog.index(await publishedCatalogSearchSource());
+        console.log(`[api] Indexed ${indexed} Typesense research documents.`);
+      }
+      if (typesenseAppCatalog) {
+        const indexed = await typesenseAppCatalog.index(await publishedAppCatalogDocuments());
+        console.log(`[api] Indexed ${indexed} Typesense App documents.`);
+      }
     };
     const referralCampaign = referralCampaignFromEnv(process.env);
     await seedAdmin(seed.email, seed.password);
@@ -83,6 +96,7 @@ await startApi({
         typesenseCatalog,
         syncTypesenseCatalog,
       } : {}),
+      ...(typesenseAppCatalog ? { typesenseAppCatalog } : {}),
     });
     app.listen(PORT, () => console.log(`[api] listening on :${PORT}`));
   },

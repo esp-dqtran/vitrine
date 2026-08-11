@@ -8,12 +8,12 @@ import {
 const document = {
   id: "linear:web", appId: "linear", platform: "web" as const,
   title: "Linear", searchText: "Linear productivity project management Login Text input",
-  categories: ["Productivity"], screens: ["Login"], elements: ["Text input"], flows: ["Sign in"],
+  categories: ["Productivity"],
   latestAt: 1_700_000_000, trendingScore: 8,
   card: JSON.stringify({ id: "linear", app: "Linear", description: null, categories: [], accent: "#5e6ad2", totalScreens: 12, platforms: ["web"], lastCapturedAt: "2023-11-14T00:00:00.000Z", previewScreens: [], websiteUrl: null, iconUrl: null }),
 };
 
-test("maps Apps filters to Typesense OR-within and AND-between groups", () => {
+test("maps App category filters to Typesense", () => {
   assert.equal(appCatalogTypesenseFilter({
     platform: "web",
     filters: [
@@ -21,7 +21,7 @@ test("maps Apps filters to Typesense OR-within and AND-between groups", () => {
       { group: "categories", value: "CRM" },
       { group: "elements", value: "Text input" },
     ],
-  }), "platform:=`web` && (categories:=`Productivity` || categories:=`CRM`) && (elements:=`Text input`)");
+  }), "platform:=`web` && (categories:=`Productivity` || categories:=`CRM`)");
 });
 
 test("indexes and returns App-card documents through a separate alias", async () => {

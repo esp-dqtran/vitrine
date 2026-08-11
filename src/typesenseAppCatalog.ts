@@ -1,6 +1,8 @@
 import type { App } from "./vitrine/types.ts";
 import type { DiscoveryFacet, DiscoveryFilter } from "./vitrine/discoveryTypes.ts";
 
+export const TYPESENSE_APP_CATALOG_COLLECTION = "vitrines_apps_v1";
+
 export interface TypesenseAppCatalogConfig {
   host: string;
   apiKey: string;
@@ -14,9 +16,6 @@ export interface AppCatalogIndexDocument {
   title: string;
   searchText: string;
   categories: string[];
-  screens: string[];
-  elements: string[];
-  flows: string[];
   latestAt: number;
   trendingScore: number;
   card: string;
@@ -49,11 +48,8 @@ interface TypesenseSearchResponse {
   facet_counts?: TypesenseFacetCount[];
 }
 
-const facetFieldByGroup: Record<string, keyof Pick<AppCatalogIndexDocument, "categories" | "screens" | "elements" | "flows">> = {
+const facetFieldByGroup: Record<string, keyof Pick<AppCatalogIndexDocument, "categories">> = {
   categories: "categories",
-  screens: "screens",
-  elements: "elements",
-  flows: "flows",
 };
 
 const escapeFilter = (value: string) => value.replace(/\\/g, "\\\\").replace(/`/g, "\\`");
@@ -92,9 +88,6 @@ function appCollectionSchema(name: string) {
       { name: "title", type: "string" },
       { name: "searchText", type: "string" },
       { name: "categories", type: "string[]", facet: true },
-      { name: "screens", type: "string[]", facet: true },
-      { name: "elements", type: "string[]", facet: true },
-      { name: "flows", type: "string[]", facet: true },
       { name: "latestAt", type: "int64", sort: true },
       { name: "trendingScore", type: "int32", sort: true },
       { name: "card", type: "string", index: false },
@@ -103,9 +96,7 @@ function appCollectionSchema(name: string) {
 }
 
 function responseFacets(counts: TypesenseFacetCount[] | undefined): DiscoveryFacet[] {
-  const groupByField: Record<string, string> = {
-    categories: "categories", screens: "screens", elements: "elements", flows: "flows",
-  };
+  const groupByField: Record<string, string> = { categories: "categories" };
   return (counts ?? []).flatMap(({ field_name, counts: values }) => {
     const group = groupByField[field_name];
     return group ? values.map(({ value, count }) => ({ group, value, count })) : [];
@@ -165,7 +156,7 @@ export function createTypesenseAppCatalogClient(
         query_by: "title,searchText",
         query_by_weights: "8,2",
         filter_by: appCatalogTypesenseFilter(options),
-        facet_by: "categories,screens,elements,flows",
+        facet_by: "categories",
         sort_by: options.sort === "trending"
           ? "trendingScore:desc,latestAt:desc,_text_match:desc"
           : "_text_match:desc,latestAt:desc",

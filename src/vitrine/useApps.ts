@@ -36,10 +36,11 @@ function catalogRequestSignal(signal?: AbortSignal): {
   signal: AbortSignal;
   dispose(): void;
 } {
+  // Callers that own cancellation (the discovery controller, pagination, and
+  // tests) must receive their exact signal. Wrapping it changes observable
+  // cancellation identity and breaks the adapter contract.
+  if (signal) return { signal, dispose() {} };
   const controller = new AbortController();
-  const abortFromCaller = () => controller.abort(signal?.reason);
-  if (signal?.aborted) abortFromCaller();
-  else signal?.addEventListener('abort', abortFromCaller, { once: true });
   const timeout = globalThis.setTimeout(() => {
     controller.abort(new DOMException(
       'Catalog is taking longer than expected. Try again.',
@@ -50,7 +51,6 @@ function catalogRequestSignal(signal?: AbortSignal): {
     signal: controller.signal,
     dispose() {
       globalThis.clearTimeout(timeout);
-      signal?.removeEventListener('abort', abortFromCaller);
     },
   };
 }
