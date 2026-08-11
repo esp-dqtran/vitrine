@@ -59,6 +59,13 @@ test("production deploy commands use the guarded release script", async () => {
   assert.match(deployScript, /wrangler deploy --keep-vars/);
   assert.match(deployScript, /wrangler deploy --dry-run --keep-vars/);
   assert.match(deployScript, /preflight_migrations/);
+  assert.match(deployScript, /vitrines-designer-canvas-collab/);
+  assert.match(deployScript, /CANVAS_COLLAB_HEALTH_URL/);
+  assert.match(deployScript, /caddy validate/);
+
+  const caddyfile = await readDeploymentFile("deploy/vitrines-api.Caddyfile");
+  assert.match(caddyfile, /path \/api\/designer-canvas-collaboration/);
+  assert.match(caddyfile, /reverse_proxy @designerCanvasCollaboration 127\.0\.0\.1:3012/);
 });
 
 test("GitHub Actions gates and serializes production releases", async () => {
@@ -112,6 +119,39 @@ test("Cloudflare proxies API requests without changing the frontend API contract
   assert.equal(forwarded?.method, "POST");
   assert.equal(forwarded?.headers.get("authorization"), "Bearer signed.jwt.token");
   assert.equal(await forwarded?.text(), JSON.stringify({ cursor: "next" }));
+});
+
+test("Cloudflare preserves the collaboration WebSocket gateway path for Caddy", async () => {
+  const module = await import("./cloudflareFrontendWorker.ts").catch(() => null);
+  assert.ok(module, "cloudflareFrontendWorker.ts must exist");
+
+  let forwarded: Request | undefined;
+  const worker = module.createCloudflareFrontendWorker(async (request: Request) => {
+    forwarded = request;
+    // Node's Response constructor deliberately excludes the WebSocket-only
+    // 101 status. This mock only verifies the forwarded upgrade request.
+    return new Response("proxied");
+  });
+
+  await worker.fetch(
+    new Request(
+      "https://vitrines.ai/api/designer-canvas-collaboration?projectId=project-1&canvasId=canvas-1",
+      { headers: { "sec-websocket-protocol": "vitrines-bearer, signed.jwt.token" } },
+    ),
+    {
+      ASSETS: { fetch: async () => new Response("asset") },
+      API_ORIGIN: "https://api.vitrines.ai",
+    },
+  );
+
+  assert.equal(
+    forwarded?.url,
+    "https://api.vitrines.ai/api/designer-canvas-collaboration?projectId=project-1&canvasId=canvas-1",
+  );
+  assert.equal(
+    forwarded?.headers.get("sec-websocket-protocol"),
+    "vitrines-bearer, signed.jwt.token",
+  );
 });
 
 test("Cloudflare keeps non-API requests on static assets and fails closed without an API origin", async () => {

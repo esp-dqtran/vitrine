@@ -1,0 +1,10 @@
+api.vitrines.ai {
+	encode zstd gzip
+
+	# This must stay before the API catch-all. Caddy forwards WebSocket upgrades
+	# automatically, while the gateway validates the Vitrines origin and JWT.
+	@designerCanvasCollaboration path /api/designer-canvas-collaboration
+	reverse_proxy @designerCanvasCollaboration 127.0.0.1:3012
+
+	reverse_proxy 127.0.0.1:3000
+}

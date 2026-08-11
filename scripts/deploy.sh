@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Deploy the two things this repo ships:
+# Deploy the production services this repo ships:
 #   web  -> Cloudflare Worker astryx-web
-#   api  -> Docker container vitrines-api on the DigitalOcean droplet
+#   api  -> Docker containers vitrines-api and vitrines-designer-canvas-collab
 #
 # Usage:
 #   scripts/deploy.sh [web|api|all] [--dry-run]
@@ -33,6 +33,11 @@ IMAGE="${IMAGE:-vitrines-api}"
 PORT_BIND="${PORT_BIND:-127.0.0.1:3000:3000}"
 HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3000/health}"
 PUBLIC_HEALTH="${PUBLIC_HEALTH:-https://api.vitrines.ai/health}"
+CANVAS_COLLAB_CONTAINER="${CANVAS_COLLAB_CONTAINER:-vitrines-designer-canvas-collab}"
+CANVAS_COLLAB_IMAGE="${CANVAS_COLLAB_IMAGE:-vitrines-designer-canvas-collab}"
+CANVAS_COLLAB_PORT_BIND="${CANVAS_COLLAB_PORT_BIND:-127.0.0.1:3012:3012}"
+CANVAS_COLLAB_HEALTH_URL="${CANVAS_COLLAB_HEALTH_URL:-http://127.0.0.1:3012/healthz}"
+CADDY_CONFIG="${CADDY_CONFIG:-/etc/caddy/Caddyfile}"
 
 cd "$(dirname "$0")/.."
 say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
@@ -95,13 +100,49 @@ preflight_env() {
   esac
 }
 
+preflight_canvas_collab_env() {
+  say "Preflight: canvas collaboration env"
+  ssh -o BatchMode=yes "$DROPLET" "
+    if grep -Eq '^CANVAS_COLLAB_ALLOWED_ORIGINS=https://' '$ENV_FILE' \
+      || grep -Eq '^APP_URL=https://' '$ENV_FILE'; then
+      exit 0
+    fi
+    exit 1
+  " || die "CANVAS_COLLAB_ALLOWED_ORIGINS or APP_URL must contain an HTTPS application origin"
+  echo "ok — canvas collaboration has an allowed application origin"
+}
+
+configure_canvas_collab_proxy() {
+  local release="$1" stamp
+  stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+  say "Caddy: route canvas collaboration WebSockets"
+  ssh -o BatchMode=yes "$DROPLET" \
+    "CADDY_CONFIG='$CADDY_CONFIG' CADDY_SOURCE='$release/deploy/vitrines-api.Caddyfile' CADDY_STAMP='$stamp' bash -s" <<'REMOTE'
+set -euo pipefail
+test -f "$CADDY_CONFIG"
+test -f "$CADDY_SOURCE"
+candidate="${CADDY_CONFIG}.vitrines-candidate-${CADDY_STAMP}"
+backup="${CADDY_CONFIG}.vitrines-backup-${CADDY_STAMP}"
+cp "$CADDY_SOURCE" "$candidate"
+caddy validate --config "$candidate" --adapter caddyfile
+cp "$CADDY_CONFIG" "$backup"
+install -m 644 "$candidate" "$CADDY_CONFIG"
+rm -f "$candidate"
+if ! systemctl reload caddy; then
+  install -m 644 "$backup" "$CADDY_CONFIG"
+  systemctl reload caddy || true
+  exit 1
+fi
+REMOTE
+}
+
 deploy_api() {
   local dry_run="${1:-}"
   local sha release stamp
   require_clean_head
   sha="$(git rev-parse --short=8 HEAD)"
   release="$REMOTE_ROOT/releases/$sha"
-  say "API: deploying $sha to $DROPLET"
+  say "API + canvas collaboration: deploying $sha to $DROPLET"
 
   [ -z "$(git status --porcelain migrations/)" ] \
     || echo "warning: uncommitted files under migrations/ will NOT be in this build"
@@ -120,14 +161,21 @@ deploy_api() {
   preflight_migrations "$tmp"
   rm -rf "$tmp"
   preflight_env
+  preflight_canvas_collab_env
 
   if [ "$dry_run" = "--dry-run" ]; then
-    say "dry run — release uploaded and preflights passed; not building or swapping"
+    ssh -o BatchMode=yes "$DROPLET" \
+      "caddy validate --config '$release/deploy/vitrines-api.Caddyfile' --adapter caddyfile"
+    say "dry run — release uploaded and preflights passed; not building, swapping, or reloading"
     return 0
   fi
 
-  say "Build image $IMAGE:$sha"
-  ssh -o BatchMode=yes "$DROPLET" "cd '$release' && docker build -f services/api/Dockerfile -t '$IMAGE:$sha' ."
+  say "Build images for $sha"
+  ssh -o BatchMode=yes "$DROPLET" "
+    cd '$release'
+    docker build -f services/api/Dockerfile -t '$IMAGE:$sha' .
+    docker build -f services/designer-canvas-collab/Dockerfile -t '$CANVAS_COLLAB_IMAGE:$sha' .
+  "
 
   stamp="$(date -u +%Y%m%dT%H%M%SZ)"
   say "Swap container (previous kept as $CONTAINER-rollback-$stamp)"
@@ -154,9 +202,31 @@ deploy_api() {
     die "deploy unhealthy — fix forward, do not assume rollback works"
   fi
 
-  echo "local health 200"
+  echo "API local health 200"
+
+  say "Swap canvas collaboration gateway"
+  ssh -o BatchMode=yes "$DROPLET" "
+    docker stop '$CANVAS_COLLAB_CONTAINER' >/dev/null 2>&1 || true
+    docker rename '$CANVAS_COLLAB_CONTAINER' '$CANVAS_COLLAB_CONTAINER-rollback-$stamp' 2>/dev/null || true
+    docker run -d --name '$CANVAS_COLLAB_CONTAINER' --restart unless-stopped \
+      --env-file '$ENV_FILE' -p '$CANVAS_COLLAB_PORT_BIND' '$CANVAS_COLLAB_IMAGE:$sha' >/dev/null
+  "
+
+  code=""
+  for _ in $(seq 1 12); do
+    sleep 5
+    code="$(ssh -o BatchMode=yes "$DROPLET" "curl -s -o /dev/null -w '%{http_code}' --max-time 8 '$CANVAS_COLLAB_HEALTH_URL'" || echo 000)"
+    [ "$code" = "200" ] && break
+  done
+  if [ "$code" != "200" ]; then
+    ssh -o BatchMode=yes "$DROPLET" "docker logs '$CANVAS_COLLAB_CONTAINER' 2>&1 | tail -20" || true
+    die "canvas collaboration gateway unhealthy ($code) — fix forward before routing WebSockets"
+  fi
+  echo "canvas collaboration health 200"
+  configure_canvas_collab_proxy "$release"
+
   curl -s -o /dev/null -w "public %{http_code}\n" --max-time 15 "$PUBLIC_HEALTH" || true
-  say "Deployed $IMAGE:$sha"
+  say "Deployed $IMAGE:$sha and $CANVAS_COLLAB_IMAGE:$sha"
 }
 
 case "${1:-}" in
@@ -169,7 +239,7 @@ Usage: scripts/deploy.sh [web|api|all] [--dry-run]
 
 Targets:
   web  Build and deploy the Cloudflare Worker (astryx-web).
-  api  Build and roll out the API container to the DigitalOcean droplet.
+  api  Build and roll out the API and canvas collaboration containers to the DigitalOcean droplet.
   all  Deploy web, then API. This is the default target.
 
 Options:
@@ -179,7 +249,8 @@ Options:
 
 Environment overrides:
   DROPLET, REMOTE_ROOT, ENV_FILE, CONTAINER, IMAGE, PORT_BIND, HEALTH_URL,
-  and PUBLIC_HEALTH.
+  PUBLIC_HEALTH, CANVAS_COLLAB_CONTAINER, CANVAS_COLLAB_IMAGE,
+  CANVAS_COLLAB_PORT_BIND, CANVAS_COLLAB_HEALTH_URL, and CADDY_CONFIG.
 USAGE
   ;;
   *) die "usage: scripts/deploy.sh [web|api|all] [--dry-run]" ;;

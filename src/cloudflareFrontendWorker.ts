@@ -212,6 +212,18 @@ function apiRequest(request: Request, origin: URL): Request {
   return new Request(target, request);
 }
 
+// The API origin does not include the `/api` prefix, except for the canvas
+// WebSocket gateway: Caddy uses that public path to select the collaboration
+// service before falling back to the HTTP API. Keep this one path intact while
+// preserving the request's Upgrade and Sec-WebSocket-Protocol headers.
+function collaborationRequest(request: Request, origin: URL): Request {
+  const incoming = new URL(request.url);
+  const target = new URL(origin);
+  target.pathname = incoming.pathname;
+  target.search = incoming.search;
+  return new Request(target, request);
+}
+
 export function createCloudflareFrontendWorker(
   fetchApi: ApiFetch = (request) => fetch(request),
   edgeCache: EdgeCache | null = defaultEdgeCache(),
@@ -290,7 +302,9 @@ export function createCloudflareFrontendWorker(
             { status: 503 },
           );
         }
-        const forwardedRequest = apiRequest(request, origin);
+        const forwardedRequest = url.pathname === "/api/designer-canvas-collaboration"
+          ? collaborationRequest(request, origin)
+          : apiRequest(request, origin);
         const useEdgeCache = request.method === "GET"
           && PUBLIC_API_CACHE_PATHS.has(url.pathname)
           && edgeCache !== null;

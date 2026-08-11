@@ -84,8 +84,9 @@ docker compose --profile research up migrate api designer-canvas-collab
 The gateway listens on port `3012` by default. Development accepts the active
 loopback origin. Set `CANVAS_COLLAB_ALLOWED_ORIGINS` to a comma-separated list
 of exact application origins when a stricter local gate is useful. Production
-fails startup unless this value or `APP_URL` supplies an allowed origin. Route
-the same-origin WebSocket path to this service so the browser sends the Vitrines
+fails startup unless this value or `APP_URL` supplies an allowed origin. The
+standard `npm run deploy` release runs this gateway alongside the API and
+installs the same-origin Caddy WebSocket route. The browser sends the Vitrines
 JWT Bearer credential through the `vitrines-bearer` subprotocol. The gateway must use the same `JWT_SIGNING_SECRET`,
 `JWT_ISSUER`, and `JWT_AUDIENCE` as the API.
 
