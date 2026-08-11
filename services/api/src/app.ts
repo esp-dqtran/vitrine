@@ -1446,10 +1446,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
   });
 
-  app.get("/preview-media/:app/:rank", async (req, res) => {
+  app.get("/preview-media/:app/:platform/:rank", async (req, res) => {
     const rank = Number(req.params.rank);
+    const platform = platformQuery(req.params.platform);
     const variant = req.query.variant === "full" ? "full" : "thumb";
-    if (!isAppSlug(req.params.app) || !Number.isInteger(rank) || rank < 1 || rank > 3) {
+    if (!isAppSlug(req.params.app) || !platform || !Number.isInteger(rank) || rank < 1 || rank > 3) {
       res.status(400).json({ error: "invalid media reference" });
       return;
     }
@@ -1457,7 +1458,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(503).json({ error: "media storage unavailable" });
       return;
     }
-    const metadata = await deps.publishedPreviewObject({ app: req.params.app, rank, variant });
+    const metadata = await deps.publishedPreviewObject({ app: req.params.app, platform, rank, variant });
     if (!metadata) {
       res.status(404).json({ error: "preview not found" });
       return;

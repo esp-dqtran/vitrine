@@ -201,14 +201,14 @@ test("builds paginated public previews without source image fields", () => {
   assert.equal(first.apps.length, 24);
   assert.equal(first.apps[0].previewScreens.length, 3);
   assert.deepEqual(first.apps[0].previewScreens.map(({ url }) => url), [
-    "/api/preview-media/catalog-01/1?variant=full",
-    "/api/preview-media/catalog-01/2?variant=full",
-    "/api/preview-media/catalog-01/3?variant=full",
+    "/api/preview-media/catalog-01/web/1?variant=full",
+    "/api/preview-media/catalog-01/web/2?variant=full",
+    "/api/preview-media/catalog-01/web/3?variant=full",
   ]);
   assert.deepEqual(first.apps[0].previewScreens.map(({ thumbnailUrl }) => thumbnailUrl), [
-    "/api/preview-media/catalog-01/1",
-    "/api/preview-media/catalog-01/2",
-    "/api/preview-media/catalog-01/3",
+    "/api/preview-media/catalog-01/web/1",
+    "/api/preview-media/catalog-01/web/2",
+    "/api/preview-media/catalog-01/web/3",
   ]);
   assert.ok(first.nextCursor);
   assert.doesNotMatch(JSON.stringify(first), /image_url|mobbin-bulk/);
@@ -261,7 +261,7 @@ test("builds the existing public catalog contract from bounded app records", () 
     page.apps[0]?.previewScreens.map(({ url }) => url),
     [
       "/api/catalog/facet-media/linear/screens/Dashboard/web/1?variant=full",
-      "/api/preview-media/linear/2?variant=full",
+      "/api/preview-media/linear/web/2?variant=full",
     ],
   );
   assert.deepEqual(page.apps[0]?.previewScreens[0]?.matchedFacets, [
@@ -307,7 +307,7 @@ test("keeps a UUID-disambiguated route while showing the human app name", () => 
 
   assert.equal(page.apps[0]?.id, slug);
   assert.equal(page.apps[0]?.app, "Aboard");
-  assert.equal(page.apps[0]?.previewScreens[0]?.url, `/api/preview-media/${slug}/1?variant=full`);
+  assert.equal(page.apps[0]?.previewScreens[0]?.url, `/api/preview-media/${slug}/web/1?variant=full`);
 });
 
 test("preserves the server's Updated At order for published Apps", () => {

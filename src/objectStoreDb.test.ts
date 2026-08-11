@@ -305,13 +305,14 @@ test("preview lookup uses explicit ranks one to three on the latest published ve
     }]);
   };
 
-  assert.equal((await publishedPreviewObject({ app: "alpha", rank: 3 }, query))?.key, metadata.key);
-  assert.deepEqual(captured?.values, ["alpha", 3]);
+  assert.equal((await publishedPreviewObject({ app: "alpha", platform: "web", rank: 3 }, query))?.key, metadata.key);
+  assert.deepEqual(captured?.values, ["alpha", 3, "web"]);
   assert.match(captured!.sql, /DISTINCT ON \(a\.id, latest\.platform, i\.id\)/);
   assert.match(captured!.sql, /api\.rank IS NULL/);
   assert.match(captured!.sql, /ROW_NUMBER\(\) OVER/);
   assert.match(captured!.sql, /PARTITION BY app, platform/);
   assert.match(captured!.sql, /ORDER BY platform_rank, platform/);
+  assert.match(captured!.sql, /av\.platform = \$3/);
   assert.match(captured!.sql, /preview_rank = \$2/);
   assert.match(captured!.sql, /'protected', 'public-preview'/);
   assert.match(captured!.sql, /COALESCE\(i\.thumbnail_object_key, i\.object_key\)/);
@@ -331,7 +332,7 @@ test("preview lookup can resolve the full image for high-density catalog cards",
   };
 
   assert.equal(
-    (await publishedPreviewObject({ app: "alpha", rank: 1, variant: "full" }, query))?.key,
+    (await publishedPreviewObject({ app: "alpha", platform: "web", rank: 1, variant: "full" }, query))?.key,
     metadata.key,
   );
   assert.match(sql, /so\.object_key = i\.object_key/);
@@ -344,8 +345,8 @@ test("preview lookup rejects ranks outside one to three without querying", async
     calls += 1;
     return result();
   };
-  await assert.rejects(publishedPreviewObject({ app: "alpha", rank: 0 }, query), /rank/i);
-  await assert.rejects(publishedPreviewObject({ app: "alpha", rank: 4 }, query), /rank/i);
+  await assert.rejects(publishedPreviewObject({ app: "alpha", platform: "web", rank: 0 }, query), /rank/i);
+  await assert.rejects(publishedPreviewObject({ app: "alpha", platform: "web", rank: 4 }, query), /rank/i);
   assert.equal(calls, 0);
 });
 

@@ -276,7 +276,7 @@ export async function crawlFailureObject(
 }
 
 export async function publishedPreviewObject(
-  input: { app: string; rank: number; variant?: "full" | "thumb" },
+  input: { app: string; platform: string; rank: number; variant?: "full" | "thumb" },
   runQuery: DatabaseQuery = query,
 ): Promise<ObjectMetadata | undefined> {
   if (!Number.isInteger(input.rank) || input.rank < 1 || input.rank > 3) {
@@ -287,7 +287,7 @@ export async function publishedPreviewObject(
        SELECT DISTINCT ON (av.app_id, av.platform)
          av.id AS version_id, av.app_id, av.platform
        FROM app_versions av
-       WHERE av.status = 'published'
+       WHERE av.status = 'published' AND av.platform = $3
        ORDER BY av.app_id, av.platform, av.version_number DESC
      ),
      candidates AS (
@@ -340,7 +340,7 @@ export async function publishedPreviewObject(
      WHERE ranked.app = $1 AND ranked.preview_rank = $2
        AND so.access_class IN ('protected', 'public-preview')
      LIMIT 1`,
-    [input.app, input.rank],
+    [input.app, input.rank, input.platform],
   );
   return metadataFrom(result.rows[0] as MetadataRow | undefined);
 }

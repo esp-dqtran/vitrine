@@ -126,7 +126,7 @@ function screen(
       ].join("/")
     : null;
   const previewUrl = exactPreviewUrl
-    ?? (hash ? `/api/preview-media/${app}/${previewRank}` : null);
+    ?? (hash ? `/api/preview-media/${app}/${image.platform}/${previewRank}` : null);
   const mediaUrl = imageUrl(app, image.image_url)
     || (image.capture_url ? imageUrl(app, image.capture_url) : "");
   const thumbnailMediaUrl = imageUrl(app, image.image_url, "thumb") || mediaUrl;

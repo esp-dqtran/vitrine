@@ -2116,7 +2116,7 @@ test("keeps the catalog public and every App detail endpoint private", async (t)
   t.after(() => close(server));
 
   assert.equal((await fetch(`${base}/catalog`)).status, 200);
-  assert.equal((await fetch(`${base}/preview-media/linear/1`)).status, 503);
+  assert.equal((await fetch(`${base}/preview-media/linear/web/1`)).status, 503);
 
   const privatePaths = [
     "/apps/linear",
@@ -2191,28 +2191,29 @@ test("keeps the Sites catalog and media public, but the Site detail JSON private
   assert.equal((await fetch(`${base}/sites/1/versions/2`)).status, 401);
 });
 
-test("serves only the first three public preview images", async (t) => {
-  const inputs: Array<{ rank: number; variant?: "full" | "thumb" }> = [];
+test("serves only the first three public preview images for the requested platform", async (t) => {
+  const inputs: Array<{ platform: string; rank: number; variant?: "full" | "thumb" }> = [];
   const { base, server } = await serve(createApiApp({
     objectStore: localObjectStore,
-    publishedPreviewObject: async ({ rank, variant }) => {
-      inputs.push({ rank, variant });
+    publishedPreviewObject: async ({ platform, rank, variant }) => {
+      inputs.push({ platform, rank, variant });
       return rank === 1 ? previewMetadata : undefined;
     },
   }));
   t.after(() => close(server));
-  const preview = await fetch(`${base}/preview-media/linear/1`);
+  const preview = await fetch(`${base}/preview-media/linear/web/1`);
   assert.equal(preview.status, 200);
   assert.equal(preview.headers.get("content-type"), "image/webp");
   assert.equal(preview.headers.get("x-content-type-options"), "nosniff");
   assert.equal(await preview.text(), "image");
-  assert.equal((await fetch(`${base}/preview-media/linear/1?variant=full`)).status, 200);
-  assert.equal((await fetch(`${base}/preview-media/linear/2`)).status, 404);
-  assert.equal((await fetch(`${base}/preview-media/linear/4`)).status, 400);
+  assert.equal((await fetch(`${base}/preview-media/linear/web/1?variant=full`)).status, 200);
+  assert.equal((await fetch(`${base}/preview-media/linear/web/2`)).status, 404);
+  assert.equal((await fetch(`${base}/preview-media/linear/web/4`)).status, 400);
+  assert.equal((await fetch(`${base}/preview-media/linear/1`)).status, 401);
   assert.deepEqual(inputs, [
-    { rank: 1, variant: "thumb" },
-    { rank: 1, variant: "full" },
-    { rank: 2, variant: "thumb" },
+    { platform: "web", rank: 1, variant: "thumb" },
+    { platform: "web", rank: 1, variant: "full" },
+    { platform: "web", rank: 2, variant: "thumb" },
   ]);
 });
 
@@ -2236,11 +2237,11 @@ test("streams public preview bytes for same-origin canvas insertion", async (t) 
   }));
   t.after(() => close(server));
 
-  const redirected = await fetch(`${base}/preview-media/linear/1`, { redirect: "manual" });
+  const redirected = await fetch(`${base}/preview-media/linear/web/1`, { redirect: "manual" });
   assert.equal(redirected.status, 302);
   assert.equal(redirected.headers.get("location"), "https://objects.example.test/signed-preview");
 
-  const inline = await fetch(`${base}/preview-media/linear/1?variant=full&inline=1`, {
+  const inline = await fetch(`${base}/preview-media/linear/web/1?variant=full&inline=1`, {
     redirect: "manual",
   });
   assert.equal(inline.status, 200);
