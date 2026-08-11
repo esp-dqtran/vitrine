@@ -55,22 +55,57 @@ test("keeps Sticky Notes toolbar actions bound to the live canvas selection", ()
   );
 });
 
-test("keeps Sticky Note text at the FigJam top-left inset", () => {
+test("uses Excalidraw rectangle bound-text geometry for Sticky Notes", () => {
   assert.match(playgroundSource, /withCanvasElementUpdate\(element, position\)/);
   const container = { x: 100, y: 200, width: 200, height: 160 };
   const text = { width: 60, height: 24 };
 
   assert.deepEqual(
     stickyNoteBoundTextPosition(container, { ...text, textAlign: "left" }),
-    { x: 124, y: 224 },
+    { x: 105, y: 205 },
   );
   assert.deepEqual(
     stickyNoteBoundTextPosition(container, { ...text, textAlign: "center" }),
-    { x: 170, y: 224 },
+    { x: 170, y: 205 },
   );
   assert.deepEqual(
     stickyNoteBoundTextPosition(container, { ...text, textAlign: "right" }),
-    { x: 216, y: 224 },
+    { x: 235, y: 205 },
+  );
+});
+
+test("edits a saved Sticky Note through its positioned composer", () => {
+  assert.match(playgroundSource, /const beginStickyNoteEditAt = useCallback/);
+  assert.match(
+    playgroundSource,
+    /onDoubleClickCapture=\{handleCanvasStickyNoteDoubleClickCapture\}/,
+  );
+  assert.match(
+    playgroundSource,
+    /event\.nativeEvent\.stopImmediatePropagation\(\)/,
+  );
+  assert.match(playgroundSource, /editingElementId: sticky\.elementId/);
+  assert.match(playgroundSource, /editingTextElementId: sticky\.textElementId/);
+  assert.match(playgroundSource, /input\.textContent = stickyDraft\?\.value \?\? ""/);
+  assert.match(
+    playgroundSource,
+    /const noteWidth = stickyDraft\.width \?\? stickyNoteSize;[\s\S]*const noteHeight = stickyDraft\.height \?\? stickyNoteSize;/,
+  );
+  assert.match(
+    playgroundSource,
+    /if \(editingElementId && editingTextElementId\)[\s\S]*?stickyNoteBoundTextPosition\(container,/,
+  );
+  assert.match(
+    playgroundSource,
+    /stickyNoteTextDimensionsForContainer\([\s\S]*?container,[\s\S]*?updatedText,[\s\S]*?text,/,
+  );
+  assert.match(
+    playgroundSource,
+    /const nextContainer = stickyNoteContainerForBoundText\([\s\S]*?container,[\s\S]*?dimensions\.height,/,
+  );
+  assert.match(
+    playgroundSource,
+    /if \(element\.id === editingElementId\) return nextContainer;/,
   );
 });
 

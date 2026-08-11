@@ -13,20 +13,33 @@ interface StickyNoteBoundText {
   textAlign: StickyNoteTextAlign;
 }
 
-/* FigJam Sticky Notes keep content in the top-left with a 24px visual inset. */
+/*
+ * Sticky Notes are Excalidraw rectangles with a bound text element. Keep the
+ * exact inset Excalidraw uses for a rectangle label so the saved canvas text,
+ * the in-place editor, and the rectangle's own resize behaviour share one
+ * coordinate system.
+ */
+export const stickyNoteTextHorizontalInset = 5;
+export const stickyNoteTextVerticalInset = 5;
+
+export function stickyNoteTextContentWidth(width: number) {
+  return Math.max(0, width - stickyNoteTextHorizontalInset * 2);
+}
+
 export function stickyNoteBoundTextPosition(
   container: StickyNoteTextContainer,
   textElement: StickyNoteBoundText,
 ) {
-  const padding = 24;
-  const width = Math.max(0, container.width - padding * 2);
+  const width = stickyNoteTextContentWidth(container.width);
   return {
     x:
       textElement.textAlign === "right"
-        ? container.x + padding + width - textElement.width
+        ? container.x + stickyNoteTextHorizontalInset + width - textElement.width
         : textElement.textAlign === "center"
-          ? container.x + padding + (width - textElement.width) / 2
-          : container.x + padding,
-    y: container.y + padding,
+          ? container.x +
+            stickyNoteTextHorizontalInset +
+            (width - textElement.width) / 2
+          : container.x + stickyNoteTextHorizontalInset,
+    y: container.y + stickyNoteTextVerticalInset,
   };
 }

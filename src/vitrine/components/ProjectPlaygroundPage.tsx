@@ -55,6 +55,7 @@ import type {
 } from "@excalidraw/excalidraw/types";
 import type {
   ExcalidrawElement,
+  ExcalidrawTextElement,
   FileId,
 } from "@excalidraw/excalidraw/element/types";
 import "@excalidraw/excalidraw/index.css";
@@ -137,7 +138,12 @@ import {
   type ProjectStickyNoteFormat,
 } from "./ProjectStickyNoteToolbar.tsx";
 import { CanvasObjectToolbarDivider } from "./CanvasObjectToolbar.tsx";
-import { stickyNoteBoundTextPosition } from "./stickyNoteTextLayout.ts";
+import {
+  stickyNoteBoundTextPosition,
+  stickyNoteTextContentWidth,
+  stickyNoteTextHorizontalInset,
+  stickyNoteTextVerticalInset,
+} from "./stickyNoteTextLayout.ts";
 import {
   ProjectTemplateLibrary,
   type ProjectCanvasTemplate,
@@ -247,6 +253,10 @@ interface StickyPlacement {
 interface StickyDraft {
   x: number;
   y: number;
+  width?: number;
+  height?: number;
+  editingElementId?: string;
+  editingTextElementId?: string;
   color: ProjectStickyNoteColor;
   value: string;
   format: ProjectStickyNoteFormat;
@@ -260,7 +270,7 @@ function stickyNotePlacementCursor(
     mode === "stack"
       ? `<path d="M8 5h17v17H8z" fill="${color.fill}" stroke="${color.stroke}" stroke-width="1.5" opacity=".55"/>`
       : "";
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">${stack}<path d="M5 8h19v13l-6 6H5z" fill="${color.fill}" stroke="${color.stroke}" stroke-width="1.5" stroke-linejoin="round"/><path d="M18 27v-6h6" fill="none" stroke="${color.stroke}" stroke-width="1.5" stroke-linejoin="round"/><circle cx="5" cy="8" r="2.5" fill="#2563eb" stroke="#fff" stroke-width="1.5"/></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">${stack}<path d="M5 8h19v13l-6 6H5z" fill="${color.fill}" stroke="${color.stroke}" stroke-width="1.5" stroke-linejoin="round"/><path d="M18 27v-6h6" fill="none" stroke="${color.stroke}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}") 5 8, crosshair`;
 }
 
@@ -865,30 +875,38 @@ function createCanvasCustomShapeElements({
   x,
   y,
   color,
+  width,
+  height,
 }: {
   shape: CanvasShapeOption;
   x: number;
   y: number;
   color: string;
+  width?: number;
+  height?: number;
 }): ExcalidrawElement[] {
   const common = {
     strokeColor: color,
     strokeWidth: 2,
     roughness: 0,
   } as const;
+  const shapeWidth = Math.max(80, width ?? 160);
+  const shapeHeight = Math.max(60, height ?? 120);
+  const left = x - shapeWidth / 2;
+  const top = y - shapeHeight / 2;
 
   switch (shape.customShape) {
     case "triangle":
       return convertToExcalidrawElements([
         {
           type: "line",
-          x: x - 80,
-          y: y - 60,
+          x: left,
+          y: top,
           points: [
-            [0, 120],
-            [80, 0],
-            [160, 120],
-            [0, 120],
+            [0, shapeHeight],
+            [shapeWidth / 2, 0],
+            [shapeWidth, shapeHeight],
+            [0, shapeHeight],
           ],
           ...common,
         } as ElementSkeleton,
@@ -897,50 +915,52 @@ function createCanvasCustomShapeElements({
       return convertToExcalidrawElements([
         {
           type: "line",
-          x: x - 80,
-          y: y - 60,
+          x: left,
+          y: top,
           points: [
             [0, 0],
-            [160, 0],
-            [80, 120],
+            [shapeWidth, 0],
+            [shapeWidth / 2, shapeHeight],
             [0, 0],
           ],
           ...common,
         } as ElementSkeleton,
       ]) as ExcalidrawElement[];
-    case "cylinder":
+    case "cylinder": {
+      const capHeight = Math.max(20, Math.min(48, shapeHeight * 0.27));
       return convertToExcalidrawElements([
         {
           type: "rectangle",
-          x: x - 72,
-          y: y - 44,
-          width: 144,
-          height: 88,
+          x: left,
+          y: top + capHeight / 2,
+          width: shapeWidth,
+          height: shapeHeight - capHeight,
           backgroundColor: "transparent",
           fillStyle: "solid",
           ...common,
         } as ElementSkeleton,
         {
           type: "ellipse",
-          x: x - 72,
-          y: y - 60,
-          width: 144,
-          height: 32,
+          x: left,
+          y: top,
+          width: shapeWidth,
+          height: capHeight,
           backgroundColor: "#ffffff",
           fillStyle: "solid",
           ...common,
         } as ElementSkeleton,
         {
           type: "ellipse",
-          x: x - 72,
-          y: y + 28,
-          width: 144,
-          height: 32,
+          x: left,
+          y: top + shapeHeight - capHeight,
+          width: shapeWidth,
+          height: capHeight,
           backgroundColor: "transparent",
           fillStyle: "solid",
           ...common,
         } as ElementSkeleton,
       ]) as ExcalidrawElement[];
+    }
     case "mind-map":
       return convertToExcalidrawElements([
         {
@@ -1226,6 +1246,53 @@ function createStickyNoteElements({
   );
 }
 
+function stickyNoteTextDimensionsForContainer(
+  container: Pick<ExcalidrawElement, "width" | "height">,
+  textElement: ExcalidrawTextElement,
+  text: string,
+) {
+  // The public converter is also what constructs a bound label initially. Use
+  // it to remeasure edited text without reaching into Excalidraw internals.
+  const elements = convertToExcalidrawElements([
+    {
+      type: "rectangle",
+      x: 0,
+      y: 0,
+      width: container.width,
+      height: container.height,
+      label: {
+        text,
+        fontSize: textElement.fontSize,
+        fontFamily: textElement.fontFamily,
+        textAlign: "left",
+        verticalAlign: "top",
+        strokeColor: textElement.strokeColor,
+      },
+    } as ElementSkeleton,
+  ]) as ExcalidrawElement[];
+  const measuredText = elements.find((element) => element.type === "text");
+  return measuredText?.type === "text"
+    ? {
+        text: measuredText.text,
+        width: measuredText.width,
+        height: measuredText.height,
+      }
+    : { text, width: textElement.width, height: textElement.height };
+}
+
+function stickyNoteContainerForBoundText(
+  container: ExcalidrawElement,
+  textHeight: number,
+) {
+  /* Match Excalidraw's rectangle-label rule: its bound text has a 5px inset
+   * on each edge, and the rectangle grows rather than clipping a taller
+   * label. */
+  const minimumHeight = textHeight + stickyNoteTextVerticalInset * 2;
+  return minimumHeight > container.height
+    ? withCanvasElementUpdate(container, { height: minimumHeight })
+    : container;
+}
+
 interface AstryxStickyNoteReference {
   elementId: string;
   textElementId?: string;
@@ -1246,6 +1313,7 @@ interface CanvasTextReference {
   y: number;
   width: number;
   height: number;
+  text: string;
   color: ProjectStickyNoteColor;
   format: ProjectStickyNoteFormat;
 }
@@ -1504,6 +1572,7 @@ function canvasTextReferenceForElement(
     y: element.y,
     width: element.width,
     height: element.height,
+    text: element.text,
     color,
     format: {
       font: projectStickyNoteFontForFamily(element.fontFamily),
@@ -1531,6 +1600,7 @@ function canvasTextReferencesEqual(
     left?.y === right?.y &&
     left?.width === right?.width &&
     left?.height === right?.height &&
+    left?.text === right?.text &&
     left?.color.text === right?.color.text &&
     left?.format.font === right?.format.font &&
     left?.format.fontSize === right?.format.fontSize &&
@@ -1540,6 +1610,18 @@ function canvasTextReferencesEqual(
     left?.format.bulletedList === right?.format.bulletedList &&
     left?.format.link === right?.format.link &&
     left?.format.locked === right?.format.locked
+  );
+}
+
+function canvasTextReferenceListsEqual(
+  left: readonly CanvasTextReference[],
+  right: readonly CanvasTextReference[],
+) {
+  return (
+    left.length === right.length &&
+    left.every((reference, index) =>
+      canvasTextReferencesEqual(reference, right[index]),
+    )
   );
 }
 
@@ -1993,6 +2075,37 @@ function blobDataUrl(blob: Blob): Promise<DataURL> {
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(blob);
   });
+}
+
+/* Stamps remain active for repeated placement, just as they do in FigJam. The
+ * files themselves are static UI assets, so decode each one once and give each
+ * placed element a fresh Excalidraw file id that reuses the cached data URL. */
+const canvasStampAssetCache = new Map<
+  string,
+  Promise<Pick<BinaryFileData, "mimeType" | "dataURL">>
+>();
+
+async function cachedCanvasStampAsset(asset: string) {
+  const cached = canvasStampAssetCache.get(asset);
+  if (cached) return cached;
+  const load = (async () => {
+    const response = await fetch(asset);
+    if (!response.ok)
+      throw new Error(`Stamp asset returned ${response.status}`);
+    const blob = await response.blob();
+    return {
+      mimeType: (blob.type || "image/png") as BinaryFileData["mimeType"],
+      dataURL: await blobDataUrl(blob),
+    };
+  })();
+  canvasStampAssetCache.set(asset, load);
+  try {
+    return await load;
+  } catch (error) {
+    if (canvasStampAssetCache.get(asset) === load)
+      canvasStampAssetCache.delete(asset);
+    throw error;
+  }
 }
 
 const canvasAssetResolveTimeoutMs = 1_500;
@@ -2820,6 +2933,7 @@ export function ProjectPlayground({
   const [activeShapeOptionId, setActiveShapeOptionId] =
     useState<CanvasShapeOptionId>("rectangle");
   const [shapePlacement, setShapePlacement] = useState<CanvasShapeOption>();
+  const shapePlacementPointerRef = useRef<{ x: number; y: number }>();
   const [shapeColor, setShapeColor] = useState(defaultSectionFill);
   const [shapeColorPickerOpen, setShapeColorPickerOpen] = useState(false);
   const [stickyPickerOpen, setStickyPickerOpen] = useState(false);
@@ -2828,6 +2942,7 @@ export function ProjectPlayground({
   );
   const [stickyPlacement, setStickyPlacement] = useState<StickyPlacement>();
   const [commentPlacement, setCommentPlacement] = useState(false);
+  const [commentsPanelOpen, setCommentsPanelOpen] = useState(false);
   const [commentDraftAnchor, setCommentDraftAnchor] = useState<{
     x: number;
     y: number;
@@ -2843,6 +2958,7 @@ export function ProjectPlayground({
   const [textSelectionActive, setTextSelectionActive] = useState(false);
   const [selectedCanvasText, setSelectedCanvasText] =
     useState<CanvasTextReference>();
+  const [canvasTexts, setCanvasTexts] = useState<CanvasTextReference[]>([]);
   const [selectedCanvasTable, setSelectedCanvasTable] =
     useState<CanvasTableReference>();
   const [selectedStickyNote, setSelectedStickyNote] =
@@ -3029,13 +3145,16 @@ export function ProjectPlayground({
       } else {
         setStampPreviewPoint(undefined);
       }
+      if (shapePlacement && button === "down") {
+        shapePlacementPointerRef.current = { x: pointer.x, y: pointer.y };
+      }
       collaborationRef.current?.publishCursor({
         pointer: { x: pointer.x, y: pointer.y },
         button,
         selectedElementIds,
       });
     },
-    [],
+    [shapePlacement],
   );
 
   useEffect(() => {
@@ -3044,6 +3163,7 @@ export function ProjectPlayground({
     const frame = window.requestAnimationFrame(() => {
       const input = stickyInputRef.current;
       if (!input) return;
+      input.textContent = stickyDraft?.value ?? "";
       input.focus();
 
       const selection = window.getSelection();
@@ -3341,6 +3461,67 @@ export function ProjectPlayground({
     setStampPickerOpen(false);
   }, []);
 
+  const beginStickyNoteEditAt = useCallback(
+    (clientX: number, clientY: number) => {
+      if (canvasReadOnly) return false;
+      const editor = editorRef.current;
+      const root = canvasRootRef.current;
+      const appState = editor?.getAppState();
+      if (!editor || !root || !appState) return false;
+
+      const bounds = root.getBoundingClientRect();
+      const sceneX =
+        (clientX - bounds.left) / appState.zoom.value - appState.scrollX;
+      const sceneY =
+        (clientY - bounds.top) / appState.zoom.value - appState.scrollY;
+      const elements = editor.getSceneElements();
+      const sticky = elements
+        .map((element) => stickyNoteReferenceForElement(element, elements))
+        .find(
+          (note): note is AstryxStickyNoteReference =>
+            Boolean(note) &&
+            sceneX >= note.x &&
+            sceneX <= note.x + note.width &&
+            sceneY >= note.y &&
+            sceneY <= note.y + note.height,
+        );
+      if (!sticky) return false;
+
+      /* Excalidraw represents a labelled sticky as a rectangle plus a separate
+       * bound text element. Its native WYSIWYG layer uses another baseline
+       * when it opens, so always use the positioned Vitrines composer instead. */
+      deactivateStickyTool();
+      setStickyDraft({
+        x: sticky.x + sticky.width / 2,
+        y: sticky.y + sticky.height / 2,
+        width: sticky.width,
+        height: sticky.height,
+        editingElementId: sticky.elementId,
+        editingTextElementId: sticky.textElementId,
+        color: sticky.color,
+        value: sticky.text,
+        format: sticky.format,
+      });
+      editor.setActiveTool({ type: "selection" });
+      return true;
+    },
+    [canvasReadOnly, deactivateStickyTool],
+  );
+
+  const handleCanvasStickyNoteDoubleClickCapture = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest(".excalidraw__canvas")) return;
+      if (!beginStickyNoteEditAt(event.clientX, event.clientY)) return;
+      // Stop Excalidraw's own double-click handler from replacing this composer
+      // with its native textarea after React has opened the in-place editor.
+      event.preventDefault();
+      event.stopPropagation();
+      event.nativeEvent.stopImmediatePropagation();
+    },
+    [beginStickyNoteEditAt],
+  );
+
   const handleCanvasToolPointerDownCapture = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
       const target = event.target as HTMLElement;
@@ -3380,6 +3561,9 @@ export function ProjectPlayground({
       } else if (canvasPointer || nativeTool) {
         canvasTableCellSelectionRef.current = undefined;
       }
+      if (canvasPointer && shapePlacement) {
+        shapePlacementPointerRef.current = undefined;
+      }
       if (nativeTool) {
         deactivateStickyTool();
         setStickyDraft(undefined);
@@ -3408,6 +3592,7 @@ export function ProjectPlayground({
       deactivateTableTool,
       deactivateStampTool,
       selectedCanvasTable,
+      shapePlacement,
     ],
   );
 
@@ -3516,6 +3701,22 @@ export function ProjectPlayground({
         canvasTextReferencesEqual(current, nextSelectedCanvasText)
           ? current
           : nextSelectedCanvasText,
+      );
+      /* Plain text owns the same FigJam typography capabilities as Sticky
+       * Notes. Keep a scene-level reference list so rich treatments stay
+       * visible after the object is deselected, not only while its toolbar is
+       * open. Bound labels belong to their parent object and are excluded. */
+      const nextCanvasTexts = elements.flatMap((element) => {
+        const reference = canvasTextReferenceForElement(element);
+        if (!reference) return [];
+        return (element as { containerId?: string | null }).containerId
+          ? []
+          : [reference];
+      });
+      setCanvasTexts((current) =>
+        canvasTextReferenceListsEqual(current, nextCanvasTexts)
+          ? current
+          : nextCanvasTexts,
       );
       // Excalidraw changes back to Select when the inline editor opens. Keep the
       // FigJam Text affordance active until that editing interaction is finished.
@@ -3798,7 +3999,11 @@ export function ProjectPlayground({
         const sticky = container
           ? stickyNoteReferenceForElement(container, elements)
           : undefined;
-        if (!sticky || !stickyNoteUsesRichTextOverlay(sticky.format)) {
+        const plainText = containerId
+          ? undefined
+          : canvasTextReferenceForElement(element);
+        const richTextFormat = sticky?.format ?? plainText?.format;
+        if (!richTextFormat || !stickyNoteUsesRichTextOverlay(richTextFormat)) {
           return element;
         }
         const nextOpacity =
@@ -3807,14 +4012,43 @@ export function ProjectPlayground({
           ? element
           : withCanvasElementUpdate(element, { opacity: nextOpacity });
       });
+      /* Keep imported and already-created Sticky Notes on the same FigJam
+       * baseline as new notes. This runs only outside inline editing so a
+       * position correction never moves the user's live caret. */
+      const positionedStickyTextElements = appState.editingTextElement
+        ? richStickyTextElements
+        : richStickyTextElements.map((element) => {
+            if (element.isDeleted || element.type !== "text") return element;
+            const containerId = (element as { containerId?: string | null })
+              .containerId;
+            const container = containerId
+              ? richStickyTextElements.find(
+                  (candidate) => candidate.id === containerId,
+                )
+              : undefined;
+            const sticky = container
+              ? stickyNoteReferenceForElement(
+                  container,
+                  richStickyTextElements,
+                )
+              : undefined;
+            if (!sticky || !container) return element;
+            const position = stickyNoteBoundTextPosition(container, {
+              ...element,
+              textAlign: "left",
+            });
+            return element.x === position.x && element.y === position.y
+              ? element
+              : withCanvasElementUpdate(element, position);
+          });
       if (
-        richStickyTextElements.some(
+        positionedStickyTextElements.some(
           (element, index) => element !== elements[index],
         )
       ) {
         window.requestAnimationFrame(() => {
           editorRef.current?.updateScene({
-            elements: richStickyTextElements,
+            elements: positionedStickyTextElements,
             captureUpdate: CaptureUpdateAction.NEVER,
           });
         });
@@ -4730,9 +4964,17 @@ export function ProjectPlayground({
     editor?.setActiveTool({ type: "selection" });
   }, []);
 
+  const closeCommentsPanel = useCallback(() => {
+    stopCommentPlacement();
+    setCommentDraftAnchor(undefined);
+    setCommentDraft("");
+    setSelectedCommentId(undefined);
+    setCommentsPanelOpen(false);
+  }, [stopCommentPlacement]);
+
   const toggleCommentTool = useCallback(() => {
-    if (commentPlacement) {
-      stopCommentPlacement();
+    if (commentsPanelOpen) {
+      closeCommentsPanel();
       return;
     }
     stopStickyPlacement();
@@ -4749,13 +4991,14 @@ export function ProjectPlayground({
     setTemplatesOpen(false);
     setReferencesOpen(false);
     setToolsCatalogOpen(false);
+    setCommentsPanelOpen(true);
     setCommentPlacement(true);
     const editor = editorRef.current;
     editor?.setActiveTool({ type: "custom", customType: "astryx-comment" });
     editor?.setCursor(commentPlacementCursor);
   }, [
-    commentPlacement,
-    stopCommentPlacement,
+    closeCommentsPanel,
+    commentsPanelOpen,
     deactivateStampTool,
     deactivateTableTool,
     stopDocumentPlacement,
@@ -4843,7 +5086,12 @@ export function ProjectPlayground({
   }, []);
 
   const insertCanvasCustomShapeAt = useCallback(
-    (x: number, y: number, shape: CanvasShapeOption) => {
+    (
+      x: number,
+      y: number,
+      shape: CanvasShapeOption,
+      size?: { width: number; height: number },
+    ) => {
       const editor = editorRef.current;
       if (!editor || !shape.customShape) return;
       const created = createCanvasCustomShapeElements({
@@ -4851,6 +5099,7 @@ export function ProjectPlayground({
         x,
         y,
         color: shapeColor,
+        ...size,
       });
       if (created.length === 0) return;
       editor.updateScene({
@@ -4897,15 +5146,11 @@ export function ProjectPlayground({
         return;
       }
       try {
-        const response = await fetch(stamp.asset);
-        if (!response.ok)
-          throw new Error(`Stamp asset returned ${response.status}`);
-        const blob = await response.blob();
+        const asset = await cachedCanvasStampAsset(stamp.asset);
         const fileId = crypto.randomUUID() as FileId;
         const file: BinaryFileData = {
           id: fileId,
-          mimeType: (blob.type || "image/png") as BinaryFileData["mimeType"],
-          dataURL: await blobDataUrl(blob),
+          ...asset,
           created: Date.now(),
         };
         const image = createCanvasStampElement({ x, y, fileId, stamp });
@@ -5073,14 +5318,13 @@ export function ProjectPlayground({
       mode: StickyPlacementMode,
       keepPickerOpen = false,
     ) => {
-      stopCommentPlacement();
+      closeCommentsPanel();
       // Sticky Notes is a complete canvas mode. It can be entered through the
       // toolbar or the N shortcut, so it must clear every competing family here
       // instead of relying on whichever caller happened to open it.
       setShapePickerOpen(false);
       setShapeLibraryOpen(false);
       setShapeLibraryQuery("");
-      setShapeColorPickerOpen(false);
       setMarkerDrawing(false);
       setResearchFrameDrawing(false);
       deactivateTableTool();
@@ -5104,7 +5348,7 @@ export function ProjectPlayground({
       });
       editor?.setCursor(stickyNotePlacementCursor(color, mode));
     },
-    [deactivateStampTool, deactivateTableTool, stopCommentPlacement],
+    [closeCommentsPanel, deactivateStampTool, deactivateTableTool],
   );
 
   const toggleStickyNoteTool = useCallback(() => {
@@ -5140,7 +5384,6 @@ export function ProjectPlayground({
     setShapePickerOpen((open) => !open);
     setShapeLibraryOpen(false);
     setShapeLibraryQuery("");
-    setShapeColorPickerOpen(false);
     setShapePlacement(undefined);
     editorRef.current?.resetCursor();
     deactivateStickyTool();
@@ -5174,6 +5417,7 @@ export function ProjectPlayground({
         },
       });
       if (shape.customShape) {
+        shapePlacementPointerRef.current = undefined;
         setShapePlacement(shape);
         editor?.setActiveTool({
           type: "custom",
@@ -5181,6 +5425,7 @@ export function ProjectPlayground({
         });
         editor?.setCursor("crosshair");
       } else if (shape.tool) {
+        shapePlacementPointerRef.current = undefined;
         setShapePlacement(undefined);
         editor?.resetCursor();
         editor?.setActiveTool({ type: shape.tool });
@@ -5470,8 +5715,60 @@ export function ProjectPlayground({
       { selectNote = true }: { selectNote?: boolean } = {},
     ) => {
       if (!stickyDraft) return;
-      const text = value.trim();
+      const editingElementId = stickyDraft.editingElementId;
+      const editingTextElementId = stickyDraft.editingTextElementId;
       setStickyDraft(undefined);
+      if (editingElementId && editingTextElementId) {
+        const editor = editorRef.current;
+        const elements = editor?.getSceneElements();
+        const container = elements?.find(
+          (element) => element.id === editingElementId,
+        );
+        const textElement = elements?.find(
+          (element) => element.id === editingTextElementId,
+        );
+        if (editor && container && textElement?.type === "text") {
+          const text = stickyDraft.format.bulletedList
+            ? canvasTextWithBulletedList(value, true)
+            : value;
+          const updatedText = withCanvasElementUpdate(textElement, {
+            text,
+            originalText: text,
+            textAlign: "left",
+          } as Partial<ExcalidrawElement>);
+          // Updating only `text` leaves the previous glyph measurements on
+          // the element. Recalculate against its bound sticker before putting
+          // it back into the scene so edited text cannot be clipped.
+          const dimensions = stickyNoteTextDimensionsForContainer(
+            container,
+            updatedText,
+            text,
+          );
+          const nextContainer = stickyNoteContainerForBoundText(
+            container,
+            dimensions.height,
+          );
+          const position = stickyNoteBoundTextPosition(nextContainer, {
+            ...updatedText,
+            ...dimensions,
+            textAlign: "left",
+          });
+          editor.updateScene({
+            elements: elements.map((element) => {
+              if (element.id === editingElementId) return nextContainer;
+              return element.id === editingTextElementId
+                ? withCanvasElementUpdate(updatedText, {
+                    ...dimensions,
+                    ...position,
+                  })
+                : element;
+            }),
+            captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+          });
+        }
+        return;
+      }
+      const text = value.trim();
       const selectedElementId = insertStickyNotesAt(
         stickyDraft.x,
         stickyDraft.y,
@@ -5632,8 +5929,22 @@ export function ProjectPlayground({
         return;
       }
       if (shapePlacement) {
-        const { x, y } = pointerDownState.origin;
-        insertCanvasCustomShapeAt(x, y, shapePlacement);
+        const origin = pointerDownState.origin;
+        const endpoint = shapePlacementPointerRef.current;
+        const deltaX = endpoint ? endpoint.x - origin.x : 0;
+        const deltaY = endpoint ? endpoint.y - origin.y : 0;
+        const hasDragBounds = Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8;
+        const x = hasDragBounds ? origin.x + deltaX / 2 : origin.x;
+        const y = hasDragBounds ? origin.y + deltaY / 2 : origin.y;
+        insertCanvasCustomShapeAt(
+          x,
+          y,
+          shapePlacement,
+          hasDragBounds
+            ? { width: Math.abs(deltaX), height: Math.abs(deltaY) }
+            : undefined,
+        );
+        shapePlacementPointerRef.current = undefined;
         setShapePlacement(undefined);
         editorRef.current?.resetCursor();
         return;
@@ -5773,10 +6084,12 @@ export function ProjectPlayground({
      * 50% zoom it covered twice the note it was standing in for, and at 200%
      * half of it. Text and padding scale with the box for the same reason.
      */
-    const width = stickyNoteSize * zoom;
-    const height = stickyNoteSize * zoom;
-    const noteLeft = (stickyDraft.x - stickyNoteSize / 2 + scrollX) * zoom;
-    const noteTop = (stickyDraft.y - stickyNoteSize / 2 + scrollY) * zoom;
+    const noteWidth = stickyDraft.width ?? stickyNoteSize;
+    const noteHeight = stickyDraft.height ?? stickyNoteSize;
+    const width = noteWidth * zoom;
+    const height = noteHeight * zoom;
+    const noteLeft = (stickyDraft.x - noteWidth / 2 + scrollX) * zoom;
+    const noteTop = (stickyDraft.y - noteHeight / 2 + scrollY) * zoom;
     /* Clamp inside the canvas when it has been measured; before that, place it
        where asked rather than withholding the composer entirely. */
     const maxLeft = root
@@ -5803,14 +6116,8 @@ export function ProjectPlayground({
               ? '"Lilita One", "Arial Rounded MT Bold", cursive'
               : 'var(--reference-font-family, "Figtree", system-ui, sans-serif)',
       "--sticky-font-size": `${stickyDraft.format.fontSize * zoom}px`,
-      "--sticky-padding": `${24 * zoom}px`,
-      "--sticky-text-align": stickyDraft.format.textAlign,
-      "--sticky-justify-content":
-        stickyDraft.format.textAlign === "left"
-          ? "flex-start"
-          : stickyDraft.format.textAlign === "right"
-            ? "flex-end"
-            : "center",
+      "--sticky-padding-horizontal": `${stickyNoteTextHorizontalInset * zoom}px`,
+      "--sticky-padding-top": `${stickyNoteTextVerticalInset * zoom}px`,
       // The board is intentionally light regardless of the surrounding app
       // theme, so applying a dark-theme filter here made the draft differ from
       // the exact palette color rendered by Excalidraw after insertion.
@@ -6196,6 +6503,10 @@ export function ProjectPlayground({
           fontFamily: projectStickyNoteFontFamilies[format.font],
           textAlign: format.textAlign,
           strokeColor: color.text,
+          // Excalidraw has no rich-text model. Use its text element for
+          // editing and persistence, then render bold/strikethrough through
+          // the positioned Vitrines layer when the editor is closed.
+          opacity: stickyNoteUsesRichTextOverlay(format) ? 0 : 100,
           link: format.link || null,
           locked: format.locked,
           customData: {
@@ -6521,9 +6832,9 @@ export function ProjectPlayground({
       ({
         // FigJam keeps the author inside the note, aligned with its text
         // inset rather than presenting it as an external collaboration pill.
-        left: `${(note.x + 24 + canvasViewport.scrollX) * canvasViewport.zoom}px`,
+        left: `${(note.x + stickyNoteTextHorizontalInset + canvasViewport.scrollX) * canvasViewport.zoom}px`,
         top: `${(note.y + note.height - 30 + canvasViewport.scrollY) * canvasViewport.zoom}px`,
-        maxWidth: `${Math.max(0, (note.width - 48) * canvasViewport.zoom)}px`,
+        maxWidth: `${stickyNoteTextContentWidth(note.width) * canvasViewport.zoom}px`,
         opacity: canvasViewport.zoom < 0.35 ? 0 : 1,
       }) as CSSProperties,
     [canvasViewport],
@@ -6532,9 +6843,9 @@ export function ProjectPlayground({
   const stickyNotePlaceholderStyle = useCallback(
     (note: AstryxStickyNoteReference) =>
       ({
-        left: `${(note.x + 24 + canvasViewport.scrollX) * canvasViewport.zoom}px`,
-        top: `${(note.y + 24 + canvasViewport.scrollY) * canvasViewport.zoom}px`,
-        width: `${Math.max(0, (note.width - 48) * canvasViewport.zoom)}px`,
+        left: `${(note.x + stickyNoteTextHorizontalInset + canvasViewport.scrollX) * canvasViewport.zoom}px`,
+        top: `${(note.y + stickyNoteTextVerticalInset + canvasViewport.scrollY) * canvasViewport.zoom}px`,
+        width: `${stickyNoteTextContentWidth(note.width) * canvasViewport.zoom}px`,
         fontSize: `${note.format.fontSize * canvasViewport.zoom}px`,
         opacity: canvasViewport.zoom < 0.35 ? 0 : 1,
       }) as CSSProperties,
@@ -6544,9 +6855,9 @@ export function ProjectPlayground({
   const stickyNoteRichTextStyle = useCallback(
     (note: AstryxStickyNoteReference) =>
       ({
-        left: `${(note.x + 24 + canvasViewport.scrollX) * canvasViewport.zoom}px`,
-        top: `${(note.y + 24 + canvasViewport.scrollY) * canvasViewport.zoom}px`,
-        width: `${Math.max(0, (note.width - 48) * canvasViewport.zoom)}px`,
+        left: `${(note.x + stickyNoteTextHorizontalInset + canvasViewport.scrollX) * canvasViewport.zoom}px`,
+        top: `${(note.y + stickyNoteTextVerticalInset + canvasViewport.scrollY) * canvasViewport.zoom}px`,
+        width: `${stickyNoteTextContentWidth(note.width) * canvasViewport.zoom}px`,
         color: note.color.text,
         fontSize: `${note.format.fontSize * canvasViewport.zoom}px`,
         fontWeight: note.format.bold ? 700 : 400,
@@ -6557,6 +6868,30 @@ export function ProjectPlayground({
             : note.format.font === "technical"
               ? '"Cascadia Code", ui-monospace, SFMono-Regular, Menlo, monospace'
               : note.format.font === "bookish"
+                ? '"Lilita One", "Arial Rounded MT Bold", cursive'
+                : 'var(--reference-font-family, "Figtree", system-ui, sans-serif)',
+        opacity: canvasViewport.zoom < 0.35 ? 0 : 1,
+      }) as CSSProperties,
+    [canvasViewport],
+  );
+
+  const canvasTextRichTextStyle = useCallback(
+    (text: CanvasTextReference) =>
+      ({
+        left: `${(text.x + canvasViewport.scrollX) * canvasViewport.zoom}px`,
+        top: `${(text.y + canvasViewport.scrollY) * canvasViewport.zoom}px`,
+        minWidth: `${Math.max(0, text.width * canvasViewport.zoom)}px`,
+        color: text.color.text,
+        fontSize: `${text.format.fontSize * canvasViewport.zoom}px`,
+        fontWeight: text.format.bold ? 700 : 400,
+        textDecoration: text.format.strikethrough ? "line-through" : "none",
+        textAlign: text.format.textAlign,
+        "--sticky-rich-font-family":
+          text.format.font === "cute"
+            ? '"Virgil", "Comic Sans MS", cursive'
+            : text.format.font === "technical"
+              ? '"Cascadia Code", ui-monospace, SFMono-Regular, Menlo, monospace'
+              : text.format.font === "bookish"
                 ? '"Lilita One", "Arial Rounded MT Bold", cursive'
                 : 'var(--reference-font-family, "Figtree", system-ui, sans-serif)',
         opacity: canvasViewport.zoom < 0.35 ? 0 : 1,
@@ -7014,6 +7349,7 @@ export function ProjectPlayground({
     screensOpen ||
     templatesOpen ||
     stickyPickerOpen ||
+    commentsPanelOpen ||
     commentPlacement ||
     Boolean(commentDraftAnchor) ||
     Boolean(selectedComment);
@@ -7170,6 +7506,7 @@ export function ProjectPlayground({
         <div
           ref={setCanvasRoot}
           onPointerDownCapture={handleCanvasToolPointerDownCapture}
+          onDoubleClickCapture={handleCanvasStickyNoteDoubleClickCapture}
           onPointerUpCapture={handleCanvasPlacementPointerUp}
           data-marker-mode={markerDrawing ? markerMode : undefined}
           data-marker-color-transition={markerColorTransition ? "b" : "a"}
@@ -7514,14 +7851,9 @@ export function ProjectPlayground({
                 <button
                   type="button"
                   className="project-playground__comments-trigger"
-                  aria-label={
-                    commentPlacement ? "Cancel comment placement" : "Comments"
-                  }
-                  aria-pressed={
-                    commentPlacement ||
-                    Boolean(commentDraftAnchor) ||
-                    Boolean(selectedComment)
-                  }
+                  aria-label={commentsPanelOpen ? "Close comments" : "Comments"}
+                  aria-expanded={commentsPanelOpen}
+                  aria-pressed={commentsPanelOpen}
                   title="Comments"
                   onClick={() => activateCanvasTool("comments")}
                 >
@@ -7589,20 +7921,23 @@ export function ProjectPlayground({
               setCommentDraftAnchor(undefined);
               setCommentDraft("");
               setSelectedCommentId(thread.id);
+              setCommentsPanelOpen(true);
             }}
           />
         ))}
-        {commentPlacement && !commentDraftAnchor && !selectedComment ? (
+        {commentsPanelOpen && !selectedComment ? (
           <ProjectCanvasCommentInbox
             threads={canvasComments}
             onSelectThread={(threadId) => {
               stopCommentPlacement();
+              setCommentDraftAnchor(undefined);
+              setCommentDraft("");
               setSelectedCommentId(threadId);
             }}
-            onClose={stopCommentPlacement}
+            onClose={closeCommentsPanel}
           />
         ) : null}
-        {commentDraftAnchor || selectedComment ? (
+        {commentDraftAnchor || (commentsPanelOpen && selectedComment) ? (
           <ProjectCanvasCommentPanel
             thread={selectedComment}
             draft={commentDraft}
@@ -7611,11 +7946,15 @@ export function ProjectPlayground({
             onSubmit={submitCanvasComment}
             onResolve={toggleSelectedCommentResolved}
             onDelete={deleteSelectedComment}
-            onClose={() => {
-              setCommentDraftAnchor(undefined);
-              setCommentDraft("");
-              setSelectedCommentId(undefined);
-            }}
+            onBack={
+              selectedComment
+                ? () => {
+                    setCommentDraft("");
+                    setSelectedCommentId(undefined);
+                  }
+                : undefined
+            }
+            onClose={closeCommentsPanel}
           />
         ) : null}
         {canvasFindOpen ? (
@@ -7951,11 +8290,12 @@ export function ProjectPlayground({
           <aside
             className="project-canvas-more-shapes"
             role="dialog"
+            aria-modal="true"
             aria-label="More shapes"
             onPointerDown={(event) => event.stopPropagation()}
           >
             <header className="project-canvas-more-shapes__header">
-              <strong>Shapes</strong>
+              <strong>More shapes</strong>
               <button
                 type="button"
                 aria-label="Close more shapes"
@@ -8105,7 +8445,7 @@ export function ProjectPlayground({
                   />
                   <div
                     className="project-canvas-marker-controls__swatches"
-                    role="group"
+                    role="radiogroup"
                     aria-label={
                       markerOptionsDisabled
                         ? "Color unavailable for Eraser"
@@ -8117,8 +8457,9 @@ export function ProjectPlayground({
                         key={color.value}
                         type="button"
                         className="project-canvas-marker-controls__swatch"
+                        role="radio"
                         aria-label={`${color.label} ${markerMode === "highlighter" ? "highlighter" : "marker"}`}
-                        aria-pressed={
+                        aria-checked={
                           markerStrokeColor.toLowerCase() === color.value
                         }
                         style={
@@ -8167,28 +8508,26 @@ export function ProjectPlayground({
           />
         )}
         {stickyPlacement ? (
-          <div
-            className="project-sticky-note-placement-hint"
+          <span
+            className="project-sticky-note-placement-status"
             role="status"
             aria-live="polite"
           >
-            <StickyNoteGlyph color={stickyPlacement.color} />
-            <span>
-              Click anywhere to place{" "}
-              {stickyPlacement.mode === "stack"
-                ? "a stack of notes"
-                : `a ${stickyPlacement.color.name} note`}
-              .
-            </span>
-            <kbd>Esc</kbd>
-          </div>
+            Sticky note tool active. Click anywhere to place{" "}
+            {stickyPlacement.mode === "stack"
+              ? "a stack of notes"
+              : `a ${stickyPlacement.color.name} note`}
+            . Press Escape to cancel.
+          </span>
         ) : null}
         {stickyDraft && stickyComposerStyle && (
           <div
             ref={stickyComposerRef}
             className="project-sticky-note-composer"
             style={stickyComposerStyle}
-            aria-label="New sticky note"
+            aria-label={
+              stickyDraft.editingElementId ? "Edit sticky note" : "New sticky note"
+            }
           >
             <div className="project-sticky-note-composer__surface">
               <div
@@ -8199,8 +8538,8 @@ export function ProjectPlayground({
                 role="textbox"
                 aria-multiline="true"
                 aria-label="Sticky note text"
-                aria-placeholder="Type your note"
-                data-placeholder="Type your note"
+                aria-placeholder="Type anything, @mention anyone"
+                data-placeholder="Type anything, @mention anyone"
                 spellCheck
                 onInput={(event) =>
                   setStickyDraft((current) =>
@@ -8412,6 +8751,7 @@ export function ProjectPlayground({
               format={selectedCanvasText.format}
               style={canvasTextToolbarStyle}
               objectLabel="Text"
+              showTextStyling
               onColorChange={(color) => updateSelectedCanvasText({ color })}
               onFormatChange={(format) => updateSelectedCanvasText({ format })}
             />
@@ -9037,6 +9377,23 @@ export function ProjectPlayground({
               aria-hidden="true"
             >
               {note.text}
+            </div>
+          ))}
+        {canvasTexts
+          .filter(
+            (text) =>
+              !canvasTextEditing &&
+              text.text.trim() &&
+              stickyNoteUsesRichTextOverlay(text.format),
+          )
+          .map((text) => (
+            <div
+              key={`${text.elementId}-rich-text`}
+              className="project-canvas-text-rich-text"
+              style={canvasTextRichTextStyle(text)}
+              aria-hidden="true"
+            >
+              {text.text}
             </div>
           ))}
         {canvasDocuments.map((document) => (

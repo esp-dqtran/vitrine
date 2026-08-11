@@ -112,7 +112,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /className="project-canvas-focus-container"/);
   assert.match(
     css,
-    /\.project-canvas-focus-container \{[^}]*border: 2px solid #0d99ff;/,
+    /\.project-canvas-focus-container \{[^}]*border:\s*2px dashed rgb\(31 31 31 \/ 58%\);/,
   );
   assert.match(
     css,
@@ -161,8 +161,8 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     /aria-label=\{\s*shapePickerOpen\s*\? "Close shapes and connectors"\s*: "Shapes and connectors"\s*\}/,
   );
   assert.match(source, /const canvasShapeOptions/);
-  assert.match(source, /const canvasShapeColors = canvasSectionColors/);
   assert.match(source, /useState\(defaultSectionFill\)/);
+  assert.match(source, /const canvasShapeColors = canvasSectionColors/);
   assert.match(source, /aria-label="Custom shape color"/);
   assert.match(source, /selectCanvasShapeColor\(event\.currentTarget\.value\)/);
   assert.match(source, /<CanvasShapesCollageGlyph color=\{shapeColor\} \/>/);
@@ -330,7 +330,11 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /customShape: "mind-map"/);
   assert.match(source, /function createCanvasCustomShapeElements/);
   assert.match(source, /customType: `astryx-shape:\$\{shape\.id\}`/);
-  assert.match(source, /insertCanvasCustomShapeAt\(x, y, shapePlacement\)/);
+  assert.match(
+    source,
+    /const hasDragBounds = Math\.abs\(deltaX\) > 8 \|\| Math\.abs\(deltaY\) > 8/,
+  );
+  assert.match(source, /width: Math\.abs\(deltaX\), height: Math\.abs\(deltaY\)/);
   assert.match(source, /className="project-canvas-shape-library__more"/);
   assert.match(source, /aria-label="More shapes"/);
   assert.match(source, /className="project-canvas-more-shapes"/);
@@ -498,6 +502,9 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.doesNotMatch(emojiStampSource, /toggleWidgetsLauncher/);
   assert.doesNotMatch(source, /FaceHappyIcon/);
   assert.match(source, /className="project-canvas-stamp-preview"/);
+  assert.match(source, /const canvasStampAssetCache = new Map/);
+  assert.match(source, /async function cachedCanvasStampAsset/);
+  assert.match(source, /const asset = await cachedCanvasStampAsset\(stamp\.asset\)/);
   assert.match(
     source,
     /stamp\.id === "profile"[\s\S]*?createCanvasProfileStampElements/,
@@ -526,7 +533,10 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     commentsSource,
     /just leave a note of appreciation\. Click anywhere in the file to leave a comment\./,
   );
-  assert.match(css, /\.project-canvas-comment-inbox\s*\{[\s\S]*?width: 240px;/);
+  assert.match(
+    css,
+    /\.project-canvas-comment-inbox,[\s\S]*?\.project-canvas-comments--thread\s*\{[\s\S]*?width: min\(320px, calc\(100% - 40px\)\);/,
+  );
   assert.match(
     commentsSource,
     /className="project-canvas-comments project-canvas-comments--composer"/,
@@ -582,6 +592,10 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /setStickyPickerOpen\(keepPickerOpen\)/);
   assert.match(
     source,
+    /const armStickyPlacement[\s\S]*closeCommentsPanel\(\);[\s\S]*setStickyPickerOpen\(keepPickerOpen\)/,
+  );
+  assert.match(
+    source,
     /const armStickyPlacement[\s\S]*setShapePickerOpen\(false\);[\s\S]*setShapeLibraryOpen\(false\);[\s\S]*setMarkerDrawing\(false\);[\s\S]*setResearchFrameDrawing\(false\);[\s\S]*setDocumentPlacement\(false\);[\s\S]*customType: "astryx-sticky-note"/,
   );
   assert.match(
@@ -597,7 +611,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     source,
     /<ProjectCanvasToolGlyph\s+tool="sticky"\s+stickyColor=\{stickyToolColor\}\s*\/>/,
   );
-  assert.match(source, /<StickyNoteGlyph color=\{stickyPlacement\.color\} \/>/);
+  assert.match(source, /className="project-sticky-note-placement-status"/);
   assert.match(
     source,
     /event\.key\.toLowerCase\(\) === "n"[\s\S]*toggleStickyNoteTool\(\)/,
@@ -696,7 +710,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     source,
     /const text = value\.trim\(\);[\s\S]{0,240}if \(!text\)/,
   );
-  assert.match(source, /aria-placeholder="Type your note"/);
+  assert.match(source, /aria-placeholder="Type anything, @mention anyone"/);
   assert.match(source, /event\.key === "Escape"[\s\S]*cancelStickyDraft\(\)/);
   assert.match(
     source,
@@ -719,14 +733,21 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   );
   assert.match(source, /tool="comments"/);
   assert.match(source, /customType: "astryx-comment"/);
+  assert.match(
+    source,
+    /const \[commentsPanelOpen, setCommentsPanelOpen\] = useState\(false\)/,
+  );
+  assert.match(source, /const closeCommentsPanel = useCallback/);
   assert.match(source, /<ProjectCanvasCommentPin/);
   assert.match(source, /<ProjectCanvasCommentInbox/);
   assert.match(
     source,
-    /commentPlacement && !commentDraftAnchor && !selectedComment/,
+    /commentsPanelOpen && !selectedComment/,
   );
   assert.match(source, /onSelectThread=\{\(threadId\) =>/);
+  assert.match(source, /onClose=\{closeCommentsPanel\}/);
   assert.match(source, /<ProjectCanvasCommentPanel/);
+  assert.match(source, /onBack=\{/);
   assert.match(source, /const deleteSelectedComment = useCallback/);
   assert.match(
     source,
@@ -739,7 +760,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     source,
     /onKeyDown=\{\(event\) => \{\s*event\.stopPropagation\(\)/,
   );
-  assert.match(source, /className="project-sticky-note-placement-hint"/);
+  assert.match(source, /className="project-sticky-note-placement-status"/);
   assert.match(
     source,
     /window\.setTimeout\(\(\) => \{[\s\S]*selectedElementIds: \{ \[selectedElementId\]: true \}/,
@@ -930,11 +951,11 @@ test("gives the infinite canvas the full available viewport", () => {
   );
   assert.match(
     css,
-    /\.project-sticky-note-picker__swatch\[aria-checked="true"\]\s*\{[^}]*box-shadow:\s*0 0 0 2px #9747ff/s,
+    /\.project-sticky-note-picker__swatch\[aria-checked="true"\]\s*\{[^}]*box-shadow:\s*0 0 0 2px #fff,[^}]*0 0 0 4px var\(--color-primary, #4262ff\);/s,
   );
   assert.match(
     css,
-    /\.project-sticky-note-placement-hint\s*\{[^}]*position:\s*absolute;[^}]*pointer-events:\s*none;/s,
+    /\.project-sticky-note-placement-status\s*\{[^}]*position:\s*absolute;[^}]*clip:\s*rect\(0 0 0 0\);/s,
   );
   assert.match(
     css,
@@ -950,7 +971,19 @@ test("gives the infinite canvas the full available viewport", () => {
   );
   assert.match(
     css,
-    /\.project-sticky-note-composer \[role="textbox"\]\s*\{[^}]*position:\s*absolute;[^}]*top:\s*50%;[^}]*min-height:\s*1\.3em;[^}]*max-height:\s*calc\(100% - 48px\);[^}]*transform:\s*translateY\(-50%\);/s,
+    /\.project-sticky-note-composer \[role="textbox"\]\s*\{[^}]*position:\s*absolute;[^}]*top:\s*0;/s,
+  );
+  assert.match(
+    css,
+    /\.project-sticky-note-composer \[role="textbox"\]\s*\{[^}]*padding:\s*var\(--sticky-padding-top, 5px\) var\(--sticky-padding-horizontal, 5px\) 42px;/s,
+  );
+  assert.match(
+    css,
+    /\.project-sticky-note-composer \[role="textbox"\]\s*\{[^}]*height:\s*100%;[^}]*max-height:\s*none;[^}]*overflow:\s*auto;/s,
+  );
+  assert.match(
+    css,
+    /\.project-sticky-note-composer \[role="textbox"\]\s*\{[^}]*cursor:\s*text;[^}]*text-align:\s*left;/s,
   );
   assert.doesNotMatch(
     css,
@@ -1003,15 +1036,31 @@ test("gives the infinite canvas the full available viewport", () => {
   );
   assert.match(
     css,
-    /\.project-playground__canvas \.excalidraw \.zoom-actions\s*\{[^}]*position:\s*fixed;[^}]*right:\s*52px;[^}]*bottom:\s*var\(--project-canvas-toolbelt-bottom, 64px\);[^}]*width:\s*80px;[^}]*height:\s*40px;[^}]*border-radius:\s*11px 0 0 11px;/s,
+    /\.project-playground__canvas \.excalidraw \.zoom-actions\s*\{[^}]*position:\s*fixed;[^}]*right:\s*52px;[^}]*bottom:\s*var\(--project-canvas-toolbelt-bottom, 64px\);[^}]*width:\s*65px;[^}]*height:\s*32px;[^}]*border-radius:\s*17px;/s,
   );
   assert.match(
     css,
-    /\.project-playground__canvas \.excalidraw \.layer-ui__wrapper__footer-right\s*\{[^}]*right:\s*12px;[^}]*bottom:\s*var\(--project-canvas-toolbelt-bottom, 64px\);[^}]*width:\s*40px;[^}]*height:\s*40px;/s,
+    /\.project-playground__canvas \.excalidraw \.layer-ui__wrapper__footer-right\s*\{[^}]*right:\s*12px;[^}]*bottom:\s*var\(--project-canvas-toolbelt-bottom, 64px\);[^}]*width:\s*32px;[^}]*height:\s*32px;[^}]*border-radius:\s*50%;/s,
   );
   assert.match(
     css,
-    /\.zoom-actions > \.Stack_horizontal\s*\{[^}]*grid-template-columns:\s*repeat\(2, 40px\);/s,
+    /\.zoom-actions > \.Stack_horizontal\s*\{[^}]*grid-template-columns:\s*repeat\(2, 32px\);/s,
+  );
+  assert.match(
+    css,
+    /\.zoom-actions \.zoom-button:hover:not\([\s\S]*?\)\s*\{[^}]*background:\s*#f5f5f5 !important;/s,
+  );
+  assert.match(
+    css,
+    /\.zoom-actions \.zoom-button:active:not\([\s\S]*?\)\s*\{[^}]*color:\s*#fff !important;[^}]*background:\s*#9747ff !important;/s,
+  );
+  assert.match(
+    css,
+    /\.zoom-button:focus-visible\s*\{[^}]*outline:\s*2px solid #9747ff !important;/s,
+  );
+  assert.match(
+    css,
+    /\.layer-ui__wrapper__footer-right[\s\S]*?\.help-icon:focus-visible,[\s\S]*?\.help-icon:focus\s*\{[^}]*border:\s*1px solid #9747ff !important;[^}]*outline:\s*1px solid #9747ff;/s,
   );
   assert.match(
     css,
@@ -1047,7 +1096,7 @@ test("gives the infinite canvas the full available viewport", () => {
   );
   assert.match(
     css,
-    /\.project-playground__canvas\s+\.excalidraw\s+\.layer-ui__wrapper__footer-right\s+\.help-icon\s*\{[^}]*width:\s*39px;[^}]*height:\s*38px;/s,
+    /\.project-playground__canvas\s+\.excalidraw\s+\.layer-ui__wrapper__footer-right\s+\.help-icon\s*\{[^}]*width:\s*32px;[^}]*height:\s*32px;[^}]*border-radius:\s*50%;/s,
   );
   assert.match(
     css,
@@ -1061,10 +1110,7 @@ test("gives the infinite canvas the full available viewport", () => {
     css,
     /@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.project-canvas-header__group--left\s*\{[^}]*max-width:\s*calc\(100% - 80px\);/s,
   );
-  assert.match(
-    css,
-    /@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.project-sticky-note-placement-hint\s*\{[^}]*top:\s*auto;[^}]*bottom:\s*72px;/s,
-  );
+  assert.doesNotMatch(css, /project-sticky-note-placement-hint/);
   assert.match(
     css,
     /@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.project-playground__canvas \.excalidraw--mobile \.App-bottom-bar\s*\{[^}]*position:\s*fixed;[^}]*bottom:\s*8px;[^}]*width:\s*96px;/s,
@@ -1335,6 +1381,11 @@ test("gives a selected sticky note its own formatting toolbar", () => {
   assert.match(playgroundSource, /objectLabel="Sticky note"/);
   assert.match(playgroundSource, /colorAriaLabel="Change color"/);
   assert.match(playgroundSource, /objectLabel="Text"/);
+  assert.match(
+    playgroundSource,
+    /objectLabel="Text"[\s\S]*?showTextStyling/,
+  );
+  assert.match(playgroundSource, /project-canvas-text-rich-text/);
 
   const toolbarSource = readFileSync(
     new URL("./components/ProjectStickyNoteToolbar.tsx", import.meta.url),
@@ -1690,7 +1741,7 @@ test("keeps Vitrines actions inside the FigJam-style canvas toolbelt", () => {
   );
   assert.match(
     css,
-    /\.project-canvas-more-shapes\s*\{[^}]*top:\s*72px;[^}]*bottom:\s*12px;[^}]*left:\s*12px;[^}]*width:\s*240px;/s,
+    /\.project-canvas-more-shapes\s*\{[^}]*bottom:\s*calc\(var\(--project-canvas-toolbelt-bottom, 64px\) \+ 116px\);[^}]*left:\s*50%;[^}]*width:\s*min\(560px, calc\(100vw - 24px\)\);/s,
   );
   assert.match(
     css,
@@ -1930,13 +1981,26 @@ test("scales the sticky composer with the board it stands in for", () => {
       source,
     );
   assert.ok(memo, "sticky composer style memo not found");
-  assert.match(memo[1], /const width = stickyNoteSize \* zoom;/);
-  assert.match(memo[1], /const height = stickyNoteSize \* zoom;/);
+  // Editing an existing note uses that note's actual bounds; a new note uses
+  // the default size. Both paths still scale by the live board zoom.
+  assert.match(memo[1], /const noteWidth = stickyDraft\.width \?\? stickyNoteSize;/);
+  assert.match(memo[1], /const noteHeight = stickyDraft\.height \?\? stickyNoteSize;/);
+  assert.match(memo[1], /const width = noteWidth \* zoom;/);
+  assert.match(memo[1], /const height = noteHeight \* zoom;/);
+  assert.match(memo[1], /stickyDraft\.x - noteWidth \/ 2/);
+  assert.match(memo[1], /stickyDraft\.y - noteHeight \/ 2/);
   assert.match(
     memo[1],
     /"--sticky-font-size": `\$\{stickyDraft\.format\.fontSize \* zoom\}px`/,
   );
-  assert.match(memo[1], /"--sticky-padding": `\$\{24 \* zoom\}px`/);
+  assert.match(
+    memo[1],
+    /"--sticky-padding-horizontal": `\$\{stickyNoteTextHorizontalInset \* zoom\}px`/,
+  );
+  assert.match(
+    memo[1],
+    /"--sticky-padding-top": `\$\{stickyNoteTextVerticalInset \* zoom\}px`/,
+  );
   // The narrow-screen guard the stylesheet gave us must survive the inline size.
   assert.match(memo[1], /width: `min\(\$\{width\}px, calc\(100vw - 24px\)\)`/);
   assert.doesNotMatch(memo[1], /const width = stickyNoteSize;/);

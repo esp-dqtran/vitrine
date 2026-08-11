@@ -5778,24 +5778,21 @@ body {
   background: var(--project-canvas-bg, #f7f8fa);
 }
 
-/* A non-interactive FigJam-style focus frame sits above Excalidraw's native
-   selection geometry. Native resize hit targets remain available underneath. */
+/* A non-interactive focus frame sits above Excalidraw's native selection
+   geometry. Native resize hit targets remain available underneath. */
 .project-canvas-focus-container {
   position: absolute;
   z-index: 8;
   box-sizing: border-box;
   border: 2px solid #0d99ff;
+  border-radius: 2px;
+  box-shadow: none;
   pointer-events: none;
 }
 
 .project-canvas-focus-container__corner,
 .project-canvas-focus-container__edge {
-  position: absolute;
-  display: block;
-  box-sizing: border-box;
-  background: #fff;
-  border: 2px solid #0d99ff;
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 82%);
+  display: none;
 }
 
 .project-canvas-focus-container__corner {
@@ -6961,13 +6958,13 @@ body {
 .project-canvas-more-shapes {
   position: fixed;
   z-index: 653;
-  top: 72px;
-  bottom: 12px;
-  left: 12px;
-  width: 240px;
-  max-height: none;
+  bottom: calc(var(--project-canvas-toolbelt-bottom, 64px) + 116px);
+  left: 50%;
+  width: min(560px, calc(100vw - 24px));
+  max-height: min(420px, calc(100vh - 196px));
   display: grid;
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
   padding: 14px;
   overflow: auto;
   box-sizing: border-box;
@@ -6979,9 +6976,11 @@ body {
     0 0 0.5px rgb(0 0 0 / 18%),
     0 8px 24px rgb(0 0 0 / 12%),
     0 2px 6px rgb(0 0 0 / 10%);
+  transform: translateX(-50%);
 }
 
 .project-canvas-more-shapes__header {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -7010,6 +7009,7 @@ body {
 }
 
 .project-canvas-more-shapes__search {
+  grid-column: 1 / -1;
   width: 100%;
   height: 32px;
   padding: 0 10px;
@@ -7036,8 +7036,8 @@ body {
 
 .project-canvas-more-shapes__grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+  gap: 6px;
 }
 
 .project-canvas-more-shapes__grid button {
@@ -7064,6 +7064,7 @@ body {
 }
 
 .project-canvas-more-shapes__empty {
+  grid-column: 1 / -1;
   margin: 0;
   color: #667085;
   font-size: 13px;
@@ -7239,7 +7240,7 @@ body {
   box-shadow:
     inset 0 0 0 1px rgb(255 255 255 / 42%),
     0 0 0 2px #fff,
-    0 0 0 3px #1e1e1e;
+    0 0 0 4px var(--color-primary, #4262ff);
 }
 
 /* A native control gives Shapes the same custom-colour escape hatch as
@@ -7250,16 +7251,30 @@ body {
   display: grid;
   place-items: center;
   cursor: pointer;
+  border: 1px solid rgb(17 24 39 / 24%);
+  border-radius: 999px;
+  background:
+    radial-gradient(50% 50%, #fff 0%, transparent 100%),
+    conic-gradient(
+      #f00,
+      #ffa800 47.73deg,
+      #ff0 79.56deg,
+      #0f0 121.33deg,
+      #0ff 180.99deg,
+      #00f 238.67deg,
+      #f0f 294.36deg,
+      #f00 360deg
+    );
 }
 
 .project-canvas-shape-library__custom-color input {
-  width: 20px;
-  height: 20px;
+  width: 100%;
+  height: 100%;
   padding: 0;
   cursor: pointer;
-  border: 1px solid rgb(17 24 39 / 25%);
+  border: 0;
   border-radius: 999px;
-  background: transparent;
+  opacity: 0;
 }
 
 .project-canvas-shape-library__custom-color input::-webkit-color-swatch-wrapper {
@@ -7925,13 +7940,13 @@ body {
 }
 
 .project-canvas-marker-controls__swatches {
-  gap: 7px;
+  gap: 6px;
   padding: 0 4px;
 }
 
 .project-canvas-marker-controls__swatch {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   padding: 0;
   cursor: pointer;
   background: var(--marker-color);
@@ -7940,13 +7955,15 @@ body {
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 24%);
 }
 
-.project-canvas-marker-controls__swatch[aria-pressed="true"] {
-  outline: 2px solid #1d1d1f;
-  outline-offset: 3px;
+.project-canvas-marker-controls__swatch[aria-checked="true"] {
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 24%),
+    0 0 0 2px #fff,
+    0 0 0 4px var(--color-primary, #4262ff);
 }
 
-.project-canvas-marker-controls__swatch:disabled[aria-pressed="true"] {
-  outline: 0;
+.project-canvas-marker-controls__swatch:disabled[aria-checked="true"] {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 24%);
 }
 
 .project-canvas-marker-controls__swatch:focus-visible {
@@ -8262,7 +8279,7 @@ body {
 
 .project-sticky-note-picker__swatch::before {
   position: absolute;
-  inset: 5px;
+  inset: 4px;
   border: 1px solid var(--sticky-stroke);
   border-radius: 999px;
   background: var(--sticky-fill);
@@ -8275,7 +8292,9 @@ body {
 }
 
 .project-sticky-note-picker__swatch[aria-checked="true"] {
-  box-shadow: 0 0 0 2px #9747ff;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px var(--color-primary, #4262ff);
 }
 
 .project-sticky-note-picker__swatch:focus-visible {
@@ -8283,25 +8302,16 @@ body {
   outline-offset: 2px;
 }
 
-.project-sticky-note-placement-hint {
+.project-sticky-note-placement-status {
   position: absolute;
-  z-index: 10;
-  top: 164px;
-  left: 50%;
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 0 12px;
-  border: 1px solid rgb(15 23 42 / 10%);
-  border-radius: 12px;
-  background: rgb(255 255 255 / 97%);
-  box-shadow: 0 10px 30px rgb(15 23 42 / 13%);
-  color: #30394a;
-  font-size: 12px;
-  font-weight: 600;
-  pointer-events: none;
-  transform: translateX(-50%);
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .project-canvas-comment-placement-hint {
@@ -8344,31 +8354,58 @@ body {
   font-size: 10px;
 }
 
-.project-canvas-comment-inbox {
+.project-canvas-comment-inbox,
+.project-canvas-comments--thread {
   position: absolute;
   z-index: 15;
   top: 68px;
   right: 12px;
   bottom: 56px;
-  width: 240px;
+  width: min(320px, calc(100% - 40px));
   display: flex;
   flex-direction: column;
-  overflow: visible;
+  gap: 0;
+  overflow: hidden;
   border: 1px solid #dedede;
   border-radius: 12px;
   color: #1e1e1e;
   background: #fff;
-  box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+  box-shadow: 0 8px 24px rgb(15 23 42 / 12%);
+  backdrop-filter: none;
 }
 
 .project-canvas-comment-inbox > header {
-  min-height: 40px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 28px 28px 28px;
-  align-items: center;
-  gap: 2px;
-  padding: 5px 6px;
+  gap: 8px;
+  padding: 12px;
   border-bottom: 1px solid #e6e6e6;
+}
+
+.project-canvas-comment-inbox__topbar,
+.project-canvas-comment-inbox__topbar > div:last-child {
+  display: flex;
+  align-items: center;
+}
+
+.project-canvas-comment-inbox__topbar {
+  justify-content: space-between;
+}
+
+.project-canvas-comment-inbox__topbar > div:first-child {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.project-canvas-comment-inbox__topbar strong,
+.project-canvas-comments--thread > header strong {
+  color: #1e1e1e;
+  font: 650 14px/20px var(--reference-font-family, var(--font-family-body));
+}
+
+.project-canvas-comment-inbox__topbar span {
+  color: #757575;
+  font-size: 12px;
 }
 
 .project-canvas-comment-inbox > header .astryx-text-input,
@@ -8384,7 +8421,8 @@ body {
 }
 
 .project-canvas-comment-inbox > header .astryx-text-input {
-  border: 0 !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
   color: #1e1e1e !important;
   background: #f5f5f5 !important;
   box-shadow: none !important;
@@ -8397,7 +8435,7 @@ body {
 .project-canvas-comment-inbox > header input {
   height: 28px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 8px;
   color: #1e1e1e !important;
   background: #f5f5f5;
   box-shadow: none;
@@ -8496,8 +8534,8 @@ body {
 
 .project-canvas-comment-inbox__threads {
   display: grid;
-  gap: 1px;
-  padding: 6px;
+  gap: 4px;
+  padding: 8px;
 }
 
 .project-canvas-comment-inbox__thread {
@@ -8506,7 +8544,7 @@ body {
   grid-template-columns: 28px minmax(0, 1fr) auto;
   align-items: start;
   gap: 8px;
-  padding: 9px 8px;
+  padding: 10px;
   border: 0;
   border-radius: 7px;
   color: #1e1e1e;
@@ -8516,7 +8554,7 @@ body {
 }
 
 .project-canvas-comment-inbox__thread:hover {
-  background: #f5f5f5;
+  background: #f7f7f8;
 }
 
 .project-canvas-comment-inbox__thread > span:nth-child(2) {
@@ -8559,7 +8597,7 @@ body {
     top: 72px;
     right: 8px;
     bottom: 74px;
-    width: min(248px, calc(100% - 16px));
+    width: min(320px, calc(100% - 16px));
   }
 }
 
@@ -8594,26 +8632,6 @@ body {
 .project-canvas-comment-pin[data-resolved="true"] {
   color: var(--project-canvas-muted-text, #6b7280);
   background: var(--project-canvas-muted-surface, #eef0f4);
-}
-
-.project-canvas-comments {
-  position: absolute;
-  z-index: 15;
-  top: 104px;
-  right: 16px;
-  width: min(340px, calc(100% - 88px));
-  display: grid;
-  gap: 14px;
-  padding: 16px;
-  border: 1px solid var(--project-canvas-border, rgb(15 23 42 / 10%));
-  border-radius: 16px;
-  color: var(--project-canvas-text, #202124);
-  background: var(
-    --project-canvas-surface-translucent-strong,
-    rgb(255 255 255 / 97%)
-  );
-  box-shadow: 0 18px 48px rgb(15 23 42 / 18%);
-  backdrop-filter: blur(16px);
 }
 
 .project-canvas-comments--composer {
@@ -8704,11 +8722,66 @@ body {
   gap: 10px;
 }
 
+.project-canvas-comments--thread > header {
+  min-height: 52px;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.project-canvas-comments--thread > header > div:first-child {
+  gap: 0;
+}
+
+.project-canvas-comments--thread > header > div:first-child > span {
+  color: #757575;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.project-canvas-comments__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.project-canvas-comments > header > .project-canvas-comments__header-actions {
+  display: flex;
+  align-items: center;
+}
+
 .project-canvas-comments__thread-actions,
 .project-canvas-comments__delete-actions {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* Keep Resolve visibly actionable without competing with destructive Delete. */
+.project-canvas-comments--thread
+  .project-canvas-comments__thread-actions
+  > button + button {
+  border: 1px solid #b8bfd0 !important;
+  color: #30394a !important;
+  font-weight: 600;
+  background: #fff !important;
+  box-shadow: inset 0 0 0 1px rgb(15 23 42 / 2%);
+}
+
+.project-canvas-comments--thread
+  .project-canvas-comments__thread-actions
+  > button + button:hover {
+  border-color: #7c8aa5 !important;
+  background: #f6f8fc !important;
+}
+
+.project-canvas-comments--thread
+  .project-canvas-comments__thread-actions
+  > button + button:focus-visible {
+  outline: 2px solid #4262ff;
+  outline-offset: 2px;
 }
 
 .project-canvas-comments__delete-prompt {
@@ -8731,37 +8804,57 @@ body {
 }
 
 .project-canvas-comments__messages {
-  max-height: 280px;
+  min-height: 0;
+  flex: 1;
   display: grid;
+  align-content: start;
   gap: 8px;
   overflow: auto;
+  padding: 12px;
 }
 
 .project-canvas-comments__messages article {
-  padding: 10px 12px;
+  align-self: start;
+  padding: 12px;
+  border: 1px solid #ececef;
   border-radius: 10px;
-  background: var(--project-canvas-muted-surface, #f3f4f6);
+  background: #f7f7f8;
+}
+
+.project-canvas-comments__messages article strong {
+  color: #1e1e1e;
+  font-size: 13px;
 }
 
 .project-canvas-comments__messages p {
   margin: 4px 0 0;
+  color: #4d4d4d;
+  font-size: 13px;
+  line-height: 1.45;
   white-space: pre-wrap;
 }
 
-.project-sticky-note-placement-hint svg {
-  width: 16px;
-  height: 16px;
-  color: #4262ff;
+.project-canvas-comments--thread > .astryx-field,
+.project-canvas-comments--thread > .astryx-text-area {
+  padding: 0 12px 12px;
 }
 
-.project-sticky-note-placement-hint kbd {
-  padding: 2px 6px;
-  border: 1px solid #d7dce3;
-  border-radius: 5px;
-  color: var(--project-canvas-muted-text, #6b7280);
-  background: #f5f6f8;
-  font: inherit;
-  font-size: 10px;
+.project-canvas-comments--thread textarea {
+  min-height: 88px;
+  box-sizing: border-box;
+  border: 1px solid #dedee3 !important;
+  border-radius: 10px !important;
+  color: #1e1e1e !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  font: 400 13px/1.45 var(--reference-font-family, var(--font-family-body));
+}
+
+.project-canvas-comments--thread > footer {
+  min-height: 58px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-top: 1px solid #e6e6e6;
 }
 
 .project-sticky-note-composer {
@@ -9302,28 +9395,30 @@ body {
 }
 
 .project-object-toolbar__color-panel {
+  top: auto;
+  bottom: calc(100% + 8px);
   left: 0;
-  top: -54px;
   width: max-content;
-  display: flex;
-  gap: 5px;
-  padding: 6px;
+  display: grid;
+  grid-template-columns: repeat(8, 24px);
+  gap: 6px;
+  padding: 8px;
   border-color: rgb(255 255 255 / 16%);
   border-radius: 12px;
-  color: #fff;
+  color: #f7f7f8;
   background: #1e1e1e;
   box-shadow:
-    0 0 0.5px rgb(0 0 0 / 28%),
-    0 3px 8px rgb(0 0 0 / 22%),
+    0 0 0.5px rgb(0 0 0 / 40%),
+    0 3px 8px rgb(0 0 0 / 26%),
     0 1px 3px rgb(0 0 0 / 20%);
 }
 
 .project-object-toolbar .project-object-toolbar__color-swatch {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   appearance: none;
   padding: 0;
-  border: 1px solid rgb(0 0 0 / 18%) !important;
+  border: 1px solid rgb(255 255 255 / 28%) !important;
   border-radius: 999px !important;
   background: var(--object-color) !important;
   cursor: pointer;
@@ -9334,8 +9429,16 @@ body {
   transform: scale(1.08);
 }
 
-.project-object-toolbar__color-swatch[aria-pressed="true"] {
-  box-shadow: 0 0 0 2px #1e1e1e, 0 0 0 4px #0d99ff;
+.project-object-toolbar__color-swatch[aria-checked="true"] {
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 24%),
+    0 0 0 2px #fff,
+    0 0 0 4px var(--color-primary, #4262ff);
+}
+
+.project-object-toolbar__color-swatch:focus-visible {
+  outline: 2px solid var(--color-primary, #4262ff);
+  outline-offset: 3px;
 }
 
 .project-object-toolbar__link-panel {
@@ -9614,9 +9717,37 @@ body {
   cursor: pointer;
 }
 
+/* Shapes follow the same neutral object toolbar as FigJam: the purple state
+   belongs to the active choice, not the entire selected object. */
+.project-shape-object-toolbar {
+  border: 1px solid rgb(0 0 0 / 12%);
+  color: #1e1e1e;
+  background: #fff;
+  box-shadow:
+    0 0 0.5px rgb(0 0 0 / 18%),
+    0 3px 8px rgb(0 0 0 / 10%),
+    0 1px 3px rgb(0 0 0 / 10%);
+}
+
+.project-shape-object-toolbar .project-object-toolbar__divider {
+  background: rgb(0 0 0 / 10%);
+}
+
+.project-shape-object-toolbar button,
+.project-shape-object-toolbar .project-object-toolbar__color-trigger,
+.project-shape-object-toolbar .project-shape-object-toolbar__shape-trigger,
+.project-shape-object-toolbar .project-shape-object-toolbar__line-trigger {
+  color: #1e1e1e !important;
+}
+
+.project-shape-object-toolbar .project-shape-object-toolbar__shape-trigger .project-canvas-shape-source-icon,
+.project-shape-object-toolbar .project-shape-object-toolbar__line-trigger > img {
+  filter: none;
+}
+
 .project-shape-object-toolbar__shape-trigger:hover,
 .project-shape-object-toolbar__line-trigger:hover {
-  background: rgb(255 255 255 / 12%) !important;
+  background: #f2f2f2 !important;
 }
 
 .project-shape-object-toolbar__shape-trigger .project-canvas-shape-source-icon,
@@ -9624,7 +9755,7 @@ body {
   width: 24px;
   height: 24px;
   object-fit: contain;
-  filter: brightness(0) invert(1);
+  filter: none;
 }
 
 .project-shape-object-toolbar__shape-trigger > svg,
@@ -9678,8 +9809,8 @@ body {
   right: 0;
   width: max-content;
   grid-template-columns: repeat(8, 24px);
-  gap: 8px;
-  padding: 10px;
+  gap: 6px;
+  padding: 8px;
 }
 
 .project-free-line-object-toolbar .project-object-toolbar__color-swatch {
@@ -9695,10 +9826,10 @@ body {
   z-index: 656;
   top: 48px;
   box-sizing: border-box;
-  border: 0;
+  border: 1px solid rgb(0 0 0 / 12%);
   border-radius: 13px;
-  color: #fff;
-  background: #1e1e1e;
+  color: #1e1e1e;
+  background: #fff;
   box-shadow:
     0 0 0.5px rgb(0 0 0 / 18%),
     0 10px 16px rgb(0 0 0 / 16%),
@@ -9725,7 +9856,7 @@ body {
 }
 
 .project-shape-object-toolbar__shape-panel button:hover {
-  background: rgb(255 255 255 / 12%) !important;
+  background: #f2f2f2 !important;
 }
 
 .project-shape-object-toolbar__shape-panel button[aria-pressed="true"],
@@ -9736,7 +9867,7 @@ body {
 .project-shape-object-toolbar__shape-panel .project-canvas-shape-source-icon {
   width: 24px;
   height: 24px;
-  filter: brightness(0) invert(1);
+  filter: none;
 }
 
 .project-shape-object-toolbar__color-panel,
@@ -9746,6 +9877,13 @@ body {
   display: grid;
   gap: 10px;
   padding: 10px;
+  border: 1px solid rgb(15 23 42 / 12%);
+  color: #1e1e1e;
+  background: #fff;
+  box-shadow:
+    0 0 0.5px rgb(0 0 0 / 18%),
+    0 3px 8px rgb(0 0 0 / 10%),
+    0 1px 3px rgb(0 0 0 / 10%);
 }
 
 .project-shape-object-toolbar__line-panel {
@@ -9764,27 +9902,27 @@ body {
   appearance: none;
   padding: 0 10px;
   border-radius: 7px !important;
-  color: #fff !important;
+  color: #1e1e1e !important;
   font-size: 12px;
   cursor: pointer;
 }
 
 .project-shape-object-toolbar__modes button:hover {
-  background: rgb(255 255 255 / 12%) !important;
+  background: #f2f2f2 !important;
 }
 
 .project-shape-object-toolbar__swatches {
   display: grid;
-  grid-template-columns: repeat(8, 30px);
-  gap: 8px;
+  grid-template-columns: repeat(8, 24px);
+  gap: 6px;
 }
 
 .project-shape-object-toolbar__swatches button {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   appearance: none;
   padding: 0;
-  border: 2px solid rgb(255 255 255 / 22%) !important;
+  border: 1px solid rgb(30 30 30 / 18%) !important;
   border-radius: 999px !important;
   background: var(--shape-color) !important;
   cursor: pointer;
@@ -9792,8 +9930,9 @@ body {
 
 .project-shape-object-toolbar__swatches button[aria-pressed="true"] {
   box-shadow:
-    0 0 0 2px #1e1e1e,
-    0 0 0 4px #fff !important;
+    inset 0 0 0 1px rgb(255 255 255 / 24%),
+    0 0 0 2px #fff,
+    0 0 0 4px var(--color-primary, #4262ff) !important;
 }
 
 /* Section uses the same compact object-toolbar shell as Sticky notes. Its
@@ -9816,7 +9955,7 @@ body {
   height: 20px;
   box-sizing: border-box;
   border: 1px solid rgb(255 255 255 / 34%);
-  border-radius: 4px;
+  border-radius: 999px;
   background: var(--section-color);
 }
 
@@ -9857,28 +9996,29 @@ body {
 
 .project-section-object-toolbar__palette {
   left: 0;
-  width: 238px;
+  width: max-content;
   display: grid;
-  grid-template-columns: repeat(5, 34px);
-  gap: 8px;
-  padding: 12px;
+  grid-template-columns: repeat(8, 24px);
+  gap: 6px;
+  padding: 8px;
 }
 
 .project-section-object-toolbar__palette button {
-  width: 34px;
-  height: 34px;
+  width: 24px;
+  height: 24px;
   appearance: none;
   padding: 0;
   border: 1px solid rgb(30 30 30 / 18%) !important;
-  border-radius: 7px !important;
+  border-radius: 999px !important;
   background: var(--section-color) !important;
   cursor: pointer;
 }
 
 .project-section-object-toolbar__palette button[aria-pressed="true"] {
   box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 24%),
     0 0 0 2px #fff,
-    0 0 0 4px #0d99ff !important;
+    0 0 0 4px var(--color-primary, #4262ff) !important;
 }
 
 .project-section-object-toolbar__line-panel {
@@ -9992,7 +10132,8 @@ body {
   pointer-events: none;
 }
 
-.project-sticky-note-rich-text {
+.project-sticky-note-rich-text,
+.project-canvas-text-rich-text {
   position: absolute;
   z-index: 8;
   overflow-wrap: anywhere;
@@ -10034,27 +10175,32 @@ body {
 .project-sticky-note-composer [role="textbox"] {
   box-sizing: border-box;
   position: absolute;
-  top: 50%;
+  top: 0;
   left: 0;
   display: block;
   width: 100%;
+  height: 100%;
   min-height: 1.3em;
-  max-height: calc(100% - 48px);
-  padding: 0 var(--sticky-padding, 24px);
+  max-height: none;
+  padding:
+    var(--sticky-padding-top, 5px)
+    var(--sticky-padding-horizontal, 5px)
+    42px;
   overflow-y: auto;
   outline: 0;
+  cursor: text;
   color: inherit;
   font-family: var(
     --sticky-font-family,
     var(--reference-font-family, var(--font-family-body))
   );
-  font-size: var(--sticky-font-size, 20px);
-  font-weight: 500;
-  line-height: 1.3;
-  text-align: var(--sticky-text-align, center);
+  font-size: var(--sticky-font-size, 16px);
+  font-weight: 400;
+  line-height: 1.35;
+  text-align: left;
   white-space: pre-wrap;
+  overflow: auto;
   overflow-wrap: anywhere;
-  transform: translateY(-50%);
 }
 
 .project-sticky-note-composer [role="textbox"]:empty::before {
@@ -11136,17 +11282,18 @@ body {
   position: fixed;
   right: 52px;
   bottom: var(--project-canvas-toolbelt-bottom, 64px);
-  width: 80px;
-  height: 40px;
-  min-height: 40px;
+  width: 65px;
+  height: 32px;
+  min-height: 32px;
   padding: 0;
   gap: 0 !important;
   overflow: hidden;
-  border-right: 0;
-  border-radius: 11px 0 0 11px;
+  border: 0;
+  border-radius: 17px;
   box-shadow:
-    -3px 2px 6px var(--project-canvas-border, rgb(17 24 39 / 10%)),
-    -6px 8px 22px var(--project-canvas-border, rgb(17 24 39 / 10%));
+    0 0 0 0.5px rgb(0 0 0 / 18%),
+    0 1px 3px rgb(0 0 0 / 10%),
+    0 3px 8px rgb(0 0 0 / 10%);
   background: #fff;
 }
 
@@ -11154,7 +11301,7 @@ body {
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-columns: repeat(2, 40px);
+  grid-template-columns: repeat(2, 32px);
   gap: 0;
   align-items: stretch !important;
 }
@@ -11162,7 +11309,7 @@ body {
 .project-playground__canvas .excalidraw .zoom-actions .zoom-button,
 .project-playground__canvas .excalidraw .zoom-actions .ToolIcon__icon {
   width: 100%;
-  height: 40px;
+  height: 32px;
   color: #1d1d1f !important;
   background: #fff !important;
 }
@@ -11177,10 +11324,19 @@ body {
 
 .project-playground__canvas .excalidraw .zoom-actions .zoom-button {
   background: #fff !important;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease,
+    outline-color 120ms ease;
+}
+
+.project-playground__canvas .excalidraw .zoom-actions .zoom-out-button {
+  border-radius: 17px 0 0 17px !important;
 }
 
 .project-playground__canvas .excalidraw .zoom-actions .zoom-in-button {
-  border-left: 1px solid #e5e7eb !important;
+  border-left: 1px solid #e4e4e7 !important;
+  border-radius: 0 17px 17px 0 !important;
 }
 
 .project-playground__canvas .excalidraw .zoom-actions .reset-zoom-button {
@@ -11194,11 +11350,70 @@ body {
   display: none !important;
 }
 
-.project-playground__canvas .excalidraw .zoom-actions .zoom-button:hover,
+.project-playground__canvas .excalidraw .zoom-actions .zoom-button:hover:not(:disabled) {
+  color: rgb(0 0 0 / 90%) !important;
+  background: #f5f5f5 !important;
+}
+
+.project-playground__canvas .excalidraw .zoom-actions .zoom-button:active:not(:disabled) {
+  color: #fff !important;
+  background: #9747ff !important;
+}
+
+.project-playground__canvas
+  .excalidraw
+  .zoom-actions
+  .zoom-button:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid #9747ff !important;
+  outline-offset: -2px;
+}
+
+.project-playground__canvas
+  .excalidraw
+  .zoom-actions
+  .zoom-button:focus:not(:focus-visible) {
+  outline-color: transparent;
+}
+
 .project-playground__canvas
   .excalidraw
   .layer-ui__wrapper__footer-right
-  .help-icon:hover,
+  .help-icon {
+  transition:
+    border-color 120ms ease,
+    outline-color 120ms ease;
+}
+
+.project-playground__canvas
+  .excalidraw
+  .layer-ui__wrapper__footer-right
+  .help-icon:hover {
+  background: #fff !important;
+}
+
+.project-playground__canvas
+  .excalidraw
+  .layer-ui__wrapper__footer-right
+  .help-icon:focus-visible,
+.project-playground__canvas
+  .excalidraw
+  .layer-ui__wrapper__footer-right
+  .help-icon:focus {
+  border: 1px solid #9747ff !important;
+  outline: 1px solid #9747ff;
+  outline-offset: -2px;
+}
+
+.project-playground__canvas
+  .excalidraw
+  .layer-ui__wrapper__footer-right
+  .help-icon:focus:not(:focus-visible) {
+  border-color: transparent !important;
+  outline: 0;
+}
+
 .project-playground__canvas
   .excalidraw
   .undo-redo-buttons
@@ -11306,25 +11521,25 @@ body {
   position: fixed;
   right: 12px;
   bottom: var(--project-canvas-toolbelt-bottom, 64px);
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   background: #fff;
-  border: 1px solid var(--project-canvas-border, rgb(17 24 39 / 10%));
-  border-radius: 0 10px 10px 0;
+  border: 0;
+  border-radius: 50%;
   box-shadow:
-    6px 8px 22px var(--project-canvas-border, rgb(17 24 39 / 10%)),
-    3px 2px 6px var(--project-canvas-border, rgb(17 24 39 / 10%));
+    0 0 0 0.5px rgb(0 0 0 / 18%),
+    0 1px 3px rgb(0 0 0 / 10%),
+    0 3px 8px rgb(0 0 0 / 10%);
 }
 
 .project-playground__canvas
   .excalidraw
   .layer-ui__wrapper__footer-right
   .help-icon {
-  width: 39px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   border: 0;
-  border-left: 1px solid var(--project-canvas-border, rgb(17 24 39 / 10%));
-  border-radius: 0 9px 9px 0;
+  border-radius: 50%;
   background: #fff;
   color: #1d1d1f;
 }
@@ -12647,15 +12862,6 @@ body {
   .project-sticky-note-picker {
     bottom: calc(var(--project-canvas-toolbelt-bottom, 64px) + 60px);
     left: 50%;
-  }
-
-  .project-sticky-note-placement-hint {
-    top: auto;
-    right: 72px;
-    bottom: 72px;
-    left: auto;
-    max-width: calc(100vw - 88px);
-    transform: none;
   }
 
   .project-playground__canvas .excalidraw .zoom-actions {
