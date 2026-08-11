@@ -51,8 +51,24 @@ test("builds same-origin WebSocket URLs for local and secure deployments", () =>
   );
 });
 
-test("keeps persisted asset URLs out of band and never broadcasts embedded image bytes", () => {
-  assert.deepEqual(Object.keys(collaborationSafeSnapshot(snapshot)!.files), ["stored"]);
+test("keeps user media out of band but broadcasts static stamp files", () => {
+  const stampedSnapshot = {
+    ...snapshot,
+    elements: [{
+      id: "stamp",
+      type: "image",
+      fileId: "stamp-file",
+      customData: { astryxReference: { kind: "stamp" } },
+    }],
+    files: {
+      ...snapshot.files,
+      "stamp-file": { dataURL: "data:image/png;base64,stamp" },
+    },
+  };
+  assert.deepEqual(
+    Object.keys(collaborationSafeSnapshot(stampedSnapshot)!.files).sort(),
+    ["stamp-file", "stored"],
+  );
 });
 
 test("coalesces local scenes and applies remote scenes without owning persistence", async () => {
@@ -96,6 +112,7 @@ test("coalesces local scenes and applies remote scenes without owning persistenc
     sequence: 1,
     snapshot: { ...snapshot, elements: [{ id: "shape-2" }], files: {} },
   });
+  assert.equal(received.length, 0, "a local scene echo is only an acknowledgement");
   session.publishScene({ ...snapshot, elements: [{ id: "shape-3" }], files: {} });
   await new Promise((resolve) => setTimeout(resolve, 140));
   const patch = JSON.parse(socket.sent.at(-1)!) as {
@@ -105,7 +122,10 @@ test("coalesces local scenes and applies remote scenes without owning persistenc
   };
   assert.equal(patch.type, "patch");
   assert.equal(patch.sequence, 2);
-  assert.deepEqual(patch.patch.elements, [{ id: "shape-3" }]);
+  assert.deepEqual(patch.patch.elements, [
+    { id: "shape-3" },
+    { id: "shape-2", isDeleted: true, version: 1 },
+  ]);
 
   socket.receive({
     type: "scene",
@@ -114,7 +134,7 @@ test("coalesces local scenes and applies remote scenes without owning persistenc
     sequence: 4,
     snapshot: { ...snapshot, files: {} },
   });
-  assert.equal(received.length, 2);
+  assert.equal(received.length, 1);
   assert.deepEqual(presence, [[{
     clientId: "remote-client",
     userId: 8,
@@ -166,6 +186,56 @@ test("diffs and applies element-level scene patches without replacing untouched 
   const patch = designerCanvasScenePatch(before, after);
   assert.deepEqual(patch.elements, [{ id: "one", x: 4 }, { id: "three", x: 20 }]);
   assert.deepEqual(applyDesignerCanvasScenePatch(before, patch).elements, after.elements);
+});
+
+test("sends a deletion tombstone when the next canvas snapshot omits an element", () => {
+  const before = { ...snapshot, elements: [{ id: "deleted", version: 4 }, { id: "kept", version: 1 }], files: {} };
+  const after = { ...before, elements: [{ id: "kept", version: 1 }] };
+  const patch = designerCanvasScenePatch(before, after);
+  assert.deepEqual(patch.elements, [{ id: "deleted", version: 5, isDeleted: true }]);
+  assert.deepEqual(applyDesignerCanvasScenePatch(before, patch).elements, [
+    { id: "deleted", version: 5, isDeleted: true },
+    { id: "kept", version: 1 },
+  ]);
+});
+
+test("treats echoed patches as acknowledgements so a local freedraw stays live", () => {
+  const socket = new FakeSocket();
+  const received: unknown[] = [];
+  const session = openDesignerCanvasCollaboration({
+    projectId: "11111111-1111-4111-8111-111111111111",
+    location: { protocol: "http:", host: "localhost:5174" },
+    reconnect: false,
+    createSocket: () => socket,
+    onPatch: (patch) => received.push(patch),
+  });
+  socket.open();
+  socket.receive({
+    type: "ready",
+    clientId: "local-client",
+    revision: 0,
+    collaborators: [],
+  });
+
+  const patch = { elements: [{ id: "freedraw", version: 2, points: [[0, 0], [8, 8]] }], files: {} };
+  socket.receive({
+    type: "patch",
+    clientId: "local-client",
+    revision: 1,
+    sequence: 1,
+    patch,
+  });
+  assert.deepEqual(received, []);
+
+  socket.receive({
+    type: "patch",
+    clientId: "remote-client",
+    revision: 2,
+    sequence: 1,
+    patch,
+  });
+  assert.deepEqual(received, [patch]);
+  session.close();
 });
 
 test("keeps a one-element realtime update materially smaller than a large canvas snapshot", () => {

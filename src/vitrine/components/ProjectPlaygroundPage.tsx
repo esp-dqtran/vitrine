@@ -2084,8 +2084,8 @@ function blobDataUrl(blob: Blob): Promise<DataURL> {
 }
 
 /* Stamps remain active for repeated placement, just as they do in FigJam. The
- * files themselves are static UI assets, so decode each one once and give each
- * placed element a fresh Excalidraw file id that reuses the cached data URL. */
+ * files themselves are static UI assets, so decode each one once and share one
+ * Excalidraw file id per stamp design across all of its placements. */
 const canvasStampAssetCache = new Map<
   string,
   Promise<Pick<BinaryFileData, "mimeType" | "dataURL">>
@@ -3087,6 +3087,13 @@ export function ProjectPlayground({
   );
   const lastQueuedSnapshotKeyRef = useRef<string | undefined>(undefined);
   const lastCanvasMutationKeyRef = useRef<string | undefined>(undefined);
+  // Keep a local gesture entirely local until Excalidraw commits the object.
+  // Replacing the scene during a pointer drag or native text edit cancels the
+  // interaction, even when the replacement contains the same element.
+  const canvasPointerDownRef = useRef(false);
+  const pendingCanvasCommitRef = useRef<ExcalidrawProjectSnapshot | undefined>(
+    undefined,
+  );
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -3192,6 +3199,10 @@ export function ProjectPlayground({
       const patches = pendingRemotePatchesRef.current.splice(0);
       const editor = editorRef.current;
       if (!editor || !patches.length) return;
+      if (canvasPointerDownRef.current || canvasTextEditingRef.current) {
+        pendingRemotePatchesRef.current.unshift(...patches);
+        return;
+      }
 
       const updates = new Map<string, ExcalidrawElement>();
       const files: BinaryFiles = {};
@@ -3237,7 +3248,7 @@ export function ProjectPlayground({
   const applyRemoteScene = useCallback((value: unknown) => {
     if (!isExcalidrawSnapshot(value)) return;
     const editor = editorRef.current;
-    if (!editor) {
+    if (!editor || canvasPointerDownRef.current || canvasTextEditingRef.current) {
       pendingRemoteSceneRef.current = value;
       return;
     }
@@ -3267,6 +3278,7 @@ export function ProjectPlayground({
 
   const handleCanvasPointerUpdate = useCallback(
     ({ pointer, button }: CanvasPointerUpdate) => {
+      if (button === "down") canvasPointerDownRef.current = true;
       const editor = editorRef.current;
       const appState = editor?.getAppState();
       const selectedElementIds = Object.keys(
@@ -3425,6 +3437,27 @@ export function ProjectPlayground({
     [queueSnapshot],
   );
 
+  const commitPendingCanvasSnapshot = useCallback(() => {
+    if (canvasPointerDownRef.current || canvasTextEditingRef.current) return;
+    const snapshot = pendingCanvasCommitRef.current;
+    pendingCanvasCommitRef.current = undefined;
+    if (snapshot) {
+      queueSnapshot(snapshot);
+      collaborationRef.current?.publishScene(snapshot);
+    }
+    if (pendingRemoteSceneRef.current) {
+      const remoteScene = pendingRemoteSceneRef.current;
+      pendingRemoteSceneRef.current = undefined;
+      applyRemoteScene(remoteScene);
+    } else if (pendingRemotePatchesRef.current.length) {
+      applyRemotePatches({ elements: [], files: {} });
+    }
+  }, [applyRemotePatches, applyRemoteScene, queueSnapshot]);
+
+  const scheduleCanvasCommit = useCallback(() => {
+    window.requestAnimationFrame(() => commitPendingCanvasSnapshot());
+  }, [commitPendingCanvasSnapshot]);
+
   const initialData = useCallback(async () => {
     loadedRef.current = false;
     try {
@@ -3459,7 +3492,6 @@ export function ProjectPlayground({
       );
       canvasCommentsRef.current = snapshot.comments;
       if (activeRef.current) setCanvasComments(snapshot.comments);
-      lastQueuedSnapshotKeyRef.current = canvasSaveKey(snapshot);
       lastCanvasMutationKeyRef.current = canvasMutationKey(
         snapshot.elements,
         snapshot.appState,
@@ -3471,9 +3503,11 @@ export function ProjectPlayground({
         !usesCanvasPresentation(remote, canvasTheme) ||
         canvasSaveKey(snapshot) !== canvasSaveKey(sourceSnapshot)
       ) {
-        if (canvasId)
-          await saveDesignerCanvasFile(projectId, canvasId, snapshot);
-        else await saveDesignerCanvas(projectId, snapshot);
+        // The board is ready to render; do not hold its initial paint behind
+        // an optional presentation normalization save.
+        queueSnapshot(snapshot);
+      } else {
+        lastQueuedSnapshotKeyRef.current = canvasSaveKey(snapshot);
       }
       if (activeRef.current) setSaveState("saved");
       if (activeRef.current) setSaveErrorMessage("");
@@ -3505,7 +3539,7 @@ export function ProjectPlayground({
       }
       return { ...snapshot, scrollToContent: true };
     }
-  }, [canvasId, projectId, readLocalCanvas, writeLocalCanvas]);
+  }, [canvasId, projectId, queueSnapshot, readLocalCanvas, writeLocalCanvas]);
 
   useEffect(() => {
     editorRef.current?.updateScene({
@@ -3674,6 +3708,7 @@ export function ProjectPlayground({
         .closest("label")
         ?.querySelector('input[data-testid^="toolbar-"]');
       const canvasPointer = target.closest(".excalidraw__canvas");
+      if (canvasPointer) canvasPointerDownRef.current = true;
       if (canvasPointer && selectedCanvasTable && canvasRootRef.current) {
         const bounds = canvasRootRef.current.getBoundingClientRect();
         const sceneX =
@@ -4231,6 +4266,14 @@ export function ProjectPlayground({
         files,
         canvasCommentsRef.current,
       );
+      // A line/rectangle is not a collaboration object until pointer-up, and
+      // native text is not committed until its editor closes. Holding the most
+      // recent snapshot keeps those interactions entirely local.
+      if (canvasPointerDownRef.current || nextCanvasTextEditing) {
+        pendingCanvasCommitRef.current = snapshot;
+        persistEmbeddedFiles(files);
+        return;
+      }
       queueSnapshot(snapshot);
       collaborationRef.current?.publishScene(snapshot);
       persistEmbeddedFiles(files);
@@ -4322,7 +4365,7 @@ export function ProjectPlayground({
             "This reference is not a supported PNG, JPEG, or WebP image.",
           );
         }
-        const fileId = crypto.randomUUID() as FileId;
+        const fileId = `stamp:${stamp.id}` as FileId;
         const dataURL = await blobDataUrl(blob);
         const assetUrl = await uploadProjectCanvasAsset(
           projectId,
@@ -6061,6 +6104,7 @@ export function ProjectPlayground({
       _activeTool: AppState["activeTool"],
       pointerDownState: PointerDownState,
     ) => {
+      canvasPointerDownRef.current = false;
       setToolsCatalogOpen(false);
       // Insert Astryx elements after Excalidraw finishes its own pointer-up
       // reconciliation. Updating the scene from onPointerDown lets Excalidraw's
@@ -6069,6 +6113,7 @@ export function ProjectPlayground({
       // tools may be normalized back to selection before this callback runs.
       if (_activeTool.type === "frame" || researchFrameDrawing) {
         finalizeResearchFrame(pointerDownState.origin);
+        scheduleCanvasCommit();
         return;
       }
       if (shapePlacement) {
@@ -6090,6 +6135,7 @@ export function ProjectPlayground({
         shapePlacementPointerRef.current = undefined;
         setShapePlacement(undefined);
         editorRef.current?.resetCursor();
+        scheduleCanvasCommit();
         return;
       }
       if (commentPlacement) {
@@ -6098,9 +6144,13 @@ export function ProjectPlayground({
         setCommentDraft("");
         setSelectedCommentId(undefined);
         stopCommentPlacement();
+        scheduleCanvasCommit();
         return;
       }
-      if (!stickyPlacement) return;
+      if (!stickyPlacement) {
+        scheduleCanvasCommit();
+        return;
+      }
       const { x, y } = pointerDownState.origin;
       if (stickyPlacement.mode === "stack") {
         insertStickyNotesAt(x, y, stickyPlacement.color, [
@@ -6109,6 +6159,7 @@ export function ProjectPlayground({
           "New idea",
         ]);
         stopStickyPlacement();
+        scheduleCanvasCommit();
         return;
       }
       const draft = {
@@ -6123,6 +6174,7 @@ export function ProjectPlayground({
          same React batch instead of being cleared immediately. */
       stopStickyPlacement();
       setStickyDraft(draft);
+      scheduleCanvasCommit();
     },
     [
       commentPlacement,
@@ -6132,6 +6184,7 @@ export function ProjectPlayground({
       shapePlacement,
       stickyPlacement,
       researchFrameDrawing,
+      scheduleCanvasCommit,
       stopCommentPlacement,
       stopStickyPlacement,
     ],

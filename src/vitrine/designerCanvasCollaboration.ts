@@ -9,7 +9,9 @@ import type { DesignerCanvasScenePatch } from "../services/designer-canvas-colla
 export type DesignerCanvasCollaborationStatus = "connecting" | "live" | "offline";
 
 const scenePublishIntervalMs = 33;
-const cursorPublishIntervalMs = 33;
+// Cursors are ephemeral and only move a few bytes, so keep them at the
+// display cadence. Object changes remain commit-based and coalesced.
+const cursorPublishIntervalMs = 1_000 / 60;
 const maxBufferedRealtimeBytes = 64 * 1024;
 
 export interface DesignerCanvasCollaborator {
@@ -90,12 +92,25 @@ export function designerCanvasScenePatch(
       return typeof element?.id === "string" ? [[element.id, element] as const] : [];
     }),
   );
+  const nextElements = new Map(
+    next.elements.flatMap((candidate) => {
+      const element = record(candidate);
+      return typeof element?.id === "string" ? [[element.id, element] as const] : [];
+    }),
+  );
   const elements = next.elements.flatMap((candidate) => {
     const element = record(candidate);
     return typeof element?.id === "string" && !canvasElementEqual(previousElements.get(element.id), element)
       ? [element]
       : [];
   });
+  // `serializeAsJSON` may omit deleted elements. A patch must still carry a
+  // tombstone or peers keep rendering the old object forever.
+  for (const [id, element] of previousElements) {
+    if (nextElements.has(id)) continue;
+    const version = typeof element.version === "number" ? element.version + 1 : 1;
+    elements.push({ ...element, isDeleted: true, version });
+  }
   const files = Object.fromEntries(
     Object.entries(next.files).filter(([id, file]) => !jsonEqual(previous.files[id], file)),
   );
@@ -214,9 +229,26 @@ export function designerCanvasCollaborationUrl(
 export function collaborationSafeSnapshot(value: unknown): DesignerCanvasSnapshot | undefined {
   const snapshot = normalizeDesignerCanvasSnapshot(value);
   if (!snapshot) return undefined;
-  const files = Object.fromEntries(Object.entries(snapshot.files).filter(([, value]) => {
+  // Static canvas stamps are small UI assets, not user-uploaded media. Keep
+  // their bytes in the realtime payload so an image stamp renders immediately
+  // for every collaborator. All other embedded images remain out of band.
+  const stampFileIds = new Set(
+    snapshot.elements.flatMap((candidate) => {
+      const element = record(candidate);
+      const reference = record(element?.customData)?.astryxReference;
+      const stamp = record(reference);
+      return element?.type === "image"
+        && typeof element.fileId === "string"
+        && stamp?.kind === "stamp"
+        ? [element.fileId]
+        : [];
+    }),
+  );
+  const files = Object.fromEntries(Object.entries(snapshot.files).filter(([id, value]) => {
     const file = record(value);
-    return typeof file?.dataURL !== "string" || !file.dataURL.startsWith("data:");
+    return stampFileIds.has(id)
+      || typeof file?.dataURL !== "string"
+      || !file.dataURL.startsWith("data:");
   }));
   return { ...snapshot, files };
 }
@@ -351,6 +383,11 @@ export function openDesignerCanvasCollaboration(
           if (!Number.isSafeInteger(revision) || revision <= lastServerRevision) return;
           lastServerRevision = revision;
         }
+        // The gateway echoes reliable scene updates to their sender so every
+        // client advances through the same revisions. The local editor already
+        // owns this scene, though; applying its echo with updateScene() while a
+        // freedraw pointer is down aborts that in-progress stroke.
+        if (message.clientId === clientId) return;
         if (snapshot) {
           lastPublishedScene = snapshot;
           options.onScene(snapshot);
@@ -363,6 +400,9 @@ export function openDesignerCanvasCollaboration(
         if (!patch || typeof revision !== "number" || !Number.isSafeInteger(revision)
           || revision <= lastServerRevision) return;
         lastServerRevision = revision;
+        // See the scene acknowledgement above. Keep the revision, but never
+        // replace the sender's live Excalidraw scene during a pointer gesture.
+        if (message.clientId === clientId) return;
         if (lastPublishedScene) {
           lastPublishedScene = applyDesignerCanvasScenePatch(lastPublishedScene, patch);
         }
