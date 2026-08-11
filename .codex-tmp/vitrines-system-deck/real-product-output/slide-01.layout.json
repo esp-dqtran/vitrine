@@ -1,0 +1,406 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/04gmnb",
+    "id": "04gmnb",
+    "slide": 1,
+    "layoutId": "9e768542-10cc-4490-8bc4-437e160bc80a",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "5969be77-921a-49aa-93f8-71a5372da454",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#141820",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Avenir Next"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "9e768542-10cc-4490-8bc4-437e160bc80a",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "5969be77-921a-49aa-93f8-71a5372da454",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "5969be77-921a-49aa-93f8-71a5372da454",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/mp8bet4f",
+      "id": "1",
+      "name": "brand",
+      "bbox": [
+        72,
+        58,
+        250,
+        28
+      ],
+      "geometry": "rect",
+      "text": "VITRINES",
+      "textPreview": "VITRINES",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 17,
+        "typeface": "Avenir Next",
+        "color": "#B8F5D2",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "VITRINES"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "VITRINES",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Avenir Next",
+            "color": "#B8F5D2",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "VITRINES",
+              "fontSize": 17,
+              "typeface": "Avenir Next",
+              "color": "#B8F5D2",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/9szup836",
+      "id": "2",
+      "name": "title",
+      "bbox": [
+        72,
+        132,
+        610,
+        210
+      ],
+      "geometry": "rect",
+      "text": "Product research\nfor decisions that ship.",
+      "textPreview": "Product research | for decisions that ship.",
+      "resolvedFontSize": 60,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 60,
+        "typeface": "Avenir Next",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Product research"
+          },
+          {
+            "index": 2,
+            "text": "for decisions that"
+          },
+          {
+            "index": 3,
+            "text": "ship."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Product research",
+          "resolvedTextStyle": {
+            "fontSize": 60,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Product research",
+              "fontSize": 60,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "for decisions that ship.",
+          "resolvedTextStyle": {
+            "fontSize": 60,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "for decisions that ship.",
+              "fontSize": 60,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/orqtg3ml",
+      "id": "3",
+      "name": "support",
+      "bbox": [
+        76,
+        384,
+        550,
+        42
+      ],
+      "geometry": "rect",
+      "text": "Real products. Real context. Decision-ready evidence.",
+      "textPreview": "Real products. Real context. Decision-ready evidence.",
+      "resolvedFontSize": 23,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 23,
+        "typeface": "Avenir Next",
+        "color": "#C9D1DB",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Real products. Real context. Decision-ready"
+          },
+          {
+            "index": 2,
+            "text": "evidence."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Real products. Real context. Decision-ready evidence.",
+          "resolvedTextStyle": {
+            "fontSize": 23,
+            "typeface": "Avenir Next",
+            "color": "#C9D1DB",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Real products. Real context. Decision-ready evidence.",
+              "fontSize": 23,
+              "typeface": "Avenir Next",
+              "color": "#C9D1DB",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/up0bip8v",
+      "id": "4",
+      "bbox": [
+        690,
+        74,
+        520,
+        548
+      ],
+      "geometry": "roundRect",
+      "alt": "Vitrines live apps catalog",
+      "contentType": "image/png",
+      "imageCrop": {
+        "left": 0.06,
+        "top": 0.05,
+        "right": 0.06,
+        "bottom": 0.07
+      },
+      "imageFit": "cover",
+      "imageMask": {
+        "geometry": "roundRect",
+        "adjustmentList": [
+          {
+            "name": "adj",
+            "formula": "val 2308"
+          }
+        ]
+      },
+      "asset": {
+        "assetId": "9882aabf-076b-4792-ac2d-6fb59aa3c472",
+        "contentType": "image/png",
+        "byteLength": 1260055
+      }
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/el8bat4j",
+      "id": "5",
+      "name": "image-caption",
+      "bbox": [
+        694,
+        640,
+        300,
+        20
+      ],
+      "geometry": "rect",
+      "text": "LIVE VITRINES CATALOG",
+      "textPreview": "LIVE VITRINES CATALOG",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 13,
+        "typeface": "Avenir Next",
+        "color": "#AEB6C3",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "LIVE VITRINES CATALOG"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "LIVE VITRINES CATALOG",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "typeface": "Avenir Next",
+            "color": "#AEB6C3",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "LIVE VITRINES CATALOG",
+              "fontSize": 13,
+              "typeface": "Avenir Next",
+              "color": "#AEB6C3",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

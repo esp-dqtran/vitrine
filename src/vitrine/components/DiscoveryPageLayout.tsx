@@ -2,6 +2,7 @@ import { type ReactNode, type RefObject } from 'react';
 import { Button, EmptyState, Skeleton } from '@astryxdesign/core';
 import { AppCardSkeleton } from './AppCardSkeleton.tsx';
 import { ReferenceDiscoveryPageShell } from './ReferenceDiscoveryPageShell.tsx';
+import { Spinner } from './Spinner.tsx';
 
 export interface DiscoveryPageLayoutProps {
   kind: 'apps' | 'sites' | 'flows';
@@ -102,7 +103,7 @@ export function DiscoveryPageLayout({
             role="status"
             aria-label={`Loading more ${resultLabel}`}
           >
-            Loading more {resultLabel}…
+            <Spinner size="md" shade="subtle" aria-hidden="true" />
           </div>
         ) : null}
         {!error && hasResults && loadMoreError ? (

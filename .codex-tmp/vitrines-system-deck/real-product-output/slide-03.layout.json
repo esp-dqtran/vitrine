@@ -1,0 +1,664 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/nytey0",
+    "id": "nytey0",
+    "slide": 3,
+    "layoutId": "9e768542-10cc-4490-8bc4-437e160bc80a",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "5969be77-921a-49aa-93f8-71a5372da454",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#141820",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Avenir Next"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "9e768542-10cc-4490-8bc4-437e160bc80a",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "5969be77-921a-49aa-93f8-71a5372da454",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "5969be77-921a-49aa-93f8-71a5372da454",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/765wzq9g",
+      "id": "1",
+      "name": "eyebrow",
+      "bbox": [
+        72,
+        58,
+        240,
+        24
+      ],
+      "geometry": "rect",
+      "text": "THE PRODUCT",
+      "textPreview": "THE PRODUCT",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 16,
+        "typeface": "Avenir Next",
+        "color": "#B8F5D2",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "THE PRODUCT"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "THE PRODUCT",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Avenir Next",
+            "color": "#B8F5D2",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "THE PRODUCT",
+              "fontSize": 16,
+              "typeface": "Avenir Next",
+              "color": "#B8F5D2",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/s7ed8val",
+      "id": "2",
+      "name": "title",
+      "bbox": [
+        72,
+        124,
+        560,
+        160
+      ],
+      "geometry": "rect",
+      "text": "A live catalog,\nnot a moodboard.",
+      "textPreview": "A live catalog, | not a moodboard.",
+      "resolvedFontSize": 56,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 56,
+        "typeface": "Avenir Next",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "A live catalog,"
+          },
+          {
+            "index": 2,
+            "text": "not a moodboard."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "A live catalog,",
+          "resolvedTextStyle": {
+            "fontSize": 56,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "A live catalog,",
+              "fontSize": 56,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "not a moodboard.",
+          "resolvedTextStyle": {
+            "fontSize": 56,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "not a moodboard.",
+              "fontSize": 56,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/t87e10r6",
+      "id": "3",
+      "name": "metric-1",
+      "bbox": [
+        76,
+        370,
+        235,
+        72
+      ],
+      "geometry": "rect",
+      "text": "430K",
+      "textPreview": "430K",
+      "resolvedFontSize": 54,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 54,
+        "typeface": "Avenir Next",
+        "color": "#B8F5D2",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "430K"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "430K",
+          "resolvedTextStyle": {
+            "fontSize": 54,
+            "typeface": "Avenir Next",
+            "color": "#B8F5D2",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "430K",
+              "fontSize": 54,
+              "typeface": "Avenir Next",
+              "color": "#B8F5D2",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/u9gvalsr",
+      "id": "4",
+      "name": "metric-2",
+      "bbox": [
+        350,
+        370,
+        250,
+        72
+      ],
+      "geometry": "rect",
+      "text": "1,188",
+      "textPreview": "1,188",
+      "resolvedFontSize": 54,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 54,
+        "typeface": "Avenir Next",
+        "color": "#B8F5D2",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "1,188"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "1,188",
+          "resolvedTextStyle": {
+            "fontSize": 54,
+            "typeface": "Avenir Next",
+            "color": "#B8F5D2",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "1,188",
+              "fontSize": 54,
+              "typeface": "Avenir Next",
+              "color": "#B8F5D2",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fapw3q9c",
+      "id": "5",
+      "name": "label-1",
+      "bbox": [
+        76,
+        442,
+        210,
+        30
+      ],
+      "geometry": "rect",
+      "text": "screens captured",
+      "textPreview": "screens captured",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 19,
+        "typeface": "Avenir Next",
+        "color": "#C9D1DB",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "screens captured"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "screens captured",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "typeface": "Avenir Next",
+            "color": "#C9D1DB",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "screens captured",
+              "fontSize": 19,
+              "typeface": "Avenir Next",
+              "color": "#C9D1DB",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/gbyxcvax",
+      "id": "6",
+      "name": "label-2",
+      "bbox": [
+        350,
+        442,
+        210,
+        30
+      ],
+      "geometry": "rect",
+      "text": "real products",
+      "textPreview": "real products",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 19,
+        "typeface": "Avenir Next",
+        "color": "#C9D1DB",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "real products"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "real products",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "typeface": "Avenir Next",
+            "color": "#C9D1DB",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "real products",
+              "fontSize": 19,
+              "typeface": "Avenir Next",
+              "color": "#C9D1DB",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/1c7e50ri",
+      "id": "7",
+      "name": "platforms",
+      "bbox": [
+        76,
+        560,
+        450,
+        32
+      ],
+      "geometry": "rect",
+      "text": "Web  ·  iOS  ·  Android",
+      "textPreview": "Web  ·  iOS  ·  Android",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 22,
+        "typeface": "Avenir Next",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Web  ·  iOS  ·  Android"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Web  ·  iOS  ·  Android",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Web  ·  iOS  ·  Android",
+              "fontSize": 22,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/7qdsbep4",
+      "id": "8",
+      "bbox": [
+        680,
+        96,
+        530,
+        528
+      ],
+      "geometry": "roundRect",
+      "alt": "Vitrines app catalog with real products",
+      "contentType": "image/png",
+      "imageCrop": {
+        "left": 0.04,
+        "top": 0.08,
+        "right": 0.04,
+        "bottom": 0.08
+      },
+      "imageFit": "cover",
+      "imageMask": {
+        "geometry": "roundRect",
+        "adjustmentList": [
+          {
+            "name": "adj",
+            "formula": "val 2273"
+          }
+        ]
+      },
+      "asset": {
+        "assetId": "908182bc-b87f-4eec-ae81-147ae2dcb2fe",
+        "contentType": "image/png",
+        "byteLength": 1260055
+      }
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3epw7a98",
+      "id": "9",
+      "name": "page",
+      "bbox": [
+        1168,
+        654,
+        54,
+        24
+      ],
+      "geometry": "rect",
+      "text": "03",
+      "textPreview": "03",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 14,
+        "typeface": "Avenir Next",
+        "color": "#AEB6C3",
+        "alignment": "right",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "03"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "03",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Avenir Next",
+            "color": "#AEB6C3",
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "03",
+              "fontSize": 14,
+              "typeface": "Avenir Next",
+              "color": "#AEB6C3",
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

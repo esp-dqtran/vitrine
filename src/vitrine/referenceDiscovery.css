@@ -1009,7 +1009,8 @@
 }
 
 .discovery-page-layout__state,
-.discovery-page-layout__load-more-error {
+.discovery-page-layout__load-more-error,
+.discovery-page-layout__loading-more {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1053,6 +1054,12 @@
   border: 1px solid var(--reference-chrome-border);
   border-radius: 12px;
   background: var(--reference-chrome-surface);
+}
+
+.discovery-page-layout__loading-more {
+  justify-content: center;
+  margin-top: 20px;
+  min-height: 48px;
 }
 
 @media (max-width: 720px) {

@@ -63,6 +63,19 @@ test('right-aligns the shared result count for Apps, Sites, and Flows', async ()
   );
 });
 
+test('renders a compact progress treatment while loading another page', async () => {
+  const [html, css] = await Promise.all([
+    Promise.resolve(renderLayout({ loadingMore: true })),
+    readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(html, /aria-label="Loading more sites"/);
+  assert.match(html, /data-vitrine-spinner="comet"/);
+  assert.match(html, /width="20"/);
+  assert.doesNotMatch(html, /Loading more sites…/);
+  assert.match(css, /\.discovery-page-layout__loading-more\s*\{[^}]*justify-content:\s*center/);
+});
+
 test('keeps kind-specific shell classes and data attributes for every discovery kind', () => {
   for (const kind of ['apps', 'sites', 'flows'] as const) {
     const html = renderLayout({ kind });

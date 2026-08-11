@@ -1,0 +1,554 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/v1xbsi",
+    "id": "v1xbsi",
+    "slide": 4,
+    "layoutId": "9e768542-10cc-4490-8bc4-437e160bc80a",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "5969be77-921a-49aa-93f8-71a5372da454",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#F7F3EB",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Avenir Next"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "9e768542-10cc-4490-8bc4-437e160bc80a",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "5969be77-921a-49aa-93f8-71a5372da454",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "5969be77-921a-49aa-93f8-71a5372da454",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/7mt47uxw",
+      "id": "1",
+      "name": "eyebrow",
+      "bbox": [
+        72,
+        62,
+        250,
+        24
+      ],
+      "geometry": "rect",
+      "text": "FLOW EVIDENCE",
+      "textPreview": "FLOW EVIDENCE",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 16,
+        "typeface": "Avenir Next",
+        "color": "#3E7B5C",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "FLOW EVIDENCE"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "FLOW EVIDENCE",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Avenir Next",
+            "color": "#3E7B5C",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "FLOW EVIDENCE",
+              "fontSize": 16,
+              "typeface": "Avenir Next",
+              "color": "#3E7B5C",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/8nm50zeh",
+      "id": "2",
+      "name": "title",
+      "bbox": [
+        72,
+        122,
+        650,
+        168
+      ],
+      "geometry": "rect",
+      "text": "See the journey,\nnot just the hero screen.",
+      "textPreview": "See the journey, | not just the hero screen.",
+      "resolvedFontSize": 54,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 54,
+        "typeface": "Avenir Next",
+        "color": "#151515",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "See the journey,"
+          },
+          {
+            "index": 2,
+            "text": "not just the hero screen."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "See the journey,",
+          "resolvedTextStyle": {
+            "fontSize": 54,
+            "typeface": "Avenir Next",
+            "color": "#151515",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "See the journey,",
+              "fontSize": 54,
+              "typeface": "Avenir Next",
+              "color": "#151515",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "not just the hero screen.",
+          "resolvedTextStyle": {
+            "fontSize": 54,
+            "typeface": "Avenir Next",
+            "color": "#151515",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "not just the hero screen.",
+              "fontSize": 54,
+              "typeface": "Avenir Next",
+              "color": "#151515",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/wrqts7u1",
+      "id": "3",
+      "bbox": [
+        730,
+        106,
+        135,
+        438
+      ],
+      "geometry": "roundRect",
+      "alt": "Trello iOS Adding a card flow step 1",
+      "contentType": "image/jpeg",
+      "imageFit": "contain",
+      "imageMask": {
+        "geometry": "roundRect",
+        "adjustmentList": [
+          {
+            "name": "adj",
+            "formula": "val 8889"
+          }
+        ]
+      },
+      "asset": {
+        "assetId": "5ff0ae0d-b3a2-4e40-ab72-8a1c4ba3eb39",
+        "contentType": "image/jpeg",
+        "byteLength": 19213
+      }
+    },
+    {
+      "order": 4,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/juhc3mts",
+      "id": "4",
+      "bbox": [
+        890,
+        106,
+        135,
+        438
+      ],
+      "geometry": "roundRect",
+      "alt": "Trello iOS Adding a card flow step 2",
+      "contentType": "image/jpeg",
+      "imageFit": "contain",
+      "imageMask": {
+        "geometry": "roundRect",
+        "adjustmentList": [
+          {
+            "name": "adj",
+            "formula": "val 8889"
+          }
+        ]
+      },
+      "asset": {
+        "assetId": "91c93f1c-1fe0-414b-af3e-a341e24b7b6e",
+        "contentType": "image/jpeg",
+        "byteLength": 35680
+      }
+    },
+    {
+      "order": 5,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/it8buhc7",
+      "id": "5",
+      "bbox": [
+        1050,
+        106,
+        135,
+        438
+      ],
+      "geometry": "roundRect",
+      "alt": "Trello iOS Adding a card flow step 3",
+      "contentType": "image/jpeg",
+      "imageFit": "contain",
+      "imageMask": {
+        "geometry": "roundRect",
+        "adjustmentList": [
+          {
+            "name": "adj",
+            "formula": "val 8889"
+          }
+        ]
+      },
+      "asset": {
+        "assetId": "6171ab95-80bf-42a8-babb-b2f8d0597a24",
+        "contentType": "image/jpeg",
+        "byteLength": 17268
+      }
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/kj25wfe5",
+      "id": "6",
+      "name": "flow-detail",
+      "bbox": [
+        76,
+        406,
+        410,
+        78
+      ],
+      "geometry": "rect",
+      "text": "Trello · Adding a card\n64 screens · observed in 47 apps",
+      "textPreview": "Trello · Adding a card | 64 screens · observed in 47 apps",
+      "resolvedFontSize": 25,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 25,
+        "typeface": "Avenir Next",
+        "color": "#151515",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Trello · Adding a card"
+          },
+          {
+            "index": 2,
+            "text": "64 screens · observed in 47"
+          },
+          {
+            "index": 3,
+            "text": "apps"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Trello · Adding a card",
+          "resolvedTextStyle": {
+            "fontSize": 25,
+            "typeface": "Avenir Next",
+            "color": "#151515",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Trello · Adding a card",
+              "fontSize": 25,
+              "typeface": "Avenir Next",
+              "color": "#151515",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "64 screens · observed in 47 apps",
+          "resolvedTextStyle": {
+            "fontSize": 25,
+            "typeface": "Avenir Next",
+            "color": "#151515",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "64 screens · observed in 47 apps",
+              "fontSize": 25,
+              "typeface": "Avenir Next",
+              "color": "#151515",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/lkbm5kfq",
+      "id": "7",
+      "name": "flow-caption",
+      "bbox": [
+        76,
+        528,
+        510,
+        42
+      ],
+      "geometry": "rect",
+      "text": "Context before. Action in the middle. Confirmation after.",
+      "textPreview": "Context before. Action in the middle. Confirmation after.",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 22,
+        "typeface": "Avenir Next",
+        "color": "#6D727C",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Context before. Action in the middle."
+          },
+          {
+            "index": 2,
+            "text": "Confirmation after."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Context before. Action in the middle. Confirmation after.",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "typeface": "Avenir Next",
+            "color": "#6D727C",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Context before. Action in the middle. Confirmation after.",
+              "fontSize": 22,
+              "typeface": "Avenir Next",
+              "color": "#6D727C",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/qt0nq5w3",
+      "id": "8",
+      "name": "page",
+      "bbox": [
+        1168,
+        654,
+        54,
+        24
+      ],
+      "geometry": "rect",
+      "text": "04",
+      "textPreview": "04",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 14,
+        "typeface": "Avenir Next",
+        "color": "#6D727C",
+        "alignment": "right",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "04"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "04",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Avenir Next",
+            "color": "#6D727C",
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "04",
+              "fontSize": 14,
+              "typeface": "Avenir Next",
+              "color": "#6D727C",
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

@@ -1,0 +1,608 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/wx9cj6",
+    "id": "wx9cj6",
+    "slide": 5,
+    "layoutId": "be13026d-78a1-4666-9192-f99d927a9634",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "94693def-e306-4b99-be06-e96f357d0519",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#141820",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Avenir Next"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "be13026d-78a1-4666-9192-f99d927a9634",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "94693def-e306-4b99-be06-e96f357d0519",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "94693def-e306-4b99-be06-e96f357d0519",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zalwv2lg",
+      "id": "1",
+      "name": "eyebrow",
+      "bbox": [
+        72,
+        62,
+        360,
+        28
+      ],
+      "geometry": "rect",
+      "text": "THE OPERATING PRINCIPLE",
+      "textPreview": "THE OPERATING PRINCIPLE",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 16,
+        "typeface": "Avenir Next",
+        "color": "#B8F5D2",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "THE OPERATING PRINCIPLE"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "THE OPERATING PRINCIPLE",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Avenir Next",
+            "color": "#B8F5D2",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "THE OPERATING PRINCIPLE",
+              "fontSize": 16,
+              "typeface": "Avenir Next",
+              "color": "#B8F5D2",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0bud47ml",
+      "id": "2",
+      "name": "title",
+      "bbox": [
+        72,
+        160,
+        820,
+        100
+      ],
+      "geometry": "rect",
+      "text": "Trust is built in.",
+      "textPreview": "Trust is built in.",
+      "resolvedFontSize": 72,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 72,
+        "typeface": "Avenir Next",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Trust is built in."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Trust is built in.",
+          "resolvedTextStyle": {
+            "fontSize": 72,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Trust is built in.",
+              "fontSize": 72,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/1c3exc36",
+      "id": "3",
+      "name": "one",
+      "bbox": [
+        76,
+        342,
+        450,
+        46
+      ],
+      "geometry": "rect",
+      "text": "Guarded crawling",
+      "textPreview": "Guarded crawling",
+      "resolvedFontSize": 33,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 33,
+        "typeface": "Avenir Next",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Guarded crawling"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Guarded crawling",
+          "resolvedTextStyle": {
+            "fontSize": 33,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Guarded crawling",
+              "fontSize": 33,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/mxcv6h4r",
+      "id": "4",
+      "name": "two",
+      "bbox": [
+        76,
+        422,
+        480,
+        46
+      ],
+      "geometry": "rect",
+      "text": "Traceable evidence",
+      "textPreview": "Traceable evidence",
+      "resolvedFontSize": 33,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 33,
+        "typeface": "Avenir Next",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Traceable evidence"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Traceable evidence",
+          "resolvedTextStyle": {
+            "fontSize": 33,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Traceable evidence",
+              "fontSize": 33,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/nylwz2lc",
+      "id": "5",
+      "name": "three",
+      "bbox": [
+        76,
+        502,
+        420,
+        46
+      ],
+      "geometry": "rect",
+      "text": "Verified releases",
+      "textPreview": "Verified releases",
+      "resolvedFontSize": 33,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 33,
+        "typeface": "Avenir Next",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Verified releases"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Verified releases",
+          "resolvedTextStyle": {
+            "fontSize": 33,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Verified releases",
+              "fontSize": 33,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ozux87mx",
+      "id": "6",
+      "bbox": [
+        680,
+        344,
+        424,
+        0
+      ],
+      "geometry": "straightConnector1",
+      "lineColor": "#536273",
+      "lineWidth": 1.5
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/90ne1c3i",
+      "id": "7",
+      "name": "close",
+      "bbox": [
+        680,
+        372,
+        450,
+        190
+      ],
+      "geometry": "rect",
+      "text": "Vitrines turns\nproduct evidence\ninto momentum.",
+      "textPreview": "Vitrines turns | product evidence | into momentum.",
+      "resolvedFontSize": 42,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 42,
+        "typeface": "Avenir Next",
+        "color": "#B8F5D2",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Vitrines turns"
+          },
+          {
+            "index": 2,
+            "text": "product evidence"
+          },
+          {
+            "index": 3,
+            "text": "into momentum."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Vitrines turns",
+          "resolvedTextStyle": {
+            "fontSize": 42,
+            "typeface": "Avenir Next",
+            "color": "#B8F5D2",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Vitrines turns",
+              "fontSize": 42,
+              "typeface": "Avenir Next",
+              "color": "#B8F5D2",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "product evidence",
+          "resolvedTextStyle": {
+            "fontSize": 42,
+            "typeface": "Avenir Next",
+            "color": "#B8F5D2",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "product evidence",
+              "fontSize": 42,
+              "typeface": "Avenir Next",
+              "color": "#B8F5D2",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 3,
+          "text": "into momentum.",
+          "resolvedTextStyle": {
+            "fontSize": 42,
+            "typeface": "Avenir Next",
+            "color": "#B8F5D2",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "into momentum.",
+              "fontSize": 42,
+              "typeface": "Avenir Next",
+              "color": "#B8F5D2",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/a1wfah43",
+      "id": "8",
+      "name": "slide-number",
+      "bbox": [
+        1168,
+        654,
+        52,
+        24
+      ],
+      "geometry": "rect",
+      "text": "05",
+      "textPreview": "05",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 14,
+        "typeface": "Avenir Next",
+        "color": "#AEB6C3",
+        "alignment": "right",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "05"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "05",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Avenir Next",
+            "color": "#AEB6C3",
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "05",
+              "fontSize": 14,
+              "typeface": "Avenir Next",
+              "color": "#AEB6C3",
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

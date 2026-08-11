@@ -1,0 +1,529 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/c89n34",
+    "id": "c89n34",
+    "slide": 5,
+    "layoutId": "9e768542-10cc-4490-8bc4-437e160bc80a",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "5969be77-921a-49aa-93f8-71a5372da454",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#141820",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Avenir Next"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "9e768542-10cc-4490-8bc4-437e160bc80a",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "5969be77-921a-49aa-93f8-71a5372da454",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "5969be77-921a-49aa-93f8-71a5372da454",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3upcbed4",
+      "id": "1",
+      "name": "eyebrow",
+      "bbox": [
+        72,
+        58,
+        360,
+        24
+      ],
+      "geometry": "rect",
+      "text": "FROM EVIDENCE TO HANDOFF",
+      "textPreview": "FROM EVIDENCE TO HANDOFF",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 16,
+        "typeface": "Avenir Next",
+        "color": "#B8F5D2",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "FROM EVIDENCE TO HANDOFF"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "FROM EVIDENCE TO HANDOFF",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Avenir Next",
+            "color": "#B8F5D2",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "FROM EVIDENCE TO HANDOFF",
+              "fontSize": 16,
+              "typeface": "Avenir Next",
+              "color": "#B8F5D2",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4vyd4jep",
+      "id": "2",
+      "name": "title",
+      "bbox": [
+        72,
+        122,
+        550,
+        160
+      ],
+      "geometry": "rect",
+      "text": "The work keeps\nits evidence attached.",
+      "textPreview": "The work keeps | its evidence attached.",
+      "resolvedFontSize": 54,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 54,
+        "typeface": "Avenir Next",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "The work keeps"
+          },
+          {
+            "index": 2,
+            "text": "its evidence"
+          },
+          {
+            "index": 3,
+            "text": "attached."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "The work keeps",
+          "resolvedTextStyle": {
+            "fontSize": 54,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "The work keeps",
+              "fontSize": 54,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "its evidence attached.",
+          "resolvedTextStyle": {
+            "fontSize": 54,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "its evidence attached.",
+              "fontSize": 54,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/pw7udova",
+      "id": "3",
+      "name": "list",
+      "bbox": [
+        76,
+        382,
+        420,
+        144
+      ],
+      "geometry": "rect",
+      "text": "Research projects\nLiving canvas\nDocuments & public previews",
+      "textPreview": "Research projects | Living canvas | Documents & public previews",
+      "resolvedFontSize": 29,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 29,
+        "typeface": "Avenir Next",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 4,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Research projects"
+          },
+          {
+            "index": 2,
+            "text": "Living canvas"
+          },
+          {
+            "index": 3,
+            "text": "Documents & public"
+          },
+          {
+            "index": 4,
+            "text": "previews"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Research projects",
+          "resolvedTextStyle": {
+            "fontSize": 29,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Research projects",
+              "fontSize": 29,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "Living canvas",
+          "resolvedTextStyle": {
+            "fontSize": 29,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Living canvas",
+              "fontSize": 29,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 3,
+          "text": "Documents & public previews",
+          "resolvedTextStyle": {
+            "fontSize": 29,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Documents & public previews",
+              "fontSize": 29,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/bqdobm1o",
+      "id": "4",
+      "bbox": [
+        640,
+        100,
+        570,
+        470
+      ],
+      "geometry": "roundRect",
+      "alt": "Vitrines public preview with captured flows",
+      "contentType": "image/png",
+      "imageCrop": {
+        "left": 0.02,
+        "top": 0.04,
+        "right": 0.02,
+        "bottom": 0.04
+      },
+      "imageFit": "cover",
+      "imageMask": {
+        "geometry": "roundRect",
+        "adjustmentList": [
+          {
+            "name": "adj",
+            "formula": "val 2553"
+          }
+        ]
+      },
+      "asset": {
+        "assetId": "d8c40aa4-4ce3-4b83-9745-979e7bc34b8c",
+        "contentType": "image/png",
+        "byteLength": 111711
+      }
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ry9cfyd0",
+      "id": "5",
+      "name": "caption",
+      "bbox": [
+        646,
+        604,
+        540,
+        36
+      ],
+      "geometry": "rect",
+      "text": "Evidence can move from private research to a shared, source-linked brief.",
+      "textPreview": "Evidence can move from private research to a shared, source-linked brief.",
+      "resolvedFontSize": 20,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 20,
+        "typeface": "Avenir Next",
+        "color": "#C9D1DB",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Evidence can move from private research to a shared,"
+          },
+          {
+            "index": 2,
+            "text": "source-linked brief."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Evidence can move from private research to a shared, source-linked brief.",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "typeface": "Avenir Next",
+            "color": "#C9D1DB",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Evidence can move from private research to a shared, source-linked brief.",
+              "fontSize": 20,
+              "typeface": "Avenir Next",
+              "color": "#C9D1DB",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/czid83el",
+      "id": "6",
+      "name": "page",
+      "bbox": [
+        1168,
+        654,
+        54,
+        24
+      ],
+      "geometry": "rect",
+      "text": "05",
+      "textPreview": "05",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 14,
+        "typeface": "Avenir Next",
+        "color": "#AEB6C3",
+        "alignment": "right",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "05"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "05",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Avenir Next",
+            "color": "#AEB6C3",
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "05",
+              "fontSize": 14,
+              "typeface": "Avenir Next",
+              "color": "#AEB6C3",
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

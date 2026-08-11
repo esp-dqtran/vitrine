@@ -1,0 +1,606 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/jxu09s",
+    "id": "jxu09s",
+    "slide": 2,
+    "layoutId": "9e768542-10cc-4490-8bc4-437e160bc80a",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "5969be77-921a-49aa-93f8-71a5372da454",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#F7F3EB",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Avenir Next"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "9e768542-10cc-4490-8bc4-437e160bc80a",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "5969be77-921a-49aa-93f8-71a5372da454",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "5969be77-921a-49aa-93f8-71a5372da454",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/jq98fahs",
+      "id": "1",
+      "name": "eyebrow",
+      "bbox": [
+        72,
+        62,
+        260,
+        24
+      ],
+      "geometry": "rect",
+      "text": "WHO IT SERVES",
+      "textPreview": "WHO IT SERVES",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 16,
+        "typeface": "Avenir Next",
+        "color": "#3E7B5C",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "WHO IT SERVES"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "WHO IT SERVES",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Avenir Next",
+            "color": "#3E7B5C",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "WHO IT SERVES",
+              "fontSize": 16,
+              "typeface": "Avenir Next",
+              "color": "#3E7B5C",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4ri98fyx",
+      "id": "2",
+      "name": "title",
+      "bbox": [
+        72,
+        128,
+        690,
+        180
+      ],
+      "geometry": "rect",
+      "text": "Built for people\nwho turn research into direction.",
+      "textPreview": "Built for people | who turn research into direction.",
+      "resolvedFontSize": 54,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 54,
+        "typeface": "Avenir Next",
+        "color": "#151515",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Built for people"
+          },
+          {
+            "index": 2,
+            "text": "who turn research into"
+          },
+          {
+            "index": 3,
+            "text": "direction."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Built for people",
+          "resolvedTextStyle": {
+            "fontSize": 54,
+            "typeface": "Avenir Next",
+            "color": "#151515",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Built for people",
+              "fontSize": 54,
+              "typeface": "Avenir Next",
+              "color": "#151515",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "who turn research into direction.",
+          "resolvedTextStyle": {
+            "fontSize": 54,
+            "typeface": "Avenir Next",
+            "color": "#151515",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "who turn research into direction.",
+              "fontSize": 54,
+              "typeface": "Avenir Next",
+              "color": "#151515",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5crah0zi",
+      "id": "3",
+      "name": "use-case-1",
+      "bbox": [
+        780,
+        170,
+        360,
+        46
+      ],
+      "geometry": "rect",
+      "text": "Product design",
+      "textPreview": "Product design",
+      "resolvedFontSize": 34,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 34,
+        "typeface": "Avenir Next",
+        "color": "#151515",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Product design"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Product design",
+          "resolvedTextStyle": {
+            "fontSize": 34,
+            "typeface": "Avenir Next",
+            "color": "#151515",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Product design",
+              "fontSize": 34,
+              "typeface": "Avenir Next",
+              "color": "#151515",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ulgr2lgv",
+      "id": "4",
+      "name": "use-case-2",
+      "bbox": [
+        780,
+        276,
+        400,
+        46
+      ],
+      "geometry": "rect",
+      "text": "Competitive research",
+      "textPreview": "Competitive research",
+      "resolvedFontSize": 34,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 34,
+        "typeface": "Avenir Next",
+        "color": "#151515",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Competitive research"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Competitive research",
+          "resolvedTextStyle": {
+            "fontSize": 34,
+            "typeface": "Avenir Next",
+            "color": "#151515",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Competitive research",
+              "fontSize": 34,
+              "typeface": "Avenir Next",
+              "color": "#151515",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/vmp8bqhg",
+      "id": "5",
+      "name": "use-case-3",
+      "bbox": [
+        780,
+        382,
+        360,
+        46
+      ],
+      "geometry": "rect",
+      "text": "Feature planning",
+      "textPreview": "Feature planning",
+      "resolvedFontSize": 34,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 34,
+        "typeface": "Avenir Next",
+        "color": "#151515",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Feature planning"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Feature planning",
+          "resolvedTextStyle": {
+            "fontSize": 34,
+            "typeface": "Avenir Next",
+            "color": "#151515",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Feature planning",
+              "fontSize": 34,
+              "typeface": "Avenir Next",
+              "color": "#151515",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wni94vy1",
+      "id": "6",
+      "bbox": [
+        780,
+        242,
+        342,
+        0
+      ],
+      "geometry": "straightConnector1",
+      "lineColor": "#C7C3BA",
+      "lineWidth": 1
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/horqd0zm",
+      "id": "7",
+      "bbox": [
+        780,
+        348,
+        342,
+        0
+      ],
+      "geometry": "straightConnector1",
+      "lineColor": "#C7C3BA",
+      "lineWidth": 1
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ehkrepgf",
+      "id": "8",
+      "name": "anchor",
+      "bbox": [
+        76,
+        470,
+        590,
+        86
+      ],
+      "geometry": "rect",
+      "text": "Product designers and design-minded teams start from what already shipped — then make the next call with context.",
+      "textPreview": "Product designers and design-minded teams start from what already shipped — then make the next call with context.",
+      "resolvedFontSize": 25,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 25,
+        "typeface": "Avenir Next",
+        "color": "#6D727C",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Product designers and design-minded teams start"
+          },
+          {
+            "index": 2,
+            "text": "from what already shipped — then make the next"
+          },
+          {
+            "index": 3,
+            "text": "call with context."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Product designers and design-minded teams start from what already shipped — then make the next call with context.",
+          "resolvedTextStyle": {
+            "fontSize": 25,
+            "typeface": "Avenir Next",
+            "color": "#6D727C",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Product designers and design-minded teams start from what already shipped — then make the next call with context.",
+              "fontSize": 25,
+              "typeface": "Avenir Next",
+              "color": "#6D727C",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fitsnuxk",
+      "id": "9",
+      "name": "page",
+      "bbox": [
+        1168,
+        654,
+        54,
+        24
+      ],
+      "geometry": "rect",
+      "text": "02",
+      "textPreview": "02",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 14,
+        "typeface": "Avenir Next",
+        "color": "#6D727C",
+        "alignment": "right",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "02"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "02",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Avenir Next",
+            "color": "#6D727C",
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "02",
+              "fontSize": 14,
+              "typeface": "Avenir Next",
+              "color": "#6D727C",
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

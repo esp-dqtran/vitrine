@@ -108,7 +108,7 @@ const apps: App[] = [
     description: 'Business, Jobs & Recruitment',
     accent: '#5b8ff9',
     totalScreens: 624,
-    preview: `${PREVIEW_HOST}/api/preview-media/aboard-ea683077-aadb-47c5-a771-d21fd9676510/1`,
+    preview: `${PREVIEW_HOST}/api/preview-media/aboard-ea683077-aadb-47c5-a771-d21fd9676510/web/1`,
     iconUrl:
       'https://bytescale.mobbin.com/FW25bBB/image/mobbin.com/prod/content/app_logos/f6788135-eea1-4370-a4de-80aaa3da4b52.png?f=png&w=400&q=85&fit=shrink-cover',
   }),
@@ -118,7 +118,7 @@ const apps: App[] = [
     description: 'Photo & Video',
     accent: '#f5b041',
     totalScreens: 201,
-    preview: `${PREVIEW_HOST}/api/preview-media/artlist/1`,
+    preview: `${PREVIEW_HOST}/api/preview-media/artlist/web/1`,
   }),
 ];
 

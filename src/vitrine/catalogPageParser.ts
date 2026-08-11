@@ -148,6 +148,7 @@ function appBase(
     "lastCapturedAt",
     "websiteUrl",
     "iconUrl",
+    "previewUrl",
     "description",
     "previewVideoUrl",
   ] as const) {

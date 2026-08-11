@@ -1,0 +1,698 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/e7zkv1",
+    "id": "e7zkv1",
+    "slide": 3,
+    "layoutId": "be13026d-78a1-4666-9192-f99d927a9634",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "94693def-e306-4b99-be06-e96f357d0519",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#141820",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Avenir Next"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "be13026d-78a1-4666-9192-f99d927a9634",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "94693def-e306-4b99-be06-e96f357d0519",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "94693def-e306-4b99-be06-e96f357d0519",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/8nypkbep",
+      "id": "1",
+      "name": "title",
+      "bbox": [
+        72,
+        62,
+        990,
+        168
+      ],
+      "geometry": "rect",
+      "text": "Capture what happened.\nNot just what it looked like.",
+      "textPreview": "Capture what happened. | Not just what it looked like.",
+      "resolvedFontSize": 58,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 58,
+        "typeface": "Avenir Next",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Capture what happened."
+          },
+          {
+            "index": 2,
+            "text": "Not just what it looked like."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Capture what happened.",
+          "resolvedTextStyle": {
+            "fontSize": 58,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Capture what happened.",
+              "fontSize": 58,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "Not just what it looked like.",
+          "resolvedTextStyle": {
+            "fontSize": 58,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Not just what it looked like.",
+              "fontSize": 58,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/nmpor6x4",
+      "id": "2",
+      "bbox": [
+        100,
+        500,
+        1080,
+        0
+      ],
+      "geometry": "straightConnector1",
+      "lineColor": "#64748B",
+      "lineWidth": 1.5
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/mlg7i1wj",
+      "id": "3",
+      "name": "plan-box",
+      "bbox": [
+        96,
+        374,
+        238,
+        98
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#1E2731",
+      "lineColor": "#536273",
+      "lineWidth": 1
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/xsr6xgf6",
+      "id": "4",
+      "name": "observe-box",
+      "bbox": [
+        521,
+        374,
+        238,
+        98
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#1E2731",
+      "lineColor": "#536273",
+      "lineWidth": 1
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wripobel",
+      "id": "5",
+      "name": "pin-box",
+      "bbox": [
+        946,
+        374,
+        238,
+        98
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#B8F5D2",
+      "lineColor": "#B8F5D2",
+      "lineWidth": 1
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/vq9ov6x0",
+      "id": "6",
+      "name": "plan",
+      "bbox": [
+        126,
+        401,
+        170,
+        38
+      ],
+      "geometry": "rect",
+      "text": "Plan",
+      "textPreview": "Plan",
+      "resolvedFontSize": 28,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 28,
+        "typeface": "Avenir Next",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Plan"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Plan",
+          "resolvedTextStyle": {
+            "fontSize": 28,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Plan",
+              "fontSize": 28,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ap07mlwv",
+      "id": "7",
+      "name": "observe",
+      "bbox": [
+        551,
+        401,
+        170,
+        38
+      ],
+      "geometry": "rect",
+      "text": "Observe",
+      "textPreview": "Observe",
+      "resolvedFontSize": 28,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 28,
+        "typeface": "Avenir Next",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Observe"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Observe",
+          "resolvedTextStyle": {
+            "fontSize": 28,
+            "typeface": "Avenir Next",
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Observe",
+              "fontSize": 28,
+              "typeface": "Avenir Next",
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5wr610fi",
+      "id": "8",
+      "name": "pin",
+      "bbox": [
+        976,
+        401,
+        180,
+        38
+      ],
+      "geometry": "rect",
+      "text": "Pin evidence",
+      "textPreview": "Pin evidence",
+      "resolvedFontSize": 28,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 28,
+        "typeface": "Avenir Next",
+        "color": "#141820",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Pin"
+          },
+          {
+            "index": 2,
+            "text": "evidence"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Pin evidence",
+          "resolvedTextStyle": {
+            "fontSize": 28,
+            "typeface": "Avenir Next",
+            "color": "#141820",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Pin evidence",
+              "fontSize": 28,
+              "typeface": "Avenir Next",
+              "color": "#141820",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/kvipsvex",
+      "id": "9",
+      "name": "detail-1",
+      "bbox": [
+        96,
+        538,
+        240,
+        32
+      ],
+      "geometry": "rect",
+      "text": "Intent and safe scope",
+      "textPreview": "Intent and safe scope",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 19,
+        "typeface": "Avenir Next",
+        "color": "#B9C3D0",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Intent and safe scope"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Intent and safe scope",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "typeface": "Avenir Next",
+            "color": "#B9C3D0",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Intent and safe scope",
+              "fontSize": 19,
+              "typeface": "Avenir Next",
+              "color": "#B9C3D0",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/upg7upwn",
+      "id": "10",
+      "name": "detail-2",
+      "bbox": [
+        521,
+        538,
+        300,
+        32
+      ],
+      "geometry": "rect",
+      "text": "Visible UI + system feedback",
+      "textPreview": "Visible UI + system feedback",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 19,
+        "typeface": "Avenir Next",
+        "color": "#B9C3D0",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Visible UI + system feedback"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Visible UI + system feedback",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "typeface": "Avenir Next",
+            "color": "#B9C3D0",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Visible UI + system feedback",
+              "fontSize": 19,
+              "typeface": "Avenir Next",
+              "color": "#B9C3D0",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/vqponud8",
+      "id": "11",
+      "name": "detail-3",
+      "bbox": [
+        946,
+        538,
+        260,
+        32
+      ],
+      "geometry": "rect",
+      "text": "Reusable canonical flows",
+      "textPreview": "Reusable canonical flows",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 19,
+        "typeface": "Avenir Next",
+        "color": "#B8F5D2",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Reusable canonical flows"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Reusable canonical flows",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "typeface": "Avenir Next",
+            "color": "#B8F5D2",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Reusable canonical flows",
+              "fontSize": 19,
+              "typeface": "Avenir Next",
+              "color": "#B8F5D2",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/gbypwzet",
+      "id": "12",
+      "name": "slide-number",
+      "bbox": [
+        1168,
+        654,
+        52,
+        24
+      ],
+      "geometry": "rect",
+      "text": "03",
+      "textPreview": "03",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 14,
+        "typeface": "Avenir Next",
+        "color": "#AEB6C3",
+        "alignment": "right",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "03"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "03",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Avenir Next",
+            "color": "#AEB6C3",
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "03",
+              "fontSize": 14,
+              "typeface": "Avenir Next",
+              "color": "#AEB6C3",
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

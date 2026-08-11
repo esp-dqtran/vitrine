@@ -1,0 +1,59 @@
+{"kind":"slide","id":"sl/kg93a3","slide":1,"title":"VITRINES","textShapes":4}
+{"kind":"textbox","id":"sh/gvmpkba5","slide":1,"name":"eyebrow","text":"VITRINES","textPreview":"VITRINES","textChars":8,"textLines":1,"bbox":[72,62,260,30]}
+{"kind":"textbox","id":"sh/vudob690","slide":1,"name":"title","text":"Product evidence,\nmade useful.","textPreview":"Product evidence, | made useful.","textChars":30,"textLines":2,"bbox":[72,190,920,240]}
+{"kind":"textbox","id":"sh/ut47i1sf","slide":1,"name":"subtitle","text":"A workspace for seeing how products work — and deciding what to build next.","textPreview":"A workspace for seeing how products work — and deciding what to build next.","textChars":75,"textLines":1,"bbox":[76,500,760,78]}
+{"kind":"shape","id":"sh/tsv69wru","slide":1,"bbox":[76,618,1128,0]}
+{"kind":"textbox","id":"sh/8rmpgra9","slide":1,"name":"footer","text":"SYSTEM OVERVIEW","textPreview":"SYSTEM OVERVIEW","textChars":15,"textLines":1,"bbox":[76,640,260,24]}
+{"kind":"notes","id":"nt/kg93a3","slide":1,"text":"[Sources]\n- Internal Vitrines repository inspection, 2026-08-11."}
+{"kind":"slide","id":"sl/8ckcgb","slide":2,"title":"One system for","textShapes":8}
+{"kind":"textbox","id":"sh/8va547ix","slide":2,"name":"title","text":"One system for\nproduct decisions.","textPreview":"One system for | product decisions.","textChars":33,"textLines":2,"bbox":[72,64,660,170]}
+{"kind":"textbox","id":"sh/7u1ob2hc","slide":2,"name":"context","text":"A simple loop that turns reference material into forward motion.","textPreview":"A simple loop that turns reference material into forward motion.","textChars":64,"textLines":1,"bbox":[76,260,590,48]}
+{"kind":"textbox","id":"sh/6tsn2x0r","slide":2,"name":"discover","text":"Discover","textPreview":"Discover","textChars":8,"textLines":1,"bbox":[760,136,360,60]}
+{"kind":"textbox","id":"sh/h036hcze","slide":2,"name":"inspect","text":"Inspect","textPreview":"Inspect","textChars":7,"textLines":1,"bbox":[760,228,360,60]}
+{"kind":"textbox","id":"sh/gzap87it","slide":2,"name":"create","text":"Create","textPreview":"Create","textChars":6,"textLines":1,"bbox":[760,320,360,60]}
+{"kind":"textbox","id":"sh/vy1of2h8","slide":2,"name":"decide","text":"Decide","textPreview":"Decide","textChars":6,"textLines":1,"bbox":[760,412,360,60]}
+{"kind":"shape","id":"sh/uxs76x03","slide":2,"bbox":[760,206,352,0]}
+{"kind":"shape","id":"sh/5o36lwzq","slide":2,"bbox":[760,298,352,0]}
+{"kind":"shape","id":"sh/43upcri5","slide":2,"bbox":[760,390,352,0]}
+{"kind":"textbox","id":"sh/etgrmp8b","slide":2,"name":"caption","text":"Catalogs · Screens · Flows · Projects","textPreview":"Catalogs · Screens · Flows · Projects","textChars":37,"textLines":1,"bbox":[76,592,690,32]}
+{"kind":"textbox","id":"sh/zep8fupg","slide":2,"name":"slide-number","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1168,654,52,24]}
+{"kind":"notes","id":"nt/8ckcgb","slide":2,"text":"[Sources]\n- src/vitrine/router.ts\n- src/vitrine/main.tsx"}
+{"kind":"slide","id":"sl/e7zkv1","slide":3,"title":"Capture what happened.","textShapes":8}
+{"kind":"textbox","id":"sh/8nypkbep","slide":3,"name":"title","text":"Capture what happened.\nNot just what it looked like.","textPreview":"Capture what happened. | Not just what it looked like.","textChars":52,"textLines":2,"bbox":[72,62,990,168]}
+{"kind":"shape","id":"sh/nmpor6x4","slide":3,"bbox":[100,500,1080,0]}
+{"kind":"shape","id":"sh/mlg7i1wj","slide":3,"name":"plan-box","bbox":[96,374,238,98]}
+{"kind":"shape","id":"sh/xsr6xgf6","slide":3,"name":"observe-box","bbox":[521,374,238,98]}
+{"kind":"shape","id":"sh/wripobel","slide":3,"name":"pin-box","bbox":[946,374,238,98]}
+{"kind":"textbox","id":"sh/vq9ov6x0","slide":3,"name":"plan","text":"Plan","textPreview":"Plan","textChars":4,"textLines":1,"bbox":[126,401,170,38]}
+{"kind":"textbox","id":"sh/ap07mlwv","slide":3,"name":"observe","text":"Observe","textPreview":"Observe","textChars":7,"textLines":1,"bbox":[551,401,170,38]}
+{"kind":"textbox","id":"sh/5wr610fi","slide":3,"name":"pin","text":"Pin evidence","textPreview":"Pin evidence","textChars":12,"textLines":1,"bbox":[976,401,180,38]}
+{"kind":"textbox","id":"sh/kvipsvex","slide":3,"name":"detail-1","text":"Intent and safe scope","textPreview":"Intent and safe scope","textChars":21,"textLines":1,"bbox":[96,538,240,32]}
+{"kind":"textbox","id":"sh/upg7upwn","slide":3,"name":"detail-2","text":"Visible UI + system feedback","textPreview":"Visible UI + system feedback","textChars":28,"textLines":1,"bbox":[521,538,300,32]}
+{"kind":"textbox","id":"sh/vqponud8","slide":3,"name":"detail-3","text":"Reusable canonical flows","textPreview":"Reusable canonical flows","textChars":24,"textLines":1,"bbox":[946,538,260,32]}
+{"kind":"textbox","id":"sh/gbypwzet","slide":3,"name":"slide-number","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1168,654,52,24]}
+{"kind":"notes","id":"nt/e7zkv1","slide":3,"text":"[Sources]\n- src/crawlPlan.ts\n- src/crawlRun.ts\n- src/flowPreparation.ts"}
+{"kind":"slide","id":"sl/nxs35b","slide":4,"title":"Fast at the edge.","textShapes":8}
+{"kind":"textbox","id":"sh/fa187udo","slide":4,"name":"title","text":"Fast at the edge.\nDependable at the core.","textPreview":"Fast at the edge. | Dependable at the core.","textChars":41,"textLines":2,"bbox":[72,58,740,170]}
+{"kind":"textbox","id":"sh/gbapgzu9","slide":4,"name":"caption","text":"Four responsibilities, one connected experience.","textPreview":"Four responsibilities, one connected experience.","textChars":48,"textLines":1,"bbox":[76,254,600,40]}
+{"kind":"shape","id":"sh/hcjq94vu","slide":4,"bbox":[250,478,780,0]}
+{"kind":"shape","id":"sh/6587apc7","slide":4,"name":"frontend","bbox":[72,396,210,108]}
+{"kind":"shape","id":"sh/76h83ads","slide":4,"name":"edge","bbox":[338,396,210,108]}
+{"kind":"shape","id":"sh/s7qpcfud","slide":4,"name":"api","bbox":[604,396,210,108]}
+{"kind":"shape","id":"sh/t8zq5kvy","slide":4,"name":"data","bbox":[870,396,250,108]}
+{"kind":"textbox","id":"sh/iho765cv","slide":4,"name":"frontend-label","text":"Vite web","textPreview":"Vite web","textChars":8,"textLines":1,"bbox":[96,426,170,32]}
+{"kind":"textbox","id":"sh/jix8zadg","slide":4,"name":"edge-label","text":"Cloudflare","textPreview":"Cloudflare","textChars":10,"textLines":1,"bbox":[362,426,160,32]}
+{"kind":"textbox","id":"sh/nu5wrml8","slide":4,"name":"api-label","text":"Node API","textPreview":"Node API","textChars":8,"textLines":1,"bbox":[628,426,160,32]}
+{"kind":"textbox","id":"sh/mtwfi1kn","slide":4,"name":"data-label","text":"Postgres + media","textPreview":"Postgres + media","textChars":16,"textLines":1,"bbox":[894,426,200,32]}
+{"kind":"textbox","id":"sh/9wnetw3e","slide":4,"name":"foot","text":"Static delivery · API proxy · Product logic · Durable state","textPreview":"Static delivery · API proxy · Product logic · Durable state","textChars":59,"textLines":1,"bbox":[76,594,920,32]}
+{"kind":"textbox","id":"sh/8vexkr2t","slide":4,"name":"slide-number","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1168,654,52,24]}
+{"kind":"notes","id":"nt/nxs35b","slide":4,"text":"[Sources]\n- src/cloudflareFrontendWorker.ts\n- package.json\n- src/objectGc.ts\n- AGENTS.md"}
+{"kind":"slide","id":"sl/wx9cj6","slide":5,"title":"THE OPERATING PRINCIPLE","textShapes":7}
+{"kind":"textbox","id":"sh/zalwv2lg","slide":5,"name":"eyebrow","text":"THE OPERATING PRINCIPLE","textPreview":"THE OPERATING PRINCIPLE","textChars":23,"textLines":1,"bbox":[72,62,360,28]}
+{"kind":"textbox","id":"sh/0bud47ml","slide":5,"name":"title","text":"Trust is built in.","textPreview":"Trust is built in.","textChars":18,"textLines":1,"bbox":[72,160,820,100]}
+{"kind":"textbox","id":"sh/1c3exc36","slide":5,"name":"one","text":"Guarded crawling","textPreview":"Guarded crawling","textChars":16,"textLines":1,"bbox":[76,342,450,46]}
+{"kind":"textbox","id":"sh/mxcv6h4r","slide":5,"name":"two","text":"Traceable evidence","textPreview":"Traceable evidence","textChars":18,"textLines":1,"bbox":[76,422,480,46]}
+{"kind":"textbox","id":"sh/nylwz2lc","slide":5,"name":"three","text":"Verified releases","textPreview":"Verified releases","textChars":17,"textLines":1,"bbox":[76,502,420,46]}
+{"kind":"shape","id":"sh/ozux87mx","slide":5,"bbox":[680,344,424,0]}
+{"kind":"textbox","id":"sh/90ne1c3i","slide":5,"name":"close","text":"Vitrines turns\nproduct evidence\ninto momentum.","textPreview":"Vitrines turns | product evidence | into momentum.","textChars":46,"textLines":3,"bbox":[680,372,450,190]}
+{"kind":"textbox","id":"sh/a1wfah43","slide":5,"name":"slide-number","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1168,654,52,24]}
+{"kind":"notes","id":"nt/wx9cj6","slide":5,"text":"[Sources]\n- src/crawlPlan.ts\n- AGENTS.md: Production deployment"}

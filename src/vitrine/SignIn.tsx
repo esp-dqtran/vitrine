@@ -105,12 +105,12 @@ function SuccessPanel() {
           width: 60,
           height: 60,
           borderRadius: '50%',
-          background: 'color-mix(in srgb, var(--vitrine-color-status-success) 14%, transparent)',
-          color: 'var(--vitrine-color-status-success)',
+          background: '#22c55e',
+          color: '#ffffff',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 10px 26px color-mix(in srgb, var(--vitrine-color-status-success) 28%, transparent)',
+          boxShadow: '0 10px 26px rgb(34 197 94 / 28%)',
           animation: 'vtRingPop .5s cubic-bezier(.16,1,.3,1) both',
         }}
       >

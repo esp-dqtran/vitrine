@@ -239,6 +239,7 @@ test("builds the existing public catalog contract from bounded app records", () 
       categories: [productivity],
       website_url: "https://linear.app",
       icon_url: "https://linear.app/icon.png",
+      preview_object_key: "thumbnails/linear/app-preview.webp",
       accent_color: "#5E6AD2",
       total_screens: 236,
       available_platforms: ["web", "ios"],
@@ -268,6 +269,7 @@ test("builds the existing public catalog contract from bounded app records", () 
     { group: "screens", value: "Dashboard" },
   ]);
   assert.equal(page.apps[0]?.iconUrl, "https://linear.app/icon.png");
+  assert.equal(page.apps[0]?.previewUrl, "/assets/thumbnails/linear/app-preview.webp");
   assert.equal(page.apps[0]?.description, "Plan and build products.");
   assert.equal(page.apps[0]?.lastCapturedAt, "2026-07-26T03:14:54.618Z");
   assert.deepEqual(page.apps[0]?.categories, [productivity]);

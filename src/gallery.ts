@@ -50,6 +50,7 @@ export interface CatalogApp {
   previewScreens: CatalogScreen[];
   websiteUrl: string | null;
   iconUrl: string | null;
+  previewUrl?: string | null;
 }
 
 export interface CatalogPage {
@@ -194,6 +195,7 @@ function catalogApp(app: string, images: CrawledImage[], previews: PublishedPrev
       .map((image) => screen(app, image, image.preview_rank)),
     websiteUrl: meta.websiteUrl,
     iconUrl: images[0]?.icon_url ?? null,
+    previewUrl: null,
   };
 }
 
@@ -290,6 +292,9 @@ export function buildPublishedCatalogPage(
         ),
         websiteUrl: row.website_url ?? meta.websiteUrl,
         iconUrl: row.icon_url,
+        previewUrl: row.preview_object_key
+          ? `/assets/${row.preview_object_key}`
+          : null,
       };
     }),
     nextCursor: page.nextCursor,

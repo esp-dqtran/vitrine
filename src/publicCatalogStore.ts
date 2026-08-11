@@ -32,6 +32,7 @@ export interface PublishedCatalogAppRecord {
   categories: Category[];
   website_url: string | null;
   icon_url: string | null;
+  preview_object_key?: string | null;
   accent_color: string | null;
   total_screens: number;
   analyzed_screens?: number;
@@ -555,7 +556,7 @@ async function catalogPage(
            ) category_rows
          ), '[]'::jsonb) AS categories,
          a.website_url,
-         a.icon_url, a.accent_color,
+         a.icon_url, a.preview_object_key, a.accent_color,
          COALESCE(SUM(latest.screen_count), 0)::int AS total_screens,
          ${visibility === "admin"
            ? `(SELECT COUNT(*)::integer
@@ -578,7 +579,7 @@ async function catalogPage(
        JOIN latest ON latest.app_id = a.id
        WHERE a.id = ANY($1::integer[])
        GROUP BY a.id, a.name, a.display_name, a.description, a.website_url,
-         a.icon_url, a.accent_color`,
+         a.icon_url, a.preview_object_key, a.accent_color`,
       [appIds, snapshotAt, input.platform ?? null],
     ),
     runQuery(

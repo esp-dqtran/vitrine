@@ -63,7 +63,7 @@ const reviewApps: ReviewApp[] = [
       screens: [
         makeScreen(
           1,
-          'http://127.0.0.1:5173/api/preview-media/aboard-ea683077-aadb-47c5-a771-d21fd9676510/1',
+          'http://127.0.0.1:5173/api/preview-media/aboard-ea683077-aadb-47c5-a771-d21fd9676510/web/1',
         ),
       ],
     },

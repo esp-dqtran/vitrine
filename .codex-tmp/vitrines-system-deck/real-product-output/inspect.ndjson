@@ -1,0 +1,54 @@
+{"kind":"slide","id":"sl/04gmnb","slide":1,"title":"VITRINES","textShapes":4}
+{"kind":"textbox","id":"sh/mp8bet4f","slide":1,"name":"brand","text":"VITRINES","textPreview":"VITRINES","textChars":8,"textLines":1,"bbox":[72,58,250,28]}
+{"kind":"textbox","id":"sh/9szup836","slide":1,"name":"title","text":"Product research\nfor decisions that ship.","textPreview":"Product research | for decisions that ship.","textChars":41,"textLines":2,"bbox":[72,132,610,210]}
+{"kind":"textbox","id":"sh/orqtg3ml","slide":1,"name":"support","text":"Real products. Real context. Decision-ready evidence.","textPreview":"Real products. Real context. Decision-ready evidence.","textChars":53,"textLines":1,"bbox":[76,384,550,42]}
+{"kind":"textbox","id":"sh/el8bat4j","slide":1,"name":"image-caption","text":"LIVE VITRINES CATALOG","textPreview":"LIVE VITRINES CATALOG","textChars":21,"textLines":1,"bbox":[694,640,300,20]}
+{"kind":"image","id":"im/up0bip8v","slide":1,"name":"","geometry":"roundRect","alt":"Vitrines live apps catalog","bbox":[690,74,520,548]}
+{"kind":"notes","id":"nt/04gmnb","slide":1,"text":"[Sources]\n- Live Vitrines landing page, inspected locally 2026-08-11.\n- public/landing/astryx-apps-catalog.png"}
+{"kind":"slide","id":"sl/jxu09s","slide":2,"title":"WHO IT SERVES","textShapes":7}
+{"kind":"textbox","id":"sh/jq98fahs","slide":2,"name":"eyebrow","text":"WHO IT SERVES","textPreview":"WHO IT SERVES","textChars":13,"textLines":1,"bbox":[72,62,260,24]}
+{"kind":"textbox","id":"sh/4ri98fyx","slide":2,"name":"title","text":"Built for people\nwho turn research into direction.","textPreview":"Built for people | who turn research into direction.","textChars":50,"textLines":2,"bbox":[72,128,690,180]}
+{"kind":"textbox","id":"sh/5crah0zi","slide":2,"name":"use-case-1","text":"Product design","textPreview":"Product design","textChars":14,"textLines":1,"bbox":[780,170,360,46]}
+{"kind":"textbox","id":"sh/ulgr2lgv","slide":2,"name":"use-case-2","text":"Competitive research","textPreview":"Competitive research","textChars":20,"textLines":1,"bbox":[780,276,400,46]}
+{"kind":"textbox","id":"sh/vmp8bqhg","slide":2,"name":"use-case-3","text":"Feature planning","textPreview":"Feature planning","textChars":16,"textLines":1,"bbox":[780,382,360,46]}
+{"kind":"shape","id":"sh/wni94vy1","slide":2,"bbox":[780,242,342,0]}
+{"kind":"shape","id":"sh/horqd0zm","slide":2,"bbox":[780,348,342,0]}
+{"kind":"textbox","id":"sh/ehkrepgf","slide":2,"name":"anchor","text":"Product designers and design-minded teams start from what already shipped — then make the next call with context.","textPreview":"Product designers and design-minded teams start from what already shipped — then make the next call with context.","textChars":113,"textLines":1,"bbox":[76,470,590,86]}
+{"kind":"textbox","id":"sh/fitsnuxk","slide":2,"name":"page","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1168,654,54,24]}
+{"kind":"notes","id":"nt/jxu09s","slide":2,"text":"[Sources]\n- Live Vitrines landing page: use cases and closing positioning, inspected locally 2026-08-11.\n- src/vitrine/Home.tsx"}
+{"kind":"slide","id":"sl/nytey0","slide":3,"title":"THE PRODUCT","textShapes":8}
+{"kind":"textbox","id":"sh/765wzq9g","slide":3,"name":"eyebrow","text":"THE PRODUCT","textPreview":"THE PRODUCT","textChars":11,"textLines":1,"bbox":[72,58,240,24]}
+{"kind":"textbox","id":"sh/s7ed8val","slide":3,"name":"title","text":"A live catalog,\nnot a moodboard.","textPreview":"A live catalog, | not a moodboard.","textChars":32,"textLines":2,"bbox":[72,124,560,160]}
+{"kind":"textbox","id":"sh/t87e10r6","slide":3,"name":"metric-1","text":"430K","textPreview":"430K","textChars":4,"textLines":1,"bbox":[76,370,235,72]}
+{"kind":"textbox","id":"sh/u9gvalsr","slide":3,"name":"metric-2","text":"1,188","textPreview":"1,188","textChars":5,"textLines":1,"bbox":[350,370,250,72]}
+{"kind":"textbox","id":"sh/fapw3q9c","slide":3,"name":"label-1","text":"screens captured","textPreview":"screens captured","textChars":16,"textLines":1,"bbox":[76,442,210,30]}
+{"kind":"textbox","id":"sh/gbyxcvax","slide":3,"name":"label-2","text":"real products","textPreview":"real products","textChars":13,"textLines":1,"bbox":[350,442,210,30]}
+{"kind":"textbox","id":"sh/1c7e50ri","slide":3,"name":"platforms","text":"Web  ·  iOS  ·  Android","textPreview":"Web  ·  iOS  ·  Android","textChars":23,"textLines":1,"bbox":[76,560,450,32]}
+{"kind":"textbox","id":"sh/3epw7a98","slide":3,"name":"page","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1168,654,54,24]}
+{"kind":"image","id":"im/7qdsbep4","slide":3,"name":"","geometry":"roundRect","alt":"Vitrines app catalog with real products","bbox":[680,96,530,528]}
+{"kind":"notes","id":"nt/nytey0","slide":3,"text":"[Sources]\n- Live Vitrines landing page stats, inspected locally 2026-08-11.\n- public/landing/astryx-apps-catalog.png"}
+{"kind":"slide","id":"sl/v1xbsi","slide":4,"title":"FLOW EVIDENCE","textShapes":5}
+{"kind":"textbox","id":"sh/7mt47uxw","slide":4,"name":"eyebrow","text":"FLOW EVIDENCE","textPreview":"FLOW EVIDENCE","textChars":13,"textLines":1,"bbox":[72,62,250,24]}
+{"kind":"textbox","id":"sh/8nm50zeh","slide":4,"name":"title","text":"See the journey,\nnot just the hero screen.","textPreview":"See the journey, | not just the hero screen.","textChars":42,"textLines":2,"bbox":[72,122,650,168]}
+{"kind":"textbox","id":"sh/kj25wfe5","slide":4,"name":"flow-detail","text":"Trello · Adding a card\n64 screens · observed in 47 apps","textPreview":"Trello · Adding a card | 64 screens · observed in 47 apps","textChars":55,"textLines":2,"bbox":[76,406,410,78]}
+{"kind":"textbox","id":"sh/lkbm5kfq","slide":4,"name":"flow-caption","text":"Context before. Action in the middle. Confirmation after.","textPreview":"Context before. Action in the middle. Confirmation after.","textChars":57,"textLines":1,"bbox":[76,528,510,42]}
+{"kind":"textbox","id":"sh/qt0nq5w3","slide":4,"name":"page","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1168,654,54,24]}
+{"kind":"image","id":"im/wrqts7u1","slide":4,"name":"","geometry":"roundRect","alt":"Trello iOS Adding a card flow step 1","bbox":[730,106,135,438]}
+{"kind":"image","id":"im/juhc3mts","slide":4,"name":"","geometry":"roundRect","alt":"Trello iOS Adding a card flow step 2","bbox":[890,106,135,438]}
+{"kind":"image","id":"im/it8buhc7","slide":4,"name":"","geometry":"roundRect","alt":"Trello iOS Adding a card flow step 3","bbox":[1050,106,135,438]}
+{"kind":"notes","id":"nt/v1xbsi","slide":4,"text":"[Sources]\n- src/vitrine/Home.tsx: FLOW_VIGNETTE\n- Live Vitrines catalog flow media: Trello iOS, Adding a card, steps 1–3."}
+{"kind":"slide","id":"sl/c89n34","slide":5,"title":"FROM EVIDENCE TO HANDOFF","textShapes":5}
+{"kind":"textbox","id":"sh/3upcbed4","slide":5,"name":"eyebrow","text":"FROM EVIDENCE TO HANDOFF","textPreview":"FROM EVIDENCE TO HANDOFF","textChars":24,"textLines":1,"bbox":[72,58,360,24]}
+{"kind":"textbox","id":"sh/4vyd4jep","slide":5,"name":"title","text":"The work keeps\nits evidence attached.","textPreview":"The work keeps | its evidence attached.","textChars":37,"textLines":2,"bbox":[72,122,550,160]}
+{"kind":"textbox","id":"sh/pw7udova","slide":5,"name":"list","text":"Research projects\nLiving canvas\nDocuments & public previews","textPreview":"Research projects | Living canvas | Documents & public previews","textChars":59,"textLines":3,"bbox":[76,382,420,144]}
+{"kind":"textbox","id":"sh/ry9cfyd0","slide":5,"name":"caption","text":"Evidence can move from private research to a shared, source-linked brief.","textPreview":"Evidence can move from private research to a shared, source-linked brief.","textChars":73,"textLines":1,"bbox":[646,604,540,36]}
+{"kind":"textbox","id":"sh/czid83el","slide":5,"name":"page","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1168,654,54,24]}
+{"kind":"image","id":"im/bqdobm1o","slide":5,"name":"","geometry":"roundRect","alt":"Vitrines public preview with captured flows","bbox":[640,100,570,470]}
+{"kind":"notes","id":"nt/c89n34","slide":5,"text":"[Sources]\n- Live Vitrines landing page: Research projects, Living canvas, Documents, Public previews, inspected locally 2026-08-11.\n- public/landing/astryx-public-preview-real-flows.png"}
+{"kind":"slide","id":"sl/8az37w","slide":6,"title":"VITRINES","textShapes":4}
+{"kind":"textbox","id":"sh/sf6dk36l","slide":6,"name":"brand","text":"VITRINES","textPreview":"VITRINES","textChars":8,"textLines":1,"bbox":[72,62,220,26]}
+{"kind":"textbox","id":"sh/rexwbyp0","slide":6,"name":"title","text":"Start from what shipped.\nFinish with a direction\nyour team can defend and build.","textPreview":"Start from what shipped. | Finish with a direction | your team can defend and build.","textChars":80,"textLines":3,"bbox":[72,150,800,260]}
+{"kind":"textbox","id":"sh/1kfeh872","slide":6,"name":"caption","text":"Real product context, not isolated inspiration.","textPreview":"Real product context, not isolated inspiration.","textChars":47,"textLines":1,"bbox":[76,520,600,34]}
+{"kind":"textbox","id":"sh/gj6do36h","slide":6,"name":"page","text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1168,654,54,24]}
+{"kind":"image","id":"im/byp8jelc","slide":6,"name":"","geometry":"roundRect","alt":"Artlist product screen captured in Vitrines","bbox":[850,130,350,360]}
+{"kind":"notes","id":"nt/8az37w","slide":6,"text":"[Sources]\n- Live Vitrines landing page closing statement, inspected locally 2026-08-11.\n- Live Vitrines catalog preview media: Artlist web capture."}

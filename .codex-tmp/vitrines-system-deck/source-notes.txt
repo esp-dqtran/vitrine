@@ -1,0 +1,12 @@
+Vitrines product overview deck
+
+Source scope: live local Vitrines landing page and its current repository assets, inspected 2026-08-11.
+
+Primary evidence:
+- Local landing page at http://localhost:5173/: product proposition, use cases, catalog totals, user journey, and handoff capabilities.
+- src/vitrine/Home.tsx: landing copy and the Trello Adding a card flow vignette.
+- public/landing/astryx-apps-catalog.png: live catalog image.
+- public/landing/astryx-public-preview-real-flows.png: public preview image.
+- Live local catalog preview media: Aboard web capture and Trello iOS flow steps.
+
+The deck uses only Vitrines-owned local/runtime assets; no external assets are used.

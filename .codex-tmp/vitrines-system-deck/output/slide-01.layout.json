@@ -1,0 +1,531 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/pgojt8",
+    "id": "pgojt8",
+    "slide": 1,
+    "layoutId": "c70b2a1b-42d8-4244-b6b6-2367c6ca4f8d",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "8485937a-c66c-4888-a533-80c253383c24",
+    "masterLayoutName": "Master",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Helvetica Neue"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "c70b2a1b-42d8-4244-b6b6-2367c6ca4f8d",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "8485937a-c66c-4888-a533-80c253383c24",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "8485937a-c66c-4888-a533-80c253383c24",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/u187mp4r",
+      "id": "1",
+      "name": "Title-3-1",
+      "bbox": [
+        41.33,
+        182.55,
+        992,
+        261.57
+      ],
+      "composeSource": {
+        "run": 1,
+        "path": "0.0"
+      },
+      "geometry": "rect",
+      "text": "A research system for product experiences",
+      "textPreview": "A research system for product experiences",
+      "resolvedFontSize": 80,
+      "resolvedTextStyle": {
+        "anchor": 3,
+        "fontSize": 80,
+        "typeface": "Helvetica Neue",
+        "color": "#000000",
+        "alignment": "left",
+        "verticalAlignment": "bottom",
+        "autoFit": "none",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "A research system for"
+          },
+          {
+            "index": 2,
+            "text": "product experiences"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "A research system for product experiences",
+          "resolvedTextStyle": {
+            "anchor": 3,
+            "fontSize": 80,
+            "typeface": "Helvetica Neue",
+            "color": "#000000",
+            "alignment": "left",
+            "verticalAlignment": "bottom",
+            "autoFit": "none",
+            "insets": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "A research system for product experiences",
+              "anchor": 3,
+              "fontSize": 80,
+              "typeface": "Helvetica Neue",
+              "color": "#000000",
+              "alignment": "left",
+              "verticalAlignment": "bottom",
+              "autoFit": "none",
+              "insets": {
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              }
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/h4jqh4n2",
+      "id": "2",
+      "name": "Subtitle-4-2",
+      "bbox": [
+        41.33,
+        497.87,
+        598.67,
+        113.41
+      ],
+      "composeSource": {
+        "run": 1,
+        "path": "0.1"
+      },
+      "geometry": "rect",
+      "text": "How discovery, evidence, collaboration, and delivery work together",
+      "textPreview": "How discovery, evidence, collaboration, and delivery work together",
+      "resolvedFontSize": 32,
+      "resolvedTextStyle": {
+        "fontSize": 32,
+        "typeface": "Helvetica Neue",
+        "color": "#000000",
+        "alignment": "left",
+        "autoFit": "none",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "How discovery, evidence, collaboration,"
+          },
+          {
+            "index": 2,
+            "text": "and delivery work together"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "How discovery, evidence, collaboration, and delivery work together",
+          "resolvedTextStyle": {
+            "fontSize": 32,
+            "typeface": "Helvetica Neue",
+            "color": "#000000",
+            "alignment": "left",
+            "autoFit": "none",
+            "insets": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "How discovery, evidence, collaboration, and delivery work together",
+              "fontSize": 32,
+              "typeface": "Helvetica Neue",
+              "color": "#000000",
+              "alignment": "left",
+              "autoFit": "none",
+              "insets": {
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              }
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/g3apozmh",
+      "id": "3",
+      "name": "Subtitle-4-3",
+      "bbox": [
+        41.33,
+        41.18,
+        598.67,
+        68.15
+      ],
+      "composeSource": {
+        "run": 1,
+        "path": "0.2"
+      },
+      "geometry": "rect",
+      "text": "VITRINES · SYSTEM OVERVIEW",
+      "textPreview": "VITRINES · SYSTEM OVERVIEW",
+      "resolvedFontSize": 32,
+      "resolvedTextStyle": {
+        "fontSize": 32,
+        "typeface": "Helvetica Neue",
+        "color": "#000000",
+        "alignment": "left",
+        "autoFit": "none",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "VITRINES · SYSTEM OVERVIEW"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "VITRINES · SYSTEM OVERVIEW",
+          "resolvedTextStyle": {
+            "fontSize": 32,
+            "typeface": "Helvetica Neue",
+            "color": "#000000",
+            "alignment": "left",
+            "autoFit": "none",
+            "insets": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "VITRINES · SYSTEM OVERVIEW",
+              "fontSize": 32,
+              "typeface": "Helvetica Neue",
+              "color": "#000000",
+              "alignment": "left",
+              "autoFit": "none",
+              "insets": {
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              }
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    }
+  ],
+  "composeRuns": [
+    {
+      "index": 1,
+      "frame": {
+        "left": 0,
+        "top": 0,
+        "width": 1280,
+        "height": 720
+      },
+      "baseUnit": 1,
+      "root": {
+        "path": "0",
+        "kind": "layers",
+        "name": "codex-grid-layout-library#slide-01",
+        "requestedSize": {
+          "width": {
+            "mode": "fill",
+            "value": 1
+          },
+          "height": {
+            "mode": "fill",
+            "value": 1
+          }
+        },
+        "intrinsicSize": {
+          "width": 1033.33,
+          "height": 611.28
+        },
+        "frame": {
+          "left": 0,
+          "top": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "children": [
+          {
+            "path": "0.0",
+            "kind": "text",
+            "name": "Title-3-1",
+            "position": {
+              "left": 41.33,
+              "top": 182.55
+            },
+            "requestedSize": {
+              "width": {
+                "mode": "fixed",
+                "value": 992
+              },
+              "height": {
+                "mode": "fixed",
+                "value": 261.57
+              }
+            },
+            "intrinsicSize": {
+              "width": 992,
+              "height": 261.57
+            },
+            "frame": {
+              "left": 41.33,
+              "top": 182.55,
+              "width": 992,
+              "height": 261.57
+            },
+            "snappedFrame": {
+              "left": 41.33,
+              "top": 182.55,
+              "width": 992,
+              "height": 261.57
+            },
+            "children": [],
+            "text": "A research system for product experiences",
+            "transform": "none",
+            "element": {
+              "aid": "sh/u187mp4r",
+              "id": "1",
+              "kind": "shape"
+            }
+          },
+          {
+            "path": "0.1",
+            "kind": "text",
+            "name": "Subtitle-4-2",
+            "position": {
+              "left": 41.33,
+              "top": 497.87
+            },
+            "requestedSize": {
+              "width": {
+                "mode": "fixed",
+                "value": 598.67
+              },
+              "height": {
+                "mode": "fixed",
+                "value": 113.41
+              }
+            },
+            "intrinsicSize": {
+              "width": 598.67,
+              "height": 113.41
+            },
+            "frame": {
+              "left": 41.33,
+              "top": 497.87,
+              "width": 598.67,
+              "height": 113.41
+            },
+            "snappedFrame": {
+              "left": 41.33,
+              "top": 497.87,
+              "width": 598.67,
+              "height": 113.41
+            },
+            "children": [],
+            "text": "How discovery, evidence, collaboration, and delivery work together",
+            "transform": "none",
+            "element": {
+              "aid": "sh/h4jqh4n2",
+              "id": "2",
+              "kind": "shape"
+            }
+          },
+          {
+            "path": "0.2",
+            "kind": "text",
+            "name": "Subtitle-4-3",
+            "position": {
+              "left": 41.33,
+              "top": 41.18
+            },
+            "requestedSize": {
+              "width": {
+                "mode": "fixed",
+                "value": 598.67
+              },
+              "height": {
+                "mode": "fixed",
+                "value": 68.15
+              }
+            },
+            "intrinsicSize": {
+              "width": 598.67,
+              "height": 68.15
+            },
+            "frame": {
+              "left": 41.33,
+              "top": 41.18,
+              "width": 598.67,
+              "height": 68.15
+            },
+            "snappedFrame": {
+              "left": 41.33,
+              "top": 41.18,
+              "width": 598.67,
+              "height": 68.15
+            },
+            "children": [],
+            "text": "VITRINES · SYSTEM OVERVIEW",
+            "transform": "none",
+            "element": {
+              "aid": "sh/g3apozmh",
+              "id": "3",
+              "kind": "shape"
+            }
+          }
+        ],
+        "padding": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "alignItems": "stretch",
+        "justifyItems": "stretch",
+        "contentFrame": {
+          "left": 0,
+          "top": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "items": [
+          {
+            "path": "0.0",
+            "frame": {
+              "left": 41.33,
+              "top": 182.55,
+              "width": 992,
+              "height": 261.57
+            }
+          },
+          {
+            "path": "0.1",
+            "frame": {
+              "left": 41.33,
+              "top": 497.87,
+              "width": 598.67,
+              "height": 113.41
+            }
+          },
+          {
+            "path": "0.2",
+            "frame": {
+              "left": 41.33,
+              "top": 41.18,
+              "width": 598.67,
+              "height": 68.15
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
