@@ -68,6 +68,13 @@ test("production deploy commands use the guarded release script", async () => {
   assert.match(caddyfile, /reverse_proxy @designerCanvasCollaboration 127\.0\.0\.1:3012/);
 });
 
+test("the API image declares every root runtime dependency it imports", async () => {
+  const packageSource = await readDeploymentFile("services/api/package.json");
+  const packageJson = JSON.parse(packageSource) as { dependencies?: Record<string, string> };
+
+  assert.equal(packageJson.dependencies?.["ffmpeg-static"], "5.3.0");
+});
+
 test("GitHub Actions gates and serializes production releases", async () => {
   const workflow = await readDeploymentFile(".github/workflows/deploy-production.yml");
   assert.notEqual(workflow, "", "production deployment workflow must exist");
