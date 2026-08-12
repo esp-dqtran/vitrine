@@ -89,7 +89,7 @@ test('builds one newest-only Apps request with platform, query, repeated filters
   );
 });
 
-test('caps the public Apps catalog request at six cards', () => {
+test('caps the public Apps catalog request at twelve cards', () => {
   const state: AppsDiscoveryControllerState = {
     platform: 'web',
     contentType: 'apps',
@@ -100,7 +100,7 @@ test('caps the public Apps catalog request at six cards', () => {
 
   assert.equal(
     appsCatalogRequestPath(state, null, 'catalog', true),
-    '/api/apps?platform=web&facets=summary&limit=6',
+    '/api/apps?platform=web&facets=summary&limit=12',
   );
 });
 

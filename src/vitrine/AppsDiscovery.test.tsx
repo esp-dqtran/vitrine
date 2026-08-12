@@ -149,7 +149,7 @@ test('caps the visible App result total for public visitors', () => {
     { isGuest: true },
   );
 
-  assert.match(html, /Showing<\/small> <strong>6 apps/);
+  assert.match(html, /Showing<\/small> <strong>12 apps/);
   assert.doesNotMatch(html, /40 apps/);
 });
 

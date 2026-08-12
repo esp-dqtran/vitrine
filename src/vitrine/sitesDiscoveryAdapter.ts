@@ -11,7 +11,9 @@ import {
   type SitesDiscoveryState,
 } from './sitesApi.ts';
 import type { SiteSummary } from './types.ts';
-import { PUBLIC_CATALOG_GUEST_LIMIT } from '../publicCatalogAccess.ts';
+
+/** Number of Site cards shown to Free-plan visitors. */
+export const PUBLIC_SITES_CATALOG_LIMIT = 12;
 
 export type SitesDiscoveryControllerState = SitesDiscoveryState;
 
@@ -99,7 +101,7 @@ export function createSitesDiscoveryAdapter(
         cursor ?? undefined,
         {
           signal,
-          ...(initial.isGuest ? { limit: PUBLIC_CATALOG_GUEST_LIMIT } : {}),
+          ...(initial.isGuest ? { limit: PUBLIC_SITES_CATALOG_LIMIT } : {}),
         },
       );
     },

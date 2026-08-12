@@ -16,7 +16,7 @@ import type { AppsFacet, AppsPlatform } from './appsDiscovery.ts';
 import { normalizeDiscoveryFilters } from './discoveryState.ts';
 import { fetchCatalogPage } from './useApps.ts';
 /** Number of App cards shown to Free-plan visitors. */
-export const PUBLIC_APPS_CATALOG_LIMIT = 6;
+export const PUBLIC_APPS_CATALOG_LIMIT = 12;
 import {
   appendFacetSearchParams,
   loadDiscoveryFacets,

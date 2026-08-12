@@ -5,6 +5,7 @@ import type { SearchFilters } from '../../searchTypes.ts';
 import { navigate, updateLocation, useLocationKey } from '../router.ts';
 import {
   createSitesDiscoveryAdapter,
+  PUBLIC_SITES_CATALOG_LIMIT,
   type SitesDiscoveryControllerState,
 } from '../sitesDiscoveryAdapter.ts';
 import type { SiteSummary } from '../types.ts';
@@ -16,7 +17,6 @@ import {
 import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
 import { SiteCard } from './SiteCard.tsx';
 import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
-import { PUBLIC_CATALOG_GUEST_LIMIT } from '../../publicCatalogAccess.ts';
 import {
   useDiscoveryController,
   type DiscoveryController,
@@ -339,7 +339,9 @@ export function SitesPageView({
       )}
       resultLabel="sites"
       singularResultLabel="site"
-      totalCount={controller.totalCount}
+      totalCount={isGuest && controller.totalCount !== null
+        ? Math.min(controller.totalCount, PUBLIC_SITES_CATALOG_LIMIT)
+        : controller.totalCount}
       renderedCount={controller.items.length}
       loading={controller.loading}
       loadingMore={controller.loadingMore}
@@ -348,7 +350,7 @@ export function SitesPageView({
       onRetry={controller.retry}
       onRetryLoadMore={controller.retryLoadMore}
       onReset={() => controller.setState({ ...controller.state, query: '', filters: [] })}
-      guestLimitReached={isGuest && controller.items.length >= PUBLIC_CATALOG_GUEST_LIMIT}
+      guestLimitReached={isGuest && controller.items.length >= PUBLIC_SITES_CATALOG_LIMIT}
       onGuestLimitReached={onGuestLimitReached}
       sentinelRef={controller.sentinelRef}
     >

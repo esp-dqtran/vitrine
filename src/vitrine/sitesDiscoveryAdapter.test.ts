@@ -137,6 +137,27 @@ test('requests one canonical Sites cursor page and parses the runtime envelope',
   }
 });
 
+test('caps the public Sites catalog request at twelve cards', async () => {
+  const originalFetch = globalThis.fetch;
+  const calls: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    calls.push(String(input));
+    return new Response(JSON.stringify(envelope()));
+  }) as typeof fetch;
+
+  try {
+    await createSitesDiscoveryAdapter({ isGuest: true }).request({
+      platform: 'web',
+      sort: 'latest',
+      query: '',
+      filters: [],
+    }, null, new AbortController().signal);
+    assert.match(calls[0], /[?&]limit=12(?:&|$)/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('rejects malformed Sites envelopes and keys each Site version', async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = (async () => new Response(JSON.stringify(

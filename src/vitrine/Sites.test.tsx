@@ -320,6 +320,19 @@ test('uses the server total in Sites result metadata while one cursor page is lo
   assert.equal((html.match(/<strong>100 sites<\/strong>/g) ?? []).length, 1);
 });
 
+test('caps the visible Site result total for public visitors', () => {
+  const html = renderToStaticMarkup(
+    <SitesPageView
+      controller={siteController({ totalCount: 100 })}
+      isAdmin={false}
+      isGuest
+    />,
+  );
+
+  assert.match(html, /<strong>12 sites<\/strong>/);
+  assert.doesNotMatch(html, /<strong>100 sites<\/strong>/);
+});
+
 test('composes Sites through the shared reference discovery shell', () => {
   const source = readFileSync(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8');
 
