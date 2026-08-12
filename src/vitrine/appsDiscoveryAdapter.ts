@@ -15,7 +15,8 @@ import {
 import type { AppsFacet, AppsPlatform } from './appsDiscovery.ts';
 import { normalizeDiscoveryFilters } from './discoveryState.ts';
 import { fetchCatalogPage } from './useApps.ts';
-import { PUBLIC_CATALOG_GUEST_LIMIT } from '../publicCatalogAccess.ts';
+/** Number of App cards shown to Free-plan visitors. */
+export const PUBLIC_APPS_CATALOG_LIMIT = 6;
 import {
   appendFacetSearchParams,
   loadDiscoveryFacets,
@@ -80,7 +81,7 @@ export function appsCatalogRequestPath(
     params.append('filter', `${filter.group}.${filter.value}`);
   }
   if (cursor) params.set('cursor', cursor);
-  if (isGuest) params.set('limit', String(PUBLIC_CATALOG_GUEST_LIMIT));
+  if (isGuest) params.set('limit', String(PUBLIC_APPS_CATALOG_LIMIT));
   // App cards now render up to three phone screenshots, which are supplied by
   // the catalog's bounded preview pass. `facets=summary` keeps this list route
   // free of the expensive full facet aggregation.

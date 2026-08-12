@@ -149,6 +149,9 @@ export function FlowCard({
   const previewItems = previewVariant === 'public'
     ? allPreviewItems.slice(0, 1)
     : allPreviewItems;
+  // The catalog can show the complete visual sequence even when its public
+  // preview dialog is limited to the first screen.
+  const galleryItems = allPreviewItems;
   const [previewIndex, setPreviewIndex] = useState<number | null>(() => (
     typeof window === 'undefined' || !syncPreviewUrl
       ? null
@@ -265,7 +268,7 @@ export function FlowCard({
             className="flow-strip-card__track"
             onClick={openPreview}
           >
-            {previewItems.map(({ evidence, label, stepNumber }, index) => (
+            {galleryItems.map(({ evidence, label, stepNumber }, index) => (
               <span
                 className="flow-strip-card__screen"
                 data-flow-carousel-item

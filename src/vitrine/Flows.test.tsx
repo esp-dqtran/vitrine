@@ -203,6 +203,20 @@ test('shows the server total independently of loaded cards', () => {
   assert.doesNotMatch(html, /Load more Flows/);
 });
 
+test('caps the visible Flow result total for public visitors', () => {
+  const html = renderToStaticMarkup(
+    <FlowsPageView
+      controller={controller({ totalCount: 40 })}
+      isGuest
+      onSelectFlow={() => undefined}
+      onSelectApp={() => undefined}
+    />,
+  );
+
+  assert.match(html, /Showing<\/small> <strong>6 flows/);
+  assert.doesNotMatch(html, /40 flows/);
+});
+
 test('keeps the top Flow taxonomy a fixed 5-item list regardless of API facets', () => {
   const facets = Array.from({ length: 5_880 }, (_, index) => ({
     group: 'flowGroups',

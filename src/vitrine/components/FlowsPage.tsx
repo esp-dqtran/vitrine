@@ -7,6 +7,7 @@ import type { Platform } from '../../platformFromUrl.ts';
 import type { FlowCatalogItem } from '../flowCatalogApi.ts';
 import {
   createFlowsDiscoveryAdapter,
+  PUBLIC_FLOW_CATALOG_LIMIT,
   type FlowsDiscoveryControllerState,
   type FlowsDiscoverySort,
 } from '../flowsDiscoveryAdapter.ts';
@@ -24,7 +25,6 @@ import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
 import { FlowGallery } from './FlowGallery.tsx';
 import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
 import type { FlowTreeGroup } from '../flowTree.ts';
-import { PUBLIC_CATALOG_GUEST_LIMIT } from '../../publicCatalogAccess.ts';
 
 function catalogFlowTitle(item: FlowCatalogItem): string {
   if (
@@ -190,7 +190,9 @@ export function FlowsPageView({
       )}
       resultLabel="flows"
       singularResultLabel="flow"
-      totalCount={controller.totalCount}
+      totalCount={isGuest
+        ? Math.min(controller.totalCount, PUBLIC_FLOW_CATALOG_LIMIT)
+        : controller.totalCount}
       renderedCount={controller.items.length}
       loading={controller.loading}
       loadingMore={controller.loadingMore}
@@ -199,7 +201,7 @@ export function FlowsPageView({
       onRetry={controller.retry}
       onRetryLoadMore={controller.retryLoadMore}
       onReset={() => controller.setState({ ...controller.state, filters: [] })}
-      guestLimitReached={isGuest && controller.items.length >= PUBLIC_CATALOG_GUEST_LIMIT}
+      guestLimitReached={isGuest && controller.items.length >= PUBLIC_FLOW_CATALOG_LIMIT}
       onGuestLimitReached={onGuestLimitReached}
       sentinelRef={controller.sentinelRef}
     >

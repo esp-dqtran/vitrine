@@ -89,6 +89,21 @@ test('builds one newest-only Apps request with platform, query, repeated filters
   );
 });
 
+test('caps the public Apps catalog request at six cards', () => {
+  const state: AppsDiscoveryControllerState = {
+    platform: 'web',
+    contentType: 'apps',
+    sort: 'latest',
+    query: '',
+    filters: [],
+  };
+
+  assert.equal(
+    appsCatalogRequestPath(state, null, 'catalog', true),
+    '/api/apps?platform=web&facets=summary&limit=6',
+  );
+});
+
 test('requests and parses one runtime catalog envelope, converting previews to App screens', async () => {
   const originalFetch = globalThis.fetch;
   const calls: Array<{ input: string; signal: AbortSignal | null }> = [];

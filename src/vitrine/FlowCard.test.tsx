@@ -39,6 +39,34 @@ test('renders a flow strip with full-resolution observed screen media', () => {
   assert.match(html, />Copy flow link</);
 });
 
+test('shows every captured screen in a public Flow catalog strip', () => {
+  const html = renderToStaticMarkup(
+    <FlowCard
+      flow={{
+        ...flow,
+        steps: [
+          flow.steps[0],
+          {
+            label: 'Confirm',
+            evidence: [{
+              imageId: 2,
+              imageUrl: '/flow-2.png',
+              thumbnailUrl: '/flow-2-thumb.webp',
+              description: null,
+            }],
+          },
+        ],
+      }}
+      previewVariant="public"
+      onOpen={() => {}}
+    />,
+  );
+
+  assert.equal((html.match(/data-flow-carousel-item/g) ?? []).length, 2);
+  assert.match(html, /src="\/flow\.png"/);
+  assert.match(html, /src="\/flow-2\.png"/);
+});
+
 test('keeps native-app flow screens in the mobile presentation', () => {
   const html = renderToStaticMarkup(
     <FlowCard flow={flow} platform="ios" onOpen={() => {}} />,

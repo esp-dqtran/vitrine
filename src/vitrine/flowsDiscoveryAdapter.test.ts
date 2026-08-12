@@ -131,6 +131,27 @@ test('requests one canonical Flow cursor page with OR Flow-group filters', async
   }
 });
 
+test('limits the public Flow catalog to six cards', async () => {
+  const originalFetch = globalThis.fetch;
+  const calls: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    calls.push(String(input));
+    return new Response(JSON.stringify(envelope()));
+  }) as typeof fetch;
+
+  try {
+    await createFlowsDiscoveryAdapter({ isGuest: true }).request({
+      platform: 'web',
+      sort: 'grouped',
+      query: '',
+      filters: [],
+    }, null, new AbortController().signal);
+    assert.match(calls[0], /[?&]limit=6(?:&|$)/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('uses preview identity and title as the Flow item key', () => {
   const adapter = createFlowsDiscoveryAdapter();
 

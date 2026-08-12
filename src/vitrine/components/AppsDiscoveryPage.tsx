@@ -17,6 +17,7 @@ import {
 } from '../appsDiscoveryState.ts';
 import {
   createAppsDiscoveryAdapter,
+  PUBLIC_APPS_CATALOG_LIMIT,
   type AppsDiscoveryControllerState,
 } from '../appsDiscoveryAdapter.ts';
 import type { DiscoveryFacet, DiscoveryFilter } from '../discoveryTypes.ts';
@@ -34,7 +35,6 @@ import { AppsDiscoveryScreenCard } from './AppsDiscoveryScreenCard.tsx';
 import { DiscoveryFilterBar } from './AppsFilterBar.tsx';
 import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
 import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
-import { PUBLIC_CATALOG_GUEST_LIMIT } from '../../publicCatalogAccess.ts';
 
 const readyAppFacetPreviews = new Map<string, FacetPreview>();
 const appFacetPreviewRequests = new Map<string, Promise<FacetPreview | null>>();
@@ -376,7 +376,11 @@ export function AppsDiscoveryPageView({
   // The API total is an App total. Non-App modes render matching cards derived
   // only from the Apps returned so far, so their count intentionally reflects
   // visible cards rather than mislabeling the server's App total.
-  const displayedTotal = appsMode ? controller.totalCount : renderedCount;
+  const displayedTotal = appsMode
+    ? isGuest
+      ? Math.min(controller.totalCount, PUBLIC_APPS_CATALOG_LIMIT)
+      : controller.totalCount
+    : renderedCount;
   const labels = appsMode
     ? RESULT_LABELS.apps
     : RESULT_LABELS[controller.state.contentType === 'elements' ? 'elements' : 'screens'];
@@ -499,7 +503,7 @@ export function AppsDiscoveryPageView({
       onRetry={controller.retry}
       onRetryLoadMore={controller.retryLoadMore}
       onReset={() => changeState({ ...state, filters: {} })}
-      guestLimitReached={isGuest && controller.items.length >= PUBLIC_CATALOG_GUEST_LIMIT}
+      guestLimitReached={isGuest && controller.items.length >= PUBLIC_APPS_CATALOG_LIMIT}
       onGuestLimitReached={onGuestLimitReached}
       sentinelRef={reviewItemLimit === undefined ? controller.sentinelRef : undefined}
       beforeResults={beforeGrid}

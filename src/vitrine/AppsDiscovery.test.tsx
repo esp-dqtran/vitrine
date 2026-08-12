@@ -143,6 +143,16 @@ test('limits the Storybook chrome review without attaching infinite pagination',
   assert.doesNotMatch(html, /data-discovery-sentinel="apps"/);
 });
 
+test('caps the visible App result total for public visitors', () => {
+  const html = renderAppsPage(
+    pageController({ totalCount: 40 }),
+    { isGuest: true },
+  );
+
+  assert.match(html, /Showing<\/small> <strong>6 apps/);
+  assert.doesNotMatch(html, /40 apps/);
+});
+
 test('filters Apps across Mobbin taxonomy fields and platform', () => {
   const apps = [
     makeApp({ id: 'web', app: 'Web App' }),
