@@ -5,7 +5,7 @@ import type { CatalogComparison, CatalogSearchResult, CatalogSearchResultItem } 
 import type { ResearchCollection } from '../../db';
 import type { Platform } from '../../platformFromUrl';
 import type { App } from '../types';
-import type { FlowCatalogItem } from '../flowCatalogApi.ts';
+import { flowCatalogItemKey, type FlowCatalogItem } from '../flowCatalogApi.ts';
 import { compareCatalogApps, searchRelatedCatalog } from '../researchApi';
 import { useCommandPaletteFlowCatalog } from '../useCommandPaletteFlowCatalog.ts';
 import { useFlowSearch } from '../useFlowSearch.ts';
@@ -217,7 +217,7 @@ export function CommandPalette({
     platform,
   });
   const richFlowItems = useMemo(
-    () => richFlowSearch.result?.items.filter((item) => item.kind === 'flow') ?? [],
+    () => richFlowSearch.result?.items ?? [],
     [richFlowSearch.result],
   );
 
@@ -349,7 +349,7 @@ export function CommandPalette({
         const item = richFlowItems[activeFlowIndex];
         if (item) {
           event.preventDefault();
-          requestClose(() => onSelectFlow(item.app, flowIdFromSearchResult(item)));
+          requestClose(() => onSelectFlow(item.preview.appId, item.preview.sourceFlowId));
         }
       }
       return;
@@ -482,16 +482,16 @@ export function CommandPalette({
           {richFlowItems.map((item, index) => (
             <button
               type="button"
-              key={item.id}
+              key={flowCatalogItemKey(item)}
               className="command-palette-flow-row command-palette-flow-row--rich"
               data-flow-rich-result="true"
               data-highlighted={index === activeFlowIndex ? 'true' : undefined}
               onMouseEnter={() => setActiveFlowIndex(index)}
-              onClick={() => requestClose(() => onSelectFlow(item.app, flowIdFromSearchResult(item)))}
+              onClick={() => requestClose(() => onSelectFlow(item.preview.appId, item.preview.sourceFlowId))}
             >
               <strong>{item.title}</strong>
-              <span>{item.app}{item.flowTags?.length ? ` · ${item.flowTags.join(', ')}` : ''}</span>
-              <small>{item.description}</small>
+              <span>{item.preview.appName}{item.preview.flow.tags.length ? ` · ${item.preview.flow.tags.join(', ')}` : ''}</span>
+              <small>{item.preview.flow.description}</small>
             </button>
           ))}
         </>

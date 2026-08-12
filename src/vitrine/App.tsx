@@ -232,7 +232,10 @@ export function App() {
   const isCatalogLimited = !isAdmin && customerPlan === "free";
   const canUseProResearch = isAdmin || customerPlan === "pro";
   const canUseAdvancedSearch = advancedSearchEnabled && user !== null;
-  const legacyAppSearch = route.name === "apps" && !canUseAdvancedSearch;
+  // App discovery must always use its dedicated catalog endpoint. In particular,
+  // detail pages keep the shared header search, so they must not fall through to
+  // the generic research search when advanced search is enabled.
+  const legacyAppSearch = route.name === "apps" || route.name === "app";
   const openPricing = () => navigate({ name: "pricing" });
   const paletteCollections = isGuest ? [] : collections;
   const palettePlan = isGuest ? "free" : customerPlan;
@@ -266,7 +269,7 @@ export function App() {
     refresh: refreshLegacyApps,
   } = useApps(
     user?.role,
-    searchSnapshot.open && (!canUseAdvancedSearch || route.name === "flows"),
+    searchSnapshot.open && (legacyAppSearch || !canUseAdvancedSearch || route.name === "flows"),
     debouncedLegacyQuery,
     legacyAppSearch ? appPlatform : undefined,
   );
@@ -576,7 +579,7 @@ export function App() {
         />
       )}
       {searchSnapshot.open &&
-        (canUseAdvancedSearch && route.name !== "flows" ? (
+        (canUseAdvancedSearch && !legacyAppSearch && route.name !== "flows" ? (
           <QuickSearch
             state={searchSnapshot.state}
             recent={

@@ -95,7 +95,7 @@ test('keeps Sites data independent from Apps and free from job-list reads', asyn
   assert.match(appSource, /case ["']site-version["']:/);
   assert.match(
     appSource,
-    /searchSnapshot\.open && \(!canUseAdvancedSearch \|\| route\.name === ["']flows["']\)/,
+    /searchSnapshot\.open && \(legacyAppSearch \|\| !canUseAdvancedSearch \|\| route\.name === ["']flows["']\)/,
   );
   assert.doesNotMatch(appSource, /useApps\(user\?\.role, route\.name === 'apps'\)/);
   assert.doesNotMatch(`${appSource}\n${sitesSource}\n${sitesApiSource}`, /\buseJobs\s*\(/);
@@ -221,7 +221,7 @@ test('separates gallery and detail route loaders', async () => {
 
   assert.match(
     appSource,
-    /searchSnapshot\.open && \(!canUseAdvancedSearch \|\| route\.name === ["']flows["']\)/,
+    /searchSnapshot\.open && \(legacyAppSearch \|\| !canUseAdvancedSearch \|\| route\.name === ["']flows["']\)/,
   );
   assert.match(gallerySource, /fetchCatalogPage/);
   assert.match(appSource, /useAppDetail\(\s*route\.name === ["']app["'] \? route\.appId : undefined,/);
@@ -289,6 +289,14 @@ test('does not request Pro catalog research for a Free account', async () => {
   assert.ok(source.indexOf('if (!canUseProResearch)') < source.indexOf('searchCatalog(q, filters, controller.signal)'));
   assert.match(source, /plan=\{customerPlan\}/);
   assert.match(source, /onUpgrade=\{openPricing\}/);
+});
+
+test('keeps Apps and App-detail palette searches on the dedicated catalog endpoint', async () => {
+  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /const legacyAppSearch = route\.name === "apps" \|\| route\.name === "app"/);
+  assert.match(source, /legacyAppSearch \|\| !canUseAdvancedSearch \|\| route\.name === "flows"/);
+  assert.match(source, /canUseAdvancedSearch && !legacyAppSearch && route\.name !== "flows"/);
 });
 
 test('keeps independent Apps and Sites search state under References', async () => {

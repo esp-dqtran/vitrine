@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { CatalogSearchResult } from '../catalogResearch.ts';
 import type { Platform } from '../platformFromUrl.ts';
-import { searchCatalog } from './researchApi.ts';
+import { loadFlowCatalogPage, type FlowCatalogPage } from './flowCatalogApi.ts';
 
 interface FlowSearchInput {
   enabled: boolean;
@@ -23,7 +22,7 @@ export function useFlowSearch({
   appCategory,
   flowTag,
 }: FlowSearchInput) {
-  const [result, setResult] = useState<CatalogSearchResult | null>(null);
+  const [result, setResult] = useState<FlowCatalogPage | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -37,11 +36,10 @@ export function useFlowSearch({
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       setLoading(true);
-      void searchCatalog(query, {
-        kind: 'flow',
+      void loadFlowCatalogPage({
         platform,
-        ...(appCategory ? { appCategory } : {}),
-        ...(flowTag ? { flowTag } : {}),
+        query,
+        ...(flowTag ? { flowGroups: [flowTag] } : {}),
       }, controller.signal)
         .then((next) => {
           if (!controller.signal.aborted) setResult(next);

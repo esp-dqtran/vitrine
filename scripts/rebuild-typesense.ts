@@ -5,6 +5,8 @@ import { closePool, publishedCatalogSearchSource } from "../src/db.ts";
 import { publishedFlowCatalogPage } from "../src/flowCatalogStore.ts";
 import { createSitesStore } from "../src/sitesStore.ts";
 import { createTypesenseCatalogClient, typesenseCatalogConfigFromEnv } from "../src/typesenseCatalog.ts";
+import { TYPESENSE_APP_CATALOG_COLLECTION, createTypesenseAppCatalogClient } from "../src/typesenseAppCatalog.ts";
+import { publishedAppCatalogDocuments } from "../src/typesenseAppCatalogSource.ts";
 import { TYPESENSE_FLOW_CATALOG_COLLECTION, createTypesenseFlowCatalogClient } from "../src/typesenseFlowCatalog.ts";
 import { publishedFlowCatalogDocuments } from "../src/typesenseFlowCatalogSource.ts";
 import { TYPESENSE_SITE_CATALOG_COLLECTION, createTypesenseSiteCatalogClient } from "../src/typesenseSiteCatalog.ts";
@@ -21,6 +23,13 @@ try {
   const catalog = createTypesenseCatalogClient(typesense);
   const catalogDocuments = await catalog.index(await publishedCatalogSearchSource());
   console.log(`[typesense-rebuild] Indexed ${catalogDocuments} research documents.`);
+
+  const apps = createTypesenseAppCatalogClient({
+    ...typesense,
+    collection: TYPESENSE_APP_CATALOG_COLLECTION,
+  });
+  const appDocuments = await apps.index(await publishedAppCatalogDocuments());
+  console.log(`[typesense-rebuild] Indexed ${appDocuments} App documents.`);
 
   const sites = createTypesenseSiteCatalogClient({
     ...typesense,
