@@ -58,42 +58,37 @@ function documentFixture(): FeatureDocumentContent {
     },
     flowAnalysis: { effectivePatterns: [], friction: [], missingStates: [], inconsistencies: [], risksAndAssumptions: [] },
     proposedFeature: { problem: claim("problem", "Progress can be lost"), targetUsers: [], goals: [], nonGoals: [], behavior: [], journey: [] },
-    requirements: [
-      {
-        id: "REQ-001",
+    requirements: [{
+      id: "REQ-001",
+      kind: "inferred",
+      text: "Present the captured checkout journey",
+      evidenceIds: manifest.map(({ evidenceId }) => evidenceId),
+      userStory: "As a buyer, I want to review the cart and payment states so that I can continue checkout.",
+      priority: "unranked",
+      preconditions: [],
+      acceptanceCriteria: [{
+        id: "AC-001",
         kind: "observed",
-        text: "Display the cart state",
-        evidenceIds: [manifest[0].evidenceId, manifest[1].evidenceId],
-        userStory: "As a buyer, I can review the cart.",
-        priority: "unranked",
-        preconditions: [],
-        acceptanceCriteria: [{
-          id: "AC-001",
-          kind: "observed",
-          given: "the cart capture is loaded",
-          when: "the cart is viewed",
-          then: "the cart state is visible",
-          evidenceIds: [manifest[0].evidenceId],
-        }],
-      },
-      {
-        id: "REQ-002",
+        given: "the cart capture is loaded",
+        when: "the cart is viewed",
+        then: "the cart state is visible",
+        evidenceIds: [manifest[0].evidenceId],
+      }, {
+        id: "AC-002",
+        kind: "observed",
+        given: "the cart detail capture is loaded",
+        when: "the cart is viewed",
+        then: "the cart detail is visible",
+        evidenceIds: [manifest[1].evidenceId],
+      }, {
+        id: "AC-003",
         kind: "inferred",
-        text: "Present the payment state",
+        given: "the payment capture is available",
+        when: "the payment state is reviewed",
+        then: "payment information is present",
         evidenceIds: [manifest[2].evidenceId],
-        userStory: "As a buyer, I can identify the payment state.",
-        priority: "unranked",
-        preconditions: [],
-        acceptanceCriteria: [{
-          id: "AC-002",
-          kind: "inferred",
-          given: "the payment capture is available",
-          when: "the payment state is reviewed",
-          then: "payment information is present",
-          evidenceIds: [manifest[2].evidenceId],
-        }],
-      },
-    ],
+      }],
+    }],
     edgeCases: [], successMetrics: [], guardrailMetrics: [], analyticsEvents: [], dependencies: [], openQuestions: [],
   };
 }
@@ -231,7 +226,7 @@ test("analyzes every ordered image then creates one validated revision", async (
   await service.generate(String(store.job.id));
 
   assert.deepEqual(imageCalls.map((call) => call.prompt.evidenceId), manifest.map(({ evidenceId }) => evidenceId));
-  assert.equal(store.completed[0].content.requirements.length, 2);
+  assert.equal(store.completed[0].content.requirements.length, 1);
   assert.deepEqual(store.progress, [
     ["preparing", 0], ["analyzing", 0], ["analyzing", 1], ["analyzing", 2], ["analyzing", 3],
     ["synthesizing", 3], ["validating", 3], ["saving", 3],

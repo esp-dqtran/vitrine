@@ -5,6 +5,7 @@ import {
   appendFacetSearchParams,
   loadDiscoveryFacets,
 } from './discoveryFacetsApi.ts';
+import { apiFetch } from './apiFetch.ts';
 
 export interface FlowCatalogItem {
   category: string;
@@ -191,7 +192,7 @@ export async function loadFlowCatalogPage(
     flowGroups?: readonly string[];
   },
   signal?: AbortSignal,
-  fetcher: Fetcher = fetch,
+  fetcher: Fetcher = apiFetch,
 ): Promise<FlowCatalogPage> {
   const params = new URLSearchParams({
     platform: input.platform,
@@ -205,7 +206,7 @@ export async function loadFlowCatalogPage(
   }
   if (input.cursor) params.set('cursor', input.cursor);
   const endpoint = `/api/flows${input.query?.trim() ? '/search' : ''}?${params.toString()}`;
-  const cacheable = fetcher === fetch;
+  const cacheable = fetcher === apiFetch;
   if (cacheable) {
     const cached = cachedFlowCatalogPage(endpoint);
     if (cached) return cached;

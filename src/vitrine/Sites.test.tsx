@@ -1070,16 +1070,16 @@ test('moves the Sections filter into the shared detail toolbar and does not dump
   assert.doesNotMatch(html, />Save</);
 });
 
-test('uses a consistent 16:10 frame for every Site section capture', () => {
+test('preserves the captured aspect ratio for every Site section', () => {
   const pageSource = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
   const imageCardSource = readFileSync(new URL('./components/MediaGridCard.tsx', import.meta.url), 'utf8');
   const videoCardSource = readFileSync(new URL('./components/SiteSectionVideoCard.tsx', import.meta.url), 'utf8');
 
-  assert.doesNotMatch(pageSource, /preserveNaturalAspectRatio/);
+  assert.match(pageSource, /preserveNaturalAspectRatio/);
   assert.match(pageSource, /imageFit="contain"/);
   assert.match(imageCardSource, /aspectRatio = '16 \/ 10'/);
-  assert.match(videoCardSource, /aspectRatio: '16 \/ 10'/);
-  assert.doesNotMatch(videoCardSource, /captureNaturalAspectRatio|onLoadedMetadata/);
+  assert.match(videoCardSource, /naturalAspectRatio/);
+  assert.match(videoCardSource, /onLoadedMetadata/);
 });
 
 test('uses the captured page title when a section has no extracted pattern', () => {

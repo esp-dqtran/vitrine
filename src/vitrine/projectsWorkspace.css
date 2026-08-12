@@ -191,9 +191,33 @@
    under its parent's label. */
 .projects-workspace__desktop-subnav {
   display: grid;
-  gap: 1px;
-  margin-top: 1px;
+  grid-template-rows: 0fr;
+  margin-top: 0;
+  opacity: 0;
   padding-left: 14px;
+  transition:
+    grid-template-rows 180ms ease,
+    margin-top 180ms ease,
+    opacity 120ms ease,
+    visibility 0s linear 180ms;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.projects-workspace__desktop-row.is-open > .projects-workspace__desktop-subnav {
+  grid-template-rows: 1fr;
+  margin-top: 1px;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+.projects-workspace__desktop-subnav-content {
+  display: grid;
+  min-height: 0;
+  gap: 1px;
+  overflow: hidden;
 }
 
 /*
@@ -1747,7 +1771,8 @@
   .projects-team-drawer,
   dialog.astryx-modal.projects-workspace__modal,
   dialog.astryx-modal.projects-workspace__modal::backdrop,
-  .projects-team-drawer__workspace > svg:last-child {
+  .projects-team-drawer__workspace > svg:last-child,
+  .projects-workspace__desktop-subnav {
     transition-duration: 0.01ms;
     animation-duration: 0.01ms;
   }
@@ -1823,10 +1848,8 @@
     align-items: center;
     gap: 12px;
     padding: 10px 16px;
-    /* Scrolls rather than wraps: a wrapped bar changes the page's height as the
-       nav grows, and the panel below is sized off what is left. */
-    overflow-x: auto;
-    scrollbar-width: none;
+    /* Menus escape below the bar; labels stay on one line at this breakpoint. */
+    overflow: visible;
     border-bottom: 1px solid var(--color-border);
   }
 
@@ -1854,9 +1877,9 @@
   }
 
   .projects-workspace__desktop-nav {
+    display: flex;
     width: auto;
     flex: 0 0 auto;
-    grid-auto-flow: column;
     gap: 4px;
   }
 
@@ -1867,30 +1890,47 @@
     white-space: nowrap;
   }
 
-  /*
-   * A tree cannot be a bar. `display: contents` drops the row and subnav
-   * wrappers so every surviving row becomes a column of the bar directly —
-   * an indented vertical block inside a horizontal strip would make the bar
-   * tall instead of wide.
-   */
-  .projects-workspace__desktop-row,
+  /* The top-level navigation becomes a compact set of dropdowns instead of
+     flattening the project tree into a long, overflowing header. */
+  .projects-workspace__desktop-row {
+    position: relative;
+    display: block;
+    flex: 0 0 auto;
+  }
+
   .projects-workspace__desktop-subnav {
-    display: contents;
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + 6px);
+    left: 0;
+    width: max-content;
+    min-width: 220px;
+    max-width: min(320px, calc(100vw - 32px));
+    padding: 6px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-element);
+    background: var(--color-background-surface);
+    box-shadow: var(--shadow-med);
   }
 
-  /*
-   * Flattened, the bar shows the path you are on: Projects › the open project ›
-   * its areas. Sibling projects are a jump the strip has no room for, and they
-   * stay one tap away on the Projects index.
-   */
-  .projects-workspace__desktop-subnav > .has-children:not(.is-open) {
-    display: none;
+  .projects-workspace__desktop-subnav .projects-workspace__desktop-row {
+    width: 100%;
   }
 
-  /* Nothing to fold once it is a strip, so the control goes rather than sitting
-     there doing nothing to the row beside it. */
-  .projects-workspace__desktop-row-caret {
-    display: none;
+  .projects-workspace__desktop-subnav .projects-workspace__desktop-row-link {
+    width: 100%;
+  }
+
+  .projects-workspace__desktop-nav--primary > .projects-workspace__desktop-row > .projects-workspace__desktop-row-line > .projects-workspace__desktop-row-link {
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  .projects-workspace__desktop-nav--primary > .projects-workspace__desktop-row > .projects-workspace__desktop-row-line > .projects-workspace__desktop-row-caret {
+    order: 2;
+    width: 28px;
+    min-height: 36px;
+    margin-left: -6px;
   }
 
   /* Footer action sits at the far end of the bar; its rule is a rail divider. */

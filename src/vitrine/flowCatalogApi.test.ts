@@ -5,6 +5,7 @@ import {
   loadFlowCatalogPage,
   parseFlowCatalogPage,
 } from './flowCatalogApi.ts';
+import { clearAuthToken, setAuthToken } from './apiFetch.ts';
 
 const item = {
   category: 'Account Management',
@@ -103,6 +104,25 @@ test('reuses a successful Flow page across catalog remounts until invalidated', 
   invalidateFlowCatalogPageCache();
   await loadFlowCatalogPage({ platform: 'web', limit: 12 });
   assert.equal(requests, 2);
+});
+
+test('uses the authenticated API fetcher for default Flow catalog requests', async (t) => {
+  invalidateFlowCatalogPageCache();
+  setAuthToken('header.payload.signature');
+  t.after(() => {
+    clearAuthToken();
+    invalidateFlowCatalogPageCache();
+  });
+  const fetchMock = t.mock.method(globalThis, 'fetch', async (_input, init) => {
+    assert.equal(
+      new Headers(init?.headers).get('authorization'),
+      'Bearer header.payload.signature',
+    );
+    return Response.json(envelope);
+  });
+
+  await loadFlowCatalogPage({ platform: 'web', limit: 12 });
+  assert.equal(fetchMock.mock.callCount(), 1);
 });
 
 test('strictly parses every envelope, item, preview, Flow, step, evidence, and facet field', () => {

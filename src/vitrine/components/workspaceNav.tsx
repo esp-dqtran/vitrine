@@ -76,6 +76,12 @@ export function workspaceNav({
             icon: <BookmarkHollowIcon aria-hidden="true" />,
             active: active === 'collections',
             onSelect: () => navigate({ name: 'collections' }),
+            children: [{
+              label: 'All collections',
+              icon: <BookmarkHollowIcon aria-hidden="true" />,
+              active: active === 'collections',
+              onSelect: () => navigate({ name: 'collections' }),
+            }],
           },
         ],
     settings: onSettings === null ? undefined : {

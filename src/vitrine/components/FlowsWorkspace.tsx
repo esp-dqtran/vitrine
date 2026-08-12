@@ -24,6 +24,7 @@ export interface FlowsWorkspaceProps {
   sourceAppName?: string;
   sourceAppIconUrl?: string | null;
   analysisControls?: ReactNode;
+  cardVariant?: 'captured' | 'draft';
   onSelectionChange(flowId?: string, step?: number, flowView?: FlowRepresentation): void;
 }
 
@@ -60,6 +61,7 @@ export function FlowsWorkspace({
   sourceAppName,
   sourceAppIconUrl,
   analysisControls,
+  cardVariant,
   onSelectionChange,
 }: FlowsWorkspaceProps) {
   const groupSignature = groups.map(({ id }) => id).join('\u0000');
@@ -152,6 +154,7 @@ export function FlowsWorkspace({
             userRole={userRole}
             sourceAppName={sourceAppName}
             sourceAppIconUrl={sourceAppIconUrl}
+            cardPropsForFlow={cardVariant ? () => ({ variant: cardVariant }) : undefined}
           />
         ) : (
           <EmptyState

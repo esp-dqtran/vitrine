@@ -31,7 +31,7 @@ const free: SubscriptionView = {
   exportUsage: { used: 0, limit: 20, resetAt: null },
 };
 
-test('renders the Lumin-style full Settings workspace around real Vitrines billing', () => {
+test('renders the Lumin-style full Settings workspace with Profile as its default section', () => {
   const html = renderToStaticMarkup(
     <ThemeModeProvider>
       <SettingsWorkspacePage
@@ -56,12 +56,20 @@ test('renders the Lumin-style full Settings workspace around real Vitrines billi
   );
   assert.match(source, /label: 'Back to App'/);
   // The section names are rail rows (published chrome); the content panel shows
-  // the active section, which defaults to billing.
+  // the active section, which defaults to Profile.
   assert.match(source, /SETTINGS_SECTIONS\.map/);
-  assert.match(html, /Subscription/);
-  assert.match(html, /Free/);
-  assert.match(html, /1 of 3 apps unlocked/);
-  assert.match(html, /Upgrade/);
+  assert.match(source, /label: 'Integrations'/);
+  assert.match(source, /section === 'integrations'/);
+  assert.match(source, /Add Vitrines in Codex/);
+  assert.match(source, /Streamable HTTP/);
+  assert.match(source, /Copy URL/);
+  assert.match(source, /label="Create token" size="sm" variant="primary"/);
+  assert.match(source, /settings-workspace__integration-copy-url/);
+  assert.match(source, /role="table" aria-label="Active Flow MCP access tokens"/);
+  assert.doesNotMatch(source, /Token active/);
+  assert.match(html, /Profile/);
+  assert.match(html, /owner@example\.com/);
+  assert.doesNotMatch(html, /1 of 3 apps unlocked/);
   assert.doesNotMatch(html, /Developer settings/);
   // Settings uses the same shell as Projects: rail + content panel, no header
   // bar, so the header profile popover is gone.

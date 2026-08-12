@@ -326,6 +326,7 @@ export function ScreenDetail({
   const flows = sectionData.state.data && 'flows' in sectionData.state.data
     ? sectionData.state.data.flows
     : [] as DesignFlow<EvidenceView>[];
+  const [draftFlowCount, setDraftFlowCount] = useState(0);
   const sectionTotals = resolveAppSectionTotals(
     app,
     sectionData.versions,
@@ -760,14 +761,17 @@ export function ScreenDetail({
     ? String(sectionData.resolvedVersion)
     : 'latest';
   const activeFlowFilterCount = Object.values(flowFilters).reduce((total, values) => total + values.length, 0);
+  const visibleFlowTotal = role === 'admin'
+    ? Math.max(sectionTotals.flows, draftFlowCount)
+    : sectionTotals.flows;
   const sectionTotal = section === 'screens'
     ? `${sectionTotals.screens} screens`
     : section === 'elements'
       ? `${sectionTotals.elements} UI elements`
       : section === 'flows'
         ? activeFlowFilterCount
-          ? `${filteredFlows.length} of ${sectionTotals.flows} ${sectionTotals.flows === 1 ? 'flow' : 'flows'}`
-          : `${sectionTotals.flows} flows`
+          ? `${filteredFlows.length} of ${visibleFlowTotal} ${visibleFlowTotal === 1 ? 'flow' : 'flows'}`
+          : `${visibleFlowTotal} flows`
         : '';
   const evidenceFilterGroups = (
     selected: ScreenFilterSelections,
@@ -933,6 +937,7 @@ export function ScreenDetail({
                           platform={selectedPlatform}
                           version={sectionData.resolvedVersion}
                           userRole={role}
+                          onDraftCountChange={setDraftFlowCount}
                           sourceAppName={app.app}
                           sourceAppIconUrl={app.iconUrl}
                           selectedFlowId={initialFlow}

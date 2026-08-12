@@ -3,6 +3,7 @@ import type { Route } from "./router.ts";
 export interface RootRouteContext {
   auth: "loading" | "guest" | "member" | "admin";
   advancedSearchEnabled: boolean;
+  collectionsEnabled: boolean;
   researchProjectsEnabled: boolean;
 }
 
@@ -67,7 +68,9 @@ export function decideRootRoute(
     case "collections":
       return context.auth === "guest"
         ? { kind: "signin" }
-        : { kind: "application" };
+        : context.collectionsEnabled
+          ? { kind: "application" }
+          : { kind: "redirect", route: { name: "projects" } };
     case "projects":
     case "project":
     case "project-documents":

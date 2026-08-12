@@ -30,6 +30,24 @@ test("crawl observations participate in source drift checks without changing leg
   assert.notEqual(observed, legacy);
   assert.notEqual(changed, observed);
   assert.equal(featureEvidenceManifestSha256([item]), legacy);
+  assert.equal(
+    featureEvidenceManifestSha256([{
+      ...item,
+      observation: {
+        confidence: 0.82,
+        accessibility: ["Button label is visible"],
+        missingOrUncertainStates: ["Interrupted session"],
+        friction: ["No recovery guidance"],
+        systemFeedback: [],
+        availableActions: ["Continue"],
+        likelyIntent: "Review the cart before checkout",
+        visibleText: ["Continue"],
+        visibleUi: ["Cart summary", "Continue button"],
+        evidenceId: "IMAGE-42",
+      },
+    }]),
+    observed,
+  );
 });
 
 const claim = (
@@ -224,6 +242,13 @@ function evidenceBackedFixture(): FeatureDocumentContent {
         when: "the shopper reviews the available controls",
         then: "a continuation control is present",
         evidenceIds: ["IMAGE-42"],
+      }, {
+        id: "AC-002",
+        kind: "inferred",
+        given: "the checkout screen is visible",
+        when: "the shopper reviews the available controls",
+        then: "a continuation control remains available",
+        evidenceIds: ["FLOW-STEP-01"],
       }],
     }],
     edgeCases: [],
@@ -252,6 +277,26 @@ test("accepts an evidence-backed replication document with classified criteria",
   assert.equal(parsed.sourceAssessment?.completeness, "partial");
   assert.equal(parsed.requirements[0].priority, "unranked");
   assert.equal(parsed.requirements[0].acceptanceCriteria[0].kind, "inferred");
+});
+
+test("requires multiple acceptance criteria for multi-state evidence", () => {
+  const fixture = evidenceBackedFixture();
+  fixture.requirements[0].acceptanceCriteria = fixture.requirements[0].acceptanceCriteria.slice(0, 1);
+  assert.throws(
+    () => parseFeatureDocumentContent(
+      fixture,
+      new Set(["FLOW-STEP-01", "IMAGE-42"]),
+      {
+        evidenceBacked: true,
+        evidenceManifest: [
+          { stepIndex: 0, imageIndex: 0, imageId: 42, evidenceId: "IMAGE-42", stepLabel: "Cart", description: null },
+          { stepIndex: 1, imageIndex: 0, imageId: 43, evidenceId: "FLOW-STEP-01", stepLabel: "Checkout", description: null },
+        ],
+        analyses: [],
+      },
+    ),
+    /requires at least two acceptance criteria for multi-state evidence/,
+  );
 });
 
 test("keeps official documentation separate from visual evidence", () => {
@@ -382,6 +427,7 @@ test("rejects an observed state transition without before-after or visible-feedb
 
 test("requires every screenshot to be scoped by requirements or explicitly unscoped", () => {
   const fixture = evidenceBackedFixture();
+  fixture.requirements[0].acceptanceCriteria = fixture.requirements[0].acceptanceCriteria.slice(0, 1);
   fixture.requirements[0].evidenceIds = ["IMAGE-42"];
   assert.throws(
     () => parseFeatureDocumentContent(

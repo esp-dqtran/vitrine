@@ -229,7 +229,20 @@ export function featureEvidenceManifestSha256(manifest: FeatureEvidenceManifestI
     interaction: item.interaction ?? null,
     description: item.description,
     capturedAt: item.capturedAt ?? null,
-    ...(item.observation ? { observation: item.observation } : {}),
+    ...(item.observation ? {
+      observation: {
+        evidenceId: item.observation.evidenceId,
+        visibleUi: item.observation.visibleUi,
+        visibleText: item.observation.visibleText,
+        likelyIntent: item.observation.likelyIntent,
+        availableActions: item.observation.availableActions,
+        systemFeedback: item.observation.systemFeedback,
+        friction: item.observation.friction,
+        missingOrUncertainStates: item.observation.missingOrUncertainStates,
+        accessibility: item.observation.accessibility,
+        confidence: item.observation.confidence,
+      },
+    } : {}),
   }));
   return createHash("sha256").update(JSON.stringify(canonical)).digest("hex");
 }
@@ -620,6 +633,13 @@ function requirement(
   if ((priority === "must" || options.evidenceBacked) && acceptanceCriteria.length === 0) {
     throw new Error(`${label} requires acceptance criteria`);
   }
+  if (
+    options.evidenceBacked
+    && (options.evidenceManifest?.length ?? allowed.size) >= 2
+    && acceptanceCriteria.length < 2
+  ) {
+    throw new Error(`${label} requires at least two acceptance criteria for multi-state evidence`);
+  }
   if (options.evidenceBacked && acceptanceCriteria.length > 4) {
     throw new Error(`${label} has too many acceptance criteria for an evidence-backed draft`);
   }
@@ -760,7 +780,7 @@ export function parseFeatureDocumentContent(
       options,
     ));
   if (requirements.length === 0) throw new Error("feature document requires at least one requirement");
-  const maximumRequirements = Math.max(1, Math.min(6, Math.ceil(allowedEvidenceIds.size / 2)));
+  const maximumRequirements = Math.max(1, Math.min(6, Math.floor(allowedEvidenceIds.size / 2)));
   if (options.evidenceBacked && requirements.length > maximumRequirements) {
     throw new Error(`feature document has too many requirements for ${allowedEvidenceIds.size} evidence items`);
   }

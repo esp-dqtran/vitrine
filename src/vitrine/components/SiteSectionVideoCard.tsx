@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type SyntheticEvent } from 'react';
 import { Badge, ClickableCard } from '@astryxdesign/core';
 import { observeNearViewportMedia } from './deferredMedia.ts';
 
@@ -53,7 +53,15 @@ export function SiteSectionVideoCard({
   const [focused, setFocused] = useState(false);
   const [mediaActive, setMediaActive] = useState(!deferMedia);
   const [mediaFailed, setMediaFailed] = useState(false);
+  const [naturalAspectRatio, setNaturalAspectRatio] = useState<number | null>(null);
   const actionVisible = hovered || focused;
+
+  const captureNaturalAspectRatio = (event: SyntheticEvent<HTMLVideoElement>) => {
+    const { videoWidth, videoHeight } = event.currentTarget;
+    if (videoWidth > 0 && videoHeight > 0) {
+      setNaturalAspectRatio(videoWidth / videoHeight);
+    }
+  };
 
   useEffect(() => {
     const video = videoRef.current;
@@ -98,7 +106,7 @@ export function SiteSectionVideoCard({
         onBlur={() => setFocused(false)}
         style={{
           position: 'relative',
-          aspectRatio: '16 / 10',
+          aspectRatio: naturalAspectRatio ?? '16 / 10',
           overflow: 'hidden',
           borderRadius: 8,
           background: 'var(--color-background-muted)',
@@ -131,6 +139,7 @@ export function SiteSectionVideoCard({
             loop
             playsInline
             preload="metadata"
+            onLoadedMetadata={captureNaturalAspectRatio}
             onError={() => setMediaFailed(true)}
             style={{
               position: 'absolute',

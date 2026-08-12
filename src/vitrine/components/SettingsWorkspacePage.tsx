@@ -11,6 +11,12 @@ import {
 } from '@storybook/icons';
 import type { AuthUser } from '../authApi.ts';
 import { changePassword } from '../authApi.ts';
+import {
+  createMcpAccessToken,
+  listMcpAccessTokens,
+  revokeMcpAccessToken,
+  type McpAccessToken,
+} from '../mcpApi.ts';
 import { createPortal, type SubscriptionView } from '../billingApi.ts';
 import {
   activateProMonth,
@@ -26,7 +32,7 @@ import { ReferralSettings, TeamSettings } from './SettingsPanel.tsx';
 import { useWorkspaceChrome } from './WorkspaceChromeContext.tsx';
 import { useSegmentedIndicator } from './useSegmentedIndicator.ts';
 
-type SettingsSection = 'overview' | 'teams' | 'billing' | 'security' | 'appearance';
+type SettingsSection = 'overview' | 'teams' | 'billing' | 'security' | 'integrations' | 'appearance';
 
 const SETTINGS_SECTIONS: Array<{
   id: SettingsSection;
@@ -37,6 +43,7 @@ const SETTINGS_SECTIONS: Array<{
   { id: 'teams', label: 'Teams', icon: UsersIcon },
   { id: 'billing', label: 'Billing', icon: CreditIcon },
   { id: 'security', label: 'Security', icon: ShieldIcon },
+  { id: 'integrations', label: 'Integrations', icon: BookmarkHollowIcon },
   { id: 'appearance', label: 'Appearance', icon: PaintBrushIcon },
 ];
 
@@ -71,12 +78,17 @@ export function SettingsWorkspacePage({
   onBack: () => void;
   onSignOut: () => void | Promise<void>;
 }) {
-  const [section, setSection] = useState<SettingsSection>('billing');
+  const [section, setSection] = useState<SettingsSection>('overview');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [passwordBusy, setPasswordBusy] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [mcpTokens, setMcpTokens] = useState<McpAccessToken[]>([]);
+  const [newMcpToken, setNewMcpToken] = useState('');
+  const [mcpBusy, setMcpBusy] = useState(false);
+  const [mcpError, setMcpError] = useState('');
+  const [mcpUrlCopied, setMcpUrlCopied] = useState(false);
   const [billingBusy, setBillingBusy] = useState(false);
   const [billingError, setBillingError] = useState('');
   const [referralSummary, setReferralSummary] = useState<ReferralSummaryView | null>(null);
@@ -90,6 +102,11 @@ export function SettingsWorkspacePage({
     if (user.role !== 'user') return;
     void loadReferralSummary().then(setReferralSummary).catch(() => setReferralSummary(null));
   }, [user.id, user.role]);
+
+  useEffect(() => {
+    if (section !== 'integrations') return;
+    void listMcpAccessTokens().then(setMcpTokens).catch((reason: Error) => setMcpError(reason.message));
+  }, [section]);
 
 
 
@@ -125,6 +142,46 @@ export function SettingsWorkspacePage({
       setPasswordError((reason as Error).message);
     } finally {
       setPasswordBusy(false);
+    }
+  };
+
+  const createFlowAccessToken = async () => {
+    if (mcpBusy) return;
+    setMcpBusy(true);
+    setMcpError('');
+    try {
+      const created = await createMcpAccessToken();
+      setNewMcpToken(created.token);
+      setMcpTokens((current) => [created.accessToken, ...current]);
+    } catch (reason) {
+      setMcpError((reason as Error).message);
+    } finally {
+      setMcpBusy(false);
+    }
+  };
+
+  const revokeFlowAccessToken = async (tokenId: number) => {
+    if (mcpBusy) return;
+    setMcpBusy(true);
+    setMcpError('');
+    try {
+      await revokeMcpAccessToken(tokenId);
+      setMcpTokens((current) => current.filter((token) => token.id !== tokenId));
+    } catch (reason) {
+      setMcpError((reason as Error).message);
+    } finally {
+      setMcpBusy(false);
+    }
+  };
+
+  const mcpUrl = typeof window === 'undefined' ? '/api/mcp' : `${window.location.origin}/api/mcp`;
+  const copyMcpUrl = async () => {
+    setMcpError('');
+    try {
+      await copyShareLink(mcpUrl);
+      setMcpUrlCopied(true);
+    } catch (reason) {
+      setMcpError((reason as Error).message);
     }
   };
 
@@ -270,6 +327,67 @@ export function SettingsWorkspacePage({
                 </div>
                 {passwordError ? <div role="alert" className="settings-workspace__error">{passwordError}</div> : null}
                 {passwordSuccess ? <div role="status" className="settings-workspace__success">Password updated.</div> : null}
+              </section>
+            </div>
+          ) : null}
+
+          {section === 'integrations' ? (
+            <div className="settings-workspace__panel settings-workspace__integrations">
+              <div className="settings-workspace__title-row"><div><h1 id="settings-integrations-title">Integrations</h1><p>Connect Vitrines research to the tools where you work.</p></div></div>
+              <section className="settings-workspace__integration-card" aria-labelledby="flow-mcp-title">
+                <div className="settings-workspace__integration-heading">
+                  <div>
+                    <span className="settings-workspace__integration-kicker">Model Context Protocol</span>
+                    <h2 id="flow-mcp-title">Flow MCP</h2>
+                    <p>Search published product flows and inspect their screen captures directly in Codex.</p>
+                  </div>
+                </div>
+                <ol className="settings-workspace__integration-steps">
+                  <li>
+                    <span aria-hidden="true">1</span>
+                    <div><strong>Create an access token</strong><p>Use this token only for your MCP client. It is shown once.</p></div>
+                    <Button label="Create token" size="sm" variant="primary" isDisabled={mcpBusy} isLoading={mcpBusy} clickAction={() => void createFlowAccessToken()} />
+                  </li>
+                  <li>
+                    <span aria-hidden="true">2</span>
+                    <div><strong>Add Vitrines in Codex</strong><p>Open Codex Settings → MCP servers → Add server, then choose Streamable HTTP.</p></div>
+                  </li>
+                  <li>
+                    <span aria-hidden="true">3</span>
+                    <div><strong>Paste the endpoint and token</strong><p>Use this endpoint and add the access token as a Bearer token.</p></div>
+                    <div className="settings-workspace__integration-endpoint">
+                      <code>{mcpUrl}</code>
+                      <Button className="settings-workspace__integration-copy-url" label={mcpUrlCopied ? 'Copied' : 'Copy URL'} size="sm" variant="secondary" clickAction={() => void copyMcpUrl()} />
+                    </div>
+                  </li>
+                </ol>
+                {newMcpToken ? (
+                  <div role="status" className="settings-workspace__success">
+                    Copy this token now. It will not be shown again: <code>{newMcpToken}</code>
+                  </div>
+                ) : null}
+                {mcpTokens.length ? (
+                  <div className="settings-workspace__integration-tokens">
+                    <h3>Active access tokens</h3>
+                    <div className="settings-workspace__integration-token-table" role="table" aria-label="Active Flow MCP access tokens">
+                      <div className="settings-workspace__integration-token-head" role="row">
+                        <span role="columnheader">Name</span>
+                        <span role="columnheader">Token</span>
+                        <span role="columnheader">Expires</span>
+                        <span role="columnheader">Action</span>
+                      </div>
+                      {mcpTokens.map((token) => (
+                        <div key={token.id} className="settings-workspace__integration-token-row" role="row">
+                          <strong role="cell">{token.label}</strong>
+                          <code role="cell">{token.prefix}…</code>
+                          <span role="cell">{formatDate(token.expiresAt)}</span>
+                          <span role="cell"><Button label="Revoke" size="sm" variant="ghost" isDisabled={mcpBusy} clickAction={() => void revokeFlowAccessToken(token.id)} /></span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                {mcpError ? <div role="alert" className="settings-workspace__error">{mcpError}</div> : null}
               </section>
             </div>
           ) : null}

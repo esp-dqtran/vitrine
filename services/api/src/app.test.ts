@@ -498,6 +498,31 @@ test("serves the exact canonical Flow discovery envelope", async (t) => {
   }]);
 });
 
+test("limits free Flow catalog requests to twelve records", async (t) => {
+  const inputs: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    verifyAuthToken: async (token: string) => token === "free" ? user : undefined,
+    getAccountEntitlements: async () => freeEntitlements,
+    publishedFlowCatalogPage: async (input: unknown) => {
+      inputs.push(input);
+      return { items: [], nextCursor: "next", totalCount: 100, facets: [] };
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/flows?platform=web&limit=40`, {
+    headers: { authorization: "Bearer free" },
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), {
+    items: [],
+    nextCursor: null,
+    totalCount: 12,
+    facets: [],
+  });
+  assert.equal((inputs[0] as { limit: number }).limit, 12);
+});
+
 test("uses Typesense for full-text Flow search", async (t) => {
   const calls: unknown[] = [];
   const { base, server } = await serve(createApiApp({

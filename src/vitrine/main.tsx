@@ -8,6 +8,7 @@ import {
 } from '@astryxdesign/core';
 import { lazy, Suspense, useEffect } from 'react';
 import { AuthProvider, useAuth } from './AuthProvider';
+import { collectionsEnabled } from './featureFlags.ts';
 import { navigate, useRoute } from './router';
 import { ThemeModeProvider, useThemeMode } from './theme';
 import { ApplicationToastProvider } from './components/ApplicationToast.tsx';
@@ -66,6 +67,7 @@ function Root() {
   const decision = decideRootRoute(route, {
     auth: loading ? 'loading' : user?.role === 'admin' ? 'admin' : user ? 'member' : 'guest',
     advancedSearchEnabled,
+    collectionsEnabled,
     researchProjectsEnabled,
   });
 

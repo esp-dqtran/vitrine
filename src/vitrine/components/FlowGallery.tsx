@@ -28,6 +28,7 @@ type FlowGalleryCardProps = Partial<Pick<
   | 'onOpenSourceApp'
   | 'onOpen'
   | 'previewVariant'
+  | 'variant'
   | 'fullAccessLabel'
   | 'onRequestFullAccess'
 >>;
@@ -218,6 +219,7 @@ export function FlowGallery({
                     sourceAppIconUrl={cardProps?.sourceAppIconUrl ?? sourceAppIconUrl}
                     onOpenSourceApp={cardProps?.onOpenSourceApp}
                     previewVariant={cardProps?.previewVariant}
+                    variant={cardProps?.variant}
                     fullAccessLabel={cardProps?.fullAccessLabel}
                     onRequestFullAccess={cardProps?.onRequestFullAccess}
                     // App-detail flow links include flow, tab, and screen. Keep the

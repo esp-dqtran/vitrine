@@ -283,7 +283,7 @@ function documentInstructions(
 ): string[] {
   const maximumRequirements = Math.max(
     1,
-    Math.min(6, Math.ceil(prompt.allowedEvidenceIds.length / 2)),
+    Math.min(6, Math.floor(prompt.allowedEvidenceIds.length / 2)),
   );
   const interactionCount = prompt.evidenceManifest.filter(
     ({ interaction }) => Boolean(interaction?.trim()),
@@ -317,6 +317,8 @@ function documentInstructions(
     "AcceptanceCriterion is exactly {\"id\":string,\"kind\":\"observed\"|\"inferred\",\"given\":string,\"when\":string,\"then\":string,\"evidenceIds\":string[]}.",
     "Use globally unique id values across all claims, requirements, and acceptance criteria.",
     "Include at least one requirement. Every must requirement must include at least one acceptance criterion.",
+    "For a Flow with two or more evidence images, every requirement must include at least two evidence-cited acceptance criteria. Group related happy, validation, alternate, or failure outcomes under the same user story instead of creating one-criterion requirements.",
+    "A one-criterion requirement is allowed only when the Flow has one evidence image or only one supportable outcome.",
     "Every requirement must include at least one acceptance criterion and at least one evidence ID.",
     "Every acceptance criterion must include at least one evidence ID, and each of those IDs must also appear on its parent requirement.",
     "Use no null values. Arrays may be empty only when the evidence does not support entries.",
@@ -353,7 +355,7 @@ function flowPrompt(
 ): string {
   const maximumRequirements = Math.max(
     1,
-    Math.min(6, Math.ceil(prompt.allowedEvidenceIds.length / 2)),
+    Math.min(6, Math.floor(prompt.allowedEvidenceIds.length / 2)),
   );
   const interactionCount = prompt.evidenceManifest.filter(
     ({ interaction }) => Boolean(interaction?.trim()),
@@ -402,6 +404,7 @@ function flowPrompt(
     `Keep states, transitions, friction, missingStates, and openQuestions to at most ${maximumEvidenceClaims} combined entries so the expanded document remains within its ${claimBudget}-claim budget.`,
     "Every supplied evidence ID must appear in a requirement or criterion when it supports replication behavior; the application marks remaining screenshots as unscoped.",
     "Requirements describe capabilities, not inventories of every visible label or control. Merge overlapping states that serve the same user goal.",
+    "For multi-state evidence, each user story must contain at least two evidence-cited criteria. Group its happy path with supported validation, alternate, or failure outcomes; do not create a separate one-criterion requirement for states in the same journey.",
     "Each acceptance criterion describes one visible state or one inferred transition. Do not combine several screenshots into one long Then statement.",
     "ImplementationBrief is a proposed implementation contract, never an observation. Base it on the evidence and requirements, but do not claim that screenshots prove it.",
     "Do not invent vendor names, API names, database schemas, compliance status, or numerical targets. State dependencies at a capability boundary.",

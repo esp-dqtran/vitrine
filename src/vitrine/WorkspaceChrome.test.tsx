@@ -95,6 +95,7 @@ test('marks a disclosing row as one and leaves leaves alone', () => {
     /<button type="button" class="projects-workspace__desktop-row-caret"[\s\S]*?<\/button><button type="button"/,
   );
   assert.match(html, /aria-label="Collapse Projects"/);
+  assert.match(html, /class="projects-workspace__desktop-subnav" aria-hidden="false"/);
 
   /*
    * The flex rule that lets a row's label take the leftover width must name the
@@ -110,4 +111,6 @@ test('marks a disclosing row as one and leaves leaves alone', () => {
     /\.projects-workspace__desktop-row-line > \.projects-workspace__desktop-row-link\s*\{[^}]*flex:\s*1 1 auto;/s,
   );
   assert.doesNotMatch(css, /\.projects-workspace__desktop-row-line > button:first-child/);
+  assert.match(css, /\.projects-workspace__desktop-subnav\s*\{[^}]*grid-template-rows:\s*0fr;[^}]*opacity:\s*0;/s);
+  assert.match(css, /\.projects-workspace__desktop-row\.is-open > \.projects-workspace__desktop-subnav\s*\{[^}]*grid-template-rows:\s*1fr;/s);
 });

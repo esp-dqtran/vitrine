@@ -57,6 +57,12 @@ import {
   registerUser,
   type AuthUser,
 } from "../../../src/authStore.ts";
+import {
+  createMcpAccessToken,
+  listMcpAccessTokens,
+  revokeMcpAccessToken,
+  verifyMcpAccessToken,
+} from "../../../src/mcpTokenStore.ts";
 import { createJwtAuth } from "../../../src/jwtAuth.ts";
 import { getDailySignups, getGrowthStats } from "../../../src/adminStats.ts";
 import {
@@ -99,6 +105,7 @@ import {
   FlowCatalogCursorError,
   publishedFlowCatalogPage,
 } from "../../../src/flowCatalogStore.ts";
+import { mountFlowMcpRoute } from "./flowMcp.ts";
 import { createCategoryStore } from "../../../src/categoryStore.ts";
 import {
   authorizedExportObject,
@@ -189,7 +196,10 @@ import {
 import { buildAppKnowledgeEvidenceManifest } from "../../../src/appKnowledgeEvidence.ts";
 import { appKnowledgeProviderModelFromEnvironment } from "../../../src/appKnowledgeProviderConfig.ts";
 import { classifySiteImportUrl } from "../../../src/sites.ts";
-import { PUBLIC_CATALOG_GUEST_LIMIT } from "../../../src/publicCatalogAccess.ts";
+import {
+  PUBLIC_CATALOG_GUEST_LIMIT,
+  PUBLIC_FLOW_CATALOG_GUEST_LIMIT,
+} from "../../../src/publicCatalogAccess.ts";
 import { publishSitesJob } from "../../../src/sitesQueue.ts";
 import { createSitesStore } from "../../../src/sitesStore.ts";
 import {
@@ -444,6 +454,10 @@ const defaults = {
   changePassword,
   issueAuthToken: defaultJwtAuth.issueAuthToken,
   verifyAuthToken: defaultJwtAuth.verifyAuthToken,
+  verifyMcpAccessToken,
+  createMcpAccessToken,
+  listMcpAccessTokens,
+  revokeMcpAccessToken,
   canAccessApp,
   unlockFreeApp,
   getAccountEntitlements,
@@ -499,7 +513,7 @@ const defaults = {
   publicPageStore: apiPublicPageStore,
   featureDocumentStore: createFeatureDocumentStore(),
   featureDocumentProviderModel: kiroCliFeatureDocumentProviderModelFromEnvironment(process.env),
-  featureDocumentPromptVersion: 6,
+  featureDocumentPromptVersion: 7,
   acquireFeatureDocumentNotificationClient: async () => pool.connect() as unknown as FeatureDocumentNotificationClient,
   appKnowledgeStore: createAppKnowledgeStore(),
   appKnowledgeProviderModel: appKnowledgeProviderModelFromEnvironment(),
@@ -882,6 +896,10 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const token = bearerToken(req.headers.authorization);
     return token ? deps.verifyAuthToken(token) : undefined;
   };
+  const resolveMcpRequestUser = async (req: express.Request): Promise<AuthUser | undefined> => {
+    const token = bearerToken(req.headers.authorization);
+    return token ? deps.verifyMcpAccessToken(token) : undefined;
+  };
   const isCatalogLimitedRequest = async (req: express.Request): Promise<boolean> => {
     const user = await resolveRequestUser(req);
     if (!user) return true;
@@ -1098,7 +1116,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         res.json({
           items: result.apps,
           nextCursor: isCatalogLimited ? null : result.nextPage ? `${typesenseCursorPrefix}${result.nextPage}` : null,
-          totalCount: isCatalogLimited ? Math.min(result.totalCount, PUBLIC_CATALOG_GUEST_LIMIT) : result.totalCount,
+          totalCount: isCatalogLimited
+            ? Math.min(result.totalCount, PUBLIC_CATALOG_GUEST_LIMIT)
+            : result.totalCount,
           facets: includeFacets ? result.facets : [],
         });
         return;
@@ -1246,7 +1266,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     const pageLimit = isCatalogLimited
-      ? Math.min(limit ?? PUBLIC_CATALOG_GUEST_LIMIT, PUBLIC_CATALOG_GUEST_LIMIT)
+      ? Math.min(limit ?? PUBLIC_FLOW_CATALOG_GUEST_LIMIT, PUBLIC_FLOW_CATALOG_GUEST_LIMIT)
       : limit;
     const typesenseCursorPrefix = "typesense-flow:";
     const typesensePage = cursor?.startsWith(typesenseCursorPrefix)
@@ -1280,7 +1300,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         const page = {
           items: result.items,
           nextCursor: isCatalogLimited ? null : result.nextPage ? `${typesenseCursorPrefix}${result.nextPage}` : null,
-          totalCount: isCatalogLimited ? Math.min(result.totalCount, PUBLIC_CATALOG_GUEST_LIMIT) : result.totalCount,
+          totalCount: isCatalogLimited
+            ? Math.min(result.totalCount, PUBLIC_FLOW_CATALOG_GUEST_LIMIT)
+            : result.totalCount,
           facets: includeFacets ? result.facets : [],
         };
         res.json(page);
@@ -1313,7 +1335,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         items: page.items,
         nextCursor: isCatalogLimited ? null : page.nextCursor,
         totalCount: isCatalogLimited
-          ? Math.min(page.totalCount, PUBLIC_CATALOG_GUEST_LIMIT)
+          ? Math.min(page.totalCount, PUBLIC_FLOW_CATALOG_GUEST_LIMIT)
           : page.totalCount,
         facets: page.facets,
       });
@@ -1671,9 +1693,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       next();
       return;
     }
-    const user = await resolveRequestUser(req);
+    const user = req.path === "/mcp"
+      ? await resolveMcpRequestUser(req)
+      : await resolveRequestUser(req);
     if (!user) {
-      res.status(401).json({ error: "Authentication required" });
+      res.status(401).json({ error: req.path === "/mcp" ? "Flow access token required" : "Authentication required" });
       return;
     }
     res.locals.user = user;
@@ -1726,6 +1750,29 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     next();
   };
+
+  mountFlowMcpRoute(app, {
+    appUrl: deps.appUrl,
+    flowCatalogSecret: deps.mediaSigningSecret,
+    canAccessApp: deps.canAccessApp,
+    publishedFlowCatalogPage: deps.publishedFlowCatalogPage,
+    getVersionFlows: deps.getVersionFlows,
+    flowEvidenceImages: deps.flowEvidenceImages,
+    readInlineImage: async (image) => {
+      const hash = bulkImageHash(image.image_url);
+      if (!hash || !deps.objectStore) return undefined;
+      const metadata = await deps.adminImageObject({ app: image.app, hash, variant: "thumb" });
+      if (
+        !metadata
+        || (metadata.contentType !== "image/png"
+          && metadata.contentType !== "image/jpeg"
+          && metadata.contentType !== "image/webp"
+          && metadata.contentType !== "image/gif")
+      ) return undefined;
+      const stored = await deps.objectStore.get(metadata.key);
+      return { data: stored.body.toString("base64"), mimeType: metadata.contentType };
+    },
+  });
 
   app.get("/admin/catalog/facets", requireAdmin, async (req, res) => {
     const platform = req.query.platform === undefined
@@ -2392,6 +2439,33 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const ok = await deps.changePassword(res.locals.user.id, currentPassword, newPassword);
     if (!ok) {
       res.status(401).json({ error: "Current password is incorrect" });
+      return;
+    }
+    res.status(204).end();
+  });
+
+  app.get("/auth/mcp-tokens", async (_req, res) => {
+    res.json({ tokens: await deps.listMcpAccessTokens(res.locals.user.id) });
+  });
+
+  app.post("/auth/mcp-tokens", async (req, res) => {
+    const body = exactBody(req.body, ["label"]);
+    const label = body?.label === undefined ? undefined : boundedText(body.label, 80);
+    if (!body || (body.label !== undefined && label === undefined)) {
+      res.status(400).json({ error: "invalid MCP token request" });
+      return;
+    }
+    res.status(201).json(await deps.createMcpAccessToken({ userId: res.locals.user.id, label }));
+  });
+
+  app.delete("/auth/mcp-tokens/:tokenId", async (req, res) => {
+    const tokenId = positiveId(req.params.tokenId);
+    if (!tokenId) {
+      res.status(400).json({ error: "invalid MCP token" });
+      return;
+    }
+    if (!await deps.revokeMcpAccessToken({ userId: res.locals.user.id, tokenId })) {
+      res.status(404).json({ error: "MCP token not found" });
       return;
     }
     res.status(204).end();

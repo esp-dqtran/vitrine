@@ -131,6 +131,11 @@ export function projectRailNav({
       label: 'Collections',
       icon: <BookmarkHollowIcon aria-hidden="true" />,
       onSelect: () => navigate({ name: 'collections' }),
+      children: [{
+        label: 'All collections',
+        icon: <BookmarkHollowIcon aria-hidden="true" />,
+        onSelect: () => navigate({ name: 'collections' }),
+      }],
     },
   ];
 }

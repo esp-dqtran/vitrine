@@ -131,7 +131,7 @@ test('requests one canonical Flow cursor page with OR Flow-group filters', async
   }
 });
 
-test('limits the public Flow catalog to six cards', async () => {
+test('limits the public Flow catalog to twelve cards', async () => {
   const originalFetch = globalThis.fetch;
   const calls: string[] = [];
   globalThis.fetch = (async (input: string | URL | Request) => {
@@ -146,7 +146,7 @@ test('limits the public Flow catalog to six cards', async () => {
       query: '',
       filters: [],
     }, null, new AbortController().signal);
-    assert.match(calls[0], /[?&]limit=6(?:&|$)/);
+    assert.match(calls[0], /[?&]limit=12(?:&|$)/);
   } finally {
     globalThis.fetch = originalFetch;
   }

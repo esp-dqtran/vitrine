@@ -587,28 +587,30 @@ test("puts the project hierarchy in the rail instead of a tab bar", () => {
   assert.match(railSource, /\{renderRow\(action\)\}\s*\n\s*\{action\.trailing\}/);
 });
 
-test("flattens the rail tree into the compact bar instead of stacking it", () => {
+test("keeps the rail tree in compact dropdowns instead of overflowing the header", () => {
   const css = readFileSync(new URL("./projectsWorkspace.css", import.meta.url), "utf8");
   const railSource = readFileSync(
     new URL("./components/WorkspaceChrome.tsx", import.meta.url),
     "utf8",
   );
 
-  // An indented vertical block inside a horizontal strip makes the bar tall
-  // rather than wide, so the wrappers drop out below the breakpoint.
+  // The project tree stays inside a positioned popup, rather than flattening
+  // every project into the header row.
   assert.match(
     css,
-    /@media \(max-width: 980px\)[\s\S]*?\.projects-workspace__desktop-subnav\s*\{\s*display:\s*contents;/s,
+    /@media \(max-width: 980px\)[\s\S]*?\.projects-workspace__desktop-subnav\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?min-width:\s*220px;/s,
   );
-  // Only the path you are on survives: sibling projects would overrun the strip.
+  // In compact mode, an action with children toggles its dropdown instead of
+  // navigating away immediately.
   assert.match(
-    css,
-    /@media \(max-width: 980px\)[\s\S]*?\.projects-workspace__desktop-subnav > \.has-children:not\(\.is-open\)\s*\{\s*display:\s*none;/s,
+    railSource,
+    /isCompact && action\.children\?\.length \? \(\) => toggleFold\(action\) : action\.onSelect/,
   );
   assert.match(railSource, /action\.children\?\.length \? 'has-children' : null/);
-  // `is-open` tracks the effective fold, not the config default, so a branch the
-  // reader collapsed stays collapsed when the bar flattens it.
+  // `is-open` tracks the effective fold, so compact menus start closed even if
+  // their matching desktop branch is expanded for the current route.
   assert.match(railSource, /isExpanded\(action\) \? 'is-open' : null/);
+  assert.match(railSource, /isCompact \? false : Boolean\(action\.expanded\)/);
 });
 
 test("lets the project panel fill the page", () => {

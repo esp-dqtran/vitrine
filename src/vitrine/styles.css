@@ -15449,6 +15449,39 @@ body {
   scroll-margin-top: calc(var(--reference-nav-height) + 24px);
 }
 
+.flow-strip-card--draft {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  padding: 4px 0 20px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.flow-strip-card--draft .flow-strip-card__meta h2 {
+  margin-top: 4px;
+}
+
+.flow-strip-card--draft .flow-strip-card__meta p {
+  max-width: 680px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.flow-strip-card__draft-label,
+.flow-strip-card__draft-status {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.flow-strip-card__draft-label {
+  display: block;
+}
+
+.flow-strip-card__draft-status {
+  white-space: nowrap;
+}
+
 .flow-strip-card__stage {
   position: relative;
   min-width: 0;

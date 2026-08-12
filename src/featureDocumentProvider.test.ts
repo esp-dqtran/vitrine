@@ -106,8 +106,8 @@ test("synthesis sends no image bytes and includes validation repair context", as
   assert.match(body, /capability-level replica behavior/);
   assert.match(body, /BDD scenario/);
   assert.match(body, /Given, When, and Then/);
-  assert.match(body, /1 to 3 acceptance criteria/);
-  assert.match(body, /never invent alternate, validation, recovery/);
+  assert.match(body, /2 to 4 acceptance criteria/);
+  assert.match(body, /Never invent alternate, validation, recovery/);
   assert.match(body, /Do not create one requirement per screen/);
 });
 

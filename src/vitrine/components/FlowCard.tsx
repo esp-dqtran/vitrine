@@ -119,6 +119,7 @@ export function FlowCard({
   syncPreviewUrl = true,
   iconTooltips = false,
   previewVariant = 'full',
+  variant = 'captured',
   fullAccessLabel,
   onRequestFullAccess,
 }: {
@@ -137,6 +138,7 @@ export function FlowCard({
   syncPreviewUrl?: boolean;
   iconTooltips?: boolean;
   previewVariant?: FlowPreviewVariant | 'none';
+  variant?: 'captured' | 'draft';
   fullAccessLabel?: string;
   onRequestFullAccess?: () => void;
 }) {
@@ -250,6 +252,24 @@ export function FlowCard({
       onOpenSourceApp();
     }
     : undefined;
+
+  if (variant === 'draft') {
+    return (
+      <article
+        className="flow-strip-card flow-strip-card--draft"
+        data-flow-strip-card="true"
+        data-flow-gallery-id={flow.id}
+        id={anchorId}
+      >
+        <div className="flow-strip-card__meta">
+          <span className="flow-strip-card__draft-label">Draft flow</span>
+          <h2>{flowTitle(flow.title)}</h2>
+          <p>{flow.description}</p>
+        </div>
+        <span className="flow-strip-card__draft-status">Screens pending Stage 3</span>
+      </article>
+    );
+  }
 
   return (
     <>

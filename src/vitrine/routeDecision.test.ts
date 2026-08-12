@@ -7,18 +7,21 @@ const PROJECT_ID = '11111111-1111-4111-8111-111111111111';
 const guest: RootRouteContext = {
   auth: 'guest',
   advancedSearchEnabled: false,
+  collectionsEnabled: false,
   researchProjectsEnabled: false,
 };
 
 const member: RootRouteContext = {
   auth: 'member',
   advancedSearchEnabled: true,
+  collectionsEnabled: false,
   researchProjectsEnabled: true,
 };
 
 const admin: RootRouteContext = {
   auth: 'admin',
   advancedSearchEnabled: true,
+  collectionsEnabled: false,
   researchProjectsEnabled: true,
 };
 
@@ -77,7 +80,6 @@ test('uses the same application renderer for members and admins on normal routes
     { name: 'app', appId: 'linear' },
     { name: 'site-version', siteSlug: 'v7' },
     { name: 'search' },
-    { name: 'collections' },
     { name: 'projects' },
     { name: 'project', projectId: PROJECT_ID },
     { name: 'project-document', projectId: PROJECT_ID },
@@ -115,11 +117,19 @@ test('renders an explicit unavailable state for disabled feature routes', () => 
   });
 });
 
-test('keeps personal Collections available when Research Projects are disabled', () => {
+test('redirects Collections while the temporary feature flag is disabled', () => {
   const disabled = { ...member, researchProjectsEnabled: false };
   assert.deepEqual(decideRootRoute({ name: 'collections' }, disabled), {
-    kind: 'application',
+    kind: 'redirect',
+    route: { name: 'projects' },
   });
+});
+
+test('restores Collections when the feature flag is enabled', () => {
+  assert.deepEqual(
+    decideRootRoute({ name: 'collections' }, { ...member, collectionsEnabled: true }),
+    { kind: 'application' },
+  );
 });
 
 test('renders unknown locations as an explicit public not-found page', () => {

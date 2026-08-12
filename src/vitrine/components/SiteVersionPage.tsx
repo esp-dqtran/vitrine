@@ -574,6 +574,7 @@ function SectionsPanel({
                       kind="image"
                       url={item.mediaUrl}
                       imageFit="contain"
+                      preserveNaturalAspectRatio
                       delay={delay}
                       deferMedia
                       onOpen={() => onOpen(inspectorIndex)}

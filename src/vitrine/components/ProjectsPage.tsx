@@ -907,7 +907,7 @@ export function ResearchProjectsView({
         </div>
       ),
     }),
-    [selectedTeam?.name, selectedTeamId, section, workspaceMenuOpen, switchableTeams.length],
+    [selectedTeam?.name, selectedTeamId, section, visibleProjects, workspaceMenuOpen, switchableTeams.length],
   );
 
   return (

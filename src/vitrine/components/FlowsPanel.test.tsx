@@ -40,6 +40,48 @@ test("keeps the empty flows state inside the shared gallery section", () => {
   assert.match(html, /No captured flows yet/);
 });
 
+test("shows an unpublished Stage 2 flow inventory only to admins", () => {
+  const draftPlan = {
+    id: '2',
+    app: 'cxgenie',
+    revision: 1,
+    status: 'draft',
+    requiredSecrets: [],
+    approved_by: null,
+    approved_at: null,
+    created_at: '2026-08-12T00:00:00.000Z',
+    updated_at: '2026-08-12T00:00:00.000Z',
+    research_metadata: { stage: 2 },
+    plan: {
+      app: 'cxgenie',
+      domain: 'Customer engagement',
+      startUrl: 'https://www.cxgenie.ai/',
+      revision: 1,
+      reviewed: false,
+      sources: [],
+      flows: [{
+        id: 'authenticate-workspace',
+        title: 'Authenticate to workspace',
+        description: 'Sign in and access the CX Genie workspace.',
+        safe: false,
+        requiredSecrets: [],
+        steps: [],
+      }],
+    },
+  } as const;
+  const adminHtml = renderToStaticMarkup(<FlowsPanel flows={[]} app="cxgenie" userRole="admin" draftPlan={draftPlan} />);
+  const userHtml = renderToStaticMarkup(<FlowsPanel flows={[]} app="cxgenie" userRole="user" draftPlan={draftPlan} />);
+
+  assert.match(adminHtml, /data-flow-workspace="true"/);
+  assert.match(adminHtml, /data-flow-draft-status="true"/);
+  assert.match(adminHtml, /Screens pending Stage 3/);
+  assert.match(adminHtml, /flow-strip-card--draft/);
+  assert.match(adminHtml, /Authenticate to workspace/);
+  assert.doesNotMatch(userHtml, /data-flow-workspace/);
+  assert.doesNotMatch(userHtml, /data-flow-draft-status/);
+  assert.doesNotMatch(userHtml, /Authenticate to workspace/);
+});
+
 test("does not offer the retired FLOW.md editor", () => {
   const html = renderToStaticMarkup(<FlowsPanel flows={[loginFlow]} app="linear" platform="web" />);
   assert.doesNotMatch(html, /FLOW\.md/);

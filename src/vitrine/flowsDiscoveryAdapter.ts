@@ -14,8 +14,10 @@ import {
   loadFlowCatalogPage,
   type FlowCatalogItem,
 } from './flowCatalogApi.ts';
-/** Number of flow cards shown to Free-plan visitors. */
-export const PUBLIC_FLOW_CATALOG_LIMIT = 6;
+import { PUBLIC_FLOW_CATALOG_GUEST_LIMIT } from '../publicCatalogAccess.ts';
+
+/** Number of Flow cards shown to Free-plan visitors. */
+export const PUBLIC_FLOW_CATALOG_LIMIT = PUBLIC_FLOW_CATALOG_GUEST_LIMIT;
 
 export type FlowsDiscoverySort = 'grouped';
 export type FlowsDiscoveryControllerState = DiscoveryState<FlowsDiscoverySort>;

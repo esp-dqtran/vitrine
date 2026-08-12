@@ -1,4 +1,4 @@
-import { useState, type ReactNode, type Ref } from 'react';
+import { useEffect, useState, type ReactNode, type Ref } from 'react';
 
 export interface WorkspaceRailAction {
   label: string;
@@ -68,10 +68,25 @@ export function WorkspaceRail({
    * own toggle overrides it. Keeping it in the rail means the folding survives
    * a page republishing its chrome, and no page has to own navigation-chrome
    * state it never reads.
-   */
+  */
   const [folds, setFolds] = useState<Record<string, boolean>>({});
+  const [compactFolds, setCompactFolds] = useState<Record<string, boolean>>({});
+  const [isCompact, setIsCompact] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 980px)');
+    const update = () => setIsCompact(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+
   const isExpanded = (action: WorkspaceRailAction) =>
-    folds[action.label] ?? Boolean(action.expanded);
+    (isCompact ? compactFolds : folds)[action.label] ??
+      (isCompact ? false : Boolean(action.expanded));
+  const toggleFold = (action: WorkspaceRailAction) => {
+    const setFold = isCompact ? setCompactFolds : setFolds;
+    setFold((open) => ({ ...open, [action.label]: !isExpanded(action) }));
+  };
 
   const renderRow = (action: WorkspaceRailAction) => {
     const expanded = isExpanded(action);
@@ -85,7 +100,7 @@ export function WorkspaceRail({
             className="projects-workspace__desktop-row-caret"
             aria-label={`${expanded ? 'Collapse' : 'Expand'} ${action.label}`}
             aria-expanded={expanded}
-            onClick={() => setFolds((open) => ({ ...open, [action.label]: !expanded }))}
+            onClick={() => toggleFold(action)}
           >
             <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path
@@ -105,7 +120,7 @@ export function WorkspaceRail({
             action.active ? 'is-active' : null,
           ].filter(Boolean).join(' ')}
           aria-current={action.active ? 'page' : undefined}
-          onClick={action.onSelect}
+          onClick={isCompact && action.children?.length ? () => toggleFold(action) : action.onSelect}
         >
           {action.icon}<span>{action.label}</span>
         </button>
@@ -128,9 +143,11 @@ export function WorkspaceRail({
         {renderRow(action)}
         {action.trailing}
       </div>
-      {action.children?.length && isExpanded(action) ? (
-        <div className="projects-workspace__desktop-subnav">
-          {action.children.map(renderAction)}
+      {action.children?.length ? (
+        <div className="projects-workspace__desktop-subnav" aria-hidden={!isExpanded(action)}>
+          <div className="projects-workspace__desktop-subnav-content">
+            {action.children.map(renderAction)}
+          </div>
         </div>
       ) : null}
     </div>
