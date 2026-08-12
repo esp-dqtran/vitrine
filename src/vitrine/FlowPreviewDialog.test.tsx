@@ -114,6 +114,37 @@ test('keeps phone Screens mode free of carousel navigation arrows', () => {
   assert.match(html, /Screen 2 of 2: Create account/);
 });
 
+test('renders one locked sample for public Flow previews', () => {
+  const html = renderToStaticMarkup(
+    <FlowPreviewDialog
+      flowId="mercor:onboarding"
+      flowTitle="Onboarding"
+      flow={flow}
+      screens={[screens[0]]}
+      activeIndex={0}
+      activeMode="screens"
+      platform="web"
+      previewVariant="public"
+      totalScreenCount={2}
+      fullAccessLabel="Sign in to view full flow"
+      onActiveIndexChange={() => undefined}
+      onModeChange={() => undefined}
+      onClose={() => undefined}
+      onRequestFullAccess={() => undefined}
+    />,
+  );
+
+  assert.match(html, /src="\/flows\/welcome\.png"/);
+  assert.doesNotMatch(html, /src="\/flows\/account\.png"/);
+  assert.match(html, /1 more screen available in the full Flow/);
+  assert.match(html, /Sign in to view full flow/);
+  assert.doesNotMatch(html, /aria-label="Flow preview mode"/);
+  assert.doesNotMatch(html, /aria-label="Copy link"/);
+  assert.doesNotMatch(html, />Save</);
+  assert.doesNotMatch(html, />Copy image</);
+  assert.doesNotMatch(html, /More info/);
+});
+
 test('renders Mobbin-style prototype playback as a first-class mode', () => {
   const html = renderToStaticMarkup(
     <FlowPreviewDialog

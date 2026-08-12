@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { type ReactNode, type RefObject } from 'react';
 import { Button, EmptyState, Skeleton } from '@astryxdesign/core';
 import { AppCardSkeleton } from './AppCardSkeleton.tsx';
 import { ReferenceDiscoveryPageShell } from './ReferenceDiscoveryPageShell.tsx';
@@ -133,31 +133,19 @@ export function DiscoveryPageLayout({
 }
 
 function GuestCatalogLimitPrompt({ onReached }: { onReached: () => void }) {
-  const promptRef = useRef<HTMLDivElement | null>(null);
-  const reachedRef = useRef(false);
-
-  useEffect(() => {
-    const prompt = promptRef.current;
-    if (!prompt || typeof IntersectionObserver === 'undefined') return;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (!entry?.isIntersecting || reachedRef.current) return;
-      reachedRef.current = true;
-      onReached();
-    }, { threshold: 0.35 });
-    observer.observe(prompt);
-    return () => observer.disconnect();
-  }, [onReached]);
-
   return (
     <div
-      ref={promptRef}
       className="discovery-page-layout__guest-limit"
       data-guest-catalog-limit="true"
-      role="status"
+      role="region"
+      aria-label="Continue exploring the Vitrines catalog"
     >
-      <strong>You've reached the free preview limit.</strong>
-      <span>Create an account or sign in to continue exploring Vitrines.</span>
-      <Button label="Create account or sign in" variant="primary" onClick={onReached} />
+      <div className="discovery-page-layout__guest-limit-copy">
+        <span className="discovery-page-layout__guest-limit-eyebrow">Catalog preview</span>
+        <strong>Keep exploring with a free account.</strong>
+        <span>Sign in or create an account to unlock the rest of Vitrines.</span>
+      </div>
+      <Button label="Create free account" variant="primary" onClick={onReached} />
     </div>
   );
 }

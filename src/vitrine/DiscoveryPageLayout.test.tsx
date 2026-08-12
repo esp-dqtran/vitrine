@@ -139,6 +139,24 @@ test('keeps loaded children when loading more fails and places the sentinel last
   assert.doesNotMatch(html, /aria-label="Load more sites"/);
 });
 
+test('uses a persistent catalog banner with an explicit account action at the guest limit', async () => {
+  const [html, source, css] = await Promise.all([
+    Promise.resolve(renderLayout({
+      guestLimitReached: true,
+      onGuestLimitReached: () => undefined,
+    })),
+    readFile(new URL('./components/DiscoveryPageLayout.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(html, /data-guest-catalog-limit="true"/);
+  assert.match(html, /role="region"/);
+  assert.match(html, /Keep exploring with a free account/);
+  assert.match(html, /Create free account/);
+  assert.doesNotMatch(source, /IntersectionObserver/);
+  assert.match(css, /\.discovery-page-layout__guest-limit\s*\{[^}]*justify-content:\s*space-between/);
+});
+
 test('uses renderedCount rather than empty children to preserve inline load-more errors', () => {
   const html = renderLayout({
     renderedCount: 1,

@@ -97,6 +97,10 @@ interface FlowsPageViewProps {
   userRole?: 'admin' | 'user';
   isGuest?: boolean;
   onGuestLimitReached?: () => void;
+  previewVariant?: 'full' | 'public' | 'none';
+  fullAccessLabel?: string;
+  onRequestFullAccess?: (appId: string) => void;
+  onOpenFullFlow?: (appId: string, platform: Platform, version: number, flowId: string) => void;
 }
 
 export function FlowsPageView({
@@ -106,6 +110,10 @@ export function FlowsPageView({
   userRole = 'user',
   isGuest = false,
   onGuestLimitReached,
+  previewVariant = 'full',
+  fullAccessLabel,
+  onRequestFullAccess,
+  onOpenFullFlow,
 }: FlowsPageViewProps) {
   const flowGroups = useMemo<DiscoveryFilterGroup>(() => ({
     id: 'flowGroups',
@@ -216,6 +224,19 @@ export function FlowsPageView({
               flowId: item.preview.sourceFlowId,
             },
             onOpenSourceApp: () => onSelectApp(item.preview.appId),
+            previewVariant,
+            fullAccessLabel,
+            onRequestFullAccess: onRequestFullAccess
+              ? () => onRequestFullAccess(item.preview.appId)
+              : undefined,
+            onOpen: onOpenFullFlow
+              ? () => onOpenFullFlow(
+                item.preview.appId,
+                controller.state.platform,
+                item.preview.version,
+                item.preview.sourceFlowId,
+              )
+              : undefined,
           };
         }}
         onSelectFlow={(flowId) => {
@@ -234,6 +255,10 @@ interface FlowsPageProps {
   userRole?: 'admin' | 'user';
   isGuest?: boolean;
   onGuestLimitReached?: () => void;
+  previewVariant?: 'full' | 'public' | 'none';
+  fullAccessLabel?: string;
+  onRequestFullAccess?: (appId: string) => void;
+  onOpenFullFlow?: (appId: string, platform: Platform, version: number, flowId: string) => void;
 }
 
 export function FlowsPage({
@@ -243,6 +268,10 @@ export function FlowsPage({
   userRole = 'user',
   isGuest = false,
   onGuestLimitReached,
+  previewVariant = 'full',
+  fullAccessLabel,
+  onRequestFullAccess,
+  onOpenFullFlow,
 }: FlowsPageProps) {
   const locationKey = useLocationKey();
   const search = locationKey.includes('?') ? locationKey.slice(locationKey.indexOf('?')) : '';
@@ -265,6 +294,10 @@ export function FlowsPage({
       userRole={userRole}
       isGuest={isGuest}
       onGuestLimitReached={onGuestLimitReached}
+      previewVariant={previewVariant}
+      fullAccessLabel={fullAccessLabel}
+      onRequestFullAccess={onRequestFullAccess}
+      onOpenFullFlow={onOpenFullFlow}
     />
   );
 }

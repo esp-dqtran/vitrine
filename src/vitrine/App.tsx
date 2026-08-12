@@ -743,6 +743,20 @@ export function App() {
         <FlowsPage
           isGuest={isCatalogLimited}
           onGuestLimitReached={openCatalogLimit}
+          previewVariant={canShowPublicSitePreview(isGuest, entitlements?.plan) ? "public" : "none"}
+          fullAccessLabel={isGuest ? "Sign in to view full flow" : "View full flow"}
+          onRequestFullAccess={requestFullAppAnalysis}
+          onOpenFullFlow={(appId, platform, version, flow) => {
+            closeDiscoveryOverlays();
+            navigate({
+              name: "app",
+              appId,
+              section: "flows",
+              platform,
+              version,
+              flow,
+            });
+          }}
           onSelectFlow={(title, platform) => {
             setQ("");
             setSearchResult(null);

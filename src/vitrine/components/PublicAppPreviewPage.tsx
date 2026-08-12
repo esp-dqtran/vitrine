@@ -105,9 +105,13 @@ function PublicAppPreviewContent({
   const { app, previewScreens } = preview;
   const previewFlows = preview.previewFlows ?? [];
   const [showAllFlows, setShowAllFlows] = useState(false);
-  const hasMoreFlows = previewFlows.length > PUBLIC_FLOW_LIMIT;
-  const visibleFlows = showAllFlows ? previewFlows : previewFlows.slice(0, PUBLIC_FLOW_LIMIT);
   const isModal = presentation === 'modal';
+  const hasMoreFlows = !isModal && previewFlows.length > PUBLIC_FLOW_LIMIT;
+  const visibleFlows = isModal
+    ? previewFlows.slice(0, 1)
+    : showAllFlows
+      ? previewFlows
+      : previewFlows.slice(0, PUBLIC_FLOW_LIMIT);
 
   return (
     <div
@@ -157,7 +161,11 @@ function PublicAppPreviewContent({
             const flowScreenCount = flow.screens.length;
             const screenLabel = `${flowScreenCount} real ${flowScreenCount === 1 ? 'screen' : 'screens'}`;
             return (
-              <div key={flow.id} style={{ gridColumn: '1 / -1' }}>
+              <div
+                key={flow.id}
+                className={isModal ? 'public-app-preview__flow public-app-preview__flow--modal' : undefined}
+                style={{ gridColumn: '1 / -1' }}
+              >
                 <FlowCard
                   flow={previewFlowAsDesignFlow(flow)}
                   onOpen={onUnlock}

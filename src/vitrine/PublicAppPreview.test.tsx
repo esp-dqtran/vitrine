@@ -122,6 +122,12 @@ test('public app preview can render as a modal without page navigation', () => {
   assert.match(html, /Screens/);
   assert.doesNotMatch(html, /UI Elements/);
   assert.match(html, /Flows/);
+  assert.match(html, /Showing 1 of 12/);
+  assert.doesNotMatch(html, /Show all 12 flows/);
+  assert.doesNotMatch(html, /data-public-preview-flow-expander="true"/);
+  assert.match(html, /class="public-app-preview__flow public-app-preview__flow--modal"/);
+  assert.match(html, /data-flow-strip-card="true"/);
+  assert.match(html, /data-flow-preview-url-sync="false"/);
   assert.match(html, /aria-label="Unlock more screens"/);
 });
 

@@ -203,14 +203,14 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.doesNotMatch(html, /reference-discovery-nav/);
   assert.match(html, /class="[^"]*reference-discovery__content[^"]*"/);
   assert.match(html, /class="[^"]*reference-discovery__taxonomy[^"]*reference-discovery__taxonomy--sites[^"]*"/);
-  assert.match(html, /Hide filter shortcuts/);
-  assert.match(html, /aria-expanded="true"/);
+  assert.doesNotMatch(html, /Hide filter shortcuts|Browse filter shortcuts/);
+  assert.doesNotMatch(html, /sites-discovery__taxonomy-toggle/);
   assert.match(html, /class="[^"]*reference-discovery__facet[^"]*"/);
   assert.match(html, /Categories/);
-  assert.match(html, /Sections/);
+  assert.doesNotMatch(html, /Open Sections filters/);
   assert.match(html, /Styles/);
   assert.match(html, /Business/);
-  assert.match(html, /Pricing/);
+  assert.doesNotMatch(html, /Pricing/);
   assert.match(html, /Minimal/);
   assert.match(html, /data-sites-filterbar="true"/);
   assert.match(html, /aria-label="Site discovery controls"/);
@@ -289,7 +289,7 @@ test('shows a URL-backed Sites query and an understandable card match label', ()
   );
 
   assert.doesNotMatch(html, /value="minimal"/);
-  assert.match(html, /Browse filter shortcuts/);
+  assert.doesNotMatch(html, /Hide filter shortcuts|Browse filter shortcuts/);
   assert.match(html, /Matched style: Minimal/);
 });
 

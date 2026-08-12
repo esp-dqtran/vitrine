@@ -20,6 +20,7 @@ test("shows the active filter count without changing the action name", () => {
   assert.match(html, /class="reference-search-trigger"/);
   assert.match(html, /class="[^"]*reference-search-trigger__button[^"]*"/);
   assert.match(html, /class="[^"]*astryx-input-text[^"]*"/);
+  assert.match(html, /reference-search-trigger__typed-label/);
   assert.match(html, /data-variant="secondary"/);
   assert.doesNotMatch(
     readFileSync(new URL("./components/SearchTrigger.tsx", import.meta.url), "utf8"),
@@ -39,4 +40,13 @@ test("uses the standard inline icon size for an active category clear action", (
 
   assert.match(html, />AI</);
   assert.match(html, /data-size="sm"/);
+});
+
+test("supports both command search shortcuts", () => {
+  const source = readFileSync(new URL("./components/SearchTrigger.tsx", import.meta.url), "utf8");
+
+  assert.match(source, /e\.key\.toLowerCase\(\) === 'k'/);
+  assert.match(source, /e\.key === ' '/);
+  assert.match(source, /⌘K \/ ⌘Space/);
+  assert.match(source, /prefers-reduced-motion: reduce/);
 });

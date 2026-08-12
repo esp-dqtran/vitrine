@@ -2520,42 +2520,6 @@ body {
   border-bottom: 0;
 }
 
-.sites-discovery__taxonomy-groups {
-  display: contents;
-}
-
-.sites-discovery__taxonomy-toggle {
-  position: absolute;
-  right: 0;
-  bottom: 28px;
-}
-
-.sites-discovery__taxonomy-toggle-button {
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: var(--color-text-secondary);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.sites-discovery__taxonomy-toggle-button:hover,
-.sites-discovery__taxonomy-toggle-button:focus-visible {
-  color: var(--color-text-primary);
-}
-
-.sites-discovery__taxonomy:has(.sites-discovery__taxonomy-toggle--collapsed) {
-  display: flex;
-  align-items: center;
-  min-height: 48px;
-  padding: 14px 0;
-}
-
-.sites-discovery__taxonomy-toggle--collapsed {
-  position: static;
-}
-
 .sites-discovery__facet h2 {
   margin: 0 0 12px;
   color: var(--color-text-secondary);
@@ -15541,6 +15505,10 @@ body {
 
 .flow-strip-card__stage[data-platform="web"] .flow-strip-card__track {
   height: clamp(240px, 22vw, 340px);
+}
+
+[data-public-app-preview-modal="true"] .public-app-preview__flow--modal .flow-strip-card__stage[data-platform="web"] .flow-strip-card__track {
+  height: clamp(320px, 40vw, 420px) !important;
 }
 
 .flow-strip-card__stage[data-platform="web"] .flow-strip-card__screen {

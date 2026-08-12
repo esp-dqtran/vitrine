@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { Button } from '@astryxdesign/core';
 import type { FacetPreview } from '../facetPreviewApi.ts';
 import type { SearchFilters } from '../../searchTypes.ts';
@@ -220,12 +220,6 @@ export function SitesPageView({
   onGuestLimitReached,
 }: SitesPageViewProps) {
   void isAdmin;
-  const [taxonomyExpanded, setTaxonomyExpanded] = useState(
-    () => controller.state.filters.length === 0 && controller.state.query.trim() === '',
-  );
-  useEffect(() => {
-    if (controller.state.query.trim()) setTaxonomyExpanded(false);
-  }, [controller.state.query]);
   const { previewRef, showPreview, movePreview, hidePreview } = useCategoryHoverPreview();
   const previewPools = useMemo(
     () => buildSiteFacetPreviewPools(controller.items),
@@ -261,71 +255,51 @@ export function SitesPageView({
       taxonomyLabel="Site discovery filters"
       taxonomy={(
         <>
-          <div
-            className={`sites-discovery__taxonomy-toggle ${taxonomyExpanded
-              ? 'sites-discovery__taxonomy-toggle--expanded'
-              : 'sites-discovery__taxonomy-toggle--collapsed'}`}
-          >
-            <button
-              type="button"
-              className="sites-discovery__taxonomy-toggle-button"
-              aria-expanded={taxonomyExpanded}
-              aria-controls="sites-discovery-shortcuts"
-              onClick={() => setTaxonomyExpanded((expanded) => !expanded)}
+          {DISCOVERY_FACETS.map((group) => (
+            <ReferenceDiscoveryFacetGroup
+              key={group.group}
+              label={group.label}
+              className={`sites-discovery__facet sites-discovery__facet--${group.group}`}
             >
-              {taxonomyExpanded ? 'Hide filter shortcuts' : 'Browse filter shortcuts'}
-            </button>
-          </div>
-          {taxonomyExpanded ? (
-            <div id="sites-discovery-shortcuts" className="sites-discovery__taxonomy-groups">
-              {DISCOVERY_FACETS.map((group) => (
-                <ReferenceDiscoveryFacetGroup
-                  key={group.group}
-                  label={group.label}
-                  className={`sites-discovery__facet sites-discovery__facet--${group.group}`}
-                >
-                  {group.defaults.map((value) => {
-                    const facet = {
-                      group: group.group,
-                      value,
-                    };
-                    const selected = controller.state.filters.some(
-                      (filter) => filter.group === group.group && filter.value === value,
-                    );
-                    const hoverFacet = facet.group === 'styles' ? null : facet;
-                    return (
-                      <Button
-                        key={value}
-                        label={value}
-                        variant="ghost"
-                        size="sm"
-                        aria-pressed={selected}
-                        data-facet-preview={hoverFacet?.group}
-                        onPointerEnter={hoverFacet ? (event) => {
-                          const preview = siteFacetPreview(
-                            previewPools,
-                            hoverFacet,
-                            Math.random,
-                            siteFacetImageReady,
-                          ) ?? siteFacetPreview(previewPools, hoverFacet);
-                          if (preview) showPreview(preview, event.clientX, event.clientY);
-                          prefetchNextSiteFacetPreview(previewPools, hoverFacet);
-                        } : undefined}
-                        onPointerMove={hoverFacet ? (event) => {
-                          movePreview(event.clientX, event.clientY);
-                        } : undefined}
-                        onPointerLeave={hoverFacet ? hidePreview : undefined}
-                        onClick={() => {
-                          controller.toggleFilter(facet);
-                          setTaxonomyExpanded(false);
-                        }}
-                      />
-                    );
-                  })}
-                </ReferenceDiscoveryFacetGroup>
-              ))}
-            </div>
-          ) : null}
+              {group.defaults.map((value) => {
+                const facet = {
+                  group: group.group,
+                  value,
+                };
+                const selected = controller.state.filters.some(
+                  (filter) => filter.group === group.group && filter.value === value,
+                );
+                const hoverFacet = facet.group === 'styles' ? null : facet;
+                return (
+                  <Button
+                    key={value}
+                    label={value}
+                    variant="ghost"
+                    size="sm"
+                    aria-pressed={selected}
+                    data-facet-preview={hoverFacet?.group}
+                    onPointerEnter={hoverFacet ? (event) => {
+                      const preview = siteFacetPreview(
+                        previewPools,
+                        hoverFacet,
+                        Math.random,
+                        siteFacetImageReady,
+                      ) ?? siteFacetPreview(previewPools, hoverFacet);
+                      if (preview) showPreview(preview, event.clientX, event.clientY);
+                      prefetchNextSiteFacetPreview(previewPools, hoverFacet);
+                    } : undefined}
+                    onPointerMove={hoverFacet ? (event) => {
+                      movePreview(event.clientX, event.clientY);
+                    } : undefined}
+                    onPointerLeave={hoverFacet ? hidePreview : undefined}
+                    onClick={() => {
+                      controller.toggleFilter(facet);
+                    }}
+                  />
+                );
+              })}
+            </ReferenceDiscoveryFacetGroup>
+          ))}
         </>
       )}
       preview={(

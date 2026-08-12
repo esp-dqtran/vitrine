@@ -381,6 +381,34 @@ dialog.flow-preview-dialog-shell::backdrop {
   transform: translateX(-50%);
 }
 
+.flow-preview-dialog__locked {
+  position: absolute;
+  right: 32px;
+  bottom: 32px;
+  left: 32px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px 14px 20px;
+  border: 1px solid var(--vitrine-color-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--flow-preview-surface) 92%, transparent);
+  box-shadow: 0 12px 36px rgb(0 0 0 / 28%);
+  backdrop-filter: blur(12px);
+}
+
+.flow-preview-dialog__locked > span {
+  color: var(--flow-preview-muted);
+  font: var(--vitrine-type-body);
+}
+
+.flow-preview-dialog__locked > button {
+  flex: 0 0 auto;
+  border-radius: 999px !important;
+}
+
 .flow-preview-dialog__footer-actions > button,
 .flow-preview-dialog__footer-actions .flow-preview-dialog__save {
   height: 44px !important;

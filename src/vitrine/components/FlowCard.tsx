@@ -7,6 +7,7 @@ import {
   FlowPreviewDialog,
   type FlowPreviewDocumentSource,
   type FlowPreviewMode,
+  type FlowPreviewVariant,
 } from './FlowPreviewDialog.tsx';
 import { copyShareLink, flowShareUrl } from '../screenActions.ts';
 import { CopyButton } from './CopyButton.tsx';
@@ -117,6 +118,9 @@ export function FlowCard({
   onOpenSourceApp,
   syncPreviewUrl = true,
   iconTooltips = false,
+  previewVariant = 'full',
+  fullAccessLabel,
+  onRequestFullAccess,
 }: {
   flow: DesignFlow<EvidenceView>;
   onOpen: () => void;
@@ -132,20 +136,26 @@ export function FlowCard({
   onOpenSourceApp?: () => void;
   syncPreviewUrl?: boolean;
   iconTooltips?: boolean;
+  previewVariant?: FlowPreviewVariant | 'none';
+  fullAccessLabel?: string;
+  onRequestFullAccess?: () => void;
 }) {
   const trackRef = useRef<HTMLButtonElement>(null);
   const [saved, setSaved] = useState(false);
   const screens = flowScreenItems(flow);
-  const previewItems = screens.length
+  const allPreviewItems = screens.length
     ? screens
     : [{ evidence: undefined, label: flow.title, stepNumber: 1 }];
+  const previewItems = previewVariant === 'public'
+    ? allPreviewItems.slice(0, 1)
+    : allPreviewItems;
   const [previewIndex, setPreviewIndex] = useState<number | null>(() => (
     typeof window === 'undefined' || !syncPreviewUrl
       ? null
-      : flowPreviewIndexFromSearch(window.location.search, flow.id, screens.length)
+      : flowPreviewIndexFromSearch(window.location.search, flow.id, previewItems.length)
   ));
   const [previewMode, setPreviewMode] = useState<FlowPreviewMode>(() => (
-    typeof window === 'undefined' || !syncPreviewUrl
+    previewVariant === 'public' || typeof window === 'undefined' || !syncPreviewUrl
       ? 'screens'
       : flowPreviewModeFromSearch(window.location.search, flow.id)
   ));
@@ -190,6 +200,10 @@ export function FlowCard({
   };
 
   const openPreview = (event: MouseEvent<HTMLButtonElement>) => {
+    if (previewVariant === 'none') {
+      onOpen();
+      return;
+    }
     const indexedItem = event.target instanceof Element
       ? event.target.closest<HTMLElement>('[data-flow-preview-index]')
       : null;
@@ -204,15 +218,17 @@ export function FlowCard({
   };
 
   const updatePreviewIndex = (index: number) => {
-    setPreviewIndex(index);
-    if (syncPreviewUrl) writeFlowPreviewUrl(flow.id, index, previewMode);
+    const nextIndex = Math.min(Math.max(index, 0), Math.max(0, previewItems.length - 1));
+    setPreviewIndex(nextIndex);
+    if (syncPreviewUrl) writeFlowPreviewUrl(flow.id, nextIndex, previewMode);
   };
 
   const updatePreviewMode = (mode: FlowPreviewMode, index = previewIndex ?? 0) => {
-    const nextIndex = Math.min(Math.max(index, 0), Math.max(0, screens.length - 1));
+    const nextMode = previewVariant === 'public' ? 'screens' : mode;
+    const nextIndex = Math.min(Math.max(index, 0), Math.max(0, previewItems.length - 1));
     setPreviewIndex(nextIndex);
-    setPreviewMode(mode);
-    if (syncPreviewUrl) writeFlowPreviewUrl(flow.id, nextIndex, mode);
+    setPreviewMode(nextMode);
+    if (syncPreviewUrl) writeFlowPreviewUrl(flow.id, nextIndex, nextMode);
   };
 
   const closePreview = () => {
@@ -345,14 +361,14 @@ export function FlowCard({
           </div>
         </footer>
       </article>
-      {previewIndex !== null && screens[previewIndex] ? (
+      {previewIndex !== null && previewItems[previewIndex]?.evidence ? (
         <FlowPreviewDialog
           flowId={flow.id}
           flowTitle={flow.title}
           flow={flow}
-          screens={screens}
+          screens={previewItems.filter((item): item is typeof screens[number] => Boolean(item.evidence))}
           activeIndex={previewIndex}
-          activeMode={previewMode}
+          activeMode={previewVariant === 'public' ? 'screens' : previewMode}
           platform={platform}
           sourceAppName={sourceAppName}
           sourceAppIconUrl={sourceAppIconUrl}
@@ -363,6 +379,15 @@ export function FlowCard({
           onClose={closePreview}
           onOpenSourceApp={openSourceAppFromPreview}
           iconTooltips={iconTooltips}
+          previewVariant={previewVariant === 'public' ? 'public' : 'full'}
+          totalScreenCount={screenCount}
+          fullAccessLabel={fullAccessLabel}
+          onRequestFullAccess={onRequestFullAccess
+            ? () => {
+              closePreview();
+              onRequestFullAccess();
+            }
+            : undefined}
         />
       ) : null}
     </>
