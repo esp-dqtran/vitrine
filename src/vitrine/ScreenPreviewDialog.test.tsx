@@ -13,6 +13,9 @@ const screen: Screen = {
   platform: 'ios',
   description: 'An observed Amazon Shopping order detail screen.',
   url: '/media/order-detail.png',
+  sourceUrl: 'https://www.amazon.com/orders/42',
+  capturedAt: '2026-08-01T12:00:00.000Z',
+  confidence: 0.93,
 };
 
 test('renders a Mobbin-style app screen viewer with identity, navigation, actions, and metadata', () => {
@@ -41,6 +44,10 @@ test('renders a Mobbin-style app screen viewer with identity, navigation, action
   assert.doesNotMatch(html, /aria-label="More screen actions"/);
   assert.match(html, /iOS \(393×852\)/);
   assert.match(html, />More info</);
+  assert.match(html, /aria-label="Evidence trust details"/);
+  assert.match(html, />93%</);
+  assert.match(html, />Not assessed</);
+  assert.match(html, />Correct this evidence</);
 });
 
 test('shows the complete web capture in the wide preview frame', () => {

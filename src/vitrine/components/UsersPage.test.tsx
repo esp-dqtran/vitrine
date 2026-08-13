@@ -289,8 +289,10 @@ test("reflows the member row on a phone against a cell that exists", () => {
   );
 });
 
-test("makes the filter and row actions primary controls", () => {
+test("uses the shared selected-filter control for members and keeps row actions primary", () => {
   const source = readFileSync(new URL("./UserDirectory.tsx", import.meta.url), "utf8");
-  assert.match(source, /ariaLabel="Filter members"[\s\S]*?triggerVariant="primary"/);
+  assert.match(source, /ariaLabel=\{props\.filter === 'all' \? 'Filter members'/);
+  assert.match(source, /apps-filterbar__filter--selected/);
+  assert.match(source, /Clear member filter/);
   assert.match(source, /label: 'Actions',[^}]*variant: 'primary'/);
 });

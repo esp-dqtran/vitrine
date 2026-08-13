@@ -30,6 +30,7 @@ import {
   PlusIcon,
   PointerDefaultIcon,
   SearchIcon,
+  TrashIcon,
   UndoIcon,
   UnlockIcon,
 } from "@storybook/icons";
@@ -70,9 +71,12 @@ import {
 } from "../../designerCanvas.ts";
 import type { Platform } from "../../platformFromUrl.ts";
 import type { AppsDiscoveryScreenResult } from "../appsDiscovery.ts";
+import {
+  consumeCanvasScreenInsertBatch,
+  consumeCanvasScreenInsertIntent,
+} from "../canvasInsertIntent.ts";
 import type { FlowCatalogItem } from "../flowCatalogApi.ts";
 import { getResearchProject } from "../researchProjectsApi.ts";
-import { useResolvedThemeMode } from "../theme.tsx";
 import {
   DesignerCanvasApiError,
   getDesignerCanvas,
@@ -92,7 +96,7 @@ import {
   projectCanvasAssetUrl,
   uploadProjectCanvasAsset,
 } from "../projectCanvasAssets.ts";
-import { navigate } from "../router.ts";
+import { navigate, routeToPath, updateLocation } from "../router.ts";
 import { ProjectAccessButton } from "./ProjectAccessDialog.tsx";
 import { useApplicationToast } from "./ApplicationToast.tsx";
 import {
@@ -195,6 +199,7 @@ const canvasMediaMimeTypeSet = new Set([
 const canvasSource = "https://astryx.design";
 // Keep the rendered board opaque so Excalidraw can composite every scene element.
 const canvasSceneBackground = "#f7f8fa";
+const canvasTheme = "light" as const;
 const stickyNoteSize = 240;
 const canvasDocumentWidth = 760;
 const canvasDocumentHeight = 1_080;
@@ -372,6 +377,13 @@ interface CanvasStampOption {
   id: CanvasStampId;
   label: string;
   asset: string;
+}
+
+interface CanvasStampEntrance {
+  id: string;
+  stamp: CanvasStampOption;
+  x: number;
+  y: number;
 }
 
 const canvasStampOptions: readonly CanvasStampOption[] = [
@@ -1688,7 +1700,8 @@ function stickyNoteReferenceForElement(
       // as Excalidraw's inline editor.
       textAlign:
         textElement?.type === "text" &&
-        (textElement.textAlign === "center" || textElement.textAlign === "right")
+        (textElement.textAlign === "center" ||
+          textElement.textAlign === "right")
           ? textElement.textAlign
           : "left",
     },
@@ -2671,13 +2684,13 @@ const saveStateIcons: Record<CanvasSaveState, IconName> = {
   unavailable: "error",
 };
 
-const blankCanvas = (theme: "light" | "dark"): ExcalidrawProjectSnapshot => ({
+const blankCanvas = (): ExcalidrawProjectSnapshot => ({
   type: "excalidraw",
   version: 2,
   source: canvasSource,
   elements: [],
   appState: {
-    theme,
+    theme: canvasTheme,
     viewBackgroundColor: canvasSceneBackground,
     gridModeEnabled: true,
     gridSize: 20,
@@ -2689,14 +2702,13 @@ const blankCanvas = (theme: "light" | "dark"): ExcalidrawProjectSnapshot => ({
 
 function withCanvasPresentation(
   snapshot: ExcalidrawProjectSnapshot,
-  theme: "light" | "dark",
 ): ExcalidrawProjectSnapshot {
   return {
     ...snapshot,
     comments: normalizeDesignerCanvasComments(snapshot.comments),
     appState: {
       ...snapshot.appState,
-      theme,
+      theme: canvasTheme,
       viewBackgroundColor: canvasSceneBackground,
       gridModeEnabled: true,
       gridSize: 20,
@@ -2705,12 +2717,9 @@ function withCanvasPresentation(
   };
 }
 
-function usesCanvasPresentation(
-  snapshot: ExcalidrawProjectSnapshot,
-  theme: "light" | "dark",
-): boolean {
+function usesCanvasPresentation(snapshot: ExcalidrawProjectSnapshot): boolean {
   return (
-    snapshot.appState.theme === theme &&
+    snapshot.appState.theme === canvasTheme &&
     snapshot.appState.viewBackgroundColor === canvasSceneBackground &&
     snapshot.appState.gridModeEnabled === true &&
     snapshot.appState.gridSize === 20 &&
@@ -2772,12 +2781,14 @@ function canvasObjectFocusBounds(
      line instead of drifting away from it. */
   const renderedBounds = selected.map((element) => {
     const freeLine = canvasFreeLineReferenceForElement(element);
-    return freeLine ?? {
-      x: element.x,
-      y: element.y,
-      width: element.width,
-      height: element.height,
-    };
+    return (
+      freeLine ?? {
+        x: element.x,
+        y: element.y,
+        width: element.width,
+        height: element.height,
+      }
+    );
   });
   const left = Math.min(...renderedBounds.map((bounds) => bounds.x));
   const top = Math.min(...renderedBounds.map((bounds) => bounds.y));
@@ -2844,12 +2855,21 @@ const canvasSaveKey = (snapshot: ExcalidrawProjectSnapshot): string => {
  */
 function canvasMutationKey(
   elements: readonly ExcalidrawElement[],
-  appState: Pick<Partial<AppState>, "gridModeEnabled" | "gridSize" | "gridStep" | "theme" | "viewBackgroundColor">,
+  appState: Pick<
+    Partial<AppState>,
+    | "gridModeEnabled"
+    | "gridSize"
+    | "gridStep"
+    | "theme"
+    | "viewBackgroundColor"
+  >,
   files: BinaryFiles,
 ): string {
   const fileRevisions = Object.entries(files)
     .sort(([left], [right]) => left.localeCompare(right))
-    .map(([id, file]) => `${id}:${file.version ?? 0}:${file.dataURL?.length ?? 0}`)
+    .map(
+      ([id, file]) => `${id}:${file.version ?? 0}:${file.dataURL?.length ?? 0}`,
+    )
     .join("|");
   return [
     hashElementsVersion(elements),
@@ -2878,6 +2898,11 @@ function canvasMediaFetchUrl(source: string): string {
   const url = new URL(source, window.location.origin);
   if (
     url.origin === window.location.origin &&
+    url.pathname.startsWith("/api/media/")
+  ) {
+    url.searchParams.set("delivery", "inline");
+  } else if (
+    url.origin === window.location.origin &&
     (url.pathname.startsWith("/api/preview-media/") ||
       url.pathname.startsWith("/api/flows/media/"))
   ) {
@@ -2889,16 +2914,18 @@ function canvasMediaFetchUrl(source: string): string {
 export function ProjectPlayground({
   projectId,
   canvasId,
+  canvasInsertToken,
   userId,
   userName,
 }: {
   projectId: string;
   canvasId?: string;
+  canvasInsertToken?: string;
   userId: string | number;
   userName: string;
 }) {
-  const resolvedTheme = useResolvedThemeMode();
   const [saveState, setSaveState] = useState<CanvasSaveState>("loading");
+  const [editorReady, setEditorReady] = useState(false);
   const [saveErrorMessage, setSaveErrorMessage] = useState("");
   const [collaborationStatus, setCollaborationStatus] =
     useState<DesignerCanvasCollaborationStatus>("connecting");
@@ -2920,6 +2947,9 @@ export function ProjectPlayground({
     x: number;
     y: number;
   }>();
+  const [stampEntrances, setStampEntrances] = useState<
+    readonly CanvasStampEntrance[]
+  >([]);
   const [widgetsLauncherOpen, setWidgetsLauncherOpen] = useState(false);
   const [widgetsLauncherQuery, setWidgetsLauncherQuery] = useState("");
   const [widgetsLauncherTab, setWidgetsLauncherTab] =
@@ -3033,9 +3063,19 @@ export function ProjectPlayground({
   >([]);
   const [documentPlacement, setDocumentPlacement] = useState(false);
   const documentPlacementRef = useRef(false);
+  const stampEntranceTimersRef = useRef<Set<number>>(new Set());
   useEffect(() => {
     documentPlacementRef.current = documentPlacement;
   }, [documentPlacement]);
+  useEffect(
+    () => () => {
+      for (const timer of stampEntranceTimersRef.current) {
+        window.clearTimeout(timer);
+      }
+      stampEntranceTimersRef.current.clear();
+    },
+    [],
+  );
   const [canvasDocuments, setCanvasDocuments] = useState<
     readonly AstryxCanvasDocumentReference[]
   >([]);
@@ -3115,7 +3155,9 @@ export function ProjectPlayground({
   const collaboratorSyncFrameRef = useRef<number | undefined>(undefined);
   const remotePatchFrameRef = useRef<number | undefined>(undefined);
   const pendingRemotePatchesRef = useRef<DesignerCanvasScenePatch[]>([]);
-  const pendingRemoteSceneRef = useRef<ExcalidrawProjectSnapshot | undefined>(undefined);
+  const pendingRemoteSceneRef = useRef<ExcalidrawProjectSnapshot | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     const canvas =
@@ -3240,7 +3282,9 @@ export function ProjectPlayground({
       }
       editor.updateScene({
         elements,
-        appState: { selectedElementIds: editor.getAppState().selectedElementIds },
+        appState: {
+          selectedElementIds: editor.getAppState().selectedElementIds,
+        },
         captureUpdate: CaptureUpdateAction.NEVER,
       });
     });
@@ -3249,7 +3293,11 @@ export function ProjectPlayground({
   const applyRemoteScene = useCallback((value: unknown) => {
     if (!isExcalidrawSnapshot(value)) return;
     const editor = editorRef.current;
-    if (!editor || canvasPointerDownRef.current || canvasTextEditingRef.current) {
+    if (
+      !editor ||
+      canvasPointerDownRef.current ||
+      canvasTextEditingRef.current
+    ) {
       pendingRemoteSceneRef.current = value;
       return;
     }
@@ -3468,8 +3516,7 @@ export function ProjectPlayground({
       const remote = isExcalidrawSnapshot(canvas.snapshot)
         ? canvas.snapshot
         : undefined;
-      const sourceSnapshot =
-        remote ?? readLocalCanvas() ?? blankCanvas(resolvedTheme);
+      const sourceSnapshot = remote ?? readLocalCanvas() ?? blankCanvas();
       /* Catalog assets use `asset:<uuid>` as both Excalidraw file ID and
          project asset ID. Remember their compact storage path when opening an
          older board that still has base64 bytes in its saved document. */
@@ -3481,16 +3528,13 @@ export function ProjectPlayground({
           );
         }
       });
-      const snapshot = withCanvasPresentation(
-        {
-          ...sourceSnapshot,
-          files: await resolveCanvasAssetDataUrls(
-            sourceSnapshot.files,
-            sourceSnapshot.elements,
-          ),
-        },
-        resolvedTheme,
-      );
+      const snapshot = withCanvasPresentation({
+        ...sourceSnapshot,
+        files: await resolveCanvasAssetDataUrls(
+          sourceSnapshot.files,
+          sourceSnapshot.elements,
+        ),
+      });
       canvasCommentsRef.current = snapshot.comments;
       if (activeRef.current) setCanvasComments(snapshot.comments);
       lastCanvasMutationKeyRef.current = canvasMutationKey(
@@ -3501,7 +3545,7 @@ export function ProjectPlayground({
       writeLocalCanvas(snapshot);
       if (
         !remote ||
-        !usesCanvasPresentation(remote, resolvedTheme) ||
+        !usesCanvasPresentation(remote) ||
         canvasSaveKey(snapshot) !== canvasSaveKey(sourceSnapshot)
       ) {
         // The board is ready to render; do not hold its initial paint behind
@@ -3516,8 +3560,7 @@ export function ProjectPlayground({
       return { ...snapshot, scrollToContent: true };
     } catch (error) {
       const snapshot = withCanvasPresentation(
-        readLocalCanvas() ?? blankCanvas(resolvedTheme),
-        resolvedTheme,
+        readLocalCanvas() ?? blankCanvas(),
       );
       lastQueuedSnapshotKeyRef.current = canvasSaveKey(snapshot);
       lastCanvasMutationKeyRef.current = canvasMutationKey(
@@ -3545,7 +3588,7 @@ export function ProjectPlayground({
   useEffect(() => {
     editorRef.current?.updateScene({
       appState: {
-        theme: resolvedTheme,
+        theme: canvasTheme,
         viewBackgroundColor: canvasSceneBackground,
         gridModeEnabled: true,
       },
@@ -4061,7 +4104,10 @@ export function ProjectPlayground({
         .map((element) => {
           const direct = stickyNoteReferenceForElement(element, elements);
           if (direct) return direct;
-          const contained = stickyNoteReferenceForTextElement(element, elements);
+          const contained = stickyNoteReferenceForTextElement(
+            element,
+            elements,
+          );
           if (contained) return contained;
           const containerId = (element as { containerId?: string | null })
             .containerId;
@@ -4170,29 +4216,34 @@ export function ProjectPlayground({
                   originalText: text,
                 } as Partial<ExcalidrawElement>);
           });
-      const richStickyTextElements = normalizedStickyListElements.map((element) => {
-        if (element.type !== "text") return element;
-        const containerId = (element as { containerId?: string | null })
-          .containerId;
-        const container = containerId
-          ? elements.find((candidate) => candidate.id === containerId)
-          : undefined;
-        const sticky = container
-          ? stickyNoteReferenceForElement(container, elements)
-          : undefined;
-        const plainText = containerId
-          ? undefined
-          : canvasTextReferenceForElement(element);
-        const richTextFormat = sticky?.format ?? plainText?.format;
-        if (!richTextFormat || !stickyNoteUsesRichTextOverlay(richTextFormat)) {
-          return element;
-        }
-        const nextOpacity =
-          appState.editingTextElement?.id === element.id ? 100 : 0;
-        return element.opacity === nextOpacity
-          ? element
-          : withCanvasElementUpdate(element, { opacity: nextOpacity });
-      });
+      const richStickyTextElements = normalizedStickyListElements.map(
+        (element) => {
+          if (element.type !== "text") return element;
+          const containerId = (element as { containerId?: string | null })
+            .containerId;
+          const container = containerId
+            ? elements.find((candidate) => candidate.id === containerId)
+            : undefined;
+          const sticky = container
+            ? stickyNoteReferenceForElement(container, elements)
+            : undefined;
+          const plainText = containerId
+            ? undefined
+            : canvasTextReferenceForElement(element);
+          const richTextFormat = sticky?.format ?? plainText?.format;
+          if (
+            !richTextFormat ||
+            !stickyNoteUsesRichTextOverlay(richTextFormat)
+          ) {
+            return element;
+          }
+          const nextOpacity =
+            appState.editingTextElement?.id === element.id ? 100 : 0;
+          return element.opacity === nextOpacity
+            ? element
+            : withCanvasElementUpdate(element, { opacity: nextOpacity });
+        },
+      );
       /* Keep imported and already-created Sticky Notes on the same FigJam
        * baseline as new notes. This runs only outside inline editing so a
        * position correction never moves the user's live caret. Preserve the
@@ -4210,10 +4261,7 @@ export function ProjectPlayground({
                 )
               : undefined;
             const sticky = container
-              ? stickyNoteReferenceForElement(
-                  container,
-                  richStickyTextElements,
-                )
+              ? stickyNoteReferenceForElement(container, richStickyTextElements)
               : undefined;
             if (!sticky || !container) return element;
             const position = stickyNoteBoundTextPosition(container, element);
@@ -4328,7 +4376,13 @@ export function ProjectPlayground({
       if (collaborationRef.current === collaboration)
         collaborationRef.current = null;
     };
-  }, [applyRemotePatches, applyRemoteScene, canvasId, projectId, scheduleCanvasCollaborators]);
+  }, [
+    applyRemotePatches,
+    applyRemoteScene,
+    canvasId,
+    projectId,
+    scheduleCanvasCollaborators,
+  ]);
 
   const canvasImagePlacement = useCallback((width: number, height: number) => {
     const editor = editorRef.current;
@@ -4436,7 +4490,7 @@ export function ProjectPlayground({
       dropPoint?: { x: number; y: number },
     ) => {
       const editor = editorRef.current;
-      if (!editor) return;
+      if (!editor) return false;
       const { app, screen } = result;
       setInsertingScreenKey(projectScreenKey(result));
       setScreenMessage("");
@@ -4453,7 +4507,7 @@ export function ProjectPlayground({
           setScreenMessage(
             "This screen image could not be loaded. Try another reference.",
           );
-          return;
+          return false;
         }
         /* A drop names its own spot; repeated clicks cascade images to the right
          instead of stacking every newly chosen screen in the same place. */
@@ -4522,14 +4576,101 @@ export function ProjectPlayground({
             ? `Added ${app.app} to the canvas.`
             : `Added ${app.app} to the canvas locally. Sign in to sync it.`,
         );
+        return true;
       } catch (error) {
         setScreenMessage((error as Error).message);
+        return false;
       } finally {
         setInsertingScreenKey(undefined);
       }
     },
     [canvasImagePlacement, projectId, showToast],
   );
+
+  const handledCanvasInsertTokenRef = useRef<string>();
+  useEffect(() => {
+    const handoffKey = `${canvasInsertToken}:${projectId}:${canvasId}`;
+    if (
+      !canvasId ||
+      !canvasInsertToken ||
+      handledCanvasInsertTokenRef.current === handoffKey ||
+      !editorReady ||
+      !loadedRef.current ||
+      saveState === "loading" ||
+      saveState === "unavailable"
+    )
+      return;
+
+    handledCanvasInsertTokenRef.current = handoffKey;
+    void (async () => {
+      let batch: ReturnType<typeof consumeCanvasScreenInsertBatch>;
+      try {
+        /* React's development mount check recreates Excalidraw once. Defer the
+           one-time handoff until that editor has settled so we never capture
+           the short-lived first API instance. */
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 500));
+        for (let attempt = 0; attempt < 50; attempt += 1) {
+          if (editorRef.current && loadedRef.current) break;
+          await new Promise<void>((resolve) => window.setTimeout(resolve, 50));
+        }
+        let items;
+        batch = consumeCanvasScreenInsertBatch(canvasInsertToken, {
+          projectId,
+          canvasId,
+        });
+        try {
+          items =
+            batch?.items ?? consumeCanvasScreenInsertIntent(canvasInsertToken);
+        } catch (error) {
+          showToast((error as Error).message);
+          items = [];
+        }
+        let inserted = 0;
+        for (const item of items) {
+          const result: AppsDiscoveryScreenResult = {
+            app: {
+              id: item.appId,
+              app: item.appName,
+              categories: [],
+              accent: "#0d99ff",
+              totalScreens: 1,
+              screens: [item.screen],
+            },
+            screen: item.screen,
+          };
+          if (await insertCatalogScreen(result)) inserted += 1;
+        }
+        if (inserted === 0) {
+          showToast("This screen could not be added to the canvas.");
+        }
+      } finally {
+        const destination = batch?.next;
+        updateLocation(
+          routeToPath(
+            destination
+              ? {
+                  name: "project-canvas",
+                  projectId: destination.projectId,
+                  canvasId: destination.canvasId,
+                  insert: canvasInsertToken,
+                }
+              : { name: "project-canvas", projectId, canvasId },
+          ),
+          {
+            replace: true,
+          },
+        );
+      }
+    })();
+  }, [
+    canvasId,
+    canvasInsertToken,
+    editorReady,
+    insertCatalogScreen,
+    projectId,
+    saveState,
+    showToast,
+  ]);
 
   const insertCanvasDataReference = useCallback(
     async (
@@ -5303,6 +5444,13 @@ export function ProjectPlayground({
     const editor = editorRef.current;
     if (!editor) return;
     const created = createCanvasTableElements({ x, y });
+    const table = canvasTableCellMetadata(created[0]);
+    if (table) {
+      canvasTableCellSelectionRef.current = {
+        tableId: table.tableId,
+        cellIds: created.map((element) => element.id),
+      };
+    }
     editor.updateScene({
       elements: [...editor.getSceneElements(), ...created],
       appState: {
@@ -5313,6 +5461,54 @@ export function ProjectPlayground({
     });
   }, []);
 
+  const animateCanvasStampEntrance = useCallback(
+    (
+      stamp: CanvasStampOption,
+      x: number,
+      y: number,
+      elementIds: readonly string[],
+    ) => {
+      const id = crypto.randomUUID();
+      const elementIdSet = new Set(elementIds);
+      setStampEntrances((current) => [...current, { id, stamp, x, y }]);
+
+      let timer: number;
+      timer = window.setTimeout(() => {
+        stampEntranceTimersRef.current.delete(timer);
+        const editor = editorRef.current;
+        if (editor) {
+          editor.updateScene({
+            elements: editor
+              .getSceneElements()
+              .map((element) =>
+                elementIdSet.has(element.id)
+                  ? withCanvasElementUpdate(element, { opacity: 100 })
+                  : element,
+              ),
+            captureUpdate: CaptureUpdateAction.NEVER,
+          });
+        }
+        setStampEntrances((current) =>
+          current.filter((entrance) => entrance.id !== id),
+        );
+      }, 320);
+      stampEntranceTimersRef.current.add(timer);
+    },
+    [],
+  );
+
+  const canvasStampEntranceStyle = useCallback(
+    (entrance: CanvasStampEntrance) =>
+      ({
+        left: `${(entrance.x + canvasViewport.scrollX) * canvasViewport.zoom}px`,
+        top: `${(entrance.y + canvasViewport.scrollY) * canvasViewport.zoom}px`,
+        width: `${40 * canvasViewport.zoom}px`,
+        height: `${40 * canvasViewport.zoom}px`,
+        fontSize: `${18 * canvasViewport.zoom}px`,
+      }) as CSSProperties,
+    [canvasViewport],
+  );
+
   const insertCanvasStampAt = useCallback(
     async (
       x: number,
@@ -5322,12 +5518,28 @@ export function ProjectPlayground({
     ) => {
       const editor = editorRef.current;
       if (!editor) return;
+      const shouldAnimate = !window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
       if (stamp.id === "profile") {
         const created = createCanvasProfileStampElements({ x, y, userName });
+        const animated = shouldAnimate
+          ? created.map((element) =>
+              withCanvasElementUpdate(element, { opacity: 0 }),
+            )
+          : created;
         editor.updateScene({
-          elements: [...editor.getSceneElements(), ...created],
+          elements: [...editor.getSceneElements(), ...animated],
           appState: { selectedElementIds },
         });
+        if (shouldAnimate) {
+          animateCanvasStampEntrance(
+            stamp,
+            x,
+            y,
+            animated.map((element) => element.id),
+          );
+        }
         return;
       }
       try {
@@ -5339,17 +5551,23 @@ export function ProjectPlayground({
           created: Date.now(),
         };
         const image = createCanvasStampElement({ x, y, fileId, stamp });
+        const animated = shouldAnimate
+          ? withCanvasElementUpdate(image, { opacity: 0 })
+          : image;
         editor.addFiles([file]);
         editor.updateScene({
-          elements: [...editor.getSceneElements(), image],
+          elements: [...editor.getSceneElements(), animated],
           appState: { selectedElementIds },
         });
+        if (shouldAnimate) {
+          animateCanvasStampEntrance(stamp, x, y, [animated.id]);
+        }
       } catch (error) {
         showToast(`Could not add ${stamp.label.toLowerCase()} stamp.`);
         console.error(error);
       }
     },
-    [showToast, userName],
+    [animateCanvasStampEntrance, showToast, userName],
   );
 
   const handleCanvasPlacementPointerUp = useCallback(
@@ -5592,9 +5810,7 @@ export function ProjectPlayground({
       editor?.updateScene({
         appState: {
           currentItemStrokeColor: isFilledShape ? "#757575" : color,
-          currentItemBackgroundColor: isFilledShape
-            ? color
-            : "transparent",
+          currentItemBackgroundColor: isFilledShape ? color : "transparent",
           currentItemFillStyle: "solid",
           currentItemStrokeWidth: 2,
           currentItemRoughness: 0,
@@ -6411,7 +6627,9 @@ export function ProjectPlayground({
        * the note's visible text as well as its saved format.
        */
       if (note.textElementId) {
-        const container = elements.find((element) => element.id === note.elementId);
+        const container = elements.find(
+          (element) => element.id === note.elementId,
+        );
         const textElement = elements.find(
           (element) => element.id === note.textElementId,
         );
@@ -6848,6 +7066,33 @@ export function ProjectPlayground({
     },
     [],
   );
+
+  const deleteSelectedCanvasTable = useCallback(() => {
+    const editor = editorRef.current;
+    const table = selectedCanvasTable;
+    if (!editor || !table) return;
+    const cellIds = new Set(table.cells.map((cell) => cell.elementId));
+    const textIds = new Set(
+      table.cells.flatMap((cell) =>
+        cell.textElementId ? [cell.textElementId] : [],
+      ),
+    );
+    canvasTableCellSelectionRef.current = undefined;
+    setSelectedCanvasTable(undefined);
+    editor.updateScene({
+      elements: editor.getSceneElements().map((element) =>
+        cellIds.has(element.id) || textIds.has(element.id)
+          ? withCanvasElementUpdate(element, { isDeleted: true })
+          : element,
+      ),
+      appState: {
+        editingGroupId: null,
+        selectedGroupIds: {},
+        selectedElementIds: {},
+      },
+      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+    });
+  }, [selectedCanvasTable]);
 
   const addCanvasTableAxis = useCallback(
     (axis: "row" | "column") => {
@@ -7694,7 +7939,18 @@ export function ProjectPlayground({
             project={{
               id: projectId,
               title: references?.title ?? "Designer project",
+              shareUrl: canvasId
+                ? new URL(
+                    routeToPath({
+                      name: "project-canvas",
+                      projectId,
+                      canvasId,
+                    }),
+                    window.location.origin,
+                  ).href
+                : undefined,
             }}
+            label="Share"
             emphasized
           />
         </div>
@@ -7733,7 +7989,7 @@ export function ProjectPlayground({
               ? " project-playground__canvas--table-selected"
               : ""
           }${
-          selectedCanvasShape
+            selectedCanvasShape
               ? " project-playground__canvas--shape-selected"
               : ""
           }${
@@ -7800,15 +8056,16 @@ export function ProjectPlayground({
           <Excalidraw
             key={projectId}
             name={references?.title ?? "Astryx designer canvas"}
-            theme={resolvedTheme}
+            theme={canvasTheme}
             gridModeEnabled
             viewModeEnabled={canvasReadOnly}
             initialData={initialData}
             excalidrawAPI={(api) => {
               editorRef.current = api;
+              setEditorReady(true);
               api.updateScene({
                 appState: {
-                  theme: resolvedTheme,
+                  theme: canvasTheme,
                   viewBackgroundColor: canvasSceneBackground,
                   gridModeEnabled: true,
                 },
@@ -7838,6 +8095,27 @@ export function ProjectPlayground({
               tools: { image: true },
             }}
           />
+          {stampEntrances.map((entrance) => (
+            <div
+              key={entrance.id}
+              className="project-canvas-stamp-entrance"
+              aria-hidden="true"
+              style={canvasStampEntranceStyle(entrance)}
+            >
+              {entrance.stamp.id === "profile" ? (
+                <span
+                  className="project-canvas-stamp-entrance__profile"
+                  style={{
+                    backgroundColor: canvasCollaboratorColor(userName).background,
+                  }}
+                >
+                  {canvasCollaboratorInitials(userName).slice(0, 1)}
+                </span>
+              ) : (
+                <img src={entrance.stamp.asset} alt="" />
+              )}
+            </div>
+          ))}
           {stampPlacement && stampPreviewPoint ? (
             stampPlacement.id === "profile" ? (
               <span
@@ -8400,7 +8678,9 @@ export function ProjectPlayground({
                 onClick={() => setShapeColorPickerOpen((open) => !open)}
               >
                 <span
-                  style={{ "--shape-color": activeCanvasToolColor } as CSSProperties}
+                  style={
+                    { "--shape-color": activeCanvasToolColor } as CSSProperties
+                  }
                 />
                 <ChevronSmallDownIcon aria-hidden="true" />
               </button>
@@ -8730,7 +9010,9 @@ export function ProjectPlayground({
             className="project-sticky-note-composer"
             style={stickyComposerStyle}
             aria-label={
-              stickyDraft.editingElementId ? "Edit sticky note" : "New sticky note"
+              stickyDraft.editingElementId
+                ? "Edit sticky note"
+                : "New sticky note"
             }
           >
             <div className="project-sticky-note-composer__surface">
@@ -8814,6 +9096,15 @@ export function ProjectPlayground({
                   </button>
                 </>
               ) : null}
+              <CanvasObjectToolbarDivider />
+              <button
+                type="button"
+                className="project-object-toolbar__action"
+                aria-label="Delete table"
+                onClick={deleteSelectedCanvasTable}
+              >
+                <TrashIcon />
+              </button>
             </ProjectObjectToolbar>
             <div
               className="project-canvas-table-controls"
@@ -8928,619 +9219,647 @@ export function ProjectPlayground({
         {canvasOverlayHost &&
           createPortal(
             <>
-        {selectedStickyNote && !selectedCanvasTable && !canvasReadOnly && (
-          <ProjectObjectToolbar
-            color={selectedStickyNote.color}
-            format={selectedStickyNote.format}
-            collaboration={selectedStickyNote.collaboration}
-            style={stickyToolbarStyle}
-            objectLabel="Sticky note"
-            colorAriaLabel="Change color"
-            showTextAlignment={false}
-            showTextStyling
-            onColorChange={(color) => updateSelectedStickyNote({ color })}
-            onFormatChange={(format) => updateSelectedStickyNote({ format })}
-            onCollaborationChange={(collaboration) =>
-              updateSelectedStickyNote({ collaboration })
-            }
-          />
-        )}
-        {selectedCanvasText &&
-          !selectedCanvasTable &&
-          !selectedStickyNote &&
-          !canvasReadOnly && (
-            <ProjectObjectToolbar
-              color={selectedCanvasText.color}
-              colorOptions={canvasTextColors}
-              format={selectedCanvasText.format}
-              style={canvasTextToolbarStyle}
-              objectLabel="Text"
-              showTextStyling
-              onColorChange={(color) => updateSelectedCanvasText({ color })}
-              onFormatChange={(format) => updateSelectedCanvasText({ format })}
-            />
-          )}
-        {selectedCanvasFreeLine &&
-        !markerDrawing &&
-        !selectedCanvasTable &&
-        !selectedStickyNote &&
-        !selectedCanvasText &&
-        !selectedCanvasShape &&
-        !selectedResearchFrame &&
-        !canvasReadOnly ? (
-          <ProjectSelectionToolbar
-            style={canvasFreeLineToolbarStyle}
-            className="project-free-line-object-toolbar"
-            ariaLabel="Free line properties"
-          >
-            {(
-              [
-                { mode: "marker", label: "Marker" },
-                { mode: "highlighter", label: "Highlighter" },
-              ] as const
-            ).map((tool) => (
-              <button
-                key={tool.mode}
-                type="button"
-                className="project-object-toolbar__action project-free-line-object-toolbar__tool"
-                aria-label={tool.label}
-                aria-pressed={selectedFreeLineToolbarMode === tool.mode}
-                onClick={() =>
-                  updateSelectedCanvasFreeLine({ mode: tool.mode })
-                }
-              >
-                <img
-                  src={coloredFigJamFreehandToolIcon(
-                    tool.mode,
-                    selectedCanvasFreeLine.color,
-                  )}
-                  alt=""
-                />
-              </button>
-            ))}
-            <CanvasObjectToolbarDivider />
-            {(["thin", "thick"] as const).map((weight) => (
-              <button
-                key={weight}
-                type="button"
-                className="project-object-toolbar__action project-free-line-object-toolbar__weight"
-                aria-label={weight === "thin" ? "Thin" : "Thick"}
-                aria-pressed={selectedCanvasFreeLine.weight === weight}
-                onClick={() => updateSelectedCanvasFreeLine({ weight })}
-              >
-                <img
-                  src={weight === "thin" ? thinStrokeIcon : thickStrokeIcon}
-                  alt=""
-                />
-              </button>
-            ))}
-            <CanvasObjectToolbarDivider />
-            <ProjectObjectToolbarColorPicker
-              color={selectedCanvasFreeLine.color}
-              className="project-free-line-object-toolbar__color-control"
-              panelClassName="project-free-line-object-toolbar__color-panel"
-              colorOptions={
-                selectedFreeLineToolbarMode === "highlighter"
-                  ? canvasHighlighterToolbarColors
-                  : canvasTextColors
-              }
-              ariaLabel="Change free line color"
-              panelLabel="Free line colors"
-              open={selectedFreeLineColorOpen}
-              onOpenChange={setSelectedFreeLineColorOpen}
-              onColorChange={(color) =>
-                updateSelectedCanvasFreeLine({ color: color.fill })
-              }
-            />
-          </ProjectSelectionToolbar>
-        ) : null}
-        {selectedCanvasShape &&
-        selectedShapeOption &&
-        !selectedCanvasTable &&
-        !selectedStickyNote &&
-        !selectedCanvasText &&
-        !canvasReadOnly ? (
-          <ProjectSelectionToolbar
-            style={canvasShapeToolbarStyle}
-            className="project-shape-object-toolbar"
-          >
-            <div className="project-object-toolbar__control project-shape-object-toolbar__shape-control">
-              <button
-                type="button"
-                className="project-shape-object-toolbar__shape-trigger"
-                aria-label={`Shape, ${selectedShapeOption.label.toLowerCase()}`}
-                aria-expanded={selectedShapePanel === "shape"}
-                onClick={() =>
-                  setSelectedShapePanel((panel) =>
-                    panel === "shape" ? undefined : "shape",
-                  )
-                }
-              >
-                <ShapeLibraryGlyph
-                  shape={selectedShapeOption}
-                  color={selectedShapeDisplayColor}
-                />
-                <ChevronSmallDownIcon aria-hidden="true" />
-              </button>
-              {selectedShapePanel === "shape" ? (
-                <div
-                  className="project-shape-object-toolbar__panel project-shape-object-toolbar__shape-panel"
-                  role="dialog"
-                  aria-label="Change shape"
-                >
-                  {canvasShapeOptions
-                    .filter(
-                      (shape) =>
-                        shape.id === "rectangle" ||
-                        shape.id === "ellipse" ||
-                        shape.id === "diamond",
-                    )
-                    .map((shape) => (
-                      <button
-                        key={shape.id}
-                        type="button"
-                        aria-label={shape.label}
-                        aria-pressed={selectedCanvasShape.type === shape.id}
-                        onClick={() => {
-                          updateSelectedCanvasShape({
-                            type: shape.id as CanvasSelectableShapeType,
-                          });
-                          setActiveShapeOptionId(shape.id);
-                          setSelectedShapePanel(undefined);
-                        }}
-                      >
-                        <ShapeLibraryGlyph
-                          shape={shape}
-                          color={selectedShapeDisplayColor}
-                        />
-                      </button>
-                    ))}
-                </div>
-              ) : null}
-            </div>
-            <CanvasObjectToolbarDivider />
-            <div className="project-object-toolbar__control project-shape-object-toolbar__fill-control">
-              <button
-                type="button"
-                className="project-object-toolbar__color-trigger"
-                aria-label="Change color"
-                aria-expanded={selectedShapePanel === "fill"}
-                onClick={() =>
-                  setSelectedShapePanel((panel) =>
-                    panel === "fill" ? undefined : "fill",
-                  )
-                }
-              >
-                <span
-                  className="project-object-toolbar__color-dot"
-                  style={
-                    {
-                      "--object-color": selectedShapeDisplayColor,
-                    } as CSSProperties
-                  }
-                />
-                <ChevronSmallDownIcon aria-hidden="true" />
-              </button>
-              {selectedShapePanel === "fill" ? (
-                <div
-                  className="project-shape-object-toolbar__panel project-shape-object-toolbar__color-panel"
-                  role="dialog"
-                  aria-label="Shape fill"
-                >
-                  <div
-                    className="project-shape-object-toolbar__modes"
-                    role="radiogroup"
-                    aria-label="Fill style"
-                  >
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={
-                        selectedCanvasShape.fillColor !== "transparent" &&
-                        selectedCanvasShape.opacity === 100
-                      }
-                      onClick={() =>
-                        updateSelectedCanvasShape({
-                          fillColor: selectedShapeDisplayColor,
-                          opacity: 100,
-                        })
-                      }
-                    >
-                      Fill
-                    </button>
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={
-                        selectedCanvasShape.fillColor !== "transparent" &&
-                        selectedCanvasShape.opacity < 100
-                      }
-                      onClick={() =>
-                        updateSelectedCanvasShape({
-                          fillColor: selectedShapeDisplayColor,
-                          opacity: 50,
-                        })
-                      }
-                    >
-                      Transparent
-                    </button>
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={
-                        selectedCanvasShape.fillColor === "transparent"
-                      }
-                      onClick={() =>
-                        updateSelectedCanvasShape({
-                          fillColor: "transparent",
-                          opacity: 100,
-                        })
-                      }
-                    >
-                      No fill
-                    </button>
-                  </div>
-                  <div className="project-shape-object-toolbar__swatches">
-                    {canvasShapeColors.map((color) => (
-                      <button
-                        key={color.value}
-                        type="button"
-                        aria-label={`Use ${color.label} fill`}
-                        aria-pressed={
-                          selectedCanvasShape.fillColor === color.value
-                        }
-                        style={
-                          { "--shape-color": color.value } as CSSProperties
-                        }
-                        onClick={() => {
-                          updateSelectedCanvasShape({
-                            fillColor: color.value,
-                            opacity: 100,
-                          });
-                          setSelectedShapePanel(undefined);
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-            <div className="project-object-toolbar__control project-shape-object-toolbar__line-control">
-              <button
-                type="button"
-                className="project-shape-object-toolbar__line-trigger"
-                aria-label="Line style"
-                aria-expanded={selectedShapePanel === "line"}
-                onClick={() =>
-                  setSelectedShapePanel((panel) =>
-                    panel === "line" ? undefined : "line",
-                  )
-                }
-              >
-                <img
-                  src={figjamConnectorNoEndpointsIcon}
-                  alt=""
-                  aria-hidden="true"
-                />
-                <ChevronSmallDownIcon aria-hidden="true" />
-              </button>
-              {selectedShapePanel === "line" ? (
-                <div
-                  className="project-shape-object-toolbar__panel project-shape-object-toolbar__line-panel"
-                  role="dialog"
-                  aria-label="Line style"
-                >
-                  <div
-                    className="project-shape-object-toolbar__modes"
-                    role="radiogroup"
-                    aria-label="Stroke style"
-                  >
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={
-                        selectedCanvasShape.strokeColor !== "transparent" &&
-                        selectedCanvasShape.strokeStyle === "solid"
-                      }
-                      onClick={() =>
-                        updateSelectedCanvasShape({
-                          strokeColor:
-                            selectedCanvasShape.strokeColor === "transparent"
-                              ? selectedShapeDisplayColor
-                              : selectedCanvasShape.strokeColor,
-                          strokeStyle: "solid",
-                        })
-                      }
-                    >
-                      Solid
-                    </button>
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={
-                        selectedCanvasShape.strokeColor !== "transparent" &&
-                        selectedCanvasShape.strokeStyle === "dashed"
-                      }
-                      onClick={() =>
-                        updateSelectedCanvasShape({
-                          strokeColor:
-                            selectedCanvasShape.strokeColor === "transparent"
-                              ? selectedShapeDisplayColor
-                              : selectedCanvasShape.strokeColor,
-                          strokeStyle: "dashed",
-                        })
-                      }
-                    >
-                      Dashed
-                    </button>
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={
-                        selectedCanvasShape.strokeColor === "transparent"
-                      }
-                      onClick={() =>
-                        updateSelectedCanvasShape({
-                          strokeColor: "transparent",
-                        })
-                      }
-                    >
-                      None
-                    </button>
-                  </div>
-                  <div className="project-shape-object-toolbar__swatches">
-                    {canvasShapeColors.map((color) => (
-                      <button
-                        key={color.value}
-                        type="button"
-                        aria-label={`Use ${color.label} stroke`}
-                        aria-pressed={
-                          selectedCanvasShape.strokeColor === color.value
-                        }
-                        style={
-                          { "--shape-color": color.value } as CSSProperties
-                        }
-                        onClick={() => {
-                          updateSelectedCanvasShape({
-                            strokeColor: color.value,
-                            strokeStyle: "solid",
-                          });
-                          setSelectedShapePanel(undefined);
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </ProjectSelectionToolbar>
-        ) : null}
-        {selectedResearchFrame &&
-        !selectedStickyNote &&
-        !selectedCanvasText &&
-        !selectedCanvasShape &&
-        !canvasReadOnly ? (
-          <ProjectSelectionToolbar
-            style={sectionToolbarStyle}
-            className="project-section-object-toolbar"
-          >
-            <div className="project-object-toolbar__control project-section-object-toolbar__color-control">
-              <button
-                type="button"
-                className="project-object-toolbar__action project-section-object-toolbar__color-trigger"
-                aria-label={
-                  selectedResearchFrame.hidden
-                    ? "Can't edit while hidden"
-                    : "Change color"
-                }
-                aria-expanded={selectedFramePanel === "color"}
-                disabled={selectedResearchFrame.hidden}
-                onClick={() =>
-                  setSelectedFramePanel((panel) =>
-                    panel === "color" ? undefined : "color",
-                  )
-                }
-              >
-                <span
-                  className="project-section-object-toolbar__color-swatch"
-                  style={
-                    {
-                      "--section-color": selectedResearchFrame.fillColor,
-                    } as CSSProperties
-                  }
-                />
-                <ChevronSmallDownIcon aria-hidden="true" />
-              </button>
-              {selectedFramePanel === "color" ? (
-                <div
-                  className="project-section-object-toolbar__panel project-section-object-toolbar__palette"
-                  role="dialog"
-                  aria-label="Section color"
-                >
-                  {canvasSectionColors.map((color) => (
-                    <button
-                      key={color.value}
-                      type="button"
-                      aria-label={color.label}
-                      aria-pressed={
-                        selectedResearchFrame.fillColor === color.value
-                      }
-                      style={
-                        { "--section-color": color.value } as CSSProperties
-                      }
-                      onClick={() => {
-                        updateSelectedResearchFrame({
-                          fillColor: color.value,
-                        });
-                        setSelectedFramePanel(undefined);
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : null}
-            </div>
-            <div className="project-object-toolbar__control project-section-object-toolbar__line-control">
-              <button
-                type="button"
-                className="project-object-toolbar__action project-section-object-toolbar__line-trigger"
-                aria-label="Line style"
-                aria-expanded={selectedFramePanel === "line"}
-                onClick={() =>
-                  setSelectedFramePanel((panel) =>
-                    panel === "line" ? undefined : "line",
-                  )
-                }
-              >
-                <span
-                  className="project-section-object-toolbar__line-sample"
-                  data-style={selectedResearchFrame.strokeStyle}
-                  style={
-                    {
-                      "--section-stroke": selectedResearchFrame.strokeColor,
-                    } as CSSProperties
-                  }
-                />
-                <ChevronSmallDownIcon aria-hidden="true" />
-              </button>
-              {selectedFramePanel === "line" ? (
-                <div
-                  className="project-section-object-toolbar__panel project-section-object-toolbar__line-panel"
-                  role="dialog"
-                  aria-label="Section line style"
-                >
-                  <div
-                    className="project-section-object-toolbar__line-modes"
-                    role="radiogroup"
-                    aria-label="Stroke style"
-                  >
-                    {(["solid", "dashed", "none"] as const).map((style) => (
-                      <button
-                        key={style}
-                        type="button"
-                        role="radio"
-                        aria-checked={
-                          selectedResearchFrame.strokeStyle === style
-                        }
-                        onClick={() =>
-                          updateSelectedResearchFrame({ strokeStyle: style })
-                        }
-                      >
-                        {style[0].toUpperCase() + style.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="project-section-object-toolbar__palette">
-                    {canvasSectionColors.map((color) => (
-                      <button
-                        key={color.value}
-                        type="button"
-                        aria-label={`${color.label} line`}
-                        aria-pressed={
-                          selectedResearchFrame.strokeColor === color.value
-                        }
-                        style={
-                          { "--section-color": color.value } as CSSProperties
-                        }
-                        onClick={() =>
-                          updateSelectedResearchFrame({
-                            strokeColor: color.value,
-                            strokeStyle:
-                              selectedResearchFrame.strokeStyle === "none"
-                                ? "solid"
-                                : selectedResearchFrame.strokeStyle,
-                          })
-                        }
-                      />
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-            <CanvasObjectToolbarDivider />
-            <div className="project-object-toolbar__control project-section-object-toolbar__rename-control">
-              <button
-                type="button"
-                className="project-object-toolbar__action"
-                aria-label="Rename section"
-                aria-expanded={selectedFramePanel === "rename"}
-                onClick={() =>
-                  setSelectedFramePanel((panel) =>
-                    panel === "rename" ? undefined : "rename",
-                  )
-                }
-              >
-                <EditIcon aria-hidden="true" />
-              </button>
-              {selectedFramePanel === "rename" ? (
-                <form
-                  className="project-section-object-toolbar__panel project-section-object-toolbar__rename-panel"
-                  aria-label="Rename section"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    const title = selectedFrameNameDraft.trim();
-                    if (title) updateSelectedResearchFrame({ title });
-                    setSelectedFramePanel(undefined);
-                  }}
-                >
-                  <TextInput
-                    label="Section name"
-                    value={selectedFrameNameDraft}
-                    onChange={setSelectedFrameNameDraft}
-                    autoFocus
+              {selectedStickyNote && !selectedCanvasTable && !canvasReadOnly && (
+                  <ProjectObjectToolbar
+                    color={selectedStickyNote.color}
+                    format={selectedStickyNote.format}
+                    collaboration={selectedStickyNote.collaboration}
+                    style={stickyToolbarStyle}
+                    objectLabel="Sticky note"
+                    colorAriaLabel="Change color"
+                    showTextAlignment={false}
+                    showTextStyling
+                    onColorChange={(color) => updateSelectedStickyNote({ color })}
+                    onFormatChange={(format) => updateSelectedStickyNote({ format })}
+                    onCollaborationChange={(collaboration) => updateSelectedStickyNote({ collaboration })}
                   />
-                  <button type="submit">Apply</button>
-                </form>
+                )}
+              {selectedCanvasText &&
+                !selectedCanvasTable &&
+                !selectedStickyNote &&
+                !canvasReadOnly && (
+                  <ProjectObjectToolbar
+                    color={selectedCanvasText.color}
+                    colorOptions={canvasTextColors}
+                    format={selectedCanvasText.format}
+                    style={canvasTextToolbarStyle}
+                    objectLabel="Text"
+                    showTextStyling
+                    onColorChange={(color) =>
+                      updateSelectedCanvasText({ color })
+                    }
+                    onFormatChange={(format) =>
+                      updateSelectedCanvasText({ format })
+                    }
+                  />
+                )}
+              {selectedCanvasFreeLine &&
+              !markerDrawing &&
+              !selectedCanvasTable &&
+              !selectedStickyNote &&
+              !selectedCanvasText &&
+              !selectedCanvasShape &&
+              !selectedResearchFrame &&
+              !canvasReadOnly ? (
+                <ProjectSelectionToolbar
+                  style={canvasFreeLineToolbarStyle}
+                  className="project-free-line-object-toolbar"
+                  ariaLabel="Free line properties"
+                >
+                  {(
+                    [
+                      { mode: "marker", label: "Marker" },
+                      { mode: "highlighter", label: "Highlighter" },
+                    ] as const
+                  ).map((tool) => (
+                    <button
+                      key={tool.mode}
+                      type="button"
+                      className="project-object-toolbar__action project-free-line-object-toolbar__tool"
+                      aria-label={tool.label}
+                      aria-pressed={selectedFreeLineToolbarMode === tool.mode}
+                      onClick={() =>
+                        updateSelectedCanvasFreeLine({ mode: tool.mode })
+                      }
+                    >
+                      <img
+                        src={coloredFigJamFreehandToolIcon(
+                          tool.mode,
+                          selectedCanvasFreeLine.color,
+                        )}
+                        alt=""
+                      />
+                    </button>
+                  ))}
+                  <CanvasObjectToolbarDivider />
+                  {(["thin", "thick"] as const).map((weight) => (
+                    <button
+                      key={weight}
+                      type="button"
+                      className="project-object-toolbar__action project-free-line-object-toolbar__weight"
+                      aria-label={weight === "thin" ? "Thin" : "Thick"}
+                      aria-pressed={selectedCanvasFreeLine.weight === weight}
+                      onClick={() => updateSelectedCanvasFreeLine({ weight })}
+                    >
+                      <img
+                        src={
+                          weight === "thin" ? thinStrokeIcon : thickStrokeIcon
+                        }
+                        alt=""
+                      />
+                    </button>
+                  ))}
+                  <CanvasObjectToolbarDivider />
+                  <ProjectObjectToolbarColorPicker
+                    color={selectedCanvasFreeLine.color}
+                    className="project-free-line-object-toolbar__color-control"
+                    panelClassName="project-free-line-object-toolbar__color-panel"
+                    colorOptions={
+                      selectedFreeLineToolbarMode === "highlighter"
+                        ? canvasHighlighterToolbarColors
+                        : canvasTextColors
+                    }
+                    ariaLabel="Change free line color"
+                    panelLabel="Free line colors"
+                    open={selectedFreeLineColorOpen}
+                    onOpenChange={setSelectedFreeLineColorOpen}
+                    onColorChange={(color) =>
+                      updateSelectedCanvasFreeLine({ color: color.fill })
+                    }
+                  />
+                </ProjectSelectionToolbar>
               ) : null}
-            </div>
-            <button
-              type="button"
-              className="project-object-toolbar__action"
-              aria-label={
-                selectedResearchFrame.hidden ? "Show section" : "Hide section"
-              }
-              aria-pressed={selectedResearchFrame.hidden}
-              onClick={() =>
-                updateSelectedResearchFrame({
-                  hidden: !selectedResearchFrame.hidden,
-                })
-              }
-            >
-              {selectedResearchFrame.hidden ? (
-                <EyeIcon aria-hidden="true" />
-              ) : (
-                <EyeCloseIcon aria-hidden="true" />
-              )}
-            </button>
-            <button
-              type="button"
-              className="project-object-toolbar__action"
-              aria-label={
-                selectedResearchFrame.locked ? "Unlock section" : "Lock section"
-              }
-              aria-pressed={selectedResearchFrame.locked}
-              onClick={() =>
-                updateSelectedResearchFrame({
-                  locked: !selectedResearchFrame.locked,
-                })
-              }
-            >
-              {selectedResearchFrame.locked ? (
-                <UnlockIcon aria-hidden="true" />
-              ) : (
-                <LockIcon aria-hidden="true" />
-              )}
-            </button>
-            <button
-              type="button"
-              className="project-object-toolbar__action"
-              aria-label="Section templates"
-              aria-expanded={researchFramesOpen}
-              onClick={() => setResearchFramesOpen((open) => !open)}
-            >
-              <GridIcon aria-hidden="true" />
-            </button>
-          </ProjectSelectionToolbar>
-        ) : null}
+              {selectedCanvasShape &&
+              selectedShapeOption &&
+              !selectedCanvasTable &&
+              !selectedStickyNote &&
+              !selectedCanvasText &&
+              !canvasReadOnly ? (
+                <ProjectSelectionToolbar
+                  style={canvasShapeToolbarStyle}
+                  className="project-shape-object-toolbar"
+                >
+                  <div className="project-object-toolbar__control project-shape-object-toolbar__shape-control">
+                    <button
+                      type="button"
+                      className="project-shape-object-toolbar__shape-trigger"
+                      aria-label={`Shape, ${selectedShapeOption.label.toLowerCase()}`}
+                      aria-expanded={selectedShapePanel === "shape"}
+                      onClick={() =>
+                        setSelectedShapePanel((panel) =>
+                          panel === "shape" ? undefined : "shape",
+                        )
+                      }
+                    >
+                      <ShapeLibraryGlyph
+                        shape={selectedShapeOption}
+                        color={selectedShapeDisplayColor}
+                      />
+                      <ChevronSmallDownIcon aria-hidden="true" />
+                    </button>
+                    {selectedShapePanel === "shape" ? (
+                      <div
+                        className="project-shape-object-toolbar__panel project-shape-object-toolbar__shape-panel"
+                        role="dialog"
+                        aria-label="Change shape"
+                      >
+                        {canvasShapeOptions
+                          .filter(
+                            (shape) =>
+                              shape.id === "rectangle" ||
+                              shape.id === "ellipse" ||
+                              shape.id === "diamond",
+                          )
+                          .map((shape) => (
+                            <button
+                              key={shape.id}
+                              type="button"
+                              aria-label={shape.label}
+                              aria-pressed={
+                                selectedCanvasShape.type === shape.id
+                              }
+                              onClick={() => {
+                                updateSelectedCanvasShape({
+                                  type: shape.id as CanvasSelectableShapeType,
+                                });
+                                setActiveShapeOptionId(shape.id);
+                                setSelectedShapePanel(undefined);
+                              }}
+                            >
+                              <ShapeLibraryGlyph
+                                shape={shape}
+                                color={selectedShapeDisplayColor}
+                              />
+                            </button>
+                          ))}
+                      </div>
+                    ) : null}
+                  </div>
+                  <CanvasObjectToolbarDivider />
+                  <div className="project-object-toolbar__control project-shape-object-toolbar__fill-control">
+                    <button
+                      type="button"
+                      className="project-object-toolbar__color-trigger"
+                      aria-label="Change color"
+                      aria-expanded={selectedShapePanel === "fill"}
+                      onClick={() =>
+                        setSelectedShapePanel((panel) =>
+                          panel === "fill" ? undefined : "fill",
+                        )
+                      }
+                    >
+                      <span
+                        className="project-object-toolbar__color-dot"
+                        style={
+                          {
+                            "--object-color": selectedShapeDisplayColor,
+                          } as CSSProperties
+                        }
+                      />
+                      <ChevronSmallDownIcon aria-hidden="true" />
+                    </button>
+                    {selectedShapePanel === "fill" ? (
+                      <div
+                        className="project-shape-object-toolbar__panel project-shape-object-toolbar__color-panel"
+                        role="dialog"
+                        aria-label="Shape fill"
+                      >
+                        <div
+                          className="project-shape-object-toolbar__modes"
+                          role="radiogroup"
+                          aria-label="Fill style"
+                        >
+                          <button
+                            type="button"
+                            role="radio"
+                            aria-checked={
+                              selectedCanvasShape.fillColor !== "transparent" &&
+                              selectedCanvasShape.opacity === 100
+                            }
+                            onClick={() =>
+                              updateSelectedCanvasShape({
+                                fillColor: selectedShapeDisplayColor,
+                                opacity: 100,
+                              })
+                            }
+                          >
+                            Fill
+                          </button>
+                          <button
+                            type="button"
+                            role="radio"
+                            aria-checked={
+                              selectedCanvasShape.fillColor !== "transparent" &&
+                              selectedCanvasShape.opacity < 100
+                            }
+                            onClick={() =>
+                              updateSelectedCanvasShape({
+                                fillColor: selectedShapeDisplayColor,
+                                opacity: 50,
+                              })
+                            }
+                          >
+                            Transparent
+                          </button>
+                          <button
+                            type="button"
+                            role="radio"
+                            aria-checked={
+                              selectedCanvasShape.fillColor === "transparent"
+                            }
+                            onClick={() =>
+                              updateSelectedCanvasShape({
+                                fillColor: "transparent",
+                                opacity: 100,
+                              })
+                            }
+                          >
+                            No fill
+                          </button>
+                        </div>
+                        <div className="project-shape-object-toolbar__swatches">
+                          {canvasShapeColors.map((color) => (
+                            <button
+                              key={color.value}
+                              type="button"
+                              aria-label={`Use ${color.label} fill`}
+                              aria-pressed={
+                                selectedCanvasShape.fillColor === color.value
+                              }
+                              style={
+                                {
+                                  "--shape-color": color.value,
+                                } as CSSProperties
+                              }
+                              onClick={() => {
+                                updateSelectedCanvasShape({
+                                  fillColor: color.value,
+                                  opacity: 100,
+                                });
+                                setSelectedShapePanel(undefined);
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="project-object-toolbar__control project-shape-object-toolbar__line-control">
+                    <button
+                      type="button"
+                      className="project-shape-object-toolbar__line-trigger"
+                      aria-label="Line style"
+                      aria-expanded={selectedShapePanel === "line"}
+                      onClick={() =>
+                        setSelectedShapePanel((panel) =>
+                          panel === "line" ? undefined : "line",
+                        )
+                      }
+                    >
+                      <img
+                        src={figjamConnectorNoEndpointsIcon}
+                        alt=""
+                        aria-hidden="true"
+                      />
+                      <ChevronSmallDownIcon aria-hidden="true" />
+                    </button>
+                    {selectedShapePanel === "line" ? (
+                      <div
+                        className="project-shape-object-toolbar__panel project-shape-object-toolbar__line-panel"
+                        role="dialog"
+                        aria-label="Line style"
+                      >
+                        <div
+                          className="project-shape-object-toolbar__modes"
+                          role="radiogroup"
+                          aria-label="Stroke style"
+                        >
+                          <button
+                            type="button"
+                            role="radio"
+                            aria-checked={
+                              selectedCanvasShape.strokeColor !==
+                                "transparent" &&
+                              selectedCanvasShape.strokeStyle === "solid"
+                            }
+                            onClick={() =>
+                              updateSelectedCanvasShape({
+                                strokeColor:
+                                  selectedCanvasShape.strokeColor ===
+                                  "transparent"
+                                    ? selectedShapeDisplayColor
+                                    : selectedCanvasShape.strokeColor,
+                                strokeStyle: "solid",
+                              })
+                            }
+                          >
+                            Solid
+                          </button>
+                          <button
+                            type="button"
+                            role="radio"
+                            aria-checked={
+                              selectedCanvasShape.strokeColor !==
+                                "transparent" &&
+                              selectedCanvasShape.strokeStyle === "dashed"
+                            }
+                            onClick={() =>
+                              updateSelectedCanvasShape({
+                                strokeColor:
+                                  selectedCanvasShape.strokeColor ===
+                                  "transparent"
+                                    ? selectedShapeDisplayColor
+                                    : selectedCanvasShape.strokeColor,
+                                strokeStyle: "dashed",
+                              })
+                            }
+                          >
+                            Dashed
+                          </button>
+                          <button
+                            type="button"
+                            role="radio"
+                            aria-checked={
+                              selectedCanvasShape.strokeColor === "transparent"
+                            }
+                            onClick={() =>
+                              updateSelectedCanvasShape({
+                                strokeColor: "transparent",
+                              })
+                            }
+                          >
+                            None
+                          </button>
+                        </div>
+                        <div className="project-shape-object-toolbar__swatches">
+                          {canvasShapeColors.map((color) => (
+                            <button
+                              key={color.value}
+                              type="button"
+                              aria-label={`Use ${color.label} stroke`}
+                              aria-pressed={
+                                selectedCanvasShape.strokeColor === color.value
+                              }
+                              style={
+                                {
+                                  "--shape-color": color.value,
+                                } as CSSProperties
+                              }
+                              onClick={() => {
+                                updateSelectedCanvasShape({
+                                  strokeColor: color.value,
+                                  strokeStyle: "solid",
+                                });
+                                setSelectedShapePanel(undefined);
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                </ProjectSelectionToolbar>
+              ) : null}
+              {selectedResearchFrame &&
+              !selectedStickyNote &&
+              !selectedCanvasText &&
+              !selectedCanvasShape &&
+              !canvasReadOnly ? (
+                <ProjectSelectionToolbar
+                  style={sectionToolbarStyle}
+                  className="project-section-object-toolbar"
+                >
+                  <div className="project-object-toolbar__control project-section-object-toolbar__color-control">
+                    <button
+                      type="button"
+                      className="project-object-toolbar__action project-section-object-toolbar__color-trigger"
+                      aria-label={
+                        selectedResearchFrame.hidden
+                          ? "Can't edit while hidden"
+                          : "Change color"
+                      }
+                      aria-expanded={selectedFramePanel === "color"}
+                      disabled={selectedResearchFrame.hidden}
+                      onClick={() =>
+                        setSelectedFramePanel((panel) =>
+                          panel === "color" ? undefined : "color",
+                        )
+                      }
+                    >
+                      <span
+                        className="project-section-object-toolbar__color-swatch"
+                        style={
+                          {
+                            "--section-color": selectedResearchFrame.fillColor,
+                          } as CSSProperties
+                        }
+                      />
+                      <ChevronSmallDownIcon aria-hidden="true" />
+                    </button>
+                    {selectedFramePanel === "color" ? (
+                      <div
+                        className="project-section-object-toolbar__panel project-section-object-toolbar__palette"
+                        role="dialog"
+                        aria-label="Section color"
+                      >
+                        {canvasSectionColors.map((color) => (
+                          <button
+                            key={color.value}
+                            type="button"
+                            aria-label={color.label}
+                            aria-pressed={
+                              selectedResearchFrame.fillColor === color.value
+                            }
+                            style={
+                              {
+                                "--section-color": color.value,
+                              } as CSSProperties
+                            }
+                            onClick={() => {
+                              updateSelectedResearchFrame({
+                                fillColor: color.value,
+                              });
+                              setSelectedFramePanel(undefined);
+                            }}
+                          />
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="project-object-toolbar__control project-section-object-toolbar__line-control">
+                    <button
+                      type="button"
+                      className="project-object-toolbar__action project-section-object-toolbar__line-trigger"
+                      aria-label="Line style"
+                      aria-expanded={selectedFramePanel === "line"}
+                      onClick={() =>
+                        setSelectedFramePanel((panel) =>
+                          panel === "line" ? undefined : "line",
+                        )
+                      }
+                    >
+                      <span
+                        className="project-section-object-toolbar__line-sample"
+                        data-style={selectedResearchFrame.strokeStyle}
+                        style={
+                          {
+                            "--section-stroke":
+                              selectedResearchFrame.strokeColor,
+                          } as CSSProperties
+                        }
+                      />
+                      <ChevronSmallDownIcon aria-hidden="true" />
+                    </button>
+                    {selectedFramePanel === "line" ? (
+                      <div
+                        className="project-section-object-toolbar__panel project-section-object-toolbar__line-panel"
+                        role="dialog"
+                        aria-label="Section line style"
+                      >
+                        <div
+                          className="project-section-object-toolbar__line-modes"
+                          role="radiogroup"
+                          aria-label="Stroke style"
+                        >
+                          {(["solid", "dashed", "none"] as const).map(
+                            (style) => (
+                              <button
+                                key={style}
+                                type="button"
+                                role="radio"
+                                aria-checked={
+                                  selectedResearchFrame.strokeStyle === style
+                                }
+                                onClick={() =>
+                                  updateSelectedResearchFrame({
+                                    strokeStyle: style,
+                                  })
+                                }
+                              >
+                                {style[0].toUpperCase() + style.slice(1)}
+                              </button>
+                            ),
+                          )}
+                        </div>
+                        <div className="project-section-object-toolbar__palette">
+                          {canvasSectionColors.map((color) => (
+                            <button
+                              key={color.value}
+                              type="button"
+                              aria-label={`${color.label} line`}
+                              aria-pressed={
+                                selectedResearchFrame.strokeColor ===
+                                color.value
+                              }
+                              style={
+                                {
+                                  "--section-color": color.value,
+                                } as CSSProperties
+                              }
+                              onClick={() =>
+                                updateSelectedResearchFrame({
+                                  strokeColor: color.value,
+                                  strokeStyle:
+                                    selectedResearchFrame.strokeStyle === "none"
+                                      ? "solid"
+                                      : selectedResearchFrame.strokeStyle,
+                                })
+                              }
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                  <CanvasObjectToolbarDivider />
+                  <div className="project-object-toolbar__control project-section-object-toolbar__rename-control">
+                    <button
+                      type="button"
+                      className="project-object-toolbar__action"
+                      aria-label="Rename section"
+                      aria-expanded={selectedFramePanel === "rename"}
+                      onClick={() =>
+                        setSelectedFramePanel((panel) =>
+                          panel === "rename" ? undefined : "rename",
+                        )
+                      }
+                    >
+                      <EditIcon aria-hidden="true" />
+                    </button>
+                    {selectedFramePanel === "rename" ? (
+                      <form
+                        className="project-section-object-toolbar__panel project-section-object-toolbar__rename-panel"
+                        aria-label="Rename section"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          const title = selectedFrameNameDraft.trim();
+                          if (title) updateSelectedResearchFrame({ title });
+                          setSelectedFramePanel(undefined);
+                        }}
+                      >
+                        <TextInput
+                          label="Section name"
+                          value={selectedFrameNameDraft}
+                          onChange={setSelectedFrameNameDraft}
+                          autoFocus
+                        />
+                        <button type="submit">Apply</button>
+                      </form>
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    className="project-object-toolbar__action"
+                    aria-label={
+                      selectedResearchFrame.hidden
+                        ? "Show section"
+                        : "Hide section"
+                    }
+                    aria-pressed={selectedResearchFrame.hidden}
+                    onClick={() =>
+                      updateSelectedResearchFrame({
+                        hidden: !selectedResearchFrame.hidden,
+                      })
+                    }
+                  >
+                    {selectedResearchFrame.hidden ? (
+                      <EyeIcon aria-hidden="true" />
+                    ) : (
+                      <EyeCloseIcon aria-hidden="true" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className="project-object-toolbar__action"
+                    aria-label={
+                      selectedResearchFrame.locked
+                        ? "Unlock section"
+                        : "Lock section"
+                    }
+                    aria-pressed={selectedResearchFrame.locked}
+                    onClick={() =>
+                      updateSelectedResearchFrame({
+                        locked: !selectedResearchFrame.locked,
+                      })
+                    }
+                  >
+                    {selectedResearchFrame.locked ? (
+                      <UnlockIcon aria-hidden="true" />
+                    ) : (
+                      <LockIcon aria-hidden="true" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className="project-object-toolbar__action"
+                    aria-label="Section templates"
+                    aria-expanded={researchFramesOpen}
+                    onClick={() => setResearchFramesOpen((open) => !open)}
+                  >
+                    <GridIcon aria-hidden="true" />
+                  </button>
+                </ProjectSelectionToolbar>
+              ) : null}
             </>,
             canvasOverlayHost,
           )}

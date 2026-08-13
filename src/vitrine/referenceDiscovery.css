@@ -187,6 +187,14 @@
   }
 }
 
+.account-menu-trigger.astryx-button {
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+}
+
 @media (max-width: 720px) {
   .reference-discovery-nav.reference-detail-top-nav {
     height: 96px;
@@ -336,29 +344,83 @@
   display: none;
 }
 
-.reference-search-trigger__typed-label {
-  display: inline-flex;
-  align-items: center;
+.reference-search-trigger__animated-label {
+  position: relative;
+  display: block;
+  height: 20px;
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
+  perspective: 160px;
+  text-align: left;
+  white-space: nowrap;
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 28px), transparent 100%);
+}
+
+.astryx-input-text span:has(> .reference-search-trigger__animated-label) {
+  display: block;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.reference-search-trigger__line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  display: inline-flex;
+  max-width: 100%;
+  overflow: hidden;
+  transform: translateY(-50%);
   white-space: nowrap;
 }
 
-.reference-search-trigger__caret {
-  width: 1px;
-  height: 1.1em;
-  margin-left: 2px;
-  background: currentColor;
-  animation: reference-search-caret 900ms steps(1, end) infinite;
+.reference-search-trigger__letter {
+  display: inline-block;
+  min-width: 0.16em;
+  transform-origin: 50% 55%;
+  will-change: transform, opacity;
 }
 
-@keyframes reference-search-caret {
-  50% { opacity: 0; }
+.reference-search-trigger__line--enter .reference-search-trigger__letter {
+  animation: reference-search-letter-in 520ms cubic-bezier(0.22, 0.86, 0, 1) both;
+  animation-delay: calc(var(--letter-index) * 18ms);
+}
+
+.reference-search-trigger__line--leave .reference-search-trigger__letter {
+  animation: reference-search-letter-out 420ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  animation-delay: calc(var(--letter-index) * 14ms);
+}
+
+@keyframes reference-search-letter-in {
+  from {
+    opacity: 0;
+    transform: translateY(115%) rotateX(-72deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg);
+  }
+}
+
+@keyframes reference-search-letter-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-115%) rotateX(72deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .reference-search-trigger__caret {
+  .reference-search-trigger__line--enter .reference-search-trigger__letter,
+  .reference-search-trigger__line--leave .reference-search-trigger__letter {
     animation: none;
+  }
+
+  .reference-search-trigger__line--leave {
+    opacity: 0;
   }
 }
 
@@ -613,6 +675,16 @@
     grid-column: 3;
   }
 
+  .reference-discovery-nav__actions .account-controls {
+    width: 44px;
+  }
+
+  .account-menu-trigger.astryx-button {
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+  }
+
   .reference-discovery-nav__actions > button {
     display: none;
   }
@@ -784,7 +856,8 @@
   white-space: nowrap;
 }
 
-.apps-filterbar .apps-filterbar__filter .apps-filterbar__filter-button {
+:is(.apps-filterbar, .reference-detail__tab-controls, .quick-search__quick-filters, .advanced-search-active-filters, .admin-users-filter-control) .apps-filterbar__filter .apps-filterbar__filter-button,
+:is(.apps-filterbar, .reference-detail__tab-controls, .quick-search__quick-filters, .advanced-search-active-filters, .admin-users-filter-control) .apps-filterbar__filter .apps-filterbar__filter-label {
   border: 0 !important;
   box-shadow: none !important;
 }
@@ -792,12 +865,12 @@
 /* Unselected discovery dropdowns use the same shared outlined trigger as
  * App Detail. Selected filters remain composite pills with a separate clear
  * action, and the platform control keeps its primary treatment. */
-.apps-filterbar .apps-filterbar__filter:not(.apps-filterbar__filter--platform):not(.apps-filterbar__filter--selected) {
+:is(.apps-filterbar, .reference-detail__tab-controls, .quick-search__quick-filters, .advanced-search-active-filters, .admin-users-filter-control) .apps-filterbar__filter:not(.apps-filterbar__filter--platform):not(.apps-filterbar__filter--selected) {
   border: 0;
   background: transparent;
 }
 
-.apps-filterbar .apps-filterbar__filter:not(.apps-filterbar__filter--platform):not(.apps-filterbar__filter--selected) .apps-filterbar__filter-button.apps-filterbar__filter-button {
+:is(.apps-filterbar, .reference-detail__tab-controls, .quick-search__quick-filters, .advanced-search-active-filters, .admin-users-filter-control) .apps-filterbar__filter:not(.apps-filterbar__filter--platform):not(.apps-filterbar__filter--selected) .apps-filterbar__filter-button.apps-filterbar__filter-button {
   height: var(--vitrine-control-height) !important;
   min-height: var(--vitrine-control-height) !important;
   border: 1px solid var(--vitrine-color-border-emphasized) !important;
@@ -823,6 +896,25 @@
   padding-right: 6px !important;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.apps-filterbar__filter-label {
+  min-width: 0;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  overflow: hidden;
+  color: var(--reference-chrome-text);
+  font-size: 14px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.apps-filterbar__filter--selected .apps-filterbar__filter-label {
+  max-width: 250px;
+  padding-right: 6px;
 }
 
 .apps-filterbar__selection-count {

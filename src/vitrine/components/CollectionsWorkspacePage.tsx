@@ -1,9 +1,8 @@
 import { Spinner } from './Spinner.tsx';
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Button,
   EmptyState,
-  TextArea,
   TextInput,
 } from "@astryxdesign/core";
 import {
@@ -14,19 +13,22 @@ import {
   GridIcon,
   StackedIcon,
 } from "@storybook/icons";
-import type { CollectionItem, ResearchCollection } from "../../db.ts";
+import type { ResearchCollection } from "../../db.ts";
 import {
   createCollection,
   deleteCollection,
+  listCollectionScreens,
   listCollections,
   removeCollectionItem,
-  updateCollectionItemNotes,
+  type CollectionScreenView,
 } from "../researchApi.ts";
 import { navigate } from "../router.ts";
+import { ReferenceGalleryGrid, ReferenceGallerySection } from "./ReferenceGallerySection.tsx";
+import { ReferenceDetailShell } from "./ReferenceDetailShell.tsx";
+import { ScreenGridCard } from "./ScreenGridCard.tsx";
+import { ScreenPreviewDialog } from "./ScreenPreviewDialog.tsx";
 import { useWorkspaceChrome } from "./WorkspaceChromeContext.tsx";
-import { workspaceNav } from "./workspaceNav.tsx";
-
-type CollectionFilter = "all" | "screen" | "flow";
+import { projectRailNav } from "./projectRailNav.tsx";
 
 function updatedLabel(value: string): string {
   const timestamp = Date.parse(value);
@@ -47,50 +49,7 @@ function updatedLabel(value: string): string {
 
 function itemCountLabel(collection: ResearchCollection): string {
   const screens = collection.items.filter(({ kind }) => kind === "screen").length;
-  const flows = collection.items.filter(({ kind }) => kind === "flow").length;
-  const parts = [];
-  if (screens) parts.push(`${screens} ${screens === 1 ? "screen" : "screens"}`);
-  if (flows) parts.push(`${flows} ${flows === 1 ? "flow" : "flows"}`);
-  return parts.join(" · ") || "No screens or flows yet";
-}
-
-function openCollectionItem(item: CollectionItem) {
-  navigate({
-    name: "app",
-    appId: item.app,
-    section: item.kind === "flow" ? "flows" : "screens",
-    ...(item.kind === "flow"
-      ? { flow: item.reference_id }
-      : { evidence: item.reference_id }),
-  });
-}
-
-function CollectionNotes({
-  collectionId,
-  item,
-  onSaved,
-}: {
-  collectionId: number;
-  item: CollectionItem;
-  onSaved(): Promise<void>;
-}) {
-  const [value, setValue] = useState(item.notes);
-  return (
-    <TextArea
-      label={`Notes for ${item.title}`}
-      isLabelHidden
-      value={value}
-      onChange={setValue}
-      placeholder="Add a research note…"
-      rows={3}
-      width="100%"
-      onBlur={async () => {
-        if (value === item.notes) return;
-        await updateCollectionItemNotes(collectionId, item.id, value);
-        await onSaved();
-      }}
-    />
-  );
+  return screens ? `${screens} ${screens === 1 ? "screen" : "screens"}` : "No screens saved yet";
 }
 
 /*
@@ -177,12 +136,14 @@ export function CollectionsWorkspacePage({
   onChange(collections: ResearchCollection[]): void;
   onUpgrade(): void;
 }) {
-  const [filter, setFilter] = useState<CollectionFilter>("all");
   const [menuOpen, setMenuOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [selectedScreens, setSelectedScreens] = useState<CollectionScreenView[] | null>(null);
+  const [screensError, setScreensError] = useState("");
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -198,13 +159,49 @@ export function CollectionsWorkspacePage({
     ? collections.find(({ id }) => id === collectionId)
     : undefined;
   const visibleCollections = collections;
-  const visibleItems = useMemo(() => {
-    if (!selected) return [];
-    return filter === "all"
-      ? selected.items
-      : selected.items.filter(({ kind }) => kind === filter);
-  }, [filter, selected]);
   const canCreate = plan === "pro" || collections.length === 0;
+
+  useEffect(() => {
+    let active = true;
+    if (!selected) {
+      setSelectedScreens(null);
+      setScreensError("");
+      return () => { active = false; };
+    }
+    setSelectedScreens(null);
+    setScreensError("");
+    setPreviewIndex(null);
+    void listCollectionScreens(selected.id)
+      .then(({ screens }) => { if (active) setSelectedScreens(screens); })
+      .catch((cause) => { if (active) setScreensError((cause as Error).message); });
+    return () => { active = false; };
+  }, [selected?.id]);
+
+  useEffect(() => {
+    if (previewIndex === null || !selectedScreens) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPreviewIndex(null);
+      else if (event.key === "ArrowLeft" && previewIndex > 0) setPreviewIndex(previewIndex - 1);
+      else if (event.key === "ArrowRight" && previewIndex < selectedScreens.length - 1) setPreviewIndex(previewIndex + 1);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [previewIndex, selectedScreens]);
+
+  const removeSavedScreen = async (itemId: number) => {
+    if (!selected || busy) return;
+    setBusy(true);
+    setScreensError("");
+    try {
+      await removeCollectionItem(selected.id, itemId);
+      setSelectedScreens((screens) => screens?.filter((screen) => screen.itemId !== itemId) ?? null);
+      await refresh();
+    } catch (cause) {
+      setScreensError((cause as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const create = async () => {
     const name = newName.trim();
@@ -238,8 +235,25 @@ export function CollectionsWorkspacePage({
         initial: "P",
         onSelect: () => navigate({ name: "projects" }),
       },
-      nav: workspaceNav({ active: "collections" }),
-      onBrandSelect: () => navigate({ name: "projects" }),
+      nav: {
+        primaryLabel: "Workspace",
+        primaryHeading: "Workspace",
+        globalActions: [{
+          label: "Apps",
+          icon: <GridIcon aria-hidden="true" />,
+          onSelect: () => navigate({ name: "apps" }),
+        }],
+        primaryActions: projectRailNav({
+          collectionsActive: true,
+          onOpenProjects: () => navigate({ name: "projects" }),
+        }),
+        settings: {
+          label: "Settings",
+          icon: <CogIcon aria-hidden="true" />,
+          onSelect: () => navigate({ name: "settings-billing" }),
+        },
+      },
+      onBrandSelect: () => navigate({ name: "apps" }),
       drawer: (
       <div
         className={`projects-workspace__drawer-layer${menuOpen ? " is-open" : ""}`}
@@ -280,24 +294,101 @@ export function CollectionsWorkspacePage({
         </div>
       ),
     }),
-    [menuOpen, selected?.id],
+    [collections, menuOpen, selected?.id],
   );
+
+  if (collectionId) {
+    const previewScreen = previewIndex === null ? undefined : selectedScreens?.[previewIndex];
+    const galleryLayout: "web-screens" | "mobile-screens" | undefined = selectedScreens?.every(({ screen }) => screen.platform === "web")
+      ? "web-screens"
+      : selectedScreens?.every(({ screen }) => screen.platform === "ios" || screen.platform === "android")
+        ? "mobile-screens"
+        : undefined;
+
+    return (
+      <>
+      <ReferenceDetailShell
+        dataDetailKind="app"
+        className="app-detail collection-detail"
+        title={selected?.name ?? "Collection"}
+        identityKey={`collection-${collectionId}`}
+        identityLabel={selected?.name?.[0]?.toUpperCase() ?? "C"}
+        accent="var(--color-background-muted)"
+        metadata={[]}
+        tabs={[]}
+        activeTab="screens"
+        onTabChange={() => undefined}
+        bodyPadding="32px 40px 72px"
+        loading={!loaded || Boolean(selected && selectedScreens === null && !screensError)}
+      >
+        {!loaded ? (
+          <div className="projects-workspace__loading"><Spinner size="lg" /></div>
+        ) : !selected ? (
+          <EmptyState
+            title="Collection not found"
+            description="This collection may have been removed or is no longer available."
+            actions={<Button label="Back to Collections" variant="primary" onClick={() => navigate({ name: "collections" })} />}
+          />
+        ) : screensError ? (
+          <div role="alert"><EmptyState title="Could not load saved screens" description={screensError} /></div>
+        ) : selectedScreens === null ? (
+          <div className="projects-workspace__loading"><Spinner size="lg" /></div>
+        ) : selectedScreens.length ? (
+          <section className="collections-workspace__screens" aria-label="Saved screens">
+            <ReferenceGallerySection>
+              <ReferenceGalleryGrid minCardWidth={240} layout={galleryLayout}>
+                {selectedScreens.map((savedScreen, index) => (
+                  <div key={savedScreen.itemId} className={`app-detail--${savedScreen.screen.platform}`}>
+                    <ScreenGridCard
+                      screen={savedScreen.screen}
+                      appName={savedScreen.app}
+                      accent={savedScreen.accent}
+                      delay={Math.min(index * 0.04, 0.32)}
+                      onOpen={() => setPreviewIndex(index)}
+                      onRemove={() => void removeSavedScreen(savedScreen.itemId)}
+                      isRemoveDisabled={busy}
+                    />
+                  </div>
+                ))}
+              </ReferenceGalleryGrid>
+            </ReferenceGallerySection>
+          </section>
+        ) : (
+          <EmptyState
+            title="No screens saved yet"
+            description="Save screens from any App detail page and they will appear here."
+            actions={<Button label="Browse Apps" variant="primary" onClick={() => navigate({ name: "apps" })} />}
+          />
+        )}
+      </ReferenceDetailShell>
+      {previewScreen ? (
+        <ScreenPreviewDialog
+          key={previewScreen.itemId}
+          appName={previewScreen.app}
+          screen={previewScreen.screen}
+          index={previewIndex ?? 0}
+          total={selectedScreens?.length ?? 0}
+          canNavigateNext={Boolean(selectedScreens && previewIndex !== null && previewIndex < selectedScreens.length - 1)}
+          onClose={() => setPreviewIndex(null)}
+          onNavigate={setPreviewIndex}
+          appId={previewScreen.app}
+          collections={collections}
+          onCollectionsChange={onChange}
+          plan={plan}
+        />
+      ) : null}
+      </>
+    );
+  }
 
   return (
     <>
           <header className="projects-workspace__page-header">
             <div>
-              {selected ? (
-                <Button label="Back to Collections" variant="ghost" size="sm" className="collections-workspace__back" onClick={() => navigate({ name: "collections" })} />
-              ) : null}
-              <h1>{selected?.name ?? "Collections"}</h1>
-              <p>
-                {selected
-                  ? selected.description || "Saved screens and flows for your research."
-                  : "Keep useful screens and flows together in your personal workspace."}
-              </p>
+              <h1>Collections</h1>
+              <p>Keep useful screens and flows together in your personal workspace.</p>
             </div>
-            {!selected && visibleCollections.length > 0 ? (
+            {visibleCollections.length > 0 ? (
               <Button
                 variant="primary"
                 label="New collection"
@@ -326,62 +417,6 @@ export function CollectionsWorkspacePage({
 
           {!loaded ? (
             <div className="projects-workspace__loading"><Spinner size="lg" /></div>
-          ) : selected ? (
-            <>
-              <div className="collections-workspace__detail-toolbar" role="tablist" aria-label="Collection items">
-                {(["all", "screen", "flow"] as const).map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    role="tab"
-                    aria-selected={filter === value}
-                    className={filter === value ? "is-active" : ""}
-                    onClick={() => setFilter(value)}
-                  >
-                    {value === "all" ? "All" : value === "screen" ? "Screens" : "Flows"}
-                    <span>{value === "all" ? selected.items.length : selected.items.filter(({ kind }) => kind === value).length}</span>
-                  </button>
-                ))}
-              </div>
-              {visibleItems.length ? (
-                <div className="collections-workspace__items">
-                  {visibleItems.map((item) => (
-                    <article key={item.id} className="collections-workspace__item">
-                      <button type="button" className="collections-workspace__item-open" onClick={() => openCollectionItem(item)}>
-                        <span className="collections-workspace__item-icon" aria-hidden="true">
-                          {item.kind === "flow" ? <StackedIcon /> : <BookmarkHollowIcon />}
-                        </span>
-                        <span>
-                          <strong>{item.title}</strong>
-                          <small>{item.kind} · {item.app}</small>
-                        </span>
-                      </button>
-                      <Button
-                        label="Remove"
-                        variant="ghost"
-                        size="sm"
-                        clickAction={async () => {
-                          await removeCollectionItem(selected.id, item.id);
-                          await refresh();
-                        }}
-                      />
-                      <div className="collections-workspace__item-notes">
-                        {plan === "pro" ? (
-                          <CollectionNotes collectionId={selected.id} item={item} onSaved={refresh} />
-                        ) : (
-                          <button type="button" onClick={onUpgrade}>Upgrade to Pro to add notes</button>
-                        )}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <div className="projects-workspace__empty">
-                  <EmptyState title="No saved items here" description="Save screens or flows from the Apps library and they will appear in this collection." />
-                  <Button label="Browse Apps" variant="primary" onClick={() => navigate({ name: "apps" })} />
-                </div>
-              )}
-            </>
           ) : visibleCollections.length ? (
             <section className="projects-workspace__section collections-workspace__section">
               <div className="projects-workspace__section-heading">

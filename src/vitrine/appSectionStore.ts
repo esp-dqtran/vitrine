@@ -16,6 +16,7 @@ export interface AppSectionKey {
   section: AppDataSection;
   platform: Platform;
   version: number | 'latest';
+  screenTypes?: string[];
 }
 
 export type AppSectionData = EvidenceSectionPage | FlowSectionResult;
@@ -41,7 +42,10 @@ const defaultClients: AppSectionClients = {
 const idleState = (): AppSectionState => ({ status: 'idle', data: null, error: null });
 
 export function appSectionCacheKey(key: AppSectionKey): string {
-  return `${key.appId}|${key.section}|${key.platform}|${key.version}`;
+  const screenTypes = key.section === 'screens'
+    ? [...(key.screenTypes ?? [])].sort().join(',')
+    : '';
+  return `${key.appId}|${key.section}|${key.platform}|${key.version}|${screenTypes}`;
 }
 
 export function createAppSectionStore(clients: AppSectionClients = defaultClients) {
@@ -65,7 +69,14 @@ export function createAppSectionStore(clients: AppSectionClients = defaultClient
   const request = (key: AppSectionKey, signal?: AbortSignal, cursor?: string): Promise<AppSectionData> => {
     const version = key.version === 'latest' ? undefined : key.version;
     if (key.section === 'screens') {
-      return clients.screens(key.appId, { platform: key.platform, version, cursor, limit: 8, signal });
+      return clients.screens(key.appId, {
+        platform: key.platform,
+        version,
+        cursor,
+        limit: 8,
+        screenTypes: key.screenTypes,
+        signal,
+      });
     }
     if (key.section === 'ui-elements') {
       return clients.uiElements(key.appId, { platform: key.platform, version, cursor, limit: 8, signal });

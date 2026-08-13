@@ -2,6 +2,7 @@ import { Button, Icon, IconButton } from "@astryxdesign/core";
 import type { ResearchCollection } from "../../db.ts";
 import type { Screen } from "../types";
 import { screenAspectRatio } from "../screenAspect";
+import { screenCategoryForType } from "../screenCategories";
 import { copyScreenImageAsPng } from "../screenActions.ts";
 import { CollectionPicker } from "./CollectionPicker.tsx";
 import { CopyButton } from "./CopyButton.tsx";
@@ -13,6 +14,8 @@ interface ScreenGridCardProps {
   delay: number;
   onOpen: () => void;
   onSave?: () => void;
+  onRemove?: () => void;
+  isRemoveDisabled?: boolean;
   appName?: string;
   appId?: string;
   collections?: ResearchCollection[];
@@ -21,7 +24,6 @@ interface ScreenGridCardProps {
   flowNames?: string[];
   selected?: boolean;
   onSelectedChange?: (selected: boolean) => void;
-  onActionStatus?: (message: string) => void;
 }
 
 const cleanLabel = (value: string | null | undefined) => {
@@ -58,6 +60,8 @@ export function ScreenGridCard({
   delay,
   onOpen,
   onSave,
+  onRemove,
+  isRemoveDisabled = false,
   appName,
   appId,
   collections,
@@ -66,23 +70,29 @@ export function ScreenGridCard({
   flowNames = [],
   selected = false,
   onSelectedChange,
-  onActionStatus,
 }: ScreenGridCardProps) {
   const screenLabel = screenAccessibleLabel(screen, appName, flowNames);
-  const screenPatterns = [...new Set(
-    (screen.matchedFacets ?? [])
-      .filter(({ group }) => group === 'screens')
-      .map(({ value }) => cleanLabel(value))
-      .filter((value) => value?.toLocaleLowerCase() !== 'preview')
-      .filter((value): value is string => Boolean(value)),
-  )];
+  // Source facets are intentionally many-to-many. Cards show only the single
+  // canonical child category selected by Screen Analyze.
+  const screenCategory = screenCategoryForType(screen.type)
+    ? cleanLabel(screen.type)
+    : null;
   const actions = (
     <div
       className="screen-grid-card__actions"
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
-      {onSave ? (
+      {onRemove ? (
+        <Button
+          label="Remove"
+          variant="secondary"
+          size="sm"
+          className="screen-grid-card__remove"
+          isDisabled={isRemoveDisabled}
+          onClick={onRemove}
+        />
+      ) : onSave ? (
         <Button
           label="Save"
           variant="primary"
@@ -99,6 +109,11 @@ export function ScreenGridCard({
             referenceId: String(screen.id),
             title: flowNames[0] ?? screenLabel,
           }}
+          canvasItems={[{
+            appId,
+            appName: appName ?? appId,
+            screen,
+          }]}
           collections={collections}
           onCollectionsChange={onCollectionsChange}
           plan={plan}
@@ -106,7 +121,6 @@ export function ScreenGridCard({
           buttonLabel="Save"
           buttonClassName="screen-grid-card__save"
           buttonVariant="primary"
-          onStatus={onActionStatus}
         />
       ) : null}
       <CopyButton
@@ -135,9 +149,9 @@ export function ScreenGridCard({
           delay={delay}
           onOpen={onOpen}
         />
-        {screenPatterns.length ? (
-          <div className="screen-grid-card__patterns" aria-label={`Screen patterns: ${screenPatterns.join(', ')}`}>
-            {screenPatterns.map((pattern) => <span key={pattern}>{pattern}</span>)}
+        {screenCategory ? (
+          <div className="screen-grid-card__patterns" aria-label={`Screen category: ${screenCategory}`}>
+            <span>{screenCategory}</span>
           </div>
         ) : null}
         {actions}

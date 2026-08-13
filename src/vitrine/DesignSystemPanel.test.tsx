@@ -137,6 +137,48 @@ test('renders observed components from their reconstruction spec, and rules grou
   assert.match(html, /layout/i);
 });
 
+test('separates source evidence, AI inference, and human review at the page level', () => {
+  const html = renderToStaticMarkup(<DesignSystemPanel snapshot={{
+    app: 'stripe',
+    summary: "Stripi's checkout language uses decisive actions.",
+    generatedAt: '2026-07-10T00:00:00.000Z',
+    tokens: [{
+      id: 'primary', kind: 'color', name: 'Primary', value: '#635bff', role: 'Action',
+      evidence: [{ imageId: 7, imageUrl: '/screen', description: 'Checkout' }],
+      source: 'llm_inferred', reviewStatus: 'needs_review', confidence: 0.91,
+    }],
+    components: [],
+    flows: [],
+  }} status="ready" appName="Stripe" showReviewMetadata />);
+
+  assert.match(html, /Stripe Design System|Stripe foundations &amp; components/);
+  assert.doesNotMatch(html, /Stripi/);
+  assert.match(html, /Evidence-backed AI analysis/);
+  assert.match(html, /How to read this Design System/);
+  assert.match(html, /Source links are captured product evidence/);
+  assert.match(html, /Evidence links<\/dt><dd>1/);
+  assert.match(html, /AI-inferred<\/dt><dd>1/);
+  assert.match(html, /Needs review<\/dt><dd>1/);
+});
+
+test('labels GetDesign snapshots as external imports without an empty evidence review scorecard', () => {
+  const html = renderToStaticMarkup(<DesignSystemPanel snapshot={{
+    app: 'stripe', generatedAt: '2026-07-10T00:00:00.000Z',
+    tokens: [{ id: 'primary', kind: 'color', name: 'Primary', value: '#635bff', role: 'Action', evidence: [] }],
+    components: [{
+      id: 'button', name: 'Button', category: 'Actions',
+      description: 'Button styling imported from the GetDesign system.',
+      variants: [{ id: 'default', name: 'Default', description: 'Primary action', evidence: [] }],
+    }],
+    flows: [],
+  }} status="ready" appName="Stripe" />);
+
+  assert.match(html, /Imported style reference/);
+  assert.match(html, /GetDesign source · External import/);
+  assert.doesNotMatch(html, /How to read this Design System/);
+  assert.doesNotMatch(html, /Vitrines · Observed evidence/);
+});
+
 test('shows automatic generation stages while retaining the previous snapshot', () => {
   const snapshot = {
     app: 'linear',
@@ -212,7 +254,8 @@ test('renders an evidence-free imported system as visible native UI', () => {
   assert.match(html, /font-size:\s*56px/);
   assert.match(html, /Button/);
   assert.match(html, /Responsive behavior/);
-  assert.doesNotMatch(html, /source screen|confidence|Reviewed|Needs review/i);
+  assert.doesNotMatch(html, /\d+% confidence/i);
+  assert.match(html, /How to read this Design System/);
 });
 
 test('shows concise actionable patterns and keeps their full guidance on demand', () => {

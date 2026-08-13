@@ -23,11 +23,9 @@ import {
   type FlowCatalogItem,
 } from "../flowCatalogApi.ts";
 import { FlowCard } from "./FlowCard.tsx";
+import type { ProjectDocumentFlowInsertItem } from "../projectDocumentFlowInsertIntent.ts";
 
-export interface ProjectDocumentFlowOption {
-  app: string;
-  appIconUrl?: string | null;
-  appId?: string;
+export interface ProjectDocumentFlowOption extends ProjectDocumentFlowInsertItem {
   catalog?: {
     app: string;
     appId: string;
@@ -37,13 +35,6 @@ export interface ProjectDocumentFlowOption {
     title: string;
     description: string;
   };
-  description: string;
-  id: string;
-  platform?: Platform;
-  previews: Array<{ label: string; url: string }>;
-  source: "catalog" | "project";
-  stepCount: number;
-  title: string;
 }
 
 export type ProjectDocumentEvidenceType = "screen" | "flow" | "upload";
@@ -964,4 +955,33 @@ export function insertProjectDocumentEvidenceBlock(
     return;
   }
   editor.insertBlocks([{ type: "vitrinesEvidence" }], target, "after");
+}
+
+export function insertProjectDocumentFlowBlock(
+  editor: ProjectDocumentEditor,
+  flow: ProjectDocumentFlowInsertItem,
+): void {
+  const props = {
+    referenceType: "flow" as const,
+    referenceId: flow.id,
+    source: flow.source,
+    title: flow.title,
+    app: flow.app,
+    appIconUrl: flow.appIconUrl ?? "",
+    appId: flow.appId ?? "",
+    description: flow.description,
+    platform: flow.platform ?? "",
+    previewSnapshot: JSON.stringify(flow.previews),
+    stepCount: flow.stepCount,
+  };
+  const target = editor.document.at(-1);
+  if (!target) return;
+  const isEmptyParagraph = target.type === "paragraph"
+    && Array.isArray(target.content)
+    && target.content.length === 0;
+  if (isEmptyParagraph) {
+    editor.updateBlock(target, { type: "astryxReference", props });
+    return;
+  }
+  editor.insertBlocks([{ type: "astryxReference", props }], target, "after");
 }

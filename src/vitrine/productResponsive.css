@@ -118,7 +118,7 @@
     --vitrine-responsive-gutter: var(--vitrine-page-gutter-compact);
     height: var(--reference-nav-height);
     min-height: var(--reference-nav-height);
-    grid-template-columns: 32px minmax(132px, 1fr) 44px 72px;
+    grid-template-columns: 32px minmax(132px, 1fr) 44px 44px;
     grid-template-rows: 64px;
     gap: 8px;
     padding-block: 0;
@@ -164,8 +164,8 @@
   .apps-top-nav .reference-discovery-nav__actions {
     grid-column: 4;
     grid-row: 1;
-    width: 72px;
-    max-width: 72px;
+    width: 44px;
+    max-width: 44px;
   }
 
   .apps-discovery__taxonomy,

@@ -91,10 +91,13 @@ test("updates Notion-style page metadata only for editors", async () => {
     icon: "idea",
     isFavorite: true,
     pageWidth: "full",
+    reviewStatus: "approved",
   });
 
   assert.equal(updated?.title, "Checkout decisions");
   assert.equal(updated?.isFavorite, true);
+  assert.equal(statements[1].values?.[5], "approved");
+  assert.match(statements[1].sql, /approved_by_user_id/);
   assert.match(statements[1].sql, /last_edited_by_user_id/);
 });
 

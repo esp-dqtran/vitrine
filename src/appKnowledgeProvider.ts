@@ -128,6 +128,7 @@ export const APP_KNOWLEDGE_DESIGN_SYSTEM_INSTRUCTIONS = [
   "Every observed or inferred claim must cite one or more supplied evidence IDs.",
   "Never invent an evidence ID, exact source token, original CSS value, font, measurement, or interaction not supported by evidence.",
   "Keep materially different observed token values or component variants separate and record unresolved contradictions instead of inventing false precision.",
+  "Proofread every user-facing name and description. Preserve supplied product names exactly and do not introduce spelling variants.",
   "Full-page screenshots may produce component candidates only with status candidate.",
 ].join(" ");
 

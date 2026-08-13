@@ -17,6 +17,7 @@ import { CopyButton, useCopyAction } from './CopyButton.tsx';
 import { DocumentFlowPanel } from './DocumentFlowPanel.tsx';
 import { PlaceholderImage } from './PlaceholderImage.tsx';
 import { AstryxModal, AstryxModalSurface } from './AstryxModal.tsx';
+import { EvidenceTrustSummary } from './EvidenceTrustSummary.tsx';
 
 export interface FlowPreviewScreen {
   evidence: EvidenceView;
@@ -517,6 +518,18 @@ export function FlowPreviewDialog({
               }}
             />
           </div> : null}
+
+          {!isPublicPreview && activeMode !== 'document' && activeScreen ? (
+            <EvidenceTrustSummary
+              evidenceId={`flow:${documentSource?.app ?? sourceAppName ?? 'catalog'}:${flowId}:${activeScreen.stepNumber}`}
+              sourceLabel={flow.provenance ? 'Autonomous crawl observation' : 'Vitrines catalog capture'}
+              sourceUrl={activeScreen.evidence.sourceUrl ?? flow.provenance?.sourceUrls[0]}
+              capturedAt={activeScreen.evidence.capturedAt}
+              confidence={flow.provenance?.confidence ?? flow.steps[activeIndex]?.observation?.confidence}
+              completeness={flow.provenance?.validationStatus ?? 'not_assessed'}
+              evidenceCount={screens.length}
+            />
+          ) : null}
 
           {!isPublicPreview && activeMode !== 'document' && infoOpen && activeScreen ? (
             <aside className="flow-preview-dialog__info" aria-label="Screen information">

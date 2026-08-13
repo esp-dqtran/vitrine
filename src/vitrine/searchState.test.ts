@@ -5,6 +5,7 @@ import {
   defaultSearchState,
   emptySearchFilters,
   parseSearchState,
+  parseComparisonApps,
   readRecentSearches,
   recordRecentSearch,
   serializeSearchState,
@@ -26,6 +27,15 @@ test("does not encode the pagination cursor in the URL", () => {
     serializeSearchState({ ...defaultSearchState, cursor: "secret" } as never),
     "",
   );
+});
+
+test("keeps a shareable comparison selection alongside search state", () => {
+  const query = serializeSearchState(
+    { ...defaultSearchState, query: "checkout" },
+    ["Stripe", "Linear", "Stripe"],
+  );
+  assert.equal(query, "q=checkout&compare=Stripe&compare=Linear");
+  assert.deepEqual(parseComparisonApps(`?${query}`), ["Stripe", "Linear"]);
 });
 
 test("round-trips scope and Site filters", () => {

@@ -1629,6 +1629,18 @@ test("creates user-owned collections and edits item notes", async (t) => {
     countUserCollections: async () => 1,
     createCollection: async (_userId, name, description) => ({ ...collection, name, description: description ?? "" }),
     listCollections: async () => [{ ...collection, items: [] }],
+    listCollectionScreens: async () => [{
+      item_id: 9,
+      id: 7,
+      app: "linear",
+      platform: "web",
+      image_url: "mobbin-bulk:0123456789abcdef",
+      description: "Workspace",
+      analysis: { pageType: "Workspace", productArea: "Projects", theme: "light", visibleStates: [] },
+      capture_url: "https://linear.app",
+      captured_at: now,
+      accent_color: "#5E6AD2",
+    }],
     addCollectionItem: async (_userId, _collectionId, item) => ({
       id: 9,
       kind: item.kind,
@@ -1654,6 +1666,33 @@ test("creates user-owned collections and edits item notes", async (t) => {
   assert.equal(created.status, 201);
   assert.equal((await created.json()).name, "Onboarding");
   assert.equal((await fetch(`${base}/collections`, { headers })).status, 200);
+  const savedScreens = await fetch(`${base}/collections/4/screens`, { headers });
+  assert.equal(savedScreens.status, 200);
+  assert.deepEqual(await savedScreens.json(), {
+    screens: [{
+      itemId: 9,
+      app: "linear",
+      accent: "#5E6AD2",
+      screen: {
+        id: 7,
+        type: "Workspace",
+        productArea: "Projects",
+        theme: "light",
+        visibleStates: [],
+        platform: "web",
+        description: "Workspace",
+        sourceUrl: "https://linear.app",
+        layoutPatterns: [],
+        componentNames: [],
+        visibleText: [],
+        capturedAt: now,
+        stateContext: null,
+        confidence: null,
+        url: "/api/media/linear/0123456789abcdef",
+        thumbnailUrl: "/api/media/linear/0123456789abcdef?variant=thumb",
+      },
+    }],
+  });
 
   const added = await fetch(`${base}/collections/4/items`, {
     method: "POST", headers,
@@ -2919,8 +2958,8 @@ test("returns captured website metadata and serves its app-scoped scrolling prev
   );
 });
 
-test("loads screens and UI elements from dedicated paged endpoints", async (t) => {
-  const calls: Array<{ kind: string; limit?: number }> = [];
+test("loads screens with complete category facets and filters the paged result", async (t) => {
+  const calls: Array<{ kind: string; limit?: number; screenTypes?: string[] }> = [];
   let versionResolutions = 0;
   const { base, server } = await serve(createApiApp({
     verifyAuthToken: async () => admin,
@@ -2932,22 +2971,28 @@ test("loads screens and UI elements from dedicated paged endpoints", async (t) =
       return { ...publishedVersion, app: "linear", platform: "ios" };
     },
     appEvidencePage: async (input) => {
-      calls.push({ kind: input.kind, limit: input.limit });
+      calls.push({ kind: input.kind, limit: input.limit, screenTypes: input.screenTypes });
       return { rows: catalogImages.map((image) => ({ ...image, platform: "ios", kind: input.kind })), nextCursor: "next" };
     },
+    appScreenTypes: async () => ["Dashboard", "Login"],
     getVersionFlows: async () => { throw new Error("must not load flows"); },
     getVersionDesignSystem: async () => { throw new Error("must not load design system"); },
     recordAccessEvent: async () => {},
   }));
   t.after(() => close(server));
 
-  const screens = await fetch(`${base}/apps/linear/screens?platform=ios&version=1&limit=48`, { headers: adminAuth });
+  const screens = await fetch(`${base}/apps/linear/screens?platform=ios&version=1&type=Login&limit=48`, { headers: adminAuth });
   const elements = await fetch(`${base}/apps/linear/ui-elements?platform=ios&version=1&limit=24`, { headers: adminAuth });
   assert.equal(screens.status, 200);
   assert.equal(elements.status, 200);
-  assert.deepEqual(calls, [{ kind: "screen", limit: 48 }, { kind: "ui_element", limit: 24 }]);
+  assert.deepEqual(calls, [
+    { kind: "screen", limit: 48, screenTypes: ["Login"] },
+    { kind: "ui_element", limit: 24, screenTypes: undefined },
+  ]);
   assert.equal(versionResolutions, 2);
-  assert.equal((await screens.json()).screens.length, 1);
+  const screenBody = await screens.json();
+  assert.equal(screenBody.screens.length, 1);
+  assert.deepEqual(screenBody.screenTypes, ["Dashboard", "Login"]);
   assert.equal((await elements.json()).nextCursor, "next");
 });
 
@@ -3372,6 +3417,90 @@ test("rejects a duplicate email and invalid signup input", async (t) => {
     body: JSON.stringify({ email: "person@example.com", password: "short" }),
   });
   assert.equal(shortPassword.status, 400);
+});
+
+test("sends a neutral one-time password reset link without exposing the token", async (t) => {
+  const deliveries: Array<{ to: string; resetUrl: string }> = [];
+  const requested: string[] = [];
+  const { base, server } = await serve(createApiApp({
+    appUrl: "https://vitrines.example",
+    createPasswordReset: async (email: string) => {
+      requested.push(email);
+      return email === "member@example.com"
+        ? { email, token: "a".repeat(43), expiresAt: new Date("2026-08-12T10:30:00Z") }
+        : undefined;
+    },
+    passwordResetEmailSender: { send: async (delivery) => { deliveries.push(delivery); } },
+  }));
+  t.after(() => close(server));
+
+  const known = await fetch(`${base}/auth/password-reset/request`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "member@example.com" }),
+  });
+  const unknown = await fetch(`${base}/auth/password-reset/request`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "missing@example.com" }),
+  });
+
+  assert.equal(known.status, 202);
+  assert.equal(unknown.status, 202);
+  assert.deepEqual(await known.json(), { accepted: true });
+  assert.deepEqual(await unknown.json(), { accepted: true });
+  assert.deepEqual(requested, ["member@example.com", "missing@example.com"]);
+  assert.deepEqual(deliveries, [{
+    to: "member@example.com",
+    resetUrl: `https://vitrines.example/reset-password?token=${"a".repeat(43)}`,
+  }]);
+});
+
+test("limits reset email delivery per recipient while keeping every response neutral", async (t) => {
+  const deliveries: string[] = [];
+  const { base, server } = await serve(createApiApp({
+    createPasswordReset: async (email: string) => ({
+      email,
+      token: "a".repeat(43),
+      expiresAt: new Date("2026-08-12T10:30:00Z"),
+    }),
+    passwordResetEmailSender: { send: async ({ to }) => { deliveries.push(to); } },
+  }));
+  t.after(() => close(server));
+
+  const responses = await Promise.all([...Array(4)].map(() => fetch(`${base}/auth/password-reset/request`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "member@example.com" }),
+  })));
+  assert.deepEqual(responses.map(({ status }) => status), [202, 202, 202, 202]);
+  assert.equal(deliveries.length, 3);
+});
+
+test("redeems only a valid reset token and enforces password length", async (t) => {
+  const resets: Array<[string, string]> = [];
+  const { base, server } = await serve(createApiApp({
+    resetPasswordWithToken: async (token: string, password: string) => {
+      resets.push([token, password]);
+      return token === "a".repeat(43);
+    },
+  }));
+  t.after(() => close(server));
+
+  const short = await fetch(`${base}/auth/password-reset`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ token: "a".repeat(43), password: "short" }),
+  });
+  const invalid = await fetch(`${base}/auth/password-reset`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ token: "bad", password: "long enough" }),
+  });
+  const valid = await fetch(`${base}/auth/password-reset`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ token: "a".repeat(43), password: "long enough" }),
+  });
+
+  assert.equal(short.status, 400);
+  assert.equal(invalid.status, 400);
+  assert.equal(valid.status, 204);
+  assert.deepEqual(resets, [["a".repeat(43), "long enough"]]);
 });
 
 test("validates referral links publicly and keeps signup available when attribution fails", async (t) => {

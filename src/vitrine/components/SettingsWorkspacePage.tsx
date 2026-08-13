@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Button, Icon, IconButton, SegmentedControl, SegmentedControlItem, TextInput } from '@astryxdesign/core';
 import {
-  BookmarkHollowIcon,
+  CommandIcon,
   CreditIcon,
   DashboardIcon,
-  PaintBrushIcon,
   PowerIcon,
-  ShieldIcon,
-  UsersIcon,
 } from '@storybook/icons';
 import type { AuthUser } from '../authApi.ts';
 import { changePassword } from '../authApi.ts';
@@ -32,7 +29,7 @@ import { ReferralSettings, TeamSettings } from './SettingsPanel.tsx';
 import { useWorkspaceChrome } from './WorkspaceChromeContext.tsx';
 import { useSegmentedIndicator } from './useSegmentedIndicator.ts';
 
-type SettingsSection = 'overview' | 'teams' | 'billing' | 'security' | 'integrations' | 'appearance';
+type SettingsSection = 'overview' | 'teams' | 'billing' | 'security' | 'integrations';
 
 const SETTINGS_SECTIONS: Array<{
   id: SettingsSection;
@@ -40,11 +37,8 @@ const SETTINGS_SECTIONS: Array<{
   icon: typeof DashboardIcon;
 }> = [
   { id: 'overview', label: 'Profile', icon: DashboardIcon },
-  { id: 'teams', label: 'Teams', icon: UsersIcon },
   { id: 'billing', label: 'Billing', icon: CreditIcon },
-  { id: 'security', label: 'Security', icon: ShieldIcon },
-  { id: 'integrations', label: 'Integrations', icon: BookmarkHollowIcon },
-  { id: 'appearance', label: 'Appearance', icon: PaintBrushIcon },
+  { id: 'integrations', label: 'Integrations', icon: CommandIcon },
 ];
 
 const THEME_OPTIONS: Array<{ mode: ThemeMode; label: string }> = [
@@ -66,6 +60,7 @@ function formatDate(value: string | null): string {
 export function SettingsWorkspacePage({
   user,
   subscription,
+  initialSection = 'overview',
   onUpgrade,
   onEntitlementsChanged,
   onBack,
@@ -73,12 +68,13 @@ export function SettingsWorkspacePage({
 }: {
   user: AuthUser;
   subscription?: SubscriptionView | null;
+  initialSection?: SettingsSection;
   onUpgrade: () => void;
   onEntitlementsChanged: () => void;
   onBack: () => void;
   onSignOut: () => void | Promise<void>;
 }) {
-  const [section, setSection] = useState<SettingsSection>('overview');
+  const [section, setSection] = useState<SettingsSection>(initialSection);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [passwordBusy, setPasswordBusy] = useState(false);
@@ -89,6 +85,7 @@ export function SettingsWorkspacePage({
   const [mcpBusy, setMcpBusy] = useState(false);
   const [mcpError, setMcpError] = useState('');
   const [mcpUrlCopied, setMcpUrlCopied] = useState(false);
+  const [mcpTokenPendingRevoke, setMcpTokenPendingRevoke] = useState<McpAccessToken | null>(null);
   const [billingBusy, setBillingBusy] = useState(false);
   const [billingError, setBillingError] = useState('');
   const [referralSummary, setReferralSummary] = useState<ReferralSummaryView | null>(null);
@@ -160,13 +157,14 @@ export function SettingsWorkspacePage({
     }
   };
 
-  const revokeFlowAccessToken = async (tokenId: number) => {
+  const revokeFlowAccessToken = async (token: McpAccessToken) => {
     if (mcpBusy) return;
     setMcpBusy(true);
     setMcpError('');
     try {
-      await revokeMcpAccessToken(tokenId);
-      setMcpTokens((current) => current.filter((token) => token.id !== tokenId));
+      await revokeMcpAccessToken(token.id);
+      setMcpTokens((current) => current.filter((currentToken) => currentToken.id !== token.id));
+      setMcpTokenPendingRevoke(null);
     } catch (reason) {
       setMcpError((reason as Error).message);
     } finally {
@@ -174,7 +172,7 @@ export function SettingsWorkspacePage({
     }
   };
 
-  const mcpUrl = typeof window === 'undefined' ? '/api/mcp' : `${window.location.origin}/api/mcp`;
+  const mcpUrl = 'https://vitrines.ai/api/mcp';
   const copyMcpUrl = async () => {
     setMcpError('');
     try {
@@ -269,6 +267,18 @@ export function SettingsWorkspacePage({
                 <div><dt>Account role</dt><dd>{user.role}</dd></div>
                 <div><dt>Plan</dt><dd>{planLabel}</dd></div>
               </dl>
+              <section className="settings-workspace__form-card settings-workspace__profile-preferences" aria-labelledby="settings-profile-appearance-title">
+                <div className="settings-workspace__profile-preferences-copy">
+                  <h2 id="settings-profile-appearance-title">Appearance</h2>
+                  <p>Choose how Vitrines looks on this device.</p>
+                </div>
+                <div className="settings-workspace__profile-theme-setting">
+                  <span>Theme</span>
+                  <SegmentedControl ref={themeSwitcherRef} label="Theme" value={themeMode} onChange={(value) => setThemeMode(value as ThemeMode)}>
+                    {THEME_OPTIONS.map(({ mode, label }) => <SegmentedControlItem key={mode} value={mode} label={label} />)}
+                  </SegmentedControl>
+                </div>
+              </section>
             </div>
           ) : null}
 
@@ -381,7 +391,7 @@ export function SettingsWorkspacePage({
                           <strong role="cell">{token.label}</strong>
                           <code role="cell">{token.prefix}…</code>
                           <span role="cell">{formatDate(token.expiresAt)}</span>
-                          <span role="cell"><Button label="Revoke" size="sm" variant="ghost" isDisabled={mcpBusy} clickAction={() => void revokeFlowAccessToken(token.id)} /></span>
+                          <span role="cell"><Button className="settings-workspace__integration-revoke" label="Revoke" size="sm" variant="ghost" isDisabled={mcpBusy} clickAction={() => setMcpTokenPendingRevoke(token)} /></span>
                         </div>
                       ))}
                     </div>
@@ -392,19 +402,24 @@ export function SettingsWorkspacePage({
             </div>
           ) : null}
 
-          {section === 'appearance' ? (
-            <div className="settings-workspace__panel settings-workspace__appearance">
-              <div className="settings-workspace__title-row"><div><h1 id="settings-appearance-title">Appearance</h1><p>Choose how Vitrines looks on this device.</p></div></div>
-              <section className="settings-workspace__form-card">
-                <h2>Theme</h2>
-                <p>Use a light theme, dark theme, or follow your system.</p>
-                <SegmentedControl ref={themeSwitcherRef} label="Theme" value={themeMode} onChange={(value) => setThemeMode(value as ThemeMode)}>
-                  {THEME_OPTIONS.map(({ mode, label }) => <SegmentedControlItem key={mode} value={mode} label={label} />)}
-                </SegmentedControl>
-              </section>
-            </div>
-          ) : null}
         </section>
+      <AstryxAlertModal
+        isOpen={mcpTokenPendingRevoke !== null}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setMcpTokenPendingRevoke(null);
+        }}
+        title="Revoke this access token?"
+        description={mcpTokenPendingRevoke
+          ? `This immediately disconnects MCP clients using ${mcpTokenPendingRevoke.label}. This cannot be undone.`
+          : ''}
+        cancelLabel="Keep token"
+        actionLabel="Revoke token"
+        actionVariant="destructive"
+        isActionLoading={mcpBusy}
+        onAction={() => {
+          if (mcpTokenPendingRevoke) void revokeFlowAccessToken(mcpTokenPendingRevoke);
+        }}
+      />
       <AstryxAlertModal
         isOpen={referralActivationOpen}
         onOpenChange={setReferralActivationOpen}

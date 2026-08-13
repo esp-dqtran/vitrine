@@ -12,6 +12,7 @@ import {
   parseScreenAnalysisValue,
   type ScreenAnalysis,
 } from "./screenAnalysis.ts";
+import { SCREEN_CATEGORIES } from "./vitrine/screenCategories.ts";
 
 export interface KiroCliScreenConfig {
   binary: string;
@@ -33,6 +34,10 @@ export interface KiroCliScreenAnalyzer {
 
 const MAX_IMAGE_DIMENSION = 2_000;
 const MAX_INPUT_PIXELS = 40_000_000;
+const SUPPORTED_SCREEN_TYPES = SCREEN_CATEGORIES.flatMap(({ children }) => children);
+const supportedScreenTypeKeys = new Set(
+  SUPPORTED_SCREEN_TYPES.map((screenType) => screenType.toLocaleLowerCase()),
+);
 
 function positiveInteger(value: string | undefined, fallback: number): number {
   if (!value?.trim()) return fallback;
@@ -121,6 +126,8 @@ function promptFor(input: {
     `Read the screenshot at this exact absolute path with the read tool: ${input.imagePath}`,
     "Analyze the image pixels, not the filename or surrounding workspace.",
     buildCaptionPrompt(input.platform),
+    "Set pageType to exactly one supported Vitrines screen category from this list. Do not invent or combine labels. Use Misc only when none of the other categories fit:",
+    JSON.stringify(SUPPORTED_SCREEN_TYPES),
     input.validationError
       ? `Your previous response failed validation: ${input.validationError}\nReturn corrected raw JSON only.`
       : "",
@@ -161,7 +168,11 @@ export function createKiroCliScreenAnalyzer(
               && typeof candidate.pageType === "string"
               && typeof candidate.productArea === "string"
             );
-            return parseScreenAnalysisValue(parsed);
+            const analysis = parseScreenAnalysisValue(parsed);
+            if (!supportedScreenTypeKeys.has(analysis.pageType.toLocaleLowerCase())) {
+              throw new Error(`Unsupported Vitrines screen category: ${analysis.pageType}`);
+            }
+            return analysis;
           } catch (error) {
             validationError = (error as Error).message;
             if (attempt === 1) throw error;

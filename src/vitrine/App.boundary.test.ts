@@ -11,10 +11,17 @@ test('keeps the Apps shell independent from job-list loading', async () => {
 });
 
 test('uses the shared Astryx dropdown for authenticated account actions', async () => {
-  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+  const [source, discoveryStyles] = await Promise.all([
+    readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8'),
+  ]);
 
   assert.match(source, /from ['"]\.\/components\/AstryxDropdown\.tsx['"]/);
   assert.match(source, /<AstryxDropdown[\s\S]*ariaLabel=\{`Account menu: \$\{user\.email\}`\}/);
+  assert.match(source, /label=\{user\.email\.trim\(\)\.slice\(0, 1\)\.toUpperCase\(\) \|\| 'Account'\}/);
+  assert.match(source, /triggerClassName="account-menu-trigger"/);
+  assert.match(source, /hasChevron=\{false\}/);
+  assert.match(discoveryStyles, /\.account-menu-trigger\.astryx-button\s*\{[\s\S]*?width:\s*40px !important;[\s\S]*?height:\s*40px !important;[\s\S]*?padding:\s*0 !important;[\s\S]*?border-radius:\s*50% !important;/);
   // Account menu order: Admin, Projects, Settings, then a destructive Log out.
   assert.match(source, /isAdmin \? \([\s\S]*label="Admin"[\s\S]*navigate\(\{ name: ['"]admin['"] \}\)/);
   const menu = source.slice(source.indexOf('<AstryxDropdown'), source.indexOf('</AstryxDropdown>'));

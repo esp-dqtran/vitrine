@@ -26,6 +26,23 @@ test('starts evidence galleries with one bounded page', async () => {
   assert.deepEqual(limits, [8]);
 });
 
+test('includes selected screen categories in the cached request key and API request', async () => {
+  const screenTypes: Array<string[] | undefined> = [];
+  const store = createAppSectionStore({
+    screens: async (_app, input) => {
+      screenTypes.push(input.screenTypes);
+      return { screens: [], nextCursor: null, screenTypes: ['Login'], platform: 'ios', version };
+    },
+    uiElements: async () => { throw new Error('unused'); },
+    flows: async () => { throw new Error('unused'); },
+  });
+
+  await store.load({ ...key, screenTypes: ['Login'] });
+  await store.load({ ...key, screenTypes: ['Dashboard'] });
+
+  assert.deepEqual(screenTypes, [['Login'], ['Dashboard']]);
+});
+
 test('deduplicates in-flight loads and reuses fulfilled section data', async () => {
   let calls = 0;
   let resolve!: (value: unknown) => void;

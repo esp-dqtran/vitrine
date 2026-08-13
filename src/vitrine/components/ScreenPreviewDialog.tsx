@@ -7,6 +7,7 @@ import { CollectionPicker } from './CollectionPicker.tsx';
 import { CopyButton, useCopyAction } from './CopyButton.tsx';
 import { PlaceholderImage } from './PlaceholderImage.tsx';
 import { AstryxModal, AstryxModalSurface } from './AstryxModal.tsx';
+import { EvidenceTrustSummary } from './EvidenceTrustSummary.tsx';
 
 interface ScreenPreviewDialogProps {
   appName: string;
@@ -56,7 +57,6 @@ export function ScreenPreviewDialog({
   foundInFlows = [],
 }: ScreenPreviewDialogProps) {
   const [savedScreens, setSavedScreens] = useState<Set<number>>(() => new Set());
-  const [status, setStatus] = useState('');
   const [mediaFailed, setMediaFailed] = useState(false);
   const [mediaDimensions, setMediaDimensions] = useState<Record<number, { width: number; height: number }>>({});
   const [infoOpen, setInfoOpen] = useState(false);
@@ -232,13 +232,17 @@ export function ScreenPreviewDialog({
                   referenceId: String(screen.id),
                   title: context ?? `${appName} screen ${index + 1}`,
                 }}
+                canvasItems={[{
+                  appId,
+                  appName,
+                  screen,
+                }]}
                 collections={collections}
                 onCollectionsChange={onCollectionsChange}
                 plan={plan}
                 dark
-                buttonLabel="Save"
+                buttonLabel="Use in project"
                 buttonClassName="flow-preview-dialog__save"
-                onStatus={setStatus}
               />
             ) : (
               <Button
@@ -271,6 +275,13 @@ export function ScreenPreviewDialog({
             />
           </div>
 
+          <EvidenceTrustSummary
+            evidenceId={`screen:${appId ?? appName}:${screen.id}`}
+            sourceUrl={screen.sourceUrl}
+            capturedAt={screen.capturedAt}
+            confidence={screen.confidence}
+          />
+
           {infoOpen ? (
             <aside className="flow-preview-dialog__info">
               <strong>{usefulLabel(screen.type) ?? `${appName} screen`}</strong>
@@ -283,10 +294,6 @@ export function ScreenPreviewDialog({
                   : null}
             </aside>
           ) : null}
-
-          <span className="flow-preview-dialog__status" aria-live="polite">
-            {status}
-          </span>
         </div>
       </AstryxModalSurface>
     </AstryxModal>

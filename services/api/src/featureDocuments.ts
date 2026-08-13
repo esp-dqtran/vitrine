@@ -11,6 +11,7 @@ import {
   type FeatureEvidenceManifestItem,
   type FeatureSourceFlow,
 } from "../../../src/featureDocument.ts";
+import { assessFeatureDocumentReadiness } from "../../../src/featureDocumentReadiness.ts";
 import type {
   FeatureDocumentStore,
   PublicFeatureDocumentShare,
@@ -516,7 +517,22 @@ export function mountFeatureDocumentRoutes(
     const revisionId = positiveId(body?.revisionId);
     const status = body?.status as FeatureDocumentReviewStatus;
     if (!documentId || !revisionId || !REVIEW_STATUSES.has(status)) { res.status(400).json({ error: "Invalid review transition" }); return; }
-    if (!(await entitledDocument(res, documentId))) return;
+    const entitled = await entitledDocument(res, documentId);
+    if (!entitled) return;
+    if (status === "approved" && entitled.currentRevision?.reviewStatus === "in_review") {
+      const current = await withCurrentSourceState(deps, res.locals.user, entitled);
+      const readiness = current.currentRevision
+        ? assessFeatureDocumentReadiness(current, current.currentRevision)
+        : undefined;
+      if (!readiness?.canApprove) {
+        res.status(409).json({
+          error: "Feature Document is not ready for approval",
+          code: "review_not_ready",
+          blockers: readiness?.blockers ?? [],
+        });
+        return;
+      }
+    }
     let document;
     try {
       document = await deps.store.setReviewStatus(res.locals.user.id, documentId, revisionId, status);

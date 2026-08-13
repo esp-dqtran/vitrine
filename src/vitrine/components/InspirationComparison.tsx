@@ -24,11 +24,21 @@ function ComparisonSection({ title, rows, apps }: { title: string; rows: Compari
   );
 }
 
-export function InspirationComparison({ comparison, onBack }: { comparison: CatalogComparison; onBack: () => void }) {
+export function InspirationComparison({
+  comparison,
+  onBack,
+  backLabel = "Back to preview",
+  title = "Compare inspiration",
+}: {
+  comparison: CatalogComparison;
+  onBack: () => void;
+  backLabel?: string;
+  title?: string;
+}) {
   return (
     <section className="inspiration-comparison" aria-label="App comparison">
-      <Button label="Back to preview" variant="ghost" size="sm" onClick={onBack} />
-      <h2>Compare inspiration</h2>
+      <Button label={backLabel} variant="ghost" size="sm" onClick={onBack} />
+      <h2>{title}</h2>
       <ComparisonSection title="Foundations" rows={comparison.foundations} apps={comparison.apps} />
       <ComparisonSection title="Components" rows={comparison.components} apps={comparison.apps} />
       <ComparisonSection title="Flows" rows={comparison.flows} apps={comparison.apps} />

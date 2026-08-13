@@ -3,6 +3,7 @@ import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
   FlowCard,
+  flowCanvasScreens,
   flowPreviewIndexFromSearch,
   flowPreviewModeFromSearch,
 } from './components/FlowCard.tsx';
@@ -24,7 +25,15 @@ const flow = {
 };
 
 test('renders a flow strip with full-resolution observed screen media', () => {
-  const html = renderToStaticMarkup(<FlowCard flow={flow} onOpen={() => {}} />);
+  const html = renderToStaticMarkup(
+    <FlowCard
+      flow={flow}
+      documentSource={{ app: 'linear', version: 1 }}
+      collections={[]}
+      onCollectionsChange={() => {}}
+      onOpen={() => {}}
+    />,
+  );
   assert.match(html, /data-flow-strip-card="true"/);
   assert.match(html, /flow-strip-card__stage" data-platform="web"/);
   assert.match(html, /aria-label="Preview Login flow screens"/);
@@ -35,8 +44,24 @@ test('renders a flow strip with full-resolution observed screen media', () => {
   assert.doesNotMatch(html, /background:#fff/);
   assert.match(html, /<h2>Login<\/h2>/);
   assert.match(html, />1 screen</);
-  assert.match(html, />Save</);
+  assert.match(html, />Use in project</);
   assert.match(html, />Copy flow link</);
+});
+
+test('turns captured flow evidence into platform-correct Canvas screens', () => {
+  assert.deepEqual(flowCanvasScreens(flow, 'ios'), [{
+    id: 1,
+    type: 'Flow step',
+    productArea: 'Login',
+    theme: 'mixed',
+    visibleStates: [],
+    platform: 'ios',
+    description: 'Submit',
+    url: '/flow.png',
+    thumbnailUrl: '/flow-thumb.webp',
+    sourceUrl: undefined,
+    capturedAt: undefined,
+  }]);
 });
 
 test('shows every captured screen in a public Flow catalog strip', () => {

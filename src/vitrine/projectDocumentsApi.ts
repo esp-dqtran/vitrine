@@ -7,6 +7,10 @@ export interface ProjectDocumentView {
   icon: ProjectDocumentIcon;
   isFavorite: boolean;
   pageWidth: ProjectDocumentPageWidth;
+  reviewStatus: ProjectDocumentReviewStatus;
+  reviewRequestedAt: string | null;
+  approvedAt: string | null;
+  approvedByEmail: string | null;
   collaborationDocumentId: string;
   role: "editor" | "viewer";
   createdAt: string;
@@ -15,12 +19,14 @@ export interface ProjectDocumentView {
 
 export type ProjectDocumentIcon = "none" | "document" | "idea" | "task" | "schedule" | "build";
 export type ProjectDocumentPageWidth = "standard" | "full";
+export type ProjectDocumentReviewStatus = "draft" | "in_review" | "approved";
 
 export interface ProjectDocumentPatch {
   title?: string;
   icon?: ProjectDocumentIcon;
   isFavorite?: boolean;
   pageWidth?: ProjectDocumentPageWidth;
+  reviewStatus?: ProjectDocumentReviewStatus;
 }
 
 export interface ProjectDocumentCommentView {

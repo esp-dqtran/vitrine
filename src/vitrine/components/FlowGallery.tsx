@@ -5,6 +5,7 @@ import {
   type ComponentProps,
 } from 'react';
 import type { Platform } from '../../platformFromUrl.ts';
+import type { ResearchCollection } from '../../db.ts';
 import type { FlowTreeGroup } from '../flowTree.ts';
 import { FlowCard } from './FlowCard.tsx';
 import { ReferenceGallerySection } from './ReferenceGallerySection.tsx';
@@ -31,6 +32,9 @@ type FlowGalleryCardProps = Partial<Pick<
   | 'variant'
   | 'fullAccessLabel'
   | 'onRequestFullAccess'
+  | 'collections'
+  | 'onCollectionsChange'
+  | 'plan'
 >>;
 
 export function activeFlowIdFromEntries(
@@ -63,6 +67,9 @@ export function FlowGallery({
   ariaLabel,
   paginate = true,
   cardPropsForFlow,
+  collections,
+  onCollectionsChange,
+  plan = 'free',
 }: {
   groups: FlowTreeGroup[];
   onSelectFlow(flowId: string): void;
@@ -80,6 +87,9 @@ export function FlowGallery({
   cardPropsForFlow?: (
     flow: FlowTreeGroup['flows'][number],
   ) => FlowGalleryCardProps | undefined;
+  collections?: ResearchCollection[];
+  onCollectionsChange?: (collections: ResearchCollection[]) => void;
+  plan?: 'free' | 'pro';
 }) {
   const ordered = groups.flatMap(({ flows }) => flows);
   const scrollTargetIndex = scrollTargetFlowId
@@ -222,6 +232,9 @@ export function FlowGallery({
                     variant={cardProps?.variant}
                     fullAccessLabel={cardProps?.fullAccessLabel}
                     onRequestFullAccess={cardProps?.onRequestFullAccess}
+                    collections={cardProps?.collections ?? collections}
+                    onCollectionsChange={cardProps?.onCollectionsChange ?? onCollectionsChange}
+                    plan={cardProps?.plan ?? plan}
                     // App-detail flow links include flow, tab, and screen. Keep the
                     // selected FlowCard in sync so those shared URLs open the preview.
                     syncPreviewUrl

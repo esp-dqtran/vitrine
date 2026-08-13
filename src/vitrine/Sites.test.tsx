@@ -216,13 +216,13 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.match(html, /aria-label="Site discovery controls"/);
   assert.doesNotMatch(html, /placeholder="Search sites, sections, styles, or technology"/);
   assert.doesNotMatch(html, /Search site names, domains, captured content, and verified implementation evidence\./);
-  assert.match(html, /aria-label="Site platform: Web"/);
+  assert.doesNotMatch(html, /aria-label="Site platform: Web"/);
   assert.doesNotMatch(html, /role="radiogroup"[^>]*aria-label="Site platform"/);
   assert.match(html, /Open Categories filters/);
   assert.match(html, /Open Sections filters/);
   assert.match(html, /Open Styles filters/);
   assert.match(html, />1 site</);
-  assert.match(html, /Latest/);
+  assert.doesNotMatch(html, /aria-label="Sort: Latest"/);
   assert.doesNotMatch(html, /data-reference-discovery-toolbar="true"/);
   assert.match(html, /data-facet-preview="categories"/);
   assert.match(html, /data-facet-preview="sections"/);
@@ -249,6 +249,11 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.equal((html.match(/Showing/g) ?? []).length, 1);
   assert.match(html, /<strong>1 site<\/strong>/);
   assert.doesNotMatch(html, /Import Site/);
+});
+
+test('anchors full-page Site posters to the homepage hero in discovery cards', () => {
+  const styles = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
+  assert.match(styles, /\.sites-discovery__grid \.site-discovery-card__media > img\s*\{\s*object-position:\s*top center;/);
 });
 
 test('keeps the Sites hero taxonomy curated when the API returns noisy facets', () => {

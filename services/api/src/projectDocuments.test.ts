@@ -17,6 +17,10 @@ const document = {
   icon: "document" as const,
   isFavorite: false,
   pageWidth: "standard" as const,
+  reviewStatus: "draft" as const,
+  reviewRequestedAt: null,
+  approvedAt: null,
+  approvedByEmail: null,
   collaborationDocumentId: "22222222-2222-4222-8222-222222222222",
   role: "editor" as const,
   createdAt: "2026-08-01T00:00:00.000Z",
@@ -136,7 +140,7 @@ test("updates page chrome and manages the page discussion", async (t) => {
   const updated = await fetch(`${base}/research-projects/${PROJECT_ID}/document`, {
     method: "PATCH",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ title: "Checkout decisions", isFavorite: true }),
+    body: JSON.stringify({ title: "Checkout decisions", isFavorite: true, reviewStatus: "in_review" }),
   });
   assert.equal(updated.status, 200);
   assert.equal((await updated.json() as { title: string }).title, "Checkout decisions");
@@ -153,7 +157,7 @@ test("updates page chrome and manages the page discussion", async (t) => {
     body: JSON.stringify({ resolved: true }),
   })).status, 200);
   assert.deepEqual(calls, [
-    'update:{"title":"Checkout decisions","isFavorite":true}',
+    'update:{"title":"Checkout decisions","isFavorite":true,"reviewStatus":"in_review"}',
     "list",
     "add:Clarify the approval step",
     "resolve:9:true",
@@ -184,6 +188,7 @@ test("validates document metadata and discussion payload boundaries", async (t) 
     { icon: "rocket" },
     { isFavorite: "yes" },
     { pageWidth: "wide" },
+    { reviewStatus: "published" },
     { title: "Valid", unknown: true },
   ]) {
     assert.equal((await patch(body)).status, 400);

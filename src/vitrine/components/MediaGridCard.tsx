@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from
 import { ClickableCard } from '@astryxdesign/core';
 import { observeNearViewportMedia } from './deferredMedia.ts';
 
-interface MediaGridCardProps {
+interface MediaGridCardBaseProps {
   label: string;
   kind: 'image' | 'video';
   url?: string;
@@ -19,8 +19,12 @@ interface MediaGridCardProps {
   title?: string;
   overlay?: ReactNode;
   delay?: number;
-  onOpen: () => void;
 }
+
+type MediaGridCardProps = MediaGridCardBaseProps & (
+  | { href: string; onOpen?: never }
+  | { href?: undefined; onOpen: () => void }
+);
 
 export function MediaGridCard({
   label,
@@ -39,6 +43,7 @@ export function MediaGridCard({
   title,
   overlay,
   delay = 0,
+  href,
   onOpen,
 }: MediaGridCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -145,7 +150,8 @@ export function MediaGridCard({
       <ClickableCard
         ref={cardRef}
         label={label}
-        onClick={onOpen}
+        href={href}
+        onClick={href ? undefined : onOpen}
         padding={0}
         variant="muted"
         onMouseEnter={() => {
@@ -165,7 +171,8 @@ export function MediaGridCard({
     <ClickableCard
       ref={cardRef}
       label={label}
-      onClick={onOpen}
+      href={href}
+      onClick={href ? undefined : onOpen}
       padding={0}
       variant="muted"
       onMouseEnter={() => {

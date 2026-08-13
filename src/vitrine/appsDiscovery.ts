@@ -1,6 +1,12 @@
 import type { Platform } from '../platformFromUrl.ts';
 import { PUBLIC_APP_STATIC_FACETS } from '../publicFacetPreview.ts';
 import { categoryNames, type App, type Screen } from './types.ts';
+import {
+  ALL_SCREEN_TYPES,
+  LEGACY_SCREEN_TYPES,
+  SCREEN_CATEGORIES,
+  screenCategoryForType,
+} from './screenCategories.ts';
 
 export type AppsFacet = {
   group: 'categories' | 'screens' | 'elements' | 'flows';
@@ -42,30 +48,7 @@ export const ALL_APPS_CATEGORIES = [
   'Sports', 'Travel & Transportation', 'Utilities',
 ];
 
-export const ALL_APPS_SCREENS = [
-  'Account Setup', 'Achievements & Awards', 'Acknowledgement & Success', 'Action Option',
-  'Add & Create', 'Article Detail', 'Audio & Video Recorder', 'Audio Player', 'Ban & Block',
-  'Billing', 'Bookmarks & Collections', 'Browse & Discover', 'Calendar', 'Call', 'Cancel',
-  'Canvas', 'Cart & Bag', 'Charts', 'Chat Bot', 'Chat Detail', 'Checkout',
-  'Class & Lesson Detail', 'Code Editor', 'Command Palette', 'Comments', 'Confirmation',
-  'Dark Mode', 'Dashboard', 'Date & Time', 'Delete', 'Delete & Deactivate Account',
-  'Draw & Annotate', 'Edit', 'Emails & Messages', 'Empty State', 'Error', 'Event Detail',
-  'Favorite & Pin', 'Feature Info', 'Feedback', 'Filter & Sort', 'Flag & Report',
-  'Follow & Subscribe', 'Followers & Following', 'Forgot Password', 'Goal & Task',
-  'Guided Tour & Tutorial', 'Help & Support', 'Home', 'Import & Export', 'Internal Tool',
-  'Invite & Refer Friends', 'Invite Teammates', 'Kanban Board', 'Leaderboard', 'Like & Upvote',
-  'Loading', 'Login', 'Map', 'Media Editor', 'Misc', 'Move', 'Multi-Column Layout',
-  'My Account & Profile', 'News Feed', 'Note Detail', 'Notifications', 'Order Confirmation',
-  'Order Detail', 'Order History', 'Other Action', 'Other Content', 'Payment Method',
-  'Permission', 'Playlists', 'Post Detail', 'Pricing', 'Preview', 'Product Detail', 'Progress',
-  'Promotions & Rewards', 'Publish', 'QR Code', 'Quiz', 'Recipe Detail', 'Reorder',
-  'Reviews & Ratings', 'Save', 'Schedule', 'Search', 'Select', 'Set', 'Settings & Preferences',
-  'Share', 'Shop & Storefront', 'Signup', 'Social Feed', 'Song & Podcast Detail', 'Stories',
-  'Subscription & Paywall', 'Suggestions & Similar Items', 'TV Show & Movie Detail',
-  'Timeline & History', 'Timer & Clock', 'Transfer & Send Money', 'Trash & Archive',
-  'Upload & Download', 'User / Group Profile', 'Verification', 'Video Player',
-  'Wallet & Balance', 'Wallpaper',
-];
+export const ALL_APPS_SCREENS = ALL_SCREEN_TYPES;
 
 const searchableText = (values: Array<string | null | undefined>) =>
   values.filter(Boolean).join(' ').toLowerCase();
@@ -221,6 +204,8 @@ export function buildAppsFilterOptions(
     section: string,
     app?: App,
     screen?: Screen,
+    sectionPosition?: number,
+    position?: number,
   ) => {
     const normalized = value?.trim();
     if (!normalized || groups[group].has(normalized)) return;
@@ -229,11 +214,32 @@ export function buildAppsFilterOptions(
       section,
       previewUrl: screen?.thumbnailUrl ?? screen?.url ?? app?.iconUrl,
       previewLabel: app ? `${app.app} · ${normalized}` : normalized,
+      sectionPosition,
+      position,
     });
   };
 
   ALL_APPS_CATEGORIES.forEach((value) => add('categories', value, 'Categories'));
-  ALL_APPS_SCREENS.forEach((value) => add('screens', value, 'Screens'));
+  SCREEN_CATEGORIES.forEach((category, sectionPosition) => {
+    category.children.forEach((value, position) => add(
+      'screens',
+      value,
+      category.label,
+      undefined,
+      undefined,
+      sectionPosition,
+      position,
+    ));
+  });
+  LEGACY_SCREEN_TYPES.forEach((value, position) => add(
+    'screens',
+    value,
+    'Other screens',
+    undefined,
+    undefined,
+    SCREEN_CATEGORIES.length,
+    position,
+  ));
   APPS_DISCOVERY_STATIC_FACETS.forEach(({ group, label, values }) => {
     if (group === 'screens') return;
     values.forEach((value) => add(group, value, label));
@@ -241,7 +247,14 @@ export function buildAppsFilterOptions(
   apps.forEach((app) => {
     app.categories.forEach(({ name }) => add('categories', name, 'Categories', app, app.screens[0]));
     app.screens.forEach((screen) => {
-      add('screens', screen.type, screen.productArea || 'Screens', app, screen);
+      add(
+        'screens',
+        screen.type,
+        screenCategoryForType(screen.type)?.label
+          ?? (screen.productArea || 'Other screens'),
+        app,
+        screen,
+      );
       (screen.componentNames ?? []).forEach((value) => add('elements', value, 'UI Elements', app, screen));
       (screen.layoutPatterns ?? []).forEach((value) => add('elements', value, 'Layout Patterns', app, screen));
       (screen.visibleStates ?? []).forEach((value) => add('flows', value, 'Flows', app, screen));

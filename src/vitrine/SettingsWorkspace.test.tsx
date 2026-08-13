@@ -58,17 +58,26 @@ test('renders the Lumin-style full Settings workspace with Profile as its defaul
   // The section names are rail rows (published chrome); the content panel shows
   // the active section, which defaults to Profile.
   assert.match(source, /SETTINGS_SECTIONS\.map/);
+  assert.doesNotMatch(source, /label: 'Security'/);
+  assert.doesNotMatch(source, /label: 'Teams'/);
   assert.match(source, /label: 'Integrations'/);
+  assert.match(source, /CommandIcon/);
+  assert.doesNotMatch(source, /label: 'Appearance'/);
   assert.match(source, /section === 'integrations'/);
   assert.match(source, /Add Vitrines in Codex/);
   assert.match(source, /Streamable HTTP/);
   assert.match(source, /Copy URL/);
+  assert.match(source, /settings-workspace__integration-revoke/);
+  assert.match(source, /title="Revoke this access token\?"/);
+  assert.match(source, /actionVariant="destructive"/);
   assert.match(source, /label="Create token" size="sm" variant="primary"/);
   assert.match(source, /settings-workspace__integration-copy-url/);
   assert.match(source, /role="table" aria-label="Active Flow MCP access tokens"/);
   assert.doesNotMatch(source, /Token active/);
   assert.match(html, /Profile/);
   assert.match(html, /owner@example\.com/);
+  assert.match(html, /Appearance/);
+  assert.match(html, /Theme/);
   assert.doesNotMatch(html, /1 of 3 apps unlocked/);
   assert.doesNotMatch(html, /Developer settings/);
   // Settings uses the same shell as Projects: rail + content panel, no header
@@ -79,6 +88,26 @@ test('renders the Lumin-style full Settings workspace with Profile as its defaul
   // the settings content only.
   assert.doesNotMatch(html, /projects-workspace__desktop-rail/);
   assert.match(html, /settings-workspace__content/);
+});
+
+test('opens Billing when the billing route selects that Settings section', () => {
+  const html = renderToStaticMarkup(
+    <ThemeModeProvider>
+      <SettingsWorkspacePage
+        user={{ id: 7, email: 'owner@example.com', role: 'user' }}
+        subscription={free}
+        initialSection="billing"
+        onUpgrade={() => undefined}
+        onEntitlementsChanged={() => undefined}
+        onBack={() => undefined}
+        onSignOut={() => undefined}
+      />
+    </ThemeModeProvider>,
+  );
+
+  assert.match(html, /Subscription/);
+  assert.match(html, /Manage and view your Vitrines plan/);
+  assert.doesNotMatch(html, /Manage your Vitrines account details/);
 });
 
 test('defines the measured desktop Settings shell and collapsed mobile menu', () => {

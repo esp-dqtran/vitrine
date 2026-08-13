@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { getCurrentUser, login, logout, signup } from "./authApi.ts";
+import { getCurrentUser, login, logout, requestPasswordReset, resetPassword, signup } from "./authApi.ts";
 import { clearAuthToken, getAuthToken, setAuthToken } from "./apiFetch.ts";
 
 test("maps 401 me responses to no user", async (t) => {
@@ -89,4 +89,18 @@ test("includes a referral token only when creating an account", async (t) => {
     password: "a long enough password",
     referralToken: "r".repeat(48),
   });
+});
+
+test("uses the public reset endpoints without creating an auth token", async (t) => {
+  const requests: Array<{ url: string; body: unknown }> = [];
+  t.mock.method(globalThis, "fetch", async (input: string | URL | Request, init?: RequestInit) => {
+    requests.push({ url: String(input), body: JSON.parse(String(init?.body)) });
+    return new Response(null, { status: String(input).endsWith("/request") ? 202 : 204 });
+  });
+  await requestPasswordReset("member@example.com");
+  await resetPassword("a".repeat(43), "long enough");
+  assert.deepEqual(requests, [
+    { url: "/api/auth/password-reset/request", body: { email: "member@example.com" } },
+    { url: "/api/auth/password-reset", body: { token: "a".repeat(43), password: "long enough" } },
+  ]);
 });

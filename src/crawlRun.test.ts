@@ -26,6 +26,7 @@ import {
   normalizeCaptureUrl,
   persistFailureArtifact,
   resolveCrawlProfileDir,
+  resolveWebCaptureViewport,
   sanitizeDurableActualUrl,
   withMaskedSecretFields,
   type CaptureDependencies,
@@ -39,6 +40,11 @@ test("crawl worker keeps Linux profiles under an explicit root without changing 
     resolveCrawlProfileDir("data", "atlassian", { CRAWL_PROFILE_ROOT: "/app/data/browser-profiles-linux" }),
     "/app/data/browser-profiles-linux/atlassian",
   );
+});
+
+test("web flow capture defaults to the Vitrines desktop preview frame", () => {
+  assert.deepEqual(resolveWebCaptureViewport(), { width: 1440, height: 810 });
+  assert.deepEqual(resolveWebCaptureViewport({ width: 1280, height: 800 }), { width: 1280, height: 800 });
 });
 
 function sha256(bytes: Uint8Array): string {

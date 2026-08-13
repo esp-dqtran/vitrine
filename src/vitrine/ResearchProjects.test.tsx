@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
+  FirstProjectGuide,
   sortProjects,
   ResearchProjectsView,
 } from "./components/ProjectsPage.tsx";
@@ -38,7 +39,12 @@ test("renders a personal projects workspace without project status", () => {
       actions={actions}
     />,
   );
-  assert.match(empty, /Create your first project/);
+  assert.match(empty, /Turn product evidence into a decision/);
+  assert.match(empty, /Create a project/);
+  assert.match(empty, /Save evidence/);
+  assert.match(empty, /Decide and hand off/);
+  assert.match(empty, /Create first project/);
+  assert.match(empty, /Browse Apps first/);
 
   const populated = renderToStaticMarkup(
     <ResearchProjectsView
@@ -70,6 +76,49 @@ test("renders a personal projects workspace without project status", () => {
   assert.match(populated, /data-variant="primary"[\s\S]*New project/);
   assert.doesNotMatch(populated, /Filter projects/);
   assert.doesNotMatch(populated, /Synthesis stale|Draft|Active|Paused/);
+});
+
+test("keeps the first-project guide actionable and bounded to the activation loop", () => {
+  const html = renderToStaticMarkup(
+    <FirstProjectGuide onCreate={() => undefined} onBrowse={() => undefined} />,
+  );
+  assert.match(html, /First project/);
+  assert.match(html, /collect real product evidence/);
+  assert.match(html, /write a requirement, request review, and approve the outcome/);
+  assert.equal((html.match(/<li>/g) ?? []).length, 3);
+});
+
+test("keeps project tiles as elevated, keyboard-accessible cards", () => {
+  const css = readFileSync(
+    new URL("./projectsWorkspace.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    css,
+    /\.project-discovery-card > \.app-discovery-card\s*\{[\s\S]*display:\s*flex[\s\S]*flex-direction:\s*column[\s\S]*border-radius:\s*18px[\s\S]*box-shadow:/,
+  );
+  assert.match(
+    css,
+    /\.project-discovery-card > \.app-discovery-card:hover,[\s\S]*?\.project-discovery-card > \.app-discovery-card:focus-within\s*\{[\s\S]*transform:\s*translateY\(-2px\)/,
+  );
+  assert.match(
+    css,
+    /\.project-discovery-card \.app-discovery-card__media\s*\{[\s\S]*width:\s*calc\(100% - 24px\)[\s\S]*aspect-ratio:\s*16 \/ 9/,
+  );
+});
+
+test("publishes a compact Apps action from the Projects workspace rail", () => {
+  const source = readFileSync(
+    new URL("./components/ProjectsPage.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(source, /globalActions: \[\{[\s\S]*?label: "Apps"/);
+  assert.match(source, /onSelect: \(\) => navigate\(\{ name: "apps" \}\)/);
+  assert.match(source, /primaryHeading: "Workspace"/);
+  assert.doesNotMatch(source, /primaryCollapsible: true/);
+  assert.match(source, /onBrandSelect: \(\) => navigate\(\{ name: "apps" \}\)/);
 });
 
 test("organizes Projects around Personal and Team scopes", () => {
@@ -129,11 +178,7 @@ test("defines Lumin-style Team dropdowns, modals, and member management layout",
 
   assert.match(
     css,
-    /\.projects-team-drawer\s*\{[^}]*width:\s*calc\(var\(--projects-rail-width, 200px\) - 24px\);[^}]*border-radius:\s*var\(--radius-container\);[^}]*transition:\s*opacity 0\.15s,\s*transform 0\.15s;/s,
-  );
-  assert.match(
-    css,
-    /\.projects-team-drawer\s*\{[^}]*top:\s*104px;[^}]*max-height:\s*calc\(100dvh - 120px\);/s,
+    /\.projects-team-drawer\s*\{[^}]*top:\s*16px;[^}]*left:\s*calc\(var\(--projects-rail-width\) \+ 8px\);[^}]*width:\s*min\(300px, calc\(100vw - var\(--projects-rail-width\) - 24px\)\);[^}]*border:\s*1px solid var\(--color-border\);/s,
   );
   assert.match(
     css,
@@ -151,6 +196,7 @@ test("defines Lumin-style Team dropdowns, modals, and member management layout",
     source,
     /projects-workspace__modal projects-workspace__modal--invite[\s\S]*?width=\{640\}/,
   );
+  assert.match(source, /role="menu"\s*aria-label="Switch workspace"/);
   assert.match(
     source,
     /role="menu"\s*aria-label=\{`Actions for \$\{project\.title\}`\}/,
@@ -193,7 +239,7 @@ test("renders a responsive Lumin-style Projects header", () => {
   );
   assert.match(
     css,
-    /\.projects-workspace__desktop-rail\s*\{[^}]*background:\s*transparent;/s,
+    /\.projects-workspace__desktop-rail\s*\{[^}]*border-right:\s*0;[^}]*background:\s*var\(--color-background-body\);/s,
   );
   // The page reserves the rail gutter plus the panel inset; a margin on the
   // panel would collapse through the page and offset everything by 8px.
@@ -215,7 +261,7 @@ test("renders a responsive Lumin-style Projects header", () => {
   );
   assert.match(
     css,
-    /\.projects-team-drawer\s*\{[^}]*top:\s*104px;[^}]*left:\s*12px;[^}]*width:\s*calc\(var\(--projects-rail-width, 200px\) - 24px\);[^}]*gap:\s*0;[^}]*background:\s*var\(--color-background-surface\);/s,
+    /\.projects-team-drawer\s*\{[^}]*top:\s*16px;[^}]*left:\s*calc\(var\(--projects-rail-width\) \+ 8px\);[^}]*width:\s*min\(300px, calc\(100vw - var\(--projects-rail-width\) - 24px\)\);[^}]*border:\s*1px solid var\(--color-border\);/s,
   );
   assert.match(
     css,
@@ -225,19 +271,19 @@ test("renders a responsive Lumin-style Projects header", () => {
     css,
     /\.projects-workspace__header-search\s*\{[^}]*width:\s*min\(800px, 100%\);/s,
   );
-  // The rail reflows into a top bar below 980px rather than vanishing — hiding it
+  // The rail reflows into a top bar below 900px rather than vanishing — hiding it
   // took the team drawer with it, since the switcher is the drawer's only trigger.
   assert.match(
     css,
-    /@media \(max-width:\s*980px\)[\s\S]*?\.projects-workspace__desktop-rail\s*\{[^}]*position:\s*static;[^}]*flex-direction:\s*row;/s,
+    /@media \(max-width:\s*900px\)[\s\S]*?\.projects-workspace__desktop-rail\s*\{[^}]*position:\s*static;[^}]*flex-direction:\s*row;/s,
   );
   assert.doesNotMatch(
     css,
-    /@media \(max-width:\s*980px\)[\s\S]*?\.projects-workspace__desktop-rail\s*\{[^}]*display:\s*none;/,
+    /@media \(max-width:\s*900px\)[\s\S]*?\.projects-workspace__desktop-rail\s*\{[^}]*display:\s*none;/,
   );
   assert.match(
     css,
-    /@media \(max-width:\s*980px\)[\s\S]*?\.projects-workspace__search-toggle\s*\{[^}]*display:\s*inline-grid !important;/,
+    /@media \(max-width:\s*900px\)[\s\S]*?\.projects-workspace__search-toggle\s*\{[^}]*display:\s*inline-grid !important;/,
   );
 });
 
@@ -500,9 +546,9 @@ test("opens every Designer Project on its Canvas file index", () => {
   assert.doesNotMatch(filesSource, /exportToBlob|getDesignerCanvasFile/);
   assert.doesNotMatch(filesSource, /project-file-index__toolbar/);
   assert.match(filesSource, /project-file-index__grid--documents/);
-  // Areas moved into the rail tree, so the screen carries neither a tab bar nor
-  // a hero of its own — it wears the same page header as every other surface.
-  assert.doesNotMatch(filesSource, /<ProjectWorkspaceNav/);
+  // The app rail stays flat. Project-only areas are available in the project
+  // header, where they do not turn the global navigation into a tiny tree.
+  assert.match(filesSource, /<ProjectWorkspaceNav projectId=\{projectId\} active=\{area\}/);
   assert.doesNotMatch(filesSource, /project-files__hero/);
   assert.match(filesSource, /className="projects-workspace__page-header"/);
   assert.match(filesSource, /area === "settings"/);
@@ -547,7 +593,7 @@ test("renders the Canvas file index as either a grid or a list", () => {
   assert.match(css, /\.project-file-index__grid--documents\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/);
 });
 
-test("puts the project hierarchy in the rail instead of a tab bar", () => {
+test("keeps the global rail flat and project areas in the project header", () => {
   const navSource = readFileSync(
     new URL("./components/projectRailNav.tsx", import.meta.url),
     "utf8",
@@ -560,57 +606,40 @@ test("puts the project hierarchy in the rail instead of a tab bar", () => {
     new URL("./components/ProjectsPage.tsx", import.meta.url),
     "utf8",
   );
-  const railSource = readFileSync(
-    new URL("./components/WorkspaceChrome.tsx", import.meta.url),
-    "utf8",
-  );
+  // The global rail only changes workspace-level destinations. It must not
+  // turn into a second project file browser on detail routes.
+  assert.match(navSource, /label: 'Projects'[\s\S]*?onSelect: onOpenProjects/);
+  assert.match(navSource, /label: 'Collections'[\s\S]*?onSelect: \(\) => navigate\(\{ name: 'collections' \}\)/);
+  assert.doesNotMatch(navSource, /children:/);
+  assert.doesNotMatch(navSource, /label: 'Canvas'/);
+  assert.doesNotMatch(navSource, /label: 'Documents'/);
+  assert.doesNotMatch(navSource, /All collections/);
 
-  // Projects › every project › the open one's areas.
-  assert.match(navSource, /label: 'Projects'[\s\S]*?children: projects\.map/);
-  assert.match(navSource, /label: 'Canvas'[\s\S]*?label: 'Documents'/);
-  // Exactly one project is expanded — the one you are inside — so there is no
-  // collapse state to persist or get out of sync with the route.
-  assert.match(navSource, /const isOpen = projectId === openProjectId/);
-  assert.match(navSource, /expanded: isOpen/);
-  // Settings is the cog on the open project's row, not a third area row.
-  assert.match(navSource, /trailing: isOpen \?/);
-  assert.match(navSource, /name: 'project-settings'/);
-
-  // One definition, used by both surfaces, so the rail keeps its shape as you
-  // move between the index and a project.
+  // The same small global rail is used everywhere, while local project areas
+  // remain readable in the detail-page header.
   assert.match(filesSource, /projectRailNav\(\{/);
-  assert.match(indexSource, /primaryActions: projectRailNav\(\{/);
-
-  // The rail renders children recursively and keeps the trailing control a
-  // sibling of the row button — a button cannot nest inside a button.
-  assert.match(railSource, /action\.children\.map\(renderAction\)/);
-  assert.match(railSource, /\{renderRow\(action\)\}\s*\n\s*\{action\.trailing\}/);
+  assert.match(filesSource, /<ProjectWorkspaceNav projectId=\{projectId\} active=\{area\}/);
+  assert.match(
+    filesSource,
+    /workspace:\s*\{[\s\S]*?label:\s*"Switch workspace"[\s\S]*?name:\s*project\?\.organization\?\.name \?\? "Personal"[\s\S]*?expanded:\s*workspaceMenuOpen/,
+  );
+  assert.match(filesSource, /aria-label="Switch workspace"/);
+  assert.match(indexSource, /primaryActions:\s*projectRailNav\(\{/);
 });
 
-test("keeps the rail tree in compact dropdowns instead of overflowing the header", () => {
-  const css = readFileSync(new URL("./projectsWorkspace.css", import.meta.url), "utf8");
-  const railSource = readFileSync(
-    new URL("./components/WorkspaceChrome.tsx", import.meta.url),
+test("does not load directory data just to populate the global rail", () => {
+  const collectionsSource = readFileSync(
+    new URL("./components/CollectionsWorkspacePage.tsx", import.meta.url),
+    "utf8",
+  );
+  const filesSource = readFileSync(
+    new URL("./components/ProjectFilesPage.tsx", import.meta.url),
     "utf8",
   );
 
-  // The project tree stays inside a positioned popup, rather than flattening
-  // every project into the header row.
-  assert.match(
-    css,
-    /@media \(max-width: 980px\)[\s\S]*?\.projects-workspace__desktop-subnav\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?min-width:\s*220px;/s,
-  );
-  // In compact mode, an action with children toggles its dropdown instead of
-  // navigating away immediately.
-  assert.match(
-    railSource,
-    /isCompact && action\.children\?\.length \? \(\) => toggleFold\(action\) : action\.onSelect/,
-  );
-  assert.match(railSource, /action\.children\?\.length \? 'has-children' : null/);
-  // `is-open` tracks the effective fold, so compact menus start closed even if
-  // their matching desktop branch is expanded for the current route.
-  assert.match(railSource, /isExpanded\(action\) \? 'is-open' : null/);
-  assert.match(railSource, /isCompact \? false : Boolean\(action\.expanded\)/);
+  assert.doesNotMatch(collectionsSource, /listResearchProjects/);
+  assert.doesNotMatch(filesSource, /listResearchProjects/);
+  assert.doesNotMatch(filesSource, /listCollections/);
 });
 
 test("lets the project panel fill the page", () => {

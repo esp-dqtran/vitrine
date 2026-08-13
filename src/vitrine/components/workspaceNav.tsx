@@ -3,6 +3,7 @@ import {
   CogIcon,
   FolderIcon,
   GraphLineIcon,
+  GridIcon,
   UsersIcon,
 } from '@storybook/icons';
 import type { ReactNode } from 'react';
@@ -43,12 +44,24 @@ export function workspaceNav({
   onUsers?: () => void;
   onInsights?: () => void;
 } = {}): {
+  globalActions?: WorkspaceRailAction[];
   primaryLabel: string;
+  primaryHeading?: string;
+  primaryCollapsible?: boolean;
   primaryActions: WorkspaceRailAction[];
   settings?: WorkspaceRailAction;
 } {
   return {
+    globalActions: admin
+      ? undefined
+      : [{
+          label: 'Apps',
+          icon: <GridIcon aria-hidden="true" />,
+          onSelect: () => navigate({ name: 'apps' }),
+        }],
     primaryLabel: label,
+    primaryHeading: admin ? undefined : label,
+    primaryCollapsible: !admin,
     primaryActions: admin
       ? [
           {
@@ -76,12 +89,6 @@ export function workspaceNav({
             icon: <BookmarkHollowIcon aria-hidden="true" />,
             active: active === 'collections',
             onSelect: () => navigate({ name: 'collections' }),
-            children: [{
-              label: 'All collections',
-              icon: <BookmarkHollowIcon aria-hidden="true" />,
-              active: active === 'collections',
-              onSelect: () => navigate({ name: 'collections' }),
-            }],
           },
         ],
     settings: onSettings === null ? undefined : {

@@ -17,6 +17,8 @@ export type RootRouteDecision =
         | "build-in-public"
         | "pricing"
         | "billing-success"
+        | "forgot-password"
+        | "reset-password"
         | "feature-document-share";
     }
   | { kind: "application" }
@@ -49,6 +51,11 @@ export function decideRootRoute(
     case "signin":
       return context.auth === "guest"
         ? { kind: "signin" }
+        : { kind: "redirect", route: { name: "apps" } };
+    case "forgot-password":
+    case "reset-password":
+      return context.auth === "guest"
+        ? { kind: "public", page: route.name }
         : { kind: "redirect", route: { name: "apps" } };
     case "apps":
     case "sites":

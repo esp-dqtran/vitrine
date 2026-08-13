@@ -4,6 +4,7 @@ import {
 } from 'react';
 import { Button } from '@astryxdesign/core';
 import type { Platform } from '../../platformFromUrl.ts';
+import type { ResearchCollection } from '../../db.ts';
 import type { FlowCatalogItem } from '../flowCatalogApi.ts';
 import {
   createFlowsDiscoveryAdapter,
@@ -101,6 +102,8 @@ interface FlowsPageViewProps {
   fullAccessLabel?: string;
   onRequestFullAccess?: (appId: string) => void;
   onOpenFullFlow?: (appId: string, platform: Platform, version: number, flowId: string) => void;
+  collections?: ResearchCollection[];
+  onCollectionsChange?: (collections: ResearchCollection[]) => void;
 }
 
 export function FlowsPageView({
@@ -114,6 +117,8 @@ export function FlowsPageView({
   fullAccessLabel,
   onRequestFullAccess,
   onOpenFullFlow,
+  collections,
+  onCollectionsChange,
 }: FlowsPageViewProps) {
   const flowGroups = useMemo<DiscoveryFilterGroup>(() => ({
     id: 'flowGroups',
@@ -211,6 +216,9 @@ export function FlowsPageView({
         paginate={false}
         platform={controller.state.platform}
         userRole={userRole}
+        collections={collections}
+        onCollectionsChange={onCollectionsChange}
+        plan={userRole === 'admin' ? 'pro' : 'free'}
         cardPropsForFlow={(flow) => {
           const item = catalogItemsByFlowId.get(flow.id);
           if (!item) return undefined;
@@ -261,6 +269,8 @@ interface FlowsPageProps {
   fullAccessLabel?: string;
   onRequestFullAccess?: (appId: string) => void;
   onOpenFullFlow?: (appId: string, platform: Platform, version: number, flowId: string) => void;
+  collections?: ResearchCollection[];
+  onCollectionsChange?: (collections: ResearchCollection[]) => void;
 }
 
 export function FlowsPage({
@@ -274,6 +284,8 @@ export function FlowsPage({
   fullAccessLabel,
   onRequestFullAccess,
   onOpenFullFlow,
+  collections,
+  onCollectionsChange,
 }: FlowsPageProps) {
   const locationKey = useLocationKey();
   const search = locationKey.includes('?') ? locationKey.slice(locationKey.indexOf('?')) : '';
@@ -300,6 +312,8 @@ export function FlowsPage({
       fullAccessLabel={fullAccessLabel}
       onRequestFullAccess={onRequestFullAccess}
       onOpenFullFlow={onOpenFullFlow}
+      collections={collections}
+      onCollectionsChange={onCollectionsChange}
     />
   );
 }

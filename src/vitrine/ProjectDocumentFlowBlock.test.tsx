@@ -8,6 +8,7 @@ import type { ResearchProjectWorkspace } from "../researchProject.ts";
 import {
   catalogFlowOption,
   insertProjectDocumentEvidenceBlock,
+  insertProjectDocumentFlowBlock,
   projectDocumentEvidenceOptions,
   projectDocumentFlowView,
   projectDocumentFlowOptions,
@@ -296,6 +297,28 @@ test("inserts the custom Flow block from the slash menu", () => {
   flowItem.onItemClick();
   assert.equal(editor.document[0]?.type, "astryxReference");
   assert.equal(editor.document[0]?.props.referenceType, "flow");
+  document.destroy();
+});
+
+test("inserts a handed-off catalog Flow with its portable evidence snapshot", () => {
+  const { document, editor } = collaborativeEditor();
+  insertProjectDocumentFlowBlock(editor, {
+    app: "Linear",
+    appIconUrl: "/icons/linear.png",
+    appId: "linear",
+    description: "Invite a teammate.",
+    id: "catalog-flow:web:linear:invite",
+    platform: "web",
+    previews: [{ label: "Members", url: "/api/media/42" }],
+    source: "catalog",
+    stepCount: 1,
+    title: "Invite teammate",
+  });
+  const block = editor.document[0];
+  assert.equal(block?.type, "astryxReference");
+  assert.equal(block?.props.referenceId, "catalog-flow:web:linear:invite");
+  assert.equal(block?.props.source, "catalog");
+  assert.equal(block?.props.previewSnapshot, JSON.stringify([{ label: "Members", url: "/api/media/42" }]));
   document.destroy();
 });
 

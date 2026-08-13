@@ -23,6 +23,7 @@ import {
   type ProjectDocumentCommentView,
   type ProjectDocumentIcon,
   type ProjectDocumentPatch,
+  type ProjectDocumentReviewStatus,
   type ProjectDocumentView,
 } from "../projectDocumentsApi.ts";
 import {
@@ -37,12 +38,17 @@ import type { ResearchProjectWorkspace } from "../../researchProject.ts";
 import {
   ProjectDocumentFlowProvider,
   insertProjectDocumentEvidenceBlock,
+  insertProjectDocumentFlowBlock,
   projectDocumentEvidenceOptions,
   projectDocumentFlowOptions,
   projectDocumentSchema,
   projectDocumentSlashMenuItems,
   type ProjectDocumentFlowOption,
 } from "./projectDocumentFlowBlock.tsx";
+import {
+  consumeProjectDocumentFlowInsertIntent,
+  type ProjectDocumentFlowInsertItem,
+} from "../projectDocumentFlowInsertIntent.ts";
 import { ProjectAccessDialog } from "./ProjectAccessDialog.tsx";
 import {
   decodeProjectDocumentStateVector,
@@ -95,6 +101,65 @@ const collaboratorInitials = (name: string): string =>
     .map((part) => part[0]?.toUpperCase())
     .join("") || "?";
 
+export const documentReviewTemplates = [
+  {
+    id: "product-requirements",
+    title: "Product requirements",
+    description: "Problem, scope, user stories, business rules, acceptance criteria, metrics, and open questions.",
+    blocks: [
+      { type: "heading", props: { level: 2 }, content: "Product requirements" },
+      { type: "heading", props: { level: 3 }, content: "Problem and outcome" },
+      { type: "paragraph", content: "What customer or business problem are we solving, and what outcome should change?" },
+      { type: "heading", props: { level: 3 }, content: "Evidence" },
+      { type: "paragraph", content: "Insert the Vitrines Flow and screens that support this requirement." },
+      { type: "heading", props: { level: 3 }, content: "Scope" },
+      { type: "bulletListItem", content: "Goal:" },
+      { type: "bulletListItem", content: "Non-goal:" },
+      { type: "heading", props: { level: 3 }, content: "User story and business rules" },
+      { type: "paragraph", content: "As a [user], I want [capability], so that [outcome]." },
+      { type: "bulletListItem", content: "Business rule:" },
+      { type: "heading", props: { level: 3 }, content: "Acceptance criteria" },
+      { type: "checkListItem", content: "Given [context], when [action], then [result]." },
+      { type: "heading", props: { level: 3 }, content: "Success and guardrails" },
+      { type: "bulletListItem", content: "Success metric:" },
+      { type: "bulletListItem", content: "Guardrail metric:" },
+      { type: "heading", props: { level: 3 }, content: "Dependencies and open questions" },
+      { type: "bulletListItem", content: "Dependency:" },
+      { type: "bulletListItem", content: "Open question:" },
+    ],
+  },
+  {
+    id: "design-critique",
+    title: "Design critique",
+    description: "Goal, evidence, feedback, open questions, and next moves.",
+    blocks: [
+      { type: "heading", props: { level: 2 }, content: "Design critique" },
+      { type: "heading", props: { level: 3 }, content: "Goal and context" },
+      { type: "paragraph", content: "What are we trying to improve, and for whom?" },
+      { type: "heading", props: { level: 3 }, content: "Evidence" },
+      { type: "paragraph", content: "Insert Vitrines screens or flows that support the review." },
+      { type: "heading", props: { level: 3 }, content: "Feedback and next moves" },
+      { type: "bulletListItem", content: "Keep:" },
+      { type: "bulletListItem", content: "Change:" },
+      { type: "bulletListItem", content: "Open question:" },
+    ],
+  },
+  {
+    id: "decision-record",
+    title: "Decision record",
+    description: "Capture the decision, evidence, tradeoffs, owner, and follow-up.",
+    blocks: [
+      { type: "heading", props: { level: 2 }, content: "Decision record" },
+      { type: "heading", props: { level: 3 }, content: "Decision" },
+      { type: "paragraph", content: "State the decision in one sentence." },
+      { type: "heading", props: { level: 3 }, content: "Evidence and tradeoffs" },
+      { type: "paragraph", content: "Link the product evidence and alternatives considered." },
+      { type: "heading", props: { level: 3 }, content: "Owner and follow-up" },
+      { type: "checkListItem", content: "Assign an owner and next checkpoint." },
+    ],
+  },
+] as const;
+
 function PageIcon({
   icon,
   size = "md",
@@ -145,6 +210,13 @@ function DocumentDiscussion({
   onRetry,
   onResolve,
   onSubmit,
+  reviewStatus,
+  reviewRequestedAt,
+  approvedAt,
+  approvedByEmail,
+  canReview,
+  onReviewStatusChange,
+  onApplyTemplate,
 }: {
   comments: ProjectDocumentCommentView[];
   context: { blockId: string; quote?: string } | null;
@@ -161,6 +233,13 @@ function DocumentDiscussion({
   onRetry: () => void;
   onResolve: (comment: ProjectDocumentCommentView) => void;
   onSubmit: () => void;
+  reviewStatus: ProjectDocumentReviewStatus;
+  reviewRequestedAt: string | null;
+  approvedAt: string | null;
+  approvedByEmail: string | null;
+  canReview: boolean;
+  onReviewStatusChange: (status: ProjectDocumentReviewStatus) => void;
+  onApplyTemplate: (templateId: typeof documentReviewTemplates[number]["id"]) => void;
 }) {
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyDraft, setReplyDraft] = useState("");
@@ -180,8 +259,8 @@ function DocumentDiscussion({
     >
       <header>
         <div>
-          <strong>Contextual review</strong>
-          <span>{openComments.length} open</span>
+          <strong>Review hub</strong>
+          <span>{openComments.length} open · {reviewStatus === "in_review" ? "In review" : reviewStatus === "approved" ? "Approved" : "Draft"}</span>
         </div>
         <IconButton
           label="Close discussion"
@@ -191,6 +270,33 @@ function DocumentDiscussion({
           onClick={onClose}
         />
       </header>
+      <section className="project-document-review-workflow" aria-label="Review workflow">
+        <div>
+          <strong>Approval</strong>
+          <span>
+            {reviewStatus === "approved" && approvedAt
+              ? `Approved${approvedByEmail ? ` by ${approvedByEmail}` : ""} on ${new Date(approvedAt).toLocaleDateString()}`
+              : reviewStatus === "in_review" && reviewRequestedAt
+                ? `Requested ${new Date(reviewRequestedAt).toLocaleDateString()}`
+                : "Keep drafting, then request a team review."}
+          </span>
+        </div>
+        <div className="project-document-review-workflow__actions">
+          <Button label="Draft" size="sm" variant={reviewStatus === "draft" ? "primary" : "ghost"} isDisabled={!canReview} onClick={() => onReviewStatusChange("draft")} />
+          <Button label="Request review" size="sm" variant={reviewStatus === "in_review" ? "primary" : "ghost"} isDisabled={!canReview} onClick={() => onReviewStatusChange("in_review")} />
+          <Button label="Approve" size="sm" variant={reviewStatus === "approved" ? "primary" : "ghost"} isDisabled={!canReview || openComments.length > 0} onClick={() => onReviewStatusChange("approved")} />
+        </div>
+        {openComments.length > 0 ? <small>Resolve all open threads before approval.</small> : null}
+      </section>
+      <section className="project-document-review-templates" aria-label="Review templates">
+        <strong>Start from a workspace template</strong>
+        {documentReviewTemplates.map((template) => (
+          <div className="project-document-review-template" key={template.id}>
+            <Button label={template.title} variant="ghost" size="sm" onClick={() => onApplyTemplate(template.id)} isDisabled={!canReview} />
+            <small>{template.description}</small>
+          </div>
+        ))}
+      </section>
       {error ? (
         <div className="project-document-discussion__error">
           <p role="alert">{error}</p>
@@ -357,6 +463,14 @@ function DocumentDiscussion({
           </article>
         ))}
       </div>
+      <section className="project-document-review-activity" aria-label="Review activity">
+        <strong>Recent activity</strong>
+        {comments.length ? comments.slice().sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)).slice(0, 5).map((comment) => (
+          <span key={`activity-${comment.id}`}>
+            {comment.authorEmail} {comment.resolvedAt ? "resolved a thread" : comment.parentCommentId ? "replied" : "commented"}
+          </span>
+        )) : <span>No review activity yet.</span>}
+      </section>
     </aside>
   );
 }
@@ -369,6 +483,8 @@ function CollaborativeProjectDocument({
   userName,
   onAttachCatalogFlow,
   onDocumentChange,
+  pendingFlow,
+  onPendingFlowConsumed,
 }: {
   document: ProjectDocumentView;
   evidence: ReturnType<typeof projectDocumentEvidenceOptions>;
@@ -379,6 +495,8 @@ function CollaborativeProjectDocument({
     option: ProjectDocumentFlowOption,
   ) => Promise<ProjectDocumentFlowOption>;
   onDocumentChange: (document: ProjectDocumentView) => void;
+  pendingFlow?: ProjectDocumentFlowInsertItem;
+  onPendingFlowConsumed: () => void;
 }) {
   const resolvedTheme = useResolvedThemeMode();
   const [saveState, setSaveState] = useState<DocumentSaveState>("connecting");
@@ -407,6 +525,7 @@ function CollaborativeProjectDocument({
   const titleInputRef = useRef<HTMLTextAreaElement>(null);
   const cancelTitleCommitRef = useRef(false);
   const saveDelayTimerRef = useRef<number | undefined>(undefined);
+  const insertedPendingFlowRef = useRef("");
   const clearSaveDelayTimer = useCallback(() => {
     if (saveDelayTimerRef.current === undefined) return;
     window.clearTimeout(saveDelayTimerRef.current);
@@ -482,6 +601,18 @@ function CollaborativeProjectDocument({
   );
 
   useEffect(() => setTitleDraft(document.title), [document.title]);
+
+  useEffect(() => {
+    if (
+      !pendingFlow
+      || document.role !== "editor"
+      || document.reviewStatus === "approved"
+      || insertedPendingFlowRef.current === pendingFlow.id
+    ) return;
+    insertProjectDocumentFlowBlock(editor, pendingFlow);
+    insertedPendingFlowRef.current = pendingFlow.id;
+    onPendingFlowConsumed();
+  }, [document.reviewStatus, document.role, editor, onPendingFlowConsumed, pendingFlow]);
 
   useEffect(() => {
     yDocument.on("update", markSavePending);
@@ -698,6 +829,20 @@ function CollaborativeProjectDocument({
     }
   };
 
+  const applyReviewTemplate = (
+    templateId: typeof documentReviewTemplates[number]["id"],
+  ) => {
+    const template = documentReviewTemplates.find(({ id }) => id === templateId);
+    const target = editor.document.at(-1);
+    if (!template || !target || document.role !== "editor") return;
+    editor.insertBlocks(
+      template.blocks.map((block) => ({ ...block })) as Parameters<typeof editor.insertBlocks>[0],
+      target,
+      "after",
+    );
+    setDiscussionOpen(false);
+  };
+
   const copyLink = async () => {
     setUiError("");
     try {
@@ -792,6 +937,15 @@ function CollaborativeProjectDocument({
               void updateMetadata({ isFavorite: !document.isFavorite })
             }
             isDisabled={document.role !== "editor" || savingMetadata}
+          />
+          <Button
+            className="project-document-action project-document-action--review"
+            label={document.reviewStatus === "in_review" ? "In review" : document.reviewStatus === "approved" ? "Approved" : "Review"}
+            variant={document.reviewStatus === "draft" ? "ghost" : "secondary"}
+            size="sm"
+            aria-expanded={discussionOpen}
+            aria-controls="project-document-discussion"
+            onClick={() => void openDiscussion()}
           />
           <div className="project-document-popover-anchor">
             <Button
@@ -1031,7 +1185,7 @@ function CollaborativeProjectDocument({
             >
               <BlockNoteView
                 editor={editor}
-                editable={document.role === "editor"}
+                editable={document.role === "editor" && document.reviewStatus !== "approved"}
                 formattingToolbar
                 linkToolbar
                 slashMenu={false}
@@ -1069,6 +1223,13 @@ function CollaborativeProjectDocument({
             onRetry={() => void openDiscussion()}
             onResolve={(comment) => void toggleComment(comment)}
             onSubmit={() => void submitComment()}
+            reviewStatus={document.reviewStatus}
+            reviewRequestedAt={document.reviewRequestedAt}
+            approvedAt={document.approvedAt}
+            approvedByEmail={document.approvedByEmail}
+            canReview={document.role === "editor" && !savingMetadata && !commentsLoading}
+            onReviewStatusChange={(reviewStatus) => void updateMetadata({ reviewStatus })}
+            onApplyTemplate={applyReviewTemplate}
           />
         ) : null}
       </div>
@@ -1094,6 +1255,7 @@ export function ProjectDocumentPage({
   const [workspace, setWorkspace] = useState<ResearchProjectWorkspace>();
   const [flowPlatform, setFlowPlatform] = useState<Platform>("web");
   const [error, setError] = useState("");
+  const [pendingFlow, setPendingFlow] = useState<ProjectDocumentFlowInsertItem>();
   const flows = useMemo(
     () => (workspace ? projectDocumentFlowOptions(workspace) : []),
     [workspace],
@@ -1130,6 +1292,10 @@ export function ProjectDocumentPage({
       active = false;
     };
   }, [documentId, projectId]);
+
+  useEffect(() => {
+    setPendingFlow(consumeProjectDocumentFlowInsertIntent(projectId));
+  }, [projectId]);
 
   const attachCatalogFlowOption = useCallback(
     async (
@@ -1202,6 +1368,8 @@ export function ProjectDocumentPage({
           userName={userName}
           onAttachCatalogFlow={attachCatalogFlowOption}
           onDocumentChange={setDocument}
+          pendingFlow={pendingFlow}
+          onPendingFlowConsumed={() => setPendingFlow(undefined)}
         />
       ) : null}
     </main>

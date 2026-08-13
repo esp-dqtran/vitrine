@@ -1,8 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { Button, Heading, Icon, IconButton, Text, TextInput, useMediaQuery, type InputStatus } from '@astryxdesign/core';
+import { Button, Heading, Icon, Text, TextInput, useMediaQuery, type InputStatus } from '@astryxdesign/core';
 import type { AuthUser } from './authApi';
 import { AppIcon } from './components/AppIcon';
+import { PasswordField } from './components/PasswordField.tsx';
+import { AuthSubmitButton } from './components/AuthSubmitButton.tsx';
 import { validateReferral } from './referralApi';
 import { useFloatDrift } from './useFloatDrift';
 import { useCatalogPreview, type PreviewApp } from './useCatalogPreview';
@@ -54,45 +56,6 @@ function Wordmark({ enlarged = false }: { enlarged?: boolean }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: enlarged ? 6 : 9 }}>
       <img src="/favicon.svg" alt="" aria-hidden="true" width={iconSize} style={{ flex: '0 0 auto' }} />
       <span style={{ fontSize: enlarged ? 24 : 18, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>Vitrines</span>
-    </div>
-  );
-}
-
-function PasswordField({ value, onChange, status, label = 'Password' }: { value: string; onChange: (v: string) => void; status?: InputStatus; label?: string }) {
-  const [show, setShow] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
-
-  // TextInput's own layout (label height, description, status message) isn't
-  // part of its public API, so a hardcoded `top` guess drifts out of line with
-  // the actual input box. Measure the rendered field instead and center against it.
-  useLayoutEffect(() => {
-    const wrap = wrapRef.current;
-    const btn = btnRef.current;
-    const input = wrap?.querySelector('input');
-    if (!wrap || !btn || !input) return;
-    const wrapRect = wrap.getBoundingClientRect();
-    const inputRect = input.getBoundingClientRect();
-    btn.style.top = `${inputRect.top - wrapRect.top + inputRect.height / 2}px`;
-    btn.style.right = `${wrapRect.right - inputRect.right}px`;
-  });
-
-  return (
-    <div ref={wrapRef} style={{ position: 'relative' }}>
-      <TextInput label={label} type={show ? 'text' : 'password'} value={value} onChange={onChange} placeholder="••••••••" status={status} />
-      <IconButton
-        ref={btnRef}
-        type="button"
-        onClick={() => setShow((s) => !s)}
-        label={show ? 'Hide password' : 'Show password'}
-        icon={<Icon icon="eyeSlash" size="sm" />}
-        variant="ghost"
-        size="sm"
-        style={{
-          position: 'absolute',
-          transform: 'translateY(-50%)',
-        }}
-      />
     </div>
   );
 }
@@ -561,11 +524,13 @@ export function SignIn({
   authenticate,
   register,
   onSignedIn,
+  onForgotPassword,
   embedded = false,
 }: {
   authenticate: (email: string, password: string) => Promise<AuthUser>;
   register: (email: string, password: string, referralToken?: string) => Promise<AuthUser>;
   onSignedIn: (user: AuthUser) => void;
+  onForgotPassword?: () => void;
   embedded?: boolean;
 }) {
   // Below md, the decorative Showcase panel (3D tilt/parallax that's meaningless on
@@ -724,6 +689,11 @@ export function SignIn({
                 >
                   <PasswordField value={password} onChange={setPassword} status={passwordStatus} />
                 </div>
+                {mode === 'signin' && onForgotPassword && (
+                  <div style={{ marginTop: -8, textAlign: 'right' }}>
+                    <Button type="button" variant="ghost" size="sm" label="Forgot password?" onClick={onForgotPassword} />
+                  </div>
+                )}
                 {mode === 'signup' && (
                   <div
                     key={'confirm-pw-wrap-' + shakeNonce}
@@ -733,16 +703,10 @@ export function SignIn({
                   </div>
                 )}
 
-                <div style={{ marginTop: 6, animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .2s both' }}>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="lg"
-                    label={mode === 'signup' ? 'Create account' : 'Sign in'}
-                    clickAction={submitAction}
-                    style={{ width: '100%' }}
-                  />
-                </div>
+                <AuthSubmitButton
+                  label={mode === 'signup' ? 'Create account' : 'Sign in'}
+                  clickAction={submitAction}
+                />
               </form>
 
               <div style={{ marginTop: 18, textAlign: 'center', animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .25s both' }}>

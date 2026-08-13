@@ -39,13 +39,13 @@ test('loads each app section from its dedicated endpoint', async () => {
   };
 
   const input = { platform: 'ios' as const, version: 3, limit: 48 };
-  await fetchAppScreens('quora mobile', input, request);
+  await fetchAppScreens('quora mobile', { ...input, screenTypes: ['Login', 'Dashboard'] }, request);
   await fetchAppUiElements('quora mobile', { ...input, cursor: 'next page' }, request);
   await fetchAppUiElementSummary('quora mobile', { ...input, limit: 12 }, request);
   await fetchAppFlows('quora mobile', { platform: 'ios', version: 3 }, request);
 
   assert.deepEqual(requested, [
-    '/api/apps/quora%20mobile/screens?platform=ios&version=3&limit=48',
+    '/api/apps/quora%20mobile/screens?platform=ios&version=3&type=Login&type=Dashboard&limit=48',
     '/api/apps/quora%20mobile/ui-elements?platform=ios&version=3&cursor=next+page&limit=48',
     '/api/apps/quora%20mobile/ui-element-summary?platform=ios&version=3&limit=12',
     '/api/apps/quora%20mobile/flows?platform=ios&version=3',

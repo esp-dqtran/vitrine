@@ -42,7 +42,7 @@ test("renders preview context and all three actions", () => {
   assert.match(html, /Back to results/);
   assert.match(html, /Open/);
   assert.match(html, /Compare/);
-  assert.match(html, /Save to collection/);
+  assert.match(html, /Use in project/);
   assert.match(html, /\/full\.webp/);
   assert.match(html, /Flow context/);
 });

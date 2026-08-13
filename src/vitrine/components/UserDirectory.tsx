@@ -1,10 +1,10 @@
 import { Spinner } from './Spinner.tsx';
 import { useEffect, useRef, useState } from 'react';
-import { Badge, Button, ClickableCard, Icon, TextInput } from '@astryxdesign/core';
+import { Badge, Button, ClickableCard, Icon, IconButton, TextInput } from '@astryxdesign/core';
 import type { AdminUser, UserFilter } from '../types.ts';
 import { formatJoinedDate, USER_FILTER_LABELS, userInitial, userPlanLabel } from '../usersPageModel.ts';
 import { AstryxAlertModal } from './AstryxModal.tsx';
-import { AstryxMenu, AstryxSingleSelectDropdown } from './AstryxDropdown.tsx';
+import { AstryxDropdown, AstryxDropdownItem, AstryxMenu } from './AstryxDropdown.tsx';
 
 interface UserDirectoryProps {
   users: AdminUser[];
@@ -117,7 +117,9 @@ function MemberRow({ user, onSetActive, onSetProGrant, onSelectUser }: Pick<User
 
 export function UserDirectory(props: UserDirectoryProps) {
   const sentinel = useRef<HTMLDivElement>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
   const hasFilters = Boolean(props.query.trim()) || props.filter !== 'all';
+  const selectedFilterLabel = USER_FILTER_LABELS[props.filter];
 
   useEffect(() => {
     const element = sentinel.current;
@@ -141,13 +143,38 @@ export function UserDirectory(props: UserDirectoryProps) {
           <TextInput label="Search members" isLabelHidden value={props.query} onChange={props.onQueryChange} placeholder="Search by email…" startIcon={<Icon icon="search" size="sm" />} hasClear={Boolean(props.query)} width="100%" />
         </div>
         <div className="admin-users-filter-control">
-          <AstryxSingleSelectDropdown
-            ariaLabel="Filter members"
-            value={props.filter}
-            triggerVariant="primary"
-            options={Object.entries(USER_FILTER_LABELS).map(([value, label]) => ({ value, label }))}
-            onChange={(value) => props.onFilterChange(value as UserFilter)}
-          />
+          <div className={`apps-filterbar__filter ${props.filter !== 'all' ? 'apps-filterbar__filter--selected' : ''}`}>
+            <AstryxDropdown
+              label={props.filter === 'all' ? 'Members' : selectedFilterLabel}
+              ariaLabel={props.filter === 'all' ? 'Filter members' : `Filter members: ${selectedFilterLabel}`}
+              open={filterOpen}
+              triggerClassName="apps-filterbar__filter-button"
+              hasChevron={props.filter === 'all'}
+              onOpenChange={setFilterOpen}
+            >
+              {Object.entries(USER_FILTER_LABELS).map(([value, label]) => (
+                <AstryxDropdownItem
+                  key={value}
+                  label={label}
+                  selected={props.filter === value}
+                  onSelect={() => {
+                    props.onFilterChange(value as UserFilter);
+                    setFilterOpen(false);
+                  }}
+                />
+              ))}
+            </AstryxDropdown>
+            {props.filter !== 'all' ? (
+              <IconButton
+                label="Clear member filter"
+                icon={<Icon icon="close" size="sm" />}
+                variant="ghost"
+                size="sm"
+                className="apps-filterbar__clear"
+                onClick={() => props.onFilterChange('all')}
+              />
+            ) : null}
+          </div>
         </div>
         {props.refreshing && (
           <span className="admin-users-refreshing" role="status">Updating…</span>

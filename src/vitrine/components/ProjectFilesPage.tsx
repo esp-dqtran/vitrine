@@ -1,5 +1,5 @@
 import { Spinner } from './Spinner.tsx';
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
   Heading,
@@ -26,7 +26,6 @@ import {
 import type { DesignerCanvasFileSummary } from "../../designerCanvas.ts";
 import type {
   ResearchProjectIcon,
-  ResearchProjectSummary,
   ResearchProjectWorkspace,
 } from "../../researchProject.ts";
 import {
@@ -41,13 +40,12 @@ import {
 } from "../projectDocumentsApi.ts";
 import {
   getResearchProject,
-  listResearchProjects,
   updateResearchProject,
 } from "../researchProjectsApi.ts";
-import { navigate } from "../router.ts";
+import { navigate, routeToPath } from "../router.ts";
 import { ProjectAccessButton } from "./ProjectAccessDialog.tsx";
 import { MediaGridCard } from "./MediaGridCard.tsx";
-import { type ProjectWorkspaceArea } from "./ProjectWorkspaceNav.tsx";
+import { ProjectWorkspaceNav, type ProjectWorkspaceArea } from "./ProjectWorkspaceNav.tsx";
 import { projectGlyph, projectRailNav } from "./projectRailNav.tsx";
 import type { WorkspaceRailAction } from "./WorkspaceChrome.tsx";
 import { useSegmentedIndicator } from "./useSegmentedIndicator.ts";
@@ -160,13 +158,13 @@ function CanvasScreenCard({
           imageFit="contain"
           preferFullImage
           title={canvas.title}
-          onOpen={() =>
-            navigate({
+          href={routeToPath(
+            {
               name: "project-canvas",
               projectId,
               canvasId: canvas.id,
-            })
-          }
+            },
+          )}
         />
       </div>
     </article>
@@ -181,9 +179,6 @@ export function ProjectFilesPage({
   area: ProjectWorkspaceArea;
 }) {
   const [project, setProject] = useState<ResearchProjectWorkspace>();
-  /* Siblings for the rail tree. Failure is silent: the tree falls back to the
-     open project alone rather than taking the page down with it. */
-  const [siblings, setSiblings] = useState<ResearchProjectSummary[]>([]);
   const [canvases, setCanvases] = useState<DesignerCanvasFileSummary[]>([]);
   const [documents, setDocuments] = useState<ProjectDocumentView[]>([]);
   const [loading, setLoading] = useState(true);
@@ -198,6 +193,9 @@ export function ProjectFilesPage({
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
   const [error, setError] = useState("");
+  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
+  const workspaceMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const workspaceMenuRef = useRef<HTMLElement>(null);
 
   const projectTitle = project?.title ?? "Designer project";
   const projectIcon = project?.icon ?? "initial";
@@ -217,9 +215,8 @@ export function ProjectFilesPage({
     const controller = new AbortController();
     setLoading(true);
     setError("");
-    /* Both lists load regardless of `area` — the rail tree shows Canvas and
-       Documents side by side, so it needs both even while the main panel
-       renders only one. */
+    /* Both lists load regardless of `area` so switching Canvas and Documents
+       is immediate once the project page is open. */
     const fileRequest = Promise.all([
       listDesignerCanvases(projectId, controller.signal).then(setCanvases),
       listProjectDocuments(projectId, controller.signal).then(setDocuments),
@@ -240,19 +237,19 @@ export function ProjectFilesPage({
     return () => controller.abort();
   }, [area, projectId]);
 
-  /* Separate from the page load: the tree is chrome, and a slow or failed list
-     must not hold up (or break) the files it sits beside. */
   useEffect(() => {
-    let cancelled = false;
-    void listResearchProjects()
-      .then((next) => {
-        if (!cancelled) setSiblings(next);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
+    if (!workspaceMenuOpen) return undefined;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setWorkspaceMenuOpen(false);
+      workspaceMenuTriggerRef.current?.focus();
     };
-  }, []);
+    window.addEventListener("keydown", closeOnEscape);
+    requestAnimationFrame(() =>
+      workspaceMenuRef.current?.querySelector<HTMLButtonElement>("button")?.focus(),
+    );
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [workspaceMenuOpen]);
 
   const files = useMemo(
     () =>
@@ -318,35 +315,38 @@ export function ProjectFilesPage({
     (settingsTitle.trim() !== projectTitle || settingsIcon !== projectIcon);
   const settingsReadOnly = project?.access?.role === "viewer";
 
-  /*
-   * The rail carries the whole hierarchy — Projects › each project › its areas —
-   * so the project screen needs no tab bar of its own. Exactly one project is
-   * expanded: the one you are inside. Opening another navigates to it, which
-   * expands it, so there is no collapse state to keep, restore, or get wrong.
-   */
+  /* The shared app rail stays flat. Project-specific areas are local to this
+     page, where their labels can be read without a popup or tiny tree rows. */
   const projectTree: WorkspaceRailAction[] = useMemo(
     () =>
       projectRailNav({
-        projects: siblings.length
-          ? siblings
-          : [{ id: projectId, title: projectTitle } as ResearchProjectSummary],
-        openProjectId: projectId,
-        area,
-        canvases,
-        documents,
         onOpenProjects: () => navigate({ name: "projects" }),
       }),
-    [area, canvases, documents, projectId, projectTitle, siblings],
+    [],
   );
 
   useWorkspaceChrome(
     () => ({
       className: "project-files-page",
-      /* No workspace row: it was an inert chip naming the project directly above
-         the project's own row in the tree, which says the same thing and is the
-         one you can actually click. */
+      /* Keep the rail identity identical to the Projects index. The current
+         workspace remains switchable on a detail route instead of becoming an
+         inert label. */
+      workspace: {
+        label: "Switch workspace",
+        name: project?.organization?.name ?? "Personal",
+        initial: (project?.organization?.name ?? "Personal").charAt(0).toUpperCase(),
+        expanded: workspaceMenuOpen,
+        buttonRef: workspaceMenuTriggerRef,
+        onSelect: () => setWorkspaceMenuOpen((open) => !open),
+      },
       nav: {
-        primaryLabel: "Projects",
+        primaryLabel: "Workspace",
+        primaryHeading: "Workspace",
+        globalActions: [{
+          label: "Apps",
+          icon: <GridIcon aria-hidden="true" />,
+          onSelect: () => navigate({ name: "apps" }),
+        }],
         primaryActions: projectTree,
         settings: {
           label: "Settings",
@@ -354,9 +354,58 @@ export function ProjectFilesPage({
           onSelect: () => navigate({ name: "settings-billing" }),
         },
       },
-      onBrandSelect: () => navigate({ name: "projects" }),
+      onBrandSelect: () => navigate({ name: "apps" }),
+      drawer: (
+        <div
+          className={`projects-workspace__drawer-layer${workspaceMenuOpen ? " is-open" : ""}`}
+          aria-hidden={!workspaceMenuOpen}
+        >
+          <button
+            type="button"
+            className="projects-workspace__drawer-backdrop"
+            aria-label="Close workspace menu"
+            tabIndex={workspaceMenuOpen ? 0 : -1}
+            onClick={() => setWorkspaceMenuOpen(false)}
+          />
+          <aside
+            ref={workspaceMenuRef}
+            className="projects-team-drawer"
+            role="menu"
+            aria-label="Switch workspace"
+          >
+            <section className="projects-team-switcher__spaces" aria-label="Workspaces">
+              <button
+                type="button"
+                className="is-active"
+                role="menuitemradio"
+                aria-checked="true"
+                onClick={() => {
+                  setWorkspaceMenuOpen(false);
+                  navigate({ name: "projects" });
+                }}
+              >
+                <UserIcon aria-hidden="true" />
+                <span>{project?.organization?.name ?? "Personal"}</span>
+              </button>
+            </section>
+            <div className="projects-team-drawer__divider" />
+            <button
+              type="button"
+              className="projects-team-switcher__create"
+              role="menuitem"
+              onClick={() => {
+                setWorkspaceMenuOpen(false);
+                navigate({ name: "settings-billing" });
+              }}
+            >
+              <CogIcon aria-hidden="true" />
+              <span>Workspace settings</span>
+            </button>
+          </aside>
+        </div>
+      ),
     }),
-    [projectTitle, projectTree],
+    [project?.organization?.name, projectTitle, projectTree, workspaceMenuOpen],
   );
 
   return (
@@ -372,6 +421,7 @@ export function ProjectFilesPage({
             <div>
               <Heading level={1}>{projectTitle}</Heading>
               <Text color="secondary">{areaSummary}</Text>
+              <ProjectWorkspaceNav projectId={projectId} active={area} />
             </div>
             <div className="projects-workspace__page-header-actions">
               {area === "canvas" && canvases.length ? (

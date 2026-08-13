@@ -21,6 +21,7 @@ interface Options {
   concurrency: number;
   output: string;
   allowEmpty: boolean;
+  force: boolean;
 }
 
 interface ScreenSource {
@@ -44,7 +45,7 @@ function usage(): never {
   throw new Error(
     "Usage: node --env-file=.env --import tsx scripts/analyze-screens-with-kiro.ts "
     + "--app <name> --platform <ios|android|web> --version <number> "
-    + "[--concurrency 3] [--limit 5000] [--output <path>] [--allow-empty]",
+    + "[--concurrency 3] [--limit 5000] [--output <path>] [--allow-empty] [--force]",
   );
 }
 
@@ -59,10 +60,15 @@ function positive(value: string | undefined, label: string): number {
 function options(args: string[]): Options {
   const values = new Map<string, string>();
   let allowEmpty = false;
+  let force = false;
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
     if (argument === "--allow-empty") {
       allowEmpty = true;
+      continue;
+    }
+    if (argument === "--force") {
+      force = true;
       continue;
     }
     if (!argument.startsWith("--") || !args[index + 1]) usage();
@@ -88,6 +94,7 @@ function options(args: string[]): Options {
       ?? `data/screen-analysis/${app}-${platform}-v${versionNumber}-kiro.json`,
     ),
     allowEmpty,
+    force,
   };
 }
 
@@ -115,10 +122,10 @@ async function listSources(selected: Options): Promise<ScreenSource[]> {
        AND av.platform = $2
        AND av.version_number = $3
        AND i.kind = 'screen'
-       AND i.analysis IS NULL
+       AND ($4::boolean OR i.analysis IS NULL)
      ORDER BY i.id
-     LIMIT $4`,
-    [selected.app, selected.platform, selected.versionNumber, selected.limit],
+     LIMIT $5`,
+    [selected.app, selected.platform, selected.versionNumber, selected.force, selected.limit],
   );
   return result.rows.map((row) => ({
     id: row.id,

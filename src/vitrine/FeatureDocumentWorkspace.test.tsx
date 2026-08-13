@@ -9,6 +9,7 @@ import type {
 } from '../featureDocument.ts';
 import { DocumentFlowPanelView } from './components/DocumentFlowPanel.tsx';
 import { FeatureDocumentEditor } from './components/FeatureDocumentEditor.tsx';
+import { FeatureDocumentHandoffPanel } from './components/FeatureDocumentHandoffPanel.tsx';
 
 const claim = (id: string, text: string) => ({ id, kind: 'proposed' as const, text, evidenceIds: [] });
 const content: FeatureDocumentContent = {
@@ -87,5 +88,29 @@ test('Document Flow renders structured requirements without exposing the editor'
   assert.match(html, /Preserve progress/);
   assert.match(html, /GIVEN/);
   assert.match(html, /Open evidence IMAGE-42 in Visual Flow/);
+  assert.match(html, /Handoff/);
   assert.doesNotMatch(html, /Overview|Edit Document Flow|Revision history|Evidence inspector|Save new revision/);
+});
+
+test('Handoff exposes the durable BA and PO review lifecycle without replacing Requirements', () => {
+  const html = renderToStaticMarkup(
+    <FeatureDocumentHandoffPanel
+      document={featureDocument}
+      revision={revision}
+      onDocumentChange={() => {}}
+      onJobStarted={() => {}}
+      onOpenVisualStep={() => {}}
+    />,
+  );
+  for (const label of [
+    'Review, approve, and share this feature brief',
+    'Approval readiness',
+    'Edit draft',
+    'Request review',
+    'Export Markdown',
+    'Create review link',
+    'Regenerate from the source Flow',
+    'Revision history',
+  ]) assert.match(html, new RegExp(label));
+  assert.doesNotMatch(html, />Approve</);
 });

@@ -13,6 +13,7 @@ import type {
 } from "../../searchTypes.ts";
 import type { SearchPageState } from "../searchState.ts";
 import { ActiveSearchFilters } from "./ActiveSearchFilters.tsx";
+import { DiscoveryFilterMenu, type DiscoveryFilterGroup } from "./AppsFilterBar.tsx";
 
 const scopeLabels: Record<SearchScope, string> = {
   apps: "Apps",
@@ -81,7 +82,6 @@ export function QuickSearchFilters({
   onChange(state: SearchPageState): void;
   onOpenMore(): void;
 }) {
-  const [openKey, setOpenKey] = useState<keyof SearchFilters | "type" | null>(null);
   const quickKeys = quickFilterKeys(state.scope);
   const types = (Object.keys(typeLabels) as SearchType[])
     .filter((type) => type === "all" || (typeCounts[type] ?? 0) > 0);
@@ -106,71 +106,41 @@ export function QuickSearchFilters({
         {quickKeys.map((key) => {
           const options = facets[key] ?? [];
           const selected = state.filters[key];
+          const group: DiscoveryFilterGroup = {
+            id: `quick-search-${key}`,
+            label: filterLabels[key],
+            selected,
+            options: options.map(({ value, count }) => ({
+              value,
+              count,
+              section: filterLabels[key],
+            })),
+          };
           return (
-            <div className="quick-search__filter-menu" key={key}>
-              <Button
-                label={`${filterLabels[key]}${selected.length ? ` · ${selected.length}` : ""}`}
-                variant="ghost"
-                size="sm"
-                className="quick-search__filter-chip"
-                aria-expanded={openKey === key}
-                onClick={() => setOpenKey(openKey === key ? null : key)}
-              />
-              {openKey === key ? (
-                <div role="menu" aria-label={filterLabels[key]}>
-                  {options.map(({ value, count }) => (
-                    <Button
-                      label={`${value} · ${count}`}
-                      variant="ghost"
-                      size="sm"
-                      role="menuitemcheckbox"
-                      aria-checked={selected.includes(value)}
-                      key={value}
-                      onClick={() => onChange({
-                        ...state,
-                        filters: {
-                          ...state.filters,
-                          [key]: toggleFilterValue(selected, value),
-                        },
-                      })}
-                    >
-                      <span>{value}</span><small>{count}</small>
-                    </Button>
-                  ))}
-                </div>
-              ) : null}
-            </div>
+            <QuickSearchFilterMenu
+              key={key}
+              group={group}
+              onChange={(value) => onChange({
+                ...state,
+                filters: {
+                  ...state.filters,
+                  [key]: toggleFilterValue(selected, value),
+                },
+              })}
+              onClear={() => onChange({
+                ...state,
+                filters: { ...state.filters, [key]: [] },
+              })}
+            />
           );
         })}
         {state.scope === "all" ? (
-          <div className="quick-search__filter-menu">
-            <Button
-              label={`Result type${state.type !== "all" ? ` · ${typeLabels[state.type]}` : ""}`}
-              variant="ghost"
-              size="sm"
-              className="quick-search__filter-chip"
-              aria-expanded={openKey === "type"}
-              onClick={() => setOpenKey(openKey === "type" ? null : "type")}
-            />
-            {openKey === "type" ? (
-              <div role="menu" aria-label="Result type">
-                {types.map((type) => (
-                  <Button
-                    label={`${typeLabels[type]}${type !== "all" ? ` · ${typeCounts[type]}` : ""}`}
-                    variant="ghost"
-                    size="sm"
-                    role="menuitemradio"
-                    aria-checked={state.type === type}
-                    key={type}
-                    onClick={() => onChange({ ...state, type })}
-                  >
-                    <span>{typeLabels[type]}</span>
-                    {type !== "all" ? <small>{typeCounts[type]}</small> : null}
-                  </Button>
-                ))}
-              </div>
-            ) : null}
-          </div>
+          <QuickSearchResultTypeMenu
+            type={state.type}
+            types={types}
+            typeCounts={typeCounts}
+            onChange={(type) => onChange({ ...state, type })}
+          />
         ) : null}
         <Button
           label="More filters"
@@ -187,5 +157,83 @@ export function QuickSearchFilters({
         />
       </div>
     </div>
+  );
+}
+
+function QuickSearchResultTypeMenu({
+  type,
+  types,
+  typeCounts,
+  onChange,
+}: {
+  type: SearchType;
+  types: SearchType[];
+  typeCounts: AdvancedSearchResult["typeCounts"];
+  onChange(type: SearchType): void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const selected = type === "all" ? [] : [typeLabels[type]];
+  const group: DiscoveryFilterGroup = {
+    id: "quick-search-result-type",
+    label: "Result type",
+    selected,
+    options: types
+      .filter((option) => option !== "all")
+      .map((option) => ({
+        value: typeLabels[option],
+        count: typeCounts[option],
+        section: "Result type",
+      })),
+  };
+  return (
+    <DiscoveryFilterMenu
+      group={group}
+      open={open}
+      query={query}
+      preview={null}
+      filterClassName="quick-search__filter"
+      onToggleOpen={() => {
+        setQuery("");
+        setOpen((current) => !current);
+      }}
+      onQueryChange={setQuery}
+      onPreview={() => undefined}
+      onToggleOption={(option) => {
+        const next = types.find((candidate) => typeLabels[candidate] === option.value);
+        if (next) onChange(next);
+      }}
+      onClear={() => onChange("all")}
+    />
+  );
+}
+
+function QuickSearchFilterMenu({
+  group,
+  onChange,
+  onClear,
+}: {
+  group: DiscoveryFilterGroup;
+  onChange(value: string): void;
+  onClear(): void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  return (
+    <DiscoveryFilterMenu
+      group={group}
+      open={open}
+      query={query}
+      preview={null}
+      filterClassName="quick-search__filter"
+      onToggleOpen={() => {
+        setQuery("");
+        setOpen((current) => !current);
+      }}
+      onQueryChange={setQuery}
+      onPreview={() => undefined}
+      onToggleOption={(option) => onChange(option.value)}
+      onClear={onClear}
+    />
   );
 }

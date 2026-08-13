@@ -29,6 +29,7 @@ export function activeAppSectionKey(input: {
   activeSection: DetailSection;
   platform: Platform;
   selectedVersion?: number;
+  screenTypes?: string[];
   versions: AppVersion[] | null;
 }): AppSectionKey | null {
   const section = activeDataSection(input.activeSection);
@@ -37,6 +38,9 @@ export function activeAppSectionKey(input: {
     section,
     platform: input.platform,
     version: input.selectedVersion ?? 'latest',
+    ...(section === 'screens' && input.screenTypes?.length
+      ? { screenTypes: input.screenTypes }
+      : {}),
   } : null;
 }
 
@@ -45,6 +49,7 @@ export function useAppSectionData(input: {
   activeSection: DetailSection;
   platform: Platform;
   selectedVersion?: number;
+  screenTypes?: string[];
 }) {
   const storeRef = useRef<ReturnType<typeof createAppSectionStore> | null>(null);
   if (!storeRef.current) storeRef.current = createAppSectionStore();
@@ -80,14 +85,28 @@ export function useAppSectionData(input: {
   const activeKey = useMemo<AppSectionKey | null>(() => activeAppSectionKey({
     ...input,
     versions,
-  }), [input.appId, input.activeSection, input.platform, input.selectedVersion, versions]);
+  }), [
+    input.appId,
+    input.activeSection,
+    input.platform,
+    input.selectedVersion,
+    input.screenTypes,
+    versions,
+  ]);
 
   useEffect(() => {
     if (!activeKey) return;
     const controller = new AbortController();
     void store.load(activeKey, controller.signal).catch(() => undefined);
     return () => controller.abort();
-  }, [activeKey?.appId, activeKey?.platform, activeKey?.section, activeKey?.version, store]);
+  }, [
+    activeKey?.appId,
+    activeKey?.platform,
+    activeKey?.section,
+    activeKey?.version,
+    activeKey?.screenTypes?.join(','),
+    store,
+  ]);
 
   const state = activeKey ? store.get(activeKey) : { status: 'idle' as const, data: null, error: null };
   const setVersions = useCallback((items: AppVersion[]) => {
@@ -102,6 +121,12 @@ export function useAppSectionData(input: {
     state,
     loadNext: () => activeKey ? store.loadNext(activeKey) : Promise.resolve(null),
     retry: () => activeKey ? store.retry(activeKey) : Promise.resolve(null),
+    refreshApp: async () => {
+      store.invalidate((key) => key.startsWith(`${input.appId}|`));
+      const items = await listAppVersions(input.appId, input.platform);
+      setVersions(items);
+      return items;
+    },
     setVersions,
     invalidateVersion: (platform: Platform, version: number) =>
       store.invalidate((key) => key.startsWith(`${input.appId}|`) && key.includes(`|${platform}|${version}`)),

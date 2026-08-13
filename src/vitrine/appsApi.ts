@@ -11,12 +11,15 @@ export interface EvidenceSectionRequest {
   version?: number;
   cursor?: string | null;
   limit?: number;
+  screenTypes?: string[];
   signal?: AbortSignal;
 }
 
 export interface EvidenceSectionPage {
   screens: Screen[];
   nextCursor: string | null;
+  /** Complete screen-type facet set for the selected App version. */
+  screenTypes?: string[];
   platform: Platform;
   version: AppVersion | null;
 }
@@ -79,6 +82,9 @@ function evidenceUrl(appId: string, section: 'screens' | 'ui-elements', input: E
   const params = new URLSearchParams({ platform: input.platform });
   if (input.version !== undefined) params.set('version', String(input.version));
   if (input.cursor) params.set('cursor', input.cursor);
+  if (section === 'screens') {
+    for (const type of input.screenTypes ?? []) params.append('type', type);
+  }
   params.set('limit', String(input.limit ?? 48));
   return `/api/apps/${encodeURIComponent(appId)}/${section}?${params.toString()}`;
 }

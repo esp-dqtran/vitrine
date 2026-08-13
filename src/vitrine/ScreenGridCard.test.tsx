@@ -89,15 +89,17 @@ test("renders hover collection and copy actions inside the card without a source
   assert.doesNotMatch(html, /Open source screen/);
 });
 
-test("shows screen-pattern badges on App detail screenshots", () => {
+test("shows only the canonical screen category, never the source facet set", () => {
   const html = renderToStaticMarkup(
     <ScreenGridCard
       screen={{
         ...screen,
+        type: "Login",
         matchedFacets: [
-          { group: "screens", value: "Preview" },
-          { group: "screens", value: "Wallpaper" },
-          { group: "elements", value: "Button" },
+          { group: "screens", value: "Signup" },
+          { group: "screens", value: "Login" },
+          { group: "screens", value: "Confirmation" },
+          { group: "screens", value: "Emails & Messages" },
         ],
       }}
       accent="#3399ff"
@@ -107,9 +109,10 @@ test("shows screen-pattern badges on App detail screenshots", () => {
   );
 
   assert.match(html, /screen-grid-card__patterns/);
-  assert.doesNotMatch(html, />Preview</);
-  assert.match(html, />Wallpaper</);
-  assert.doesNotMatch(html, />Button</);
+  assert.match(html, />Login</);
+  assert.doesNotMatch(html, />Signup</);
+  assert.doesNotMatch(html, />Confirmation</);
+  assert.doesNotMatch(html, />Emails &amp; Messages</);
 });
 
 test("can hand the production Save action to an owning workflow", () => {
@@ -127,6 +130,22 @@ test("can hand the production Save action to an owning workflow", () => {
   assert.match(html, /screen-grid-card__save/);
   assert.match(html, /data-variant="primary"/);
   assert.match(html, />Copy image</);
+});
+
+test("uses a Remove action when the card is rendered inside a collection", () => {
+  const html = renderToStaticMarkup(
+    <ScreenGridCard
+      screen={screen}
+      accent="#3399ff"
+      delay={0}
+      onOpen={() => undefined}
+      onRemove={() => undefined}
+    />,
+  );
+
+  assert.match(html, />Remove</);
+  assert.doesNotMatch(html, />Save</);
+  assert.match(html, /screen-grid-card__remove/);
 });
 
 test("builds meaningful accessible labels without leaking database ids", () => {

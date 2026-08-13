@@ -18,6 +18,14 @@ test("round-trips the billing settings route used by the Stripe customer portal"
   assert.equal(routeToPath({ name: "settings-billing" }), "/settings/billing");
 });
 
+test("parses public password recovery routes and a bounded reset token", () => {
+  const token = "a".repeat(43);
+  assert.deepEqual(parseRoutePath("/forgot-password"), { name: "forgot-password" });
+  assert.deepEqual(parseRouteLocation("/reset-password", `?token=${token}`), { name: "reset-password", token });
+  assert.equal(routeToPath({ name: "reset-password", token }), `/reset-password?token=${token}`);
+  assert.deepEqual(parseRouteLocation("/reset-password", "?token=bad"), { name: "reset-password" });
+});
+
 test("round-trips the advanced search route without owning its query parameters", () => {
   assert.deepEqual(parseRoutePath("/search"), { name: "search" });
   assert.equal(routeToPath({ name: "search" }), "/search");
@@ -117,6 +125,25 @@ test("round-trips Project Canvas and Documents file routes", () => {
     `/projects/${PROJECT_ID}/canvases/${canvasId}`,
   );
   assert.deepEqual(parseRoutePath(routeToPath(canvas)), canvas);
+  const insert = "33333333-3333-4333-8333-333333333333";
+  assert.equal(
+    routeToPath({ ...canvas, insert }),
+    `/projects/${PROJECT_ID}/canvases/${canvasId}?insert=${insert}`,
+  );
+  assert.deepEqual(
+    parseRouteLocation(
+      `/projects/${PROJECT_ID}/canvases/${canvasId}`,
+      `?insert=${insert}`,
+    ),
+    { ...canvas, insert },
+  );
+  assert.deepEqual(
+    parseRouteLocation(
+      `/projects/${PROJECT_ID}/canvases/${canvasId}`,
+      '?insert=bad',
+    ),
+    canvas,
+  );
   assert.equal(routeToPath(documents), `/projects/${PROJECT_ID}/documents`);
   assert.deepEqual(parseRoutePath(routeToPath(documents)), documents);
   assert.equal(routeToPath(settings), `/projects/${PROJECT_ID}/settings`);

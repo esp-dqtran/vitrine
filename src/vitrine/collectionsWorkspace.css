@@ -111,6 +111,41 @@
   overflow-x: auto;
 }
 
+.collections-workspace__screens {
+  margin-top: 28px;
+}
+
+.collection-detail .collections-workspace__screens {
+  margin-top: 0;
+}
+
+.collection-detail,
+.collection-detail .reference-detail__hero {
+  background: transparent;
+}
+
+.collection-detail .reference-detail__navigation {
+  display: none;
+}
+
+.collection-detail .reference-detail__hero-inner {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "heading";
+  justify-items: center;
+  text-align: center;
+}
+
+.collection-detail .reference-detail__heading {
+  justify-self: center;
+  text-align: center;
+}
+
+.collection-detail .reference-detail__logo,
+.collection-detail .reference-detail__metadata,
+.collection-detail .reference-detail__actions {
+  display: none;
+}
+
 .collections-workspace__detail-toolbar button {
   display: inline-flex;
   min-height: 36px;

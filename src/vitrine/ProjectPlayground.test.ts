@@ -101,6 +101,8 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /className="project-playground__identity-status"/);
   assert.match(source, /aria-label=\{saveStatusLabel\}/);
   assert.match(source, /convertToExcalidrawElements/);
+  assert.match(source, /consumeCanvasScreenInsertIntent/);
+  assert.match(source, /await insertCatalogScreen\(result\)/);
   assert.match(source, /editor\.addFiles\(\[file\]\)/);
   assert.match(source, /<ProjectReferencePanel/);
   assert.match(source, /<ProjectScreenLibrary/);
@@ -340,7 +342,10 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     source,
     /const hasDragBounds = Math\.abs\(deltaX\) > 8 \|\| Math\.abs\(deltaY\) > 8/,
   );
-  assert.match(source, /width: Math\.abs\(deltaX\), height: Math\.abs\(deltaY\)/);
+  assert.match(
+    source,
+    /width: Math\.abs\(deltaX\), height: Math\.abs\(deltaY\)/,
+  );
   assert.match(source, /className="project-canvas-shape-library__more"/);
   assert.match(source, /aria-label="More shapes"/);
   assert.match(source, /className="project-canvas-more-shapes"/);
@@ -389,6 +394,10 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /customType: "astryx-table"/);
   assert.match(
     source,
+    /const insertCanvasTableAt = useCallback\([\s\S]*?canvasTableCellSelectionRef\.current = \{[\s\S]*?cellIds: created\.map\(\(element\) => element\.id\),/,
+  );
+  assert.match(
+    source,
     /const handleCanvasPlacementPointerUp = useCallback\([\s\S]*?tablePlacementRef\.current[\s\S]*?insertCanvasTableAt\([\s\S]*?stopTablePlacement\(\);/,
   );
   assert.match(
@@ -430,6 +439,11 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   );
   assert.match(source, /aria-label="Add column"/);
   assert.match(source, /aria-label="Add row"/);
+  assert.match(source, /const deleteSelectedCanvasTable = useCallback/);
+  assert.match(
+    source,
+    /aria-label="Delete table"[\s\S]*?onClick=\{deleteSelectedCanvasTable\}/,
+  );
   assert.match(
     source,
     /if \(nativeTool\) \{[\s\S]*?deactivateStickyTool\(\);[\s\S]*?deactivateTableTool\(\);[\s\S]*?deactivateStampTool\(\);/,
@@ -508,9 +522,19 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.doesNotMatch(emojiStampSource, /toggleWidgetsLauncher/);
   assert.doesNotMatch(source, /FaceHappyIcon/);
   assert.match(source, /className="project-canvas-stamp-preview"/);
+  assert.match(source, /const \[stampEntrances, setStampEntrances\]/);
+  assert.match(source, /const animateCanvasStampEntrance = useCallback/);
+  assert.match(
+    source,
+    /withCanvasElementUpdate\(image, \{ opacity: 0 \}\)[\s\S]*?animateCanvasStampEntrance\(stamp, x, y, \[animated\.id\]\)/,
+  );
+  assert.match(source, /className="project-canvas-stamp-entrance"/);
   assert.match(source, /const canvasStampAssetCache = new Map/);
   assert.match(source, /async function cachedCanvasStampAsset/);
-  assert.match(source, /const asset = await cachedCanvasStampAsset\(stamp\.asset\)/);
+  assert.match(
+    source,
+    /const asset = await cachedCanvasStampAsset\(stamp\.asset\)/,
+  );
   assert.match(
     source,
     /stamp\.id === "profile"[\s\S]*?createCanvasProfileStampElements/,
@@ -525,16 +549,21 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   );
   assert.match(
     css,
+    /\.project-canvas-stamp-entrance\s*\{[\s\S]*?animation: project-canvas-stamp-entrance 320ms/,
+  );
+  assert.match(
+    css,
+    /@keyframes project-canvas-stamp-entrance[\s\S]*?translate\(-50%, -50%\) scale\(0\.52\)[\s\S]*?translate\(-50%, -50%\) scale\(1\)/,
+  );
+  assert.match(
+    css,
     /\.project-playground__canvas--stamp-placement[\s\S]*?toolbar-selection[\s\S]*?background: transparent !important/,
   );
   assert.match(
     css,
     /\.layer-ui__wrapper:has\(\.project-canvas-stamp-menu\)[\s\S]*?z-index: 700 !important/,
   );
-  assert.match(
-    commentsSource,
-    /const figjamCommentToolIcon = new URL\(/,
-  );
+  assert.match(commentsSource, /const figjamCommentToolIcon = new URL\(/);
   assert.match(
     commentsSource,
     /just leave a note of appreciation\. Click anywhere in the file to leave a comment\./,
@@ -623,10 +652,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     /event\.key\.toLowerCase\(\) === "n"[\s\S]*toggleStickyNoteTool\(\)/,
   );
   assert.match(source, /customType: "astryx-document"/);
-  assert.match(
-    source,
-    /const documentPlacementRef = useRef\(false\)/,
-  );
+  assert.match(source, /const documentPlacementRef = useRef\(false\)/);
   assert.match(
     source,
     /const handleCanvasPlacementPointerUp[\s\S]*documentPlacementRef\.current[\s\S]*window\.requestAnimationFrame\(\(\) => \{[\s\S]*insertCanvasDocumentAt\(placement\.x, placement\.y\);[\s\S]*stopDocumentPlacement\(\);/,
@@ -746,10 +772,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /const closeCommentsPanel = useCallback/);
   assert.match(source, /<ProjectCanvasCommentPin/);
   assert.match(source, /<ProjectCanvasCommentInbox/);
-  assert.match(
-    source,
-    /commentsPanelOpen && !selectedComment/,
-  );
+  assert.match(source, /commentsPanelOpen && !selectedComment/);
   assert.match(source, /onSelectThread=\{\(threadId\) =>/);
   assert.match(source, /onClose=\{closeCommentsPanel\}/);
   assert.match(source, /<ProjectCanvasCommentPanel/);
@@ -835,6 +858,23 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.doesNotMatch(source, /mobileHelpOpen/);
   assert.doesNotMatch(source, /adjustCanvasZoom/);
   assert.match(source, /<ProjectAccessButton[\s\S]*?emphasized/);
+  assert.match(source, /shareUrl: canvasId/);
+  assert.match(
+    source,
+    /routeToPath\(\s*\{\s*name: "project-canvas",\s*projectId,\s*canvasId,\s*\}\s*\)/,
+  );
+  const projectAccessDialogSource = readFileSync(
+    new URL("./components/ProjectAccessDialog.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(projectAccessDialogSource, /Share canvas/);
+  assert.match(projectAccessDialogSource, /aria-label="Canvas sharing link"/);
+  assert.match(projectAccessDialogSource, /label="Copy link"/);
+  assert.match(
+    projectAccessDialogSource,
+    /successMessage="Canvas link copied"/,
+  );
+  assert.match(projectAccessDialogSource, /showToast\("Access updated"\)/);
   assert.doesNotMatch(
     source,
     /project-canvas-header__project-files|Open project files/,
@@ -850,12 +890,12 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /role="menuitem"[\s\S]*Project home/);
   assert.match(source, /navigate\(\{ name: "project", projectId \}\)/);
   assert.doesNotMatch(source, /project-canvas-header__group--right/);
-  assert.match(source, /theme=\{resolvedTheme\}/);
-  assert.match(source, /useResolvedThemeMode/);
+  assert.match(source, /const canvasTheme = "light" as const;/);
+  assert.match(source, /theme=\{canvasTheme\}/);
+  assert.doesNotMatch(source, /useResolvedThemeMode/);
   assert.match(source, /viewBackgroundColor: canvasSceneBackground/);
   assert.match(source, /const canvasSceneBackground = "#f7f8fa"/);
-  assert.match(source, /const resolvedTheme = useResolvedThemeMode\(\)/);
-  assert.match(source, /updateScene\(\{[\s\S]*theme: resolvedTheme/);
+  assert.match(source, /updateScene\(\{[\s\S]*theme: canvasTheme/);
   assert.match(source, /gridModeEnabled/);
   assert.match(source, /<Excalidraw/);
   assert.match(source, /excalidrawAPI=/);
@@ -1397,10 +1437,7 @@ test("gives a selected sticky note its own formatting toolbar", () => {
   assert.match(playgroundSource, /objectLabel="Sticky note"/);
   assert.match(playgroundSource, /colorAriaLabel="Change color"/);
   assert.match(playgroundSource, /objectLabel="Text"/);
-  assert.match(
-    playgroundSource,
-    /objectLabel="Text"[\s\S]*?showTextStyling/,
-  );
+  assert.match(playgroundSource, /objectLabel="Text"[\s\S]*?showTextStyling/);
   assert.match(playgroundSource, /project-canvas-text-rich-text/);
 
   // A Sticky Note has one bound Excalidraw label. Its rich closed-state layer
@@ -1644,7 +1681,10 @@ test("offers a data-aware Screens tool for the designer canvas", () => {
   assert.match(source, /IconButton/);
   assert.match(source, /fetchCatalogPage\(endpoint, controller\.signal\)/);
   assert.match(source, /filterAppsDiscoveryScreens/);
-  assert.match(source, /import \{ AppsPlatformSwitcher \} from "\.\/AppsPlatformSwitcher\.tsx"/);
+  assert.match(
+    source,
+    /import \{ AppsPlatformSwitcher \} from "\.\/AppsPlatformSwitcher\.tsx"/,
+  );
   assert.match(source, /Search screens, features, or UI text…/);
   assert.match(source, /"app-store-listing"/);
   assert.match(source, /Screen platform/);
@@ -1660,7 +1700,10 @@ test("offers a data-aware Screens tool for the designer canvas", () => {
   assert.match(source, /inspirationPrompts/);
   assert.doesNotMatch(source, /aria-label="Refine screens"/);
   assert.match(source, /project-screen-library__grid--inspiration/);
-  assert.match(source, /<AppsPlatformSwitcher[\s\S]*ariaLabel="Screen platform"/);
+  assert.match(
+    source,
+    /<AppsPlatformSwitcher[\s\S]*ariaLabel="Screen platform"/,
+  );
   assert.match(source, /project-screen-library__card--flow/);
   assert.match(source, /project-screen-library__flow-steps/);
   assert.match(source, /Place \$\{projectScreenCardTitle\(result\)\}/);
@@ -1986,7 +2029,6 @@ test("keeps the sticky composer reachable and glued to the board", () => {
   // Only the absent draft withholds the composer now.
   assert.equal((memo[1].match(/return undefined;/g) ?? []).length, 1);
   assert.match(memo[1], /if \(!stickyDraft\) return undefined;/);
-
 });
 
 test("scales the sticky composer with the board it stands in for", () => {
@@ -2008,8 +2050,14 @@ test("scales the sticky composer with the board it stands in for", () => {
   assert.ok(memo, "sticky composer style memo not found");
   // Editing an existing note uses that note's actual bounds; a new note uses
   // the default size. Both paths still scale by the live board zoom.
-  assert.match(memo[1], /const noteWidth = stickyDraft\.width \?\? stickyNoteSize;/);
-  assert.match(memo[1], /const noteHeight = stickyDraft\.height \?\? stickyNoteSize;/);
+  assert.match(
+    memo[1],
+    /const noteWidth = stickyDraft\.width \?\? stickyNoteSize;/,
+  );
+  assert.match(
+    memo[1],
+    /const noteHeight = stickyDraft\.height \?\? stickyNoteSize;/,
+  );
   assert.match(memo[1], /const width = noteWidth \* zoom;/);
   assert.match(memo[1], /const height = noteHeight \* zoom;/);
   assert.match(memo[1], /stickyDraft\.x - noteWidth \/ 2/);
@@ -2026,9 +2074,18 @@ test("scales the sticky composer with the board it stands in for", () => {
     memo[1],
     /"--sticky-padding-top": `\$\{stickyNoteTextVerticalInset \* zoom\}px`/,
   );
-  assert.match(memo[1], /const editingExistingNote = Boolean\(stickyDraft\.editingElementId\)/);
-  assert.match(memo[1], /"--sticky-font-weight": stickyDraft\.format\.bold \? "700" : "400"/);
-  assert.match(memo[1], /"--sticky-text-align": stickyDraft\.format\.textAlign/);
+  assert.match(
+    memo[1],
+    /const editingExistingNote = Boolean\(stickyDraft\.editingElementId\)/,
+  );
+  assert.match(
+    memo[1],
+    /"--sticky-font-weight": stickyDraft\.format\.bold \? "700" : "400"/,
+  );
+  assert.match(
+    memo[1],
+    /"--sticky-text-align": stickyDraft\.format\.textAlign/,
+  );
   // The narrow-screen guard the stylesheet gave us must survive the inline size.
   assert.match(memo[1], /width: `min\(\$\{width\}px, calc\(100vw - 24px\)\)`/);
   assert.doesNotMatch(memo[1], /const width = stickyNoteSize;/);
@@ -2351,6 +2408,8 @@ test("places a catalog flow as a storyboard of real step images", () => {
   assert.match(insertFlow, /imageUrl/);
   assert.doesNotMatch(insertFlow, /thumbnailUrl/);
   assert.match(source, /url\.pathname\.startsWith\("\/api\/flows\/media\/"\)/);
+  assert.match(source, /url\.pathname\.startsWith\("\/api\/media\/"\)/);
+  assert.match(source, /url\.searchParams\.set\("delivery", "inline"\)/);
   assert.match(insertFlow, /type: "image"/);
   assert.match(insertFlow, /kind: "flow"/);
   assert.match(insertFlow, /stepIndex/);

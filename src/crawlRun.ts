@@ -83,6 +83,16 @@ export interface ScreenshotPage {
   evaluate?: Page["evaluate"];
 }
 
+// Flow preview treats Web evidence as a desktop 16:9 frame. Keep crawler
+// captures on that same frame unless a reviewed plan deliberately overrides it.
+export const DEFAULT_WEB_CAPTURE_VIEWPORT = { width: 1440, height: 810 } as const;
+
+export function resolveWebCaptureViewport(
+  requested?: { width: number; height: number },
+): { width: number; height: number } {
+  return { ...(requested ?? DEFAULT_WEB_CAPTURE_VIEWPORT) };
+}
+
 export interface CaptureDependencies {
   dataDir: string;
   findWorkerEvidence(input: FindWorkerEvidenceInput): Promise<CrawlEvidenceRecord | undefined>;
@@ -782,6 +792,7 @@ function defaultBrowserExecutor(
       throw new Error("Durable crawling currently supports Chromium only");
     }
     let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
+    const viewport = resolveWebCaptureViewport(run.environment.viewport);
     try {
       return await executeFlowsInOwnedContext(plan, flows, {
         createContext: async () => {
@@ -790,14 +801,14 @@ function defaultBrowserExecutor(
             const storageState = await loadStorageState?.(run);
             return browser.newContext({
               ...(storageState ? { storageState } : {}),
-              ...(run.environment.viewport ? { viewport: run.environment.viewport } : {}),
+              viewport,
               ...(run.environment.locale ? { locale: run.environment.locale } : {}),
               ...(run.environment.timezone ? { timezoneId: run.environment.timezone } : {}),
             });
           }
           return chromium.launchPersistentContext(resolveCrawlProfileDir(dataDir, run.app, runtimeEnv), {
             headless: run.environment.headless ?? true,
-            ...(run.environment.viewport ? { viewport: run.environment.viewport } : {}),
+            viewport,
             ...(run.environment.locale ? { locale: run.environment.locale } : {}),
             ...(run.environment.timezone ? { timezoneId: run.environment.timezone } : {}),
           });

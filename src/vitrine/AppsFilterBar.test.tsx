@@ -105,6 +105,29 @@ test('keeps DiscoveryFilterBar generic across discovery kinds', () => {
   assert.match(html, /2 sites/);
 });
 
+test('can omit platform and sort controls for a web-only Sites catalog', () => {
+  const html = renderToStaticMarkup(
+    <DiscoveryFilterBar
+      kind="sites"
+      ariaLabel="Site discovery controls"
+      platform={{ value: 'web', ariaLabel: 'Site platform', onChange: () => undefined }}
+      filters={[]}
+      resultCount={2}
+      resultLabels={['site', 'sites']}
+      showPlatform={false}
+      showSort={false}
+      sort="latest"
+      sortOptions={[{ value: 'latest', label: 'Latest' }]}
+      onSortChange={() => undefined}
+      onToggleFilter={() => undefined}
+      onClearFilter={() => undefined}
+    />,
+  );
+
+  assert.doesNotMatch(html, /aria-label="Site platform: Web"/);
+  assert.doesNotMatch(html, /aria-label="Sort: Latest"/);
+});
+
 test('only renders generic DiscoveryFilterBar result meta when explicitly requested', () => {
   const props = {
     kind: 'sites' as const,
@@ -387,7 +410,7 @@ test('keeps the shared filter panel themed when portalled from App Detail', asyn
 test('matches unselected Apps dropdown triggers to the App Detail control', async () => {
   const css = await readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
   const sharedTriggerRule = css.match(
-    /\.apps-filterbar \.apps-filterbar__filter:not\(\.apps-filterbar__filter--platform\):not\(\.apps-filterbar__filter--selected\) \.apps-filterbar__filter-button\.apps-filterbar__filter-button\s*\{[^}]+\}/,
+    /:is\(\.apps-filterbar, \.reference-detail__tab-controls, \.quick-search__quick-filters, \.advanced-search-active-filters, \.admin-users-filter-control\) \.apps-filterbar__filter:not\(\.apps-filterbar__filter--platform\):not\(\.apps-filterbar__filter--selected\) \.apps-filterbar__filter-button\.apps-filterbar__filter-button\s*\{[^}]+\}/,
   )?.[0] ?? '';
 
   assert.match(sharedTriggerRule, /height:\s*var\(--vitrine-control-height\)\s*!important/);
@@ -428,7 +451,7 @@ test('keeps selected Apps filters checked only in their grouped taxonomy with th
   );
   assert.match(
     css,
-    /\.apps-filterbar \.apps-filterbar__filter \.apps-filterbar__filter-button\s*\{[^}]*border:\s*0\s*!important;[^}]*box-shadow:\s*none\s*!important;/,
+    /:is\(\.apps-filterbar, \.reference-detail__tab-controls, \.quick-search__quick-filters, \.advanced-search-active-filters, \.admin-users-filter-control\) \.apps-filterbar__filter \.apps-filterbar__filter-button[\s\S]*?border:\s*0\s*!important;[^}]*box-shadow:\s*none\s*!important;/,
   );
 });
 

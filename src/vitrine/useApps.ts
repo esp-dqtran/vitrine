@@ -142,13 +142,14 @@ export function useApps(
   const loadingMoreRef = useRef(false);
   const requestGenerationRef = useRef(0);
   const loadMoreControllerRef = useRef<AbortController | null>(null);
+  const roleCacheContextRef = useRef({ hasLoaded: false, role });
   const trimmedQuery = query.trim();
   const catalogPath = appCatalogRequestPath(trimmedQuery, platform);
   // This hook only ever reads the app list, but /api/apps ships its full
   // facet payload by default — ~75k entries / 5.4MB, which measured as 14x
   // slower than the same request with facets=summary (2.89s vs 0.21s).
 
-  const refresh = useCallback((signal?: AbortSignal) => {
+  const load = useCallback((signal?: AbortSignal, bypassCache = false) => {
     loadMoreControllerRef.current?.abort();
     loadMoreControllerRef.current = null;
     const generation = ++requestGenerationRef.current;
@@ -159,7 +160,9 @@ export function useApps(
     return (async () => {
       // No admin branch: /api/apps is now the public Apps grid, so the old
       // admin listing it used to serve is gone. Everyone reads the catalog.
-      const page = await refreshCatalogPage(catalogPath, signal);
+      const page = bypassCache
+        ? await refreshCatalogPage(catalogPath, signal)
+        : await fetchCatalogPage(catalogPath, signal);
       const firstPage = page.apps;
       if (generation !== requestGenerationRef.current) return;
       setApps(firstPage);
@@ -172,6 +175,11 @@ export function useApps(
       });
   }, [role, platform, catalogPath]);
 
+  // Retry is intentionally the one path that bypasses the short-lived catalog
+  // cache. Opening and closing the palette should simply restore its cached
+  // browse page instead of issuing the same request again.
+  const refresh = useCallback((signal?: AbortSignal) => load(signal, true), [load]);
+
   useEffect(() => () => {
     loadMoreControllerRef.current?.abort();
     loadMoreControllerRef.current = null;
@@ -180,6 +188,7 @@ export function useApps(
 
   useEffect(() => {
     const controller = new AbortController();
+    requestGenerationRef.current += 1;
     loadMoreControllerRef.current?.abort();
     loadMoreControllerRef.current = null;
     loadingMoreRef.current = false;
@@ -190,9 +199,12 @@ export function useApps(
     setNextCursor(null);
     setTotalApps(null);
     if (!enabled) return () => controller.abort();
-    void refresh(controller.signal);
+    const roleChanged = roleCacheContextRef.current.hasLoaded
+      && roleCacheContextRef.current.role !== role;
+    roleCacheContextRef.current = { hasLoaded: true, role };
+    void load(controller.signal, roleChanged);
     return () => controller.abort();
-  }, [enabled, refresh]);
+  }, [enabled, load, role]);
 
   const loadMore = useCallback(async () => {
     if (!nextCursor || loadingMoreRef.current) return;

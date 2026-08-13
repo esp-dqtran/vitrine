@@ -10,7 +10,7 @@ import type { KiroCliInvocation } from "./kiroCliFeatureDocumentProvider.ts";
 const VALID_ANALYSIS = {
   description: "A settings screen with a navigation bar and account rows.",
   purpose: "Manage account settings",
-  pageType: "Settings",
+  pageType: "Settings & Preferences",
   productArea: "Account",
   theme: "light",
   visibleStates: ["selected account tab"],
@@ -66,7 +66,7 @@ test("Kiro screen analyzer reads the normalized image and parses the final JSON"
     signal: new AbortController().signal,
   });
 
-  assert.equal(result.pageType, "Settings");
+  assert.equal(result.pageType, "Settings & Preferences");
   assert.equal(result.responsiveViewport, "mobile");
   assert.equal(invocations.length, 1);
   assert.match(invocations[0].args.at(-1) ?? "", /Read the screenshot at this exact absolute path/);
@@ -101,5 +101,32 @@ test("Kiro screen analyzer retries one invalid structured response", async () =>
   });
 
   assert.equal(result.productArea, "Account");
+  assert.equal(attempts, 2);
+});
+
+test("Kiro screen analyzer rejects a page type outside the Vitrines taxonomy", async () => {
+  let attempts = 0;
+  const analyzer = createKiroCliScreenAnalyzer(
+    { KIRO_CLI_SCREEN_CWD: "/tmp" },
+    async (invocation) => {
+      attempts += 1;
+      if (attempts === 1) {
+        return JSON.stringify({ ...VALID_ANALYSIS, pageType: "Settings" });
+      }
+      assert.match(invocation.args.at(-1) ?? "", /Unsupported Vitrines screen category: Settings/);
+      return JSON.stringify(VALID_ANALYSIS);
+    },
+  );
+  const body = await sharp({
+    create: { width: 8, height: 8, channels: 3, background: "#000000" },
+  }).png().toBuffer();
+
+  const result = await analyzer.analyze({
+    body,
+    platform: "web",
+    signal: new AbortController().signal,
+  });
+
+  assert.equal(result.pageType, "Settings & Preferences");
   assert.equal(attempts, 2);
 });

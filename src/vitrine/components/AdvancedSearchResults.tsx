@@ -5,11 +5,13 @@ export function AdvancedSearchResults({
   items,
   onPreview,
   comparisonAppIds = [],
+  comparisonAppNames = [],
   onToggleCompare,
 }: {
   items: SearchResultItem[];
   onPreview(item: SearchResultItem): void;
   comparisonAppIds?: number[];
+  comparisonAppNames?: string[];
   onToggleCompare?(item: SearchResultItem): void;
 }) {
   if (!items.length) {
@@ -22,7 +24,10 @@ export function AdvancedSearchResults({
           key={item.documentId}
           item={item}
           onPreview={onPreview}
-          selected={item.appId !== undefined && comparisonAppIds.includes(item.appId)}
+          selected={Boolean(
+            (item.appId !== undefined && comparisonAppIds.includes(item.appId))
+            || (item.appName && comparisonAppNames.includes(item.appName)),
+          )}
           onToggleCompare={
             item.catalogScope === "apps" && item.appId !== undefined
               ? onToggleCompare

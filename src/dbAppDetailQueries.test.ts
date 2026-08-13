@@ -14,6 +14,7 @@ test("app detail queries are explicit and evidence pagination stays in SQL", () 
   const evidenceEnd = source.indexOf("\nexport async function", evidenceStart + 1);
   const evidenceBody = source.slice(evidenceStart, evidenceEnd);
   assert.match(evidenceBody, /requestedLimit \+ 1/);
+  assert.match(evidenceBody, /i\.analysis->>'pageType' = ANY\(\$8\)/);
   assert.match(evidenceBody, /LIMIT \$\d/);
   assert.match(evidenceBody, /WHERE \(\$6::integer IS NULL OR id < \$6\)/);
   assert.match(evidenceBody, /ORDER BY id DESC/);
@@ -27,6 +28,17 @@ test("app detail queries are explicit and evidence pagination stays in SQL", () 
   assert.match(evidenceBody, /source_screen_id/);
   assert.doesNotMatch(evidenceBody, /\bappImages\(/);
   assert.doesNotMatch(evidenceBody, /\bversionImages\(/);
+});
+
+test("screen category facets are read independently of the paginated gallery", () => {
+  const start = source.indexOf("export async function appScreenTypes(");
+  const end = source.indexOf("\nexport async function", start + 1);
+  const body = source.slice(start, end);
+
+  assert.ok(start >= 0, "appScreenTypes source was not found");
+  assert.match(body, /SELECT DISTINCT trimmed\.page_type/);
+  assert.match(body, /i\.kind = 'screen'/);
+  assert.doesNotMatch(body, /LIMIT \$\d/);
 });
 
 test("UI element summaries group reviewed crop occurrences in SQL", () => {

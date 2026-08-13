@@ -316,6 +316,11 @@ export function App() {
       .finally(() => setEntitlementsResolved(true));
   }, [entitlementsRevision, user?.id, user?.role]);
 
+  useEffect(() => {
+    if (!user || collectionsLoaded || (route.name !== "app" && route.name !== "flows")) return;
+    void ensureCollections().catch(() => []);
+  }, [collectionsLoaded, ensureCollections, route.name, user?.id]);
+
   const retryEntitlements = () => setEntitlementsRevision((value) => value + 1);
 
   const openPalette = (
@@ -473,6 +478,7 @@ export function App() {
 
   const accountControls = user ? (
     <div
+      className="account-controls"
       style={{
         marginLeft: "auto",
         display: "flex",
@@ -482,10 +488,12 @@ export function App() {
       }}
     >
       <AstryxDropdown
-        label={user.email}
+        label={user.email.trim().slice(0, 1).toUpperCase() || 'Account'}
         ariaLabel={`Account menu: ${user.email}`}
         open={accountMenuOpen}
         menuWidth={220}
+        triggerClassName="account-menu-trigger"
+        hasChevron={false}
         onOpenChange={setAccountMenuOpen}
       >
         {isAdmin ? (
@@ -772,6 +780,8 @@ export function App() {
           onSelectApp={(appId) => void openApp(appId)}
           accountControls={accountControls}
           userRole={isAdmin ? "admin" : "user"}
+          collections={collections}
+          onCollectionsChange={setCollections}
         />
       );
       break;
@@ -893,6 +903,7 @@ export function App() {
         <ProjectPlayground
           projectId={route.projectId}
           canvasId={route.canvasId}
+          canvasInsertToken={route.insert}
           userId={user?.id ?? 0}
           userName={user?.email ?? "Astryx member"}
         />
@@ -1086,6 +1097,7 @@ export function App() {
           <SettingsWorkspacePage
             user={user}
             subscription={entitlements}
+            initialSection="billing"
             onUpgrade={openPricing}
             onEntitlementsChanged={retryEntitlements}
             onBack={() => navigate({ name: "projects" })}

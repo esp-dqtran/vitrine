@@ -24,6 +24,7 @@ import {
   listAppFlowSets,
   createCollection,
   listCollections,
+  listCollectionScreens,
   addCollectionItem,
   updateCollectionItemNotes,
   removeCollectionItem,
@@ -45,6 +46,7 @@ import {
   publishedAppPreviewMetadata,
   publishedAppPreviewFlows,
   appEvidencePage,
+  appScreenTypes,
   appUiElementSummary,
   appKnowledgeEvidenceSource,
   getVersionFlows,
@@ -54,9 +56,16 @@ import {
 import {
   authenticateUser,
   changePassword,
+  normalizeEmail,
   registerUser,
   type AuthUser,
 } from "../../../src/authStore.ts";
+import {
+  createPasswordReset,
+  resetPasswordWithToken,
+} from "../../../src/passwordResetStore.ts";
+import { validPasswordResetToken } from "../../../src/passwordResetToken.ts";
+import type { PasswordResetEmailSender } from "../../../src/passwordResetEmail.ts";
 import {
   createMcpAccessToken,
   listMcpAccessTokens,
@@ -382,6 +391,7 @@ const defaults = {
   listAppFlowSets,
   createCollection,
   listCollections,
+  listCollectionScreens,
   addCollectionItem,
   updateCollectionItemNotes,
   removeCollectionItem,
@@ -407,6 +417,7 @@ const defaults = {
   publishedAppPreviewMetadata,
   publishedAppPreviewFlows,
   appEvidencePage,
+  appScreenTypes,
   appUiElementSummary,
   getVersionFlows,
   flowEvidenceImages,
@@ -452,6 +463,9 @@ const defaults = {
   authenticateUser,
   registerUser,
   changePassword,
+  createPasswordReset,
+  resetPasswordWithToken,
+  passwordResetEmailSender: undefined as PasswordResetEmailSender | undefined,
   issueAuthToken: defaultJwtAuth.issueAuthToken,
   verifyAuthToken: defaultJwtAuth.verifyAuthToken,
   verifyMcpAccessToken,
@@ -876,6 +890,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   const deps = {
     ...defaults,
     ...overrides,
+    appScreenTypes: overrides.appScreenTypes ?? (overrides.appEvidencePage
+      ? async () => []
+      : defaults.appScreenTypes),
     publishedImages: overrides.publishedImages ?? overrides.allImages ?? defaults.publishedImages,
     listPublishedDesignSystems: overrides.listPublishedDesignSystems ?? overrides.listDesignSystems ?? defaults.listPublishedDesignSystems,
     listPublishedFlowSets: overrides.listPublishedFlowSets ?? overrides.listAppFlowSets ?? defaults.listPublishedFlowSets,
@@ -908,6 +925,10 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   };
   app.use(compression());
   const generalLimiter = createFixedWindowLimiter({ limit: deps.generalRateLimit, windowMs: 5 * 60_000 });
+  // Protect both the delivery source and a recipient inbox. The address key is
+  // normalized only in process memory and is never returned to the caller.
+  const passwordResetIpLimiter = createFixedWindowLimiter({ limit: 10, windowMs: 60 * 60_000 });
+  const passwordResetEmailLimiter = createFixedWindowLimiter({ limit: 3, windowMs: 60 * 60_000 });
   const traversalLimiter = createDistinctValueLimiter({ limit: deps.appTraversalLimit, windowMs: 10 * 60_000 });
   app.post("/billing/webhook", express.raw({ type: "application/json" }), async (req, res) => {
     try {
@@ -1017,6 +1038,45 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       token: auth.token,
       expiresAt: auth.expiresAt.toISOString(),
     });
+  });
+
+  // This endpoint always acknowledges a request, whether or not the address exists.
+  // The raw token is used only to compose the email and is never returned or stored.
+  app.post("/auth/password-reset/request", async (req, res) => {
+    const email = typeof req.body?.email === "string" ? req.body.email.trim() : "";
+    const validEmail = email.length > 0 && email.length <= 320;
+    const ipAllowed = passwordResetIpLimiter.check(`password-reset-ip:${req.ip ?? "unknown"}`);
+    const emailAllowed = validEmail
+      ? passwordResetEmailLimiter.check(`password-reset-email:${normalizeEmail(email)}`)
+      : { allowed: false as const };
+    if (ipAllowed.allowed && emailAllowed.allowed) {
+      try {
+        const reset = await deps.createPasswordReset(email);
+        if (reset && deps.passwordResetEmailSender) {
+          const url = new URL("/reset-password", `${deps.appUrl.replace(/\/$/, "")}/`);
+          url.searchParams.set("token", reset.token);
+          await deps.passwordResetEmailSender.send({ to: reset.email, resetUrl: url.toString() });
+        }
+      } catch {
+        // Deliberately neutral: callers must never learn account or delivery state.
+        console.error("[auth] password reset request failed");
+      }
+    }
+    res.status(202).json({ accepted: true });
+  });
+
+  app.post("/auth/password-reset", async (req, res) => {
+    const token = typeof req.body?.token === "string" ? req.body.token : "";
+    const password = typeof req.body?.password === "string" ? req.body.password : "";
+    if (password.length < 8) {
+      res.status(400).json({ error: "Password must be at least 8 characters" });
+      return;
+    }
+    if (!validPasswordResetToken(token) || !(await deps.resetPasswordWithToken(token, password))) {
+      res.status(400).json({ error: "This password reset link is invalid or has expired" });
+      return;
+    }
+    res.status(204).end();
   });
 
   app.post("/auth/logout", (_req, res) => {
@@ -2674,6 +2734,29 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.json(await deps.listCollections(res.locals.user.id));
   });
 
+  app.get("/collections/:collectionId/screens", async (req, res) => {
+    const collectionId = positiveId(req.params.collectionId);
+    if (!collectionId) {
+      res.status(400).json({ error: "invalid collection id" });
+      return;
+    }
+    const savedScreens = await deps.listCollectionScreens(res.locals.user.id, collectionId);
+    const visibleScreens = await Promise.all(savedScreens.map(async (savedScreen) => {
+      if (!await deps.canAccessApp(res.locals.user, savedScreen.app)) return null;
+      const screen = buildEvidencePage(
+        { rows: [savedScreen], nextCursor: null },
+        publicImageUrl,
+      ).screens[0];
+      return screen ? {
+        itemId: savedScreen.item_id,
+        app: savedScreen.app,
+        accent: savedScreen.accent_color ?? "var(--vitrine-color-action-primary)",
+        screen,
+      } : null;
+    }));
+    res.json({ screens: visibleScreens.filter((screen) => screen !== null) });
+  });
+
   app.post("/collections", async (req, res) => {
     const name = boundedText(req.body?.name, 120, true);
     const description = boundedText(req.body?.description, 1000);
@@ -3177,7 +3260,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
 
   app.get("/apps/:app/screens", async (req, res) => {
     if (!await authorizeAppDetail(req, res)) return;
-    if (Object.keys(req.query).some((key) => !["platform", "version", "cursor", "limit"].includes(key))) {
+    if (Object.keys(req.query).some((key) => !["platform", "version", "cursor", "limit", "type"].includes(key))) {
       res.status(400).json({ error: "invalid screens query" });
       return;
     }
@@ -3185,25 +3268,39 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     if (!section) return;
     const limit = req.query.limit === undefined ? 48 : Number(req.query.limit);
     const cursor = optionalQuery(req.query.cursor);
-    if (!Number.isInteger(limit) || limit < 1 || limit > 48 || (req.query.cursor !== undefined && !cursor)) {
+    const screenTypes = req.query.type === undefined
+      ? []
+      : (Array.isArray(req.query.type) ? req.query.type : [req.query.type])
+        .map(optionalQuery)
+        .filter((value): value is string => Boolean(value));
+    if (!Number.isInteger(limit) || limit < 1 || limit > 48 || (req.query.cursor !== undefined && !cursor)
+      || screenTypes.length > 64 || screenTypes.some((type) => type.length > 120)) {
       res.status(400).json({ error: "invalid pagination" });
       return;
     }
     try {
+      const queryInput = {
+        app: req.params.app,
+        kind: "screen" as const,
+        platform: section.platform,
+        versionNumber: section.version?.version_number,
+        publishedOnly: section.publishedOnly,
+      };
+      const [evidence, screenTypesFacet] = await Promise.all([
+        deps.appEvidencePage({ ...queryInput, cursor, limit, screenTypes }),
+        deps.appScreenTypes(queryInput),
+      ]);
       const page = buildEvidencePage(
-        await deps.appEvidencePage({
-          app: req.params.app,
-          kind: "screen",
-          platform: section.platform,
-          versionNumber: section.version?.version_number,
-          cursor,
-          limit,
-          publishedOnly: section.publishedOnly,
-        }),
+        evidence,
         publicImageUrl,
       );
       await recordAppDetailSuccess(req, res);
-      res.json({ ...page, platform: section.platform, version: section.version ?? null });
+      res.json({
+        ...page,
+        screenTypes: screenTypesFacet,
+        platform: section.platform,
+        version: section.version ?? null,
+      });
     } catch (error) {
       if (error instanceof RangeError) res.status(400).json({ error: error.message });
       else throw error;

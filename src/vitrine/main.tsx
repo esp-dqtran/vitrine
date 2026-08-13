@@ -49,6 +49,8 @@ const BuildInPublicPage = lazy(() => import('./BuildInPublic').then((module) => 
 const Pricing = lazy(() => import('./Pricing').then((module) => ({ default: module.Pricing })));
 const BillingSuccess = lazy(() => import('./components/BillingSuccess').then((module) => ({ default: module.BillingSuccess })));
 const SignIn = lazy(() => import('./SignIn').then((module) => ({ default: module.SignIn })));
+const PasswordRecovery = lazy(() => import('./PasswordRecovery').then((module) => ({ default: module.ForgotPassword })));
+const ResetPassword = lazy(() => import('./PasswordRecovery').then((module) => ({ default: module.ResetPassword })));
 const FeatureDocumentSharePage = lazy(() => import('./components/FeatureDocumentSharePage.tsx').then((module) => ({ default: module.FeatureDocumentSharePage })));
 
 const goApps = () => navigate({ name: 'apps' });
@@ -56,6 +58,7 @@ const goHome = () => navigate({ name: 'landing' });
 const goBuildInPublic = () => navigate({ name: 'build-in-public' });
 const goPricing = () => navigate({ name: 'pricing' });
 const goSignIn = () => navigate({ name: 'signin' });
+const goForgotPassword = () => navigate({ name: 'forgot-password' });
 
 function Root() {
   const { user, loading, authenticate, register, completeLogin } = useAuth();
@@ -77,7 +80,7 @@ function Root() {
     case 'redirect':
       return <RouteRedirect route={decision.route} />;
     case 'signin':
-      return <SignIn authenticate={authenticate} register={register} onSignedIn={completeLogin} />;
+      return <SignIn authenticate={authenticate} register={register} onSignedIn={completeLogin} onForgotPassword={goForgotPassword} />;
     case 'application':
       return <App />;
     case 'admin-dashboard':
@@ -105,6 +108,10 @@ function Root() {
           return <BuildInPublicPage onHome={goHome} onBrowse={goApps} onPricing={goPricing} />;
         case 'billing-success':
           return <BillingSuccess onContinue={goApps} />;
+        case 'forgot-password':
+          return <PasswordRecovery onBack={goSignIn} />;
+        case 'reset-password':
+          return <ResetPassword token={route.name === 'reset-password' ? route.token : undefined} onBack={goSignIn} />;
         case 'not-found':
           return <RouteStatusPage title="Page not found" onBack={user ? goApps : goHome} />;
         case 'landing':

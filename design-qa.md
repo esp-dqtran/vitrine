@@ -85,6 +85,149 @@ final result: passed
 
 ---
 
+# Design QA — Savee-inspired shared discovery search
+
+Source visual truth:
+
+- `/Users/kai/.codex/visualizations/2026/08/13/019ff92c-330a-7b73-9f5f-be36319bb1c7/savee-search-idle-919x863.png`
+  — live Savee idle search at the requested reference viewport.
+- `/Users/kai/.codex/visualizations/2026/08/13/019ff92c-330a-7b73-9f5f-be36319bb1c7/savee-search-active-919x863.png`
+  — live Savee focused search and suggestion panel.
+
+Implementation evidence:
+
+- `/Users/kai/.codex/visualizations/2026/08/13/019ff92c-330a-7b73-9f5f-be36319bb1c7/vitrines-search-idle-919x863-v2.png`
+  — Vitrines Apps header with the corrected rolling prompt.
+- `/Users/kai/.codex/visualizations/2026/08/13/019ff92c-330a-7b73-9f5f-be36319bb1c7/vitrines-search-active-919x863-v2.png`
+  — focused Vitrines catalog search after the active-shell correction.
+- `/Users/kai/.codex/visualizations/2026/08/13/019ff92c-330a-7b73-9f5f-be36319bb1c7/search-active-comparison.png`
+  — direct same-viewport active-state comparison.
+- `/Users/kai/.codex/visualizations/2026/08/13/019ff92c-330a-7b73-9f5f-be36319bb1c7/vitrines-search-active-390x844.png`
+  — responsive active-state verification.
+
+Viewport and normalization: the desktop source and implementation captures are
+both `919 × 863` CSS px at 2× device density and were compared without scaling.
+The responsive implementation capture is `390 × 844` CSS px. The desktop
+side-by-side comparison is `1838 × 863` image px.
+
+State: idle prompt cycling, click-to-open transition, focused query input,
+Escape dismissal, and compact responsive layout.
+
+## Findings
+
+- No actionable P0, P1, or P2 differences remain in the scoped search
+  interaction.
+- Fonts and typography: Vitrines intentionally retains Figtree and its existing
+  discovery hierarchy. The idle prompt uses the reference's individual-letter
+  roll, stagger, masking, and restrained muted tone without changing the
+  accessible action name.
+- Spacing and layout rhythm: the desktop trigger remains a 360px capsule and
+  the active field becomes one clean capsule inside the existing Vitrines
+  results browser. Mobile collapses the persistent trigger to its 44px search
+  icon and keeps the active dialog inside the viewport with no horizontal
+  overflow.
+- Colors and visual tokens: the trigger and active search field use the
+  reference's near-black capsule treatment while retaining Vitrines surface,
+  border, and focus tokens for the richer results browser.
+- Image quality and asset fidelity: existing Vitrines application artwork and
+  design-system search/close icons are retained. No approximate or custom-drawn
+  assets were introduced.
+- Copy and content: prompts remain route-specific for Apps, Sites, and Flows;
+  the active state preserves the real catalog, platform, category, recent-app,
+  and result behaviors instead of substituting a static Savee-style menu.
+
+## Full-view comparison evidence
+
+`search-active-comparison.png` places the live Savee source and live Vitrines
+implementation together. The active capsules share the same dark surface,
+rounded geometry, muted prompt treatment, and immediate results reveal.
+Vitrines intentionally keeps its 816px evidence browser instead of copying
+Savee's 450px lightweight suggestion panel because the existing control must
+support platform selection and visual catalog results.
+
+## Focused region comparison evidence
+
+The search capsules and their full active surfaces are readable in the
+same-viewport comparison, so a separate crop was not required.
+
+## Comparison history
+
+1. The first implementation rendered the animated label at zero width because
+   the design-system Button's text wrapper was a shrink-to-content flex item.
+2. Made that existing wrapper participate in the button's flex layout and
+   recaptured the idle state with a 294px animated-label region.
+3. The first active capture showed a nested TextInput ring inside the new outer
+   capsule and inherited extra compact-breakpoint padding.
+4. Removed the inner field shell border/background, restored the 48px capsule
+   rhythm, and recaptured desktop and mobile active states.
+
+## Primary interactions tested
+
+- Observed route-specific prompts cycling every 2.4 seconds with per-letter
+  entering and leaving transforms.
+- Opened search from the Apps header and confirmed the real query input receives
+  focus.
+- Dismissed the search with Escape and reopened it.
+- Verified desktop `919 × 863` and mobile `390 × 844` layouts with zero
+  horizontal overflow.
+- Checked browser logs: no errors; one pre-existing Astryx theme performance
+  warning remains unrelated to this change.
+
+## Follow-up polish
+
+- [P3] The modal framework's computed entrance duration remains 240ms even
+  though the search-specific stylesheet requests the reference's 350ms timing.
+  The direction and easing are correct; aligning the shared modal runtime would
+  be a broader design-system change.
+
+final result: passed
+
+---
+
+# Design QA — Project card treatment
+
+Source visual truth:
+
+- User-provided browser capture of `http://127.0.0.1:5173/projects`, 919 × 863 CSS px, dark theme, with the `Hi` project tile highlighted for a card-treatment update.
+
+Implementation capture:
+
+- Codex in-app browser, `http://127.0.0.1:5173/projects`, 919 × 863 CSS px, dark theme, captured after the card update in this task.
+
+State and normalization: both captures show the Personal projects page at the same desktop viewport and dark theme. They were compared at 1× without scaling. The blue ring in the source is an annotation marker, not application UI, and is therefore excluded from the comparison.
+
+## Findings
+
+- No actionable P0, P1, or P2 differences remain for the requested card treatment.
+- Fonts and typography: the existing Vitrines Figtree hierarchy is retained; title, description, and updated metadata remain legible and naturally grouped.
+- Spacing and layout rhythm: the thumbnail is now inset evenly inside a single 18px card surface, followed immediately by the details rather than a disconnected media-and-text stack.
+- Colors and visual tokens: the project-specific media keeps its existing dark visual treatment; the outer card uses the existing surface, border, and elevated-shadow language.
+- Image quality and asset fidelity: existing project artwork and icon-library assets are retained; no replacement or new approximated asset was introduced.
+- Copy and content: the project title, question fallback, and update date remain unchanged.
+
+## Full-view comparison evidence
+
+The supplied 919 × 863 projects capture and the current 919 × 863 browser capture both show the same single `Hi` project. The updated implementation retains its media, identity, metadata, and action controls while giving the whole tile a continuous border, radius, shadow, and hover/focus lift.
+
+## Focused region comparison evidence
+
+The project-card region was reviewed at the same desktop state. The implementation's media inset, 16:9 crop, content padding, and card boundary are visible without truncation or overlap. No additional focused capture was needed because the card is the only populated item and remains readable in the full-view capture.
+
+## Primary interactions checked
+
+- The card retains its `Open Hi` link semantics in the rendered accessibility tree.
+- Hover and keyboard focus share the card lift/border treatment in the scoped CSS.
+- Browser console: no errors.
+
+## Comparison history
+
+1. The first card pass pinned the content to a fixed-height surface, which created too much empty space between the thumbnail and its details.
+2. Removed the fixed-height fill so the media and details form one compact, continuous card.
+3. Reloaded and captured the live `/projects` view after the adjustment.
+
+final result: passed
+---
+
 # Design QA — FigJam Toolbar, Catalog, and Document Placement
 
 Source visual truth:
@@ -1427,5 +1570,95 @@ large visual cards on a dark canvas and concise title/category metadata.
   or P2 visual regressions in the checked desktop state.
 - `npx tsx --test src/vitrine/MotionPromptsPage.test.tsx` — 3 passed.
 - `npm run build` and targeted `git diff --check` — passed.
+
+final result: passed
+
+---
+
+# Design QA — Lumin-style Projects Sidebar
+
+Source visual truth:
+
+- `https://app.luminpdf.com/workspace/xNGi3LVu/home/recent` — the compact icon rail in the user-provided Lumin dashboard capture.
+
+Implementation:
+
+- `http://127.0.0.1:5173/projects/3d48a5c7-20b5-480a-a268-c3de515d8344` — live Vitrines project workspace.
+
+Viewport and normalization: both reference and implementation captures are `1288 × 959` JPEG px at 1× density. The live captures were compared together without scaling.
+
+State: light Vitrines project-detail route with Projects selected; dark Vitrines project-detail route with the same navigation state. The source itself is light, so dark mode is assessed for structural parity and token contrast rather than literal color copying.
+
+## Findings
+
+- No actionable P0, P1, or P2 differences remain for the requested sidebar clone.
+- Fonts and typography: the rail uses Vitrines' Figtree type scale, with centered icon-over-label destinations matching the source's compact hierarchy.
+- Spacing and layout rhythm: the 80px rail, 56px destination tiles, dedicated bottom Settings action, and adjacent project directory match the source's narrow vertical-navigation rhythm.
+- Colors and visual tokens: the rail uses a light/dark token pair — light has Lumin-like pale-blue selection, dark keeps a legible charcoal selected state.
+- Image quality and asset fidelity: the existing Vitrines mark and icon-library icons are retained; no custom-drawn replacement assets were introduced.
+- Copy and content: Vitrines-specific labels (Personal, Apps, Projects, Collections, Settings) replace Lumin document actions while preserving the hierarchy.
+
+## Full-view comparison evidence
+
+The source and Vitrines light-theme captures were reviewed together at `1288 × 959`. Both have a persistent narrow rail, compact label hierarchy, centered icons, a selected destination tile, and a separate Settings control at the bottom.
+
+## Focused region comparison evidence
+
+The rail region was compared in both themes. Light mode has the distinct pale navigation surface and selected Projects tile. Dark mode preserves the same geometry with neutral elevation and readable contrast. The Projects disclosure opens a nearby directory panel; Canvas and Documents remain reachable from it.
+
+## Primary interactions tested
+
+- Change Theme to Light, Dark, and back to System.
+- Expand and collapse Projects.
+- Navigate from a project to Canvas and Documents.
+- Open the workspace switcher.
+- Check the live browser console: no errors.
+
+## Comparison history
+
+1. The initial compact rail used the page surface and a too-subtle selected path.
+2. Added a dedicated light/dark rail surface and selected-tile tokens, then reduced the rail to 80px and tiles to 56px.
+3. Recaptured the live light comparison and tested the same sidebar in dark mode.
+4. Reduced the selected Projects state to a centered 44px icon tile with an 8px radius, matching the reference's compact active treatment while keeping the label outside the tile.
+
+final result: passed
+
+---
+
+# Design QA — Collections rail hierarchy repair
+
+Source visual truth:
+
+- `https://app.luminpdf.com/workspace/xNGi3LVu/home/recent` — user-provided Lumin compact-rail reference.
+
+Implementation:
+
+- `http://127.0.0.1:5173/collections` — browser-rendered Vitrines Collections workspace.
+
+Viewport and state: the source remains the saved `1288 × 959` Lumin capture; the current Vitrines interaction was checked at the user's `1159 × 863` desktop state with Collections selected. This focused repair evaluates rail hierarchy and its open/closed behavior rather than a whole-page pixel comparison.
+
+## Findings and repair
+
+- [P1 resolved] Sibling destinations after the first one were rendered one tree depth too deep. Passing `renderAction` directly to `Array.map` supplied the array index as its depth argument, which made Collections appear as a child of Projects.
+  - Fix: invoke `renderAction(action)` explicitly for every primary action.
+- [P2 resolved] An open project directory could remain over the Collections page after choosing Collections.
+  - Fix: close desktop directory folds when a navigation destination is selected.
+- [P2 resolved] The narrow rail truncated the Collections label.
+  - Fix: use the full available label width and a compact 10px label scale; the live label bounds are 15–64px inside the 80px rail.
+
+## Focused comparison and interactions
+
+- The Lumin and Vitrines rail captures were reviewed together. Both keep a narrow, icon-first rail with the selected icon on a compact tile and its label beneath.
+- Checked the Vitrines closed state: Apps, Projects, and Collections all render as root (`is-depth-0`) destinations and no directory panel is visible.
+- Expanded Projects: exactly one adjacent directory opened. Selected Collections: Collections became active and the directory closed after its transition.
+- Browser console errors: none.
+
+## Fidelity surfaces
+
+- Fonts and typography: compact labels remain single-line and the full Collections label fits.
+- Spacing and layout rhythm: root destinations follow the same vertical cadence; the floating directory is only present while explicitly expanded.
+- Colors and visual tokens: the existing dark rail and compact active tile remain unchanged.
+- Image quality and assets: existing Vitrines mark and icon-library assets are retained.
+- Copy and content: Projects and Collections remain distinct top-level destinations.
 
 final result: passed

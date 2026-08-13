@@ -11,12 +11,14 @@ export const PROJECT_DOCUMENT_INTEGRATION_VERSION = "blocknote-yjs-v1";
 export type ProjectDocumentRole = "editor" | "viewer";
 export type ProjectDocumentIcon = "none" | "document" | "idea" | "task" | "schedule" | "build";
 export type ProjectDocumentPageWidth = "standard" | "full";
+export type ProjectDocumentReviewStatus = "draft" | "in_review" | "approved";
 
 export interface ProjectDocumentPatch {
   title?: string;
   icon?: ProjectDocumentIcon;
   isFavorite?: boolean;
   pageWidth?: ProjectDocumentPageWidth;
+  reviewStatus?: ProjectDocumentReviewStatus;
 }
 
 export interface ProjectDocumentView {
@@ -26,6 +28,10 @@ export interface ProjectDocumentView {
   icon: ProjectDocumentIcon;
   isFavorite: boolean;
   pageWidth: ProjectDocumentPageWidth;
+  reviewStatus: ProjectDocumentReviewStatus;
+  reviewRequestedAt: string | null;
+  approvedAt: string | null;
+  approvedByEmail: string | null;
   collaborationDocumentId: string;
   role: ProjectDocumentRole;
   createdAt: string;
@@ -95,6 +101,10 @@ interface DocumentRow extends Record<string, unknown> {
   icon: ProjectDocumentIcon;
   is_favorite: boolean;
   page_width: ProjectDocumentPageWidth;
+  review_status?: ProjectDocumentReviewStatus;
+  review_requested_at?: Date | string | null;
+  approved_at?: Date | string | null;
+  approved_by_email?: string | null;
   collaboration_document_id: string;
   role: ProjectDocumentRole;
   created_at: Date | string;
@@ -111,6 +121,10 @@ const view = (row: DocumentRow): ProjectDocumentView => ({
   icon: row.icon,
   isFavorite: row.is_favorite,
   pageWidth: row.page_width,
+  reviewStatus: row.review_status ?? "draft",
+  reviewRequestedAt: row.review_requested_at ? dateString(row.review_requested_at) : null,
+  approvedAt: row.approved_at ? dateString(row.approved_at) : null,
+  approvedByEmail: row.approved_by_email ?? null,
   collaborationDocumentId: row.collaboration_document_id,
   role: row.role,
   createdAt: dateString(row.created_at),
@@ -151,6 +165,10 @@ const selectDocumentSql = `
          document.icon,
          document.is_favorite,
          document.page_width,
+         document.review_status,
+         document.review_requested_at,
+         document.approved_at,
+         (SELECT email FROM users WHERE id = document.approved_by_user_id) AS approved_by_email,
          document.octobase_document_id AS collaboration_document_id,
          CASE
            WHEN project.organization_id IS NULL AND document.owner_user_id = $1 THEN 'editor'
@@ -290,11 +308,28 @@ export function createProjectDocumentStore(
         `UPDATE project_documents SET
            title = COALESCE($2, title), icon = COALESCE($3, icon),
            is_favorite = COALESCE($4, is_favorite), page_width = COALESCE($5, page_width),
-           updated_at = now(), last_edited_by_user_id = $6::bigint,
-           last_edited_by_email = (SELECT email FROM users WHERE id = $6::bigint)
+           review_status = COALESCE($6, review_status),
+           review_requested_at = CASE
+             WHEN $6 = 'in_review' THEN now()
+             WHEN $6 = 'draft' THEN NULL
+             ELSE review_requested_at
+           END,
+           approved_at = CASE
+             WHEN $6 = 'approved' THEN now()
+             WHEN $6 IS NOT NULL THEN NULL
+             ELSE approved_at
+           END,
+           approved_by_user_id = CASE
+             WHEN $6 = 'approved' THEN $7::bigint
+             WHEN $6 IS NOT NULL THEN NULL
+             ELSE approved_by_user_id
+           END,
+           updated_at = now(), last_edited_by_user_id = $7::bigint,
+           last_edited_by_email = (SELECT email FROM users WHERE id = $7::bigint)
          WHERE id = $1`,
         [documentId, patch.title ?? null, patch.icon ?? null,
-          patch.isFavorite ?? null, patch.pageWidth ?? null, userId],
+          patch.isFavorite ?? null, patch.pageWidth ?? null,
+          patch.reviewStatus ?? null, userId],
       );
       return getDocumentById(userId, projectId, documentId);
     },
@@ -451,10 +486,26 @@ export function createProjectDocumentStore(
              icon = COALESCE($3, icon),
              is_favorite = COALESCE($4, is_favorite),
              page_width = COALESCE($5, page_width),
+             review_status = COALESCE($6, review_status),
+             review_requested_at = CASE
+               WHEN $6 = 'in_review' THEN now()
+               WHEN $6 = 'draft' THEN NULL
+               ELSE review_requested_at
+             END,
+             approved_at = CASE
+               WHEN $6 = 'approved' THEN now()
+               WHEN $6 IS NOT NULL THEN NULL
+               ELSE approved_at
+             END,
+             approved_by_user_id = CASE
+               WHEN $6 = 'approved' THEN $7::bigint
+               WHEN $6 IS NOT NULL THEN NULL
+               ELSE approved_by_user_id
+             END,
              updated_at = now(),
-             last_edited_by_user_id = $6::bigint,
+             last_edited_by_user_id = $7::bigint,
              last_edited_by_email = (
-               SELECT email FROM users WHERE id = $6::bigint
+               SELECT email FROM users WHERE id = $7::bigint
              )
          WHERE id = $1
          RETURNING id`,
@@ -464,6 +515,7 @@ export function createProjectDocumentStore(
           patch.icon ?? null,
           patch.isFavorite ?? null,
           patch.pageWidth ?? null,
+          patch.reviewStatus ?? null,
           userId,
         ],
       );

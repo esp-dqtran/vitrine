@@ -91,6 +91,40 @@ test('renders a dedicated Flow workspace with real app identity and full-resolut
   assert.match(html, /aria-expanded="false"[^>]*>[\s\S]*More info/);
   assert.doesNotMatch(html, /aria-label="Previous Flow screen"/);
   assert.match(html, /aria-label="Next Flow screen"/);
+  assert.match(html, /aria-label="Evidence trust details"/);
+  assert.match(html, />Not assessed</);
+  assert.match(html, />2 screens</);
+  assert.match(html, />Correct this evidence</);
+});
+
+test('shows crawl provenance, confidence, and completeness without inventing a review score', () => {
+  const html = renderToStaticMarkup(
+    <FlowPreviewDialog
+      flowId="mercor:onboarding"
+      flowTitle="Onboarding"
+      flow={{
+        ...flow,
+        provenance: {
+          autonomousRunId: 'run-1',
+          missionId: 'mission-1',
+          confidence: 0.84,
+          sourceUrls: ['https://mercor.com/signup'],
+          validationStatus: 'uncertain',
+        },
+      }}
+      screens={screens}
+      activeIndex={0}
+      activeMode="screens"
+      platform="web"
+      onActiveIndexChange={() => undefined}
+      onModeChange={() => undefined}
+      onClose={() => undefined}
+    />,
+  );
+
+  assert.match(html, /Autonomous crawl observation/);
+  assert.match(html, />84%</);
+  assert.match(html, /data-completeness="uncertain">Uncertain/);
 });
 
 test('keeps phone Screens mode free of carousel navigation arrows', () => {

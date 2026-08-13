@@ -326,7 +326,9 @@ export function SitesPageView({
           filters={filterGroups}
           resultCount={controller.items.length}
           resultLabels={['site', 'sites']}
+          showPlatform={false}
           showResultCount={false}
+          showSort={false}
           sort={controller.state.sort}
           sortOptions={[
             { value: 'latest', label: 'Latest' },

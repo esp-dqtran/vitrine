@@ -11,7 +11,7 @@ test('keeps guest Apps discovery on public catalog capabilities', async () => {
   assert.match(source, /searchMode=\{canUseAdvancedSearch \? ["']advanced["'] : ["']legacy["']\}/);
   assert.match(
     source,
-    /canUseAdvancedSearch && route\.name !== ["']flows["'] \? \(\s*<QuickSearch/,
+    /canUseAdvancedSearch && !legacyAppSearch && route\.name !== ["']flows["'] \? \(\s*<QuickSearch/,
   );
   assert.doesNotMatch(source, /collectionsOpen|<CollectionsPanel/);
   assert.match(source, /\{canUseAdvancedSearch && advancedPreview \?/);

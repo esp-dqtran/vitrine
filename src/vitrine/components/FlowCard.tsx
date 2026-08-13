@@ -1,4 +1,6 @@
 import type { DesignFlow, EvidenceView } from '../../designSystem';
+import type { ResearchCollection } from '../../db.ts';
+import type { Screen } from '../types.ts';
 import type { Platform } from '../../platformFromUrl.ts';
 import { Button, Icon, IconButton } from '@astryxdesign/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -16,6 +18,7 @@ import {
   flowCarouselEdges,
   scrollToAdjacentFlowScreen,
 } from './flowCarousel';
+import { CollectionPicker } from './CollectionPicker.tsx';
 
 function flowScreenItems(flow: DesignFlow<EvidenceView>) {
   let screenNumber = 0;
@@ -24,6 +27,25 @@ function flowScreenItems(flow: DesignFlow<EvidenceView>) {
     label: step.label,
     stepNumber: ++screenNumber,
   })));
+}
+
+export function flowCanvasScreens(
+  flow: DesignFlow<EvidenceView>,
+  platform: Platform = 'web',
+): Screen[] {
+  return flowScreenItems(flow).flatMap(({ evidence, label }) => evidence ? [{
+    id: evidence.imageId,
+    type: 'Flow step',
+    productArea: flow.category ?? flow.title,
+    theme: 'mixed' as const,
+    visibleStates: [],
+    platform,
+    description: evidence.description ?? label,
+    url: evidence.imageUrl,
+    thumbnailUrl: evidence.thumbnailUrl,
+    sourceUrl: evidence.sourceUrl,
+    capturedAt: evidence.capturedAt,
+  }] : []);
 }
 
 function flowTitle(title: string) {
@@ -122,6 +144,9 @@ export function FlowCard({
   variant = 'captured',
   fullAccessLabel,
   onRequestFullAccess,
+  collections,
+  onCollectionsChange,
+  plan = 'free',
 }: {
   flow: DesignFlow<EvidenceView>;
   onOpen: () => void;
@@ -141,10 +166,13 @@ export function FlowCard({
   variant?: 'captured' | 'draft';
   fullAccessLabel?: string;
   onRequestFullAccess?: () => void;
+  collections?: ResearchCollection[];
+  onCollectionsChange?: (collections: ResearchCollection[]) => void;
+  plan?: 'free' | 'pro';
 }) {
   const trackRef = useRef<HTMLButtonElement>(null);
-  const [saved, setSaved] = useState(false);
   const screens = flowScreenItems(flow);
+  const canvasScreens = flowCanvasScreens(flow, platform);
   const allPreviewItems = screens.length
     ? screens
     : [{ evidence: undefined, label: flow.title, stepNumber: 1 }];
@@ -358,13 +386,37 @@ export function FlowCard({
             </div>
           </div>
           <div className="flow-strip-card__actions">
-            <Button
-              label={saved ? 'Saved' : 'Save'}
-              variant="primary"
-              size="sm"
-              className="flow-strip-card__save"
-              clickAction={() => setSaved((value) => !value)}
-            />
+            {collections && onCollectionsChange && documentSource ? (
+              <CollectionPicker
+                reference={{ kind: 'flow', app: documentSource.app, referenceId: flow.id, title: flow.title }}
+                documentFlow={{
+                  app: sourceAppName ?? documentSource.app,
+                  appIconUrl: sourceAppIconUrl,
+                  appId: documentSource.app,
+                  description: flow.description,
+                  id: `catalog-flow:${documentSource.platform ?? platform}:${encodeURIComponent(documentSource.app)}:${encodeURIComponent(documentSource.flowId ?? flow.id)}`,
+                  platform: documentSource.platform ?? platform,
+                  previews: allPreviewItems.flatMap(({ evidence, label }) => {
+                    const url = evidence?.thumbnailUrl ?? evidence?.imageUrl;
+                    return url ? [{ label, url }] : [];
+                  }),
+                  source: 'catalog',
+                  stepCount: allPreviewItems.length,
+                  title: flow.title,
+                }}
+                canvasItems={canvasScreens.map((screen) => ({
+                  appId: documentSource.app,
+                  appName: sourceAppName ?? documentSource.app,
+                  screen,
+                }))}
+                collections={collections}
+                onCollectionsChange={onCollectionsChange}
+                plan={plan}
+                buttonLabel="Use in project"
+                buttonVariant="primary"
+                buttonClassName="flow-strip-card__save"
+              />
+            ) : null}
             <CopyButton
               label="Copy flow link"
               successMessage="Flow link copied"

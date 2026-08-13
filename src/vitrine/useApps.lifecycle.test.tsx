@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { useApps } from "./useApps.ts";
+import { invalidateCatalogPageCache, useApps } from "./useApps.ts";
 
 class FakeNode {
   readonly nodeType = 1;
@@ -163,6 +163,45 @@ test("aborts pending load-more on unmount and reloads the catalog when the role 
     assert.equal(loadMoreSignals[1]?.aborted, true);
   } finally {
     globalThis.fetch = originalFetch;
+    dom.restore();
+  }
+});
+
+test("reuses the cached Apps browse page when the palette is reopened", async () => {
+  const dom = installDom();
+  const originalFetch = globalThis.fetch;
+  let requests = 0;
+  invalidateCatalogPageCache();
+  globalThis.fetch = (async () => {
+    requests += 1;
+    return new Response(JSON.stringify(publicPage("cached", null)));
+  }) as typeof fetch;
+
+  function Probe({ enabled }: { enabled: boolean }) {
+    useApps("user", enabled);
+    return null;
+  }
+
+  const root = createRoot(dom.container as never);
+  try {
+    await act(async () => {
+      root.render(<Probe enabled />);
+      await settle();
+    });
+    await act(async () => {
+      root.render(<Probe enabled={false} />);
+      await settle();
+    });
+    await act(async () => {
+      root.render(<Probe enabled />);
+      await settle();
+    });
+
+    assert.equal(requests, 1);
+  } finally {
+    await act(async () => root.unmount());
+    globalThis.fetch = originalFetch;
+    invalidateCatalogPageCache();
     dom.restore();
   }
 });

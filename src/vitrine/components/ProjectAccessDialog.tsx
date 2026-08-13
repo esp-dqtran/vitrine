@@ -1,4 +1,4 @@
-import { Spinner } from './Spinner.tsx';
+import { Spinner } from "./Spinner.tsx";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -20,10 +20,13 @@ import {
   removeResearchProjectMember,
 } from "../researchProjectsApi.ts";
 import { AstryxModal } from "./AstryxModal.tsx";
+import { CopyButton } from "./CopyButton.tsx";
+import { useApplicationToast } from "./ApplicationToast.tsx";
 
 export interface ProjectAccessTarget {
   id: string;
   title: string;
+  shareUrl?: string;
 }
 
 export function ProjectAccessDialog({
@@ -35,6 +38,7 @@ export function ProjectAccessDialog({
   isOpen: boolean;
   onOpenChange(open: boolean): void;
 }) {
+  const showToast = useApplicationToast();
   const [view, setView] = useState<ResearchProjectMembersView>();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<ResearchProjectMemberRole>("editor");
@@ -47,9 +51,15 @@ export function ProjectAccessDialog({
     setView(undefined);
     setError("");
     void listResearchProjectMembers(project.id)
-      .then((next) => { if (active) setView(next); })
-      .catch((cause) => { if (active) setError((cause as Error).message); });
-    return () => { active = false; };
+      .then((next) => {
+        if (active) setView(next);
+      })
+      .catch((cause) => {
+        if (active) setError((cause as Error).message);
+      });
+    return () => {
+      active = false;
+    };
   }, [isOpen, project]);
 
   const invite = async () => {
@@ -59,6 +69,7 @@ export function ProjectAccessDialog({
     try {
       setView(await addResearchProjectMember(project.id, email.trim(), role));
       setEmail("");
+      showToast("Access updated");
     } catch (cause) {
       setError((cause as Error).message);
     } finally {
@@ -73,6 +84,7 @@ export function ProjectAccessDialog({
     try {
       await removeResearchProjectMember(project.id, userId);
       setView(await listResearchProjectMembers(project.id));
+      showToast("Access removed");
     } catch (cause) {
       setError((cause as Error).message);
     } finally {
@@ -90,11 +102,17 @@ export function ProjectAccessDialog({
       <div className="project-access-dialog">
         <div className="project-access-dialog__header">
           <div>
-            <Heading level={3}>Share {project?.title ?? "project"}</Heading>
+            <Heading level={3}>
+              {project?.shareUrl
+                ? "Share canvas"
+                : `Share ${project?.title ?? "project"}`}
+            </Heading>
             <Text color="secondary">
-              {view?.organization
-                ? `Everyone in ${view.organization.name} can edit by default. Direct roles can grant guest access or make a Team member view-only.`
-                : "Invite people directly as editors or viewers."}
+              {project?.shareUrl
+                ? "Invite people to collaborate or copy a link for anyone who already has project access."
+                : view?.organization
+                  ? `Everyone in ${view.organization.name} can edit by default. Direct roles can grant guest access or make a Team member view-only.`
+                  : "Invite people directly as editors or viewers."}
             </Text>
           </div>
           <IconButton
@@ -107,13 +125,53 @@ export function ProjectAccessDialog({
           />
         </div>
 
-        {!view && !error ? <div className="project-access-dialog__loading"><Spinner size="md" /></div> : null}
-        {error ? <p role="alert" className="projects-workspace__error">{error}</p> : null}
+        {!view && !error ? (
+          <div className="project-access-dialog__loading">
+            <Spinner size="md" />
+          </div>
+        ) : null}
+        {error ? (
+          <p role="alert" className="projects-workspace__error">
+            {error}
+          </p>
+        ) : null}
+
+        {project?.shareUrl ? (
+          <section
+            className="project-access-dialog__link"
+            aria-label="Canvas sharing link"
+          >
+            <div>
+              <strong>Canvas link</strong>
+              <Text color="secondary">
+                Anyone with project access can open this canvas.
+              </Text>
+            </div>
+            <div className="project-access-dialog__link-controls">
+              <input
+                aria-label="Canvas link"
+                readOnly
+                value={project.shareUrl}
+              />
+              <CopyButton
+                action={() =>
+                  navigator.clipboard.writeText(project.shareUrl ?? "")
+                }
+                label="Copy link"
+                successMessage="Canvas link copied"
+                variant="secondary"
+              />
+            </div>
+          </section>
+        ) : null}
 
         {view?.canManage ? (
           <form
             className="project-access-dialog__invite"
-            onSubmit={(event) => { event.preventDefault(); void invite(); }}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void invite();
+            }}
           >
             <TextInput
               label="Email"
@@ -144,42 +202,67 @@ export function ProjectAccessDialog({
             />
           </form>
         ) : view ? (
-          <Text color="secondary">Only the Project owner or a Team owner/admin can change access.</Text>
+          <Text color="secondary">
+            Only the Project owner or a Team owner/admin can change access.
+          </Text>
         ) : null}
 
         {view ? (
-          <section className="project-access-dialog__members" aria-label="Direct project members">
+          <section
+            className="project-access-dialog__members"
+            aria-label="Direct project members"
+          >
             <div className="project-access-dialog__members-heading">
               <strong>Direct access</strong>
               <span>{view.members.length}</span>
             </div>
-            {view.members.length ? view.members.map((member) => (
-              <div className="project-access-dialog__member" key={member.userId}>
-                <span className="project-access-dialog__avatar" aria-hidden="true">
-                  {member.email.charAt(0).toUpperCase()}
-                </span>
-                <span className="project-access-dialog__member-email">{member.email}</span>
-                <span className="project-access-dialog__role">{member.role}</span>
-                {view.canManage ? (
-                  <Button
-                    label="Remove"
-                    variant="ghost"
-                    size="sm"
-                    isDisabled={busy}
-                    clickAction={() => void remove(member.userId)}
-                  />
-                ) : null}
-              </div>
-            )) : (
-              <Text color="secondary" className="project-access-dialog__empty-state">
-                No one has direct access yet. Only people invited here can access this canvas.
+            {view.members.length ? (
+              view.members.map((member) => (
+                <div
+                  className="project-access-dialog__member"
+                  key={member.userId}
+                >
+                  <span
+                    className="project-access-dialog__avatar"
+                    aria-hidden="true"
+                  >
+                    {member.email.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="project-access-dialog__member-email">
+                    {member.email}
+                  </span>
+                  <span className="project-access-dialog__role">
+                    {member.role}
+                  </span>
+                  {view.canManage ? (
+                    <Button
+                      label="Remove"
+                      variant="ghost"
+                      size="sm"
+                      isDisabled={busy}
+                      clickAction={() => void remove(member.userId)}
+                    />
+                  ) : null}
+                </div>
+              ))
+            ) : (
+              <Text
+                color="secondary"
+                className="project-access-dialog__empty-state"
+              >
+                No one has direct access yet. Only people invited here can
+                access this canvas.
               </Text>
             )}
           </section>
         ) : null}
 
         <div className="projects-workspace__dialog-actions">
-          <Button label="Done" variant="secondary" clickAction={() => onOpenChange(false)} />
+          <Button
+            label="Done"
+            variant="secondary"
+            clickAction={() => onOpenChange(false)}
+          />
         </div>
       </div>
     </AstryxModal>
@@ -204,7 +287,11 @@ export function ProjectAccessButton({
         size="sm"
         clickAction={() => setOpen(true)}
       />
-      <ProjectAccessDialog project={project} isOpen={open} onOpenChange={setOpen} />
+      <ProjectAccessDialog
+        project={project}
+        isOpen={open}
+        onOpenChange={setOpen}
+      />
     </>
   );
 }

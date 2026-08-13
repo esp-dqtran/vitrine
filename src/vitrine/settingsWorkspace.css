@@ -679,6 +679,36 @@
   gap: 14px;
 }
 
+.settings-workspace__profile-preferences {
+  display: grid;
+  align-items: start;
+  gap: 20px;
+}
+
+.settings-workspace__profile-preferences-copy,
+.settings-workspace__profile-theme-setting {
+  display: grid;
+  gap: 4px;
+}
+
+.settings-workspace__profile-preferences-copy p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.settings-workspace__profile-theme-setting {
+  gap: 8px;
+  justify-items: start;
+}
+
+.settings-workspace__profile-theme-setting > span {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
 .settings-workspace__profile-card > div {
   display: grid;
   min-width: 0;
@@ -885,6 +915,15 @@
 }
 
 .settings-workspace__integration-token-row > :last-child { justify-self: end; }
+
+.settings-workspace__integration-revoke.astryx-button.ghost {
+  color: var(--color-text-danger);
+}
+
+.settings-workspace__integration-revoke.astryx-button.ghost:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-text-danger) 12%, transparent);
+  color: var(--color-text-danger);
+}
 
 .settings-workspace__form-grid {
   display: grid;

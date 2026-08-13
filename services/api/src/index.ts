@@ -18,6 +18,10 @@ import {
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../../../src/objectStoreConfig.ts";
 import { publishedFlowCatalogPage } from "../../../src/flowCatalogStore.ts";
 import { createJwtAuth, jwtAuthConfigFromEnv } from "../../../src/jwtAuth.ts";
+import {
+  createPasswordResetEmailSender,
+  passwordResetEmailConfigFromEnv,
+} from "../../../src/passwordResetEmail.ts";
 import { createTypesenseCatalogClient, typesenseCatalogConfigFromEnv } from "../../../src/typesenseCatalog.ts";
 import {
   TYPESENSE_APP_CATALOG_COLLECTION,
@@ -43,6 +47,10 @@ await startApi({
   start: async () => {
     const seed = adminSeedFromEnv(process.env);
     const config = billingConfigFromEnv(process.env);
+    const passwordResetEmailConfig = passwordResetEmailConfigFromEnv(process.env);
+    if (process.env.NODE_ENV === "production" && !passwordResetEmailConfig) {
+      throw new Error("RESEND_API_KEY and EMAIL_FROM are required in production for password reset");
+    }
     const auth = createJwtAuth(jwtAuthConfigFromEnv(process.env));
     const typesenseConfig = typesenseCatalogConfigFromEnv(process.env);
     const typesenseCatalog = typesenseConfig ? createTypesenseCatalogClient(typesenseConfig) : undefined;
@@ -106,6 +114,9 @@ await startApi({
       appTraversalLimit: config.appTraversalLimit,
       appUrl: config.appUrl,
       referralCampaign,
+      ...(passwordResetEmailConfig
+        ? { passwordResetEmailSender: createPasswordResetEmailSender(passwordResetEmailConfig) }
+        : {}),
       ...(typesenseCatalog ? { typesenseCatalog } : {}),
       ...(typesenseAppCatalog ? { typesenseAppCatalog, syncTypesenseAppCatalog } : {}),
       ...(typesenseFlowCatalog ? { typesenseFlowCatalog } : {}),

@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Button, TextInput } from "@astryxdesign/core";
+import type { CatalogComparison } from "../../catalogResearch.ts";
 import type { SearchFilters, SearchResultItem, SearchType } from "../../searchTypes.ts";
 import { compatibleFilterKeys } from "../../searchScope.ts";
 import { useAdvancedSearch } from "../useAdvancedSearch.ts";
 import {
   parseSearchState,
+  parseComparisonApps,
   recordRecentSearch,
   serializeSearchState,
   type SearchPageState,
@@ -17,6 +19,9 @@ import { AdvancedSearchFilters } from "./AdvancedSearchFilters.tsx";
 import { AdvancedSearchResults } from "./AdvancedSearchResults.tsx";
 import { addComparisonSelection } from "./SearchResearchActions.tsx";
 import { switchSearchScope } from "./QuickSearchFilters.tsx";
+import { compareCatalogApps } from "../researchApi.ts";
+import { CopyButton } from "./CopyButton.tsx";
+import { InspirationComparison } from "./InspirationComparison.tsx";
 
 const tabs: Array<[SearchType, string]> = [
   ["all", "All"],
@@ -39,16 +44,43 @@ export function AdvancedSearchPage({
 }) {
   const location = useLocationKey();
   const queryIndex = location.indexOf("?");
-  const state = parseSearchState(queryIndex < 0 ? "" : location.slice(queryIndex));
+  const locationSearch = queryIndex < 0 ? "" : location.slice(queryIndex);
+  const state = parseSearchState(locationSearch);
+  const sharedComparisonApps = parseComparisonApps(locationSearch);
+  const comparisonApps = comparison.length
+    ? comparison.flatMap(({ appName }) => appName ? [appName] : [])
+    : sharedComparisonApps;
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [comparisonView, setComparisonView] = useState<CatalogComparison | null>(null);
+  const [comparisonLoading, setComparisonLoading] = useState(false);
+  const [comparisonError, setComparisonError] = useState("");
   const search = useAdvancedSearch(state);
   const commit = (next: SearchPageState, push = true) => {
     if (typeof window !== "undefined") {
-      const query = serializeSearchState(next);
+      const query = serializeSearchState(next, comparisonApps);
       updateLocation(
         `/search${query ? `?${query}` : ""}`,
         { replace: !push },
       );
+    }
+  };
+  const commitComparison = (items: SearchResultItem[], appNames: string[]) => {
+    onComparisonChange(items);
+    setComparisonView(null);
+    setComparisonError("");
+    const query = serializeSearchState(state, appNames);
+    updateLocation(`/search${query ? `?${query}` : ""}`);
+  };
+  const openComparison = async () => {
+    if (comparisonApps.length < 2) return;
+    setComparisonLoading(true);
+    setComparisonError("");
+    try {
+      setComparisonView(await compareCatalogApps(comparisonApps));
+    } catch (error) {
+      setComparisonError((error as Error).message);
+    } finally {
+      setComparisonLoading(false);
     }
   };
   const applyFilters = (filters: SearchFilters) => commit({ ...state, filters });
@@ -117,6 +149,15 @@ export function AdvancedSearchPage({
             { value: "app-az", label: "App A–Z" },
           ]}
         />
+        <CopyButton
+          label="Copy search link"
+          successMessage="Search link copied"
+          action={async () => {
+            const query = serializeSearchState(state, comparisonApps);
+            const href = `${window.location.origin}/search${query ? `?${query}` : ""}`;
+            await navigator.clipboard.writeText(href);
+          }}
+        />
       </div>
       <ActiveSearchFilters filters={state.filters} onChange={applyFilters} />
       <div className="advanced-search-layout">
@@ -144,13 +185,26 @@ export function AdvancedSearchPage({
                 onPreview={onPreview}
                 comparisonAppIds={comparison.flatMap(({ appId }) =>
                   appId === undefined ? [] : [appId])}
+                comparisonAppNames={comparisonApps}
                 onToggleCompare={(item) => {
                   if (item.catalogScope !== "apps" || item.appId === undefined) return;
-                  if (comparison.some(({ appId }) => appId === item.appId)) {
-                    onComparisonChange(comparison.filter(({ appId }) => appId !== item.appId));
+                  const appName = item.appName;
+                  if (!appName) return;
+                  if (comparisonApps.includes(appName)) {
+                    commitComparison(
+                      comparison.filter(({ appId, appName: selectedName }) =>
+                        appId !== item.appId && selectedName !== appName),
+                      comparisonApps.filter((name) => name !== appName),
+                    );
                     return;
                   }
-                  try { onComparisonChange(addComparisonSelection(comparison, item)); } catch {}
+                  if (comparisonApps.length >= 5) return;
+                  try {
+                    commitComparison(
+                      addComparisonSelection(comparison, item),
+                      [...comparisonApps, appName],
+                    );
+                  } catch {}
                 }}
               />
               {search.result.hasMore ? (
@@ -174,21 +228,28 @@ export function AdvancedSearchPage({
           onClose={() => setFiltersOpen(false)}
         />
       ) : null}
-      {comparison.length ? (
+      {comparisonView ? (
+        <section className="advanced-search-comparison" aria-label="Search comparison">
+          <InspirationComparison
+            comparison={comparisonView}
+            onBack={() => setComparisonView(null)}
+            backLabel="Back to search"
+            title="Compare selected apps"
+          />
+        </section>
+      ) : null}
+      {comparisonApps.length ? (
         <div className="advanced-search-comparison-tray" role="status">
-          <span>{comparison.length} {comparison.length === 1 ? "app" : "apps"} selected for comparison</span>
+          <span>{comparisonApps.join(" · ")}</span>
           <Button
             label="Compare selected"
             variant="primary"
-            isDisabled={comparison.length < 2}
-            onClick={() => window.open(
-              `/api/compare?apps=${encodeURIComponent(comparison.flatMap(({ appName }) =>
-                appName ? [appName] : []).join(","))}`,
-              "_blank",
-              "noopener,noreferrer",
-            )}
+            isDisabled={comparisonApps.length < 2}
+            isLoading={comparisonLoading}
+            onClick={() => void openComparison()}
           />
-          <Button label="Clear" variant="ghost" onClick={() => onComparisonChange([])} />
+          <Button label="Clear" variant="ghost" onClick={() => commitComparison([], [])} />
+          {comparisonError ? <span role="alert">{comparisonError}</span> : null}
         </div>
       ) : null}
     </main>

@@ -10,6 +10,9 @@ export interface WorkspaceRailAction {
      200px wide, so keep real trees shallow. */
   children?: WorkspaceRailAction[];
   expanded?: boolean;
+  /* Top-level project sections may fold. Detail routes keep the open project's
+     path visible without adding more disclosure controls beneath it. */
+  collapsible?: boolean;
   /* Right-aligned control on the row itself (the project settings cog). Kept
      outside the row button — a button cannot nest inside a button. */
   trailing?: ReactNode;
@@ -27,8 +30,15 @@ export interface WorkspaceRailProps {
     buttonRef?: Ref<HTMLButtonElement>;
     onSelect: () => void;
   };
-  /* The nav group's accessible name only — the rail shows no visible caption. */
+  /* A compact global destination sits above the workspace group when present. */
+  globalActions?: WorkspaceRailAction[];
+  /* The nav group's accessible name; `primaryHeading` optionally makes it visible. */
   primaryLabel: string;
+  primaryHeading?: string;
+  /* Mirrors Linear's collapsible section headings without making every child row
+     into a disclosure control. */
+  primaryCollapsible?: boolean;
+  primaryExpanded?: boolean;
   primaryActions: WorkspaceRailAction[];
   /* Footer action. Omit it and the rail ends after the nav — Admin does, and
      reaches the rest of the app through the brand link instead. */
@@ -43,7 +53,13 @@ export interface WorkspaceRailProps {
 /* What workspaceNav() hands to the rail. */
 export type WorkspaceNavSlots = Pick<
   WorkspaceRailProps,
-  'primaryLabel' | 'primaryActions' | 'settings'
+  | 'globalActions'
+  | 'primaryLabel'
+  | 'primaryHeading'
+  | 'primaryCollapsible'
+  | 'primaryExpanded'
+  | 'primaryActions'
+  | 'settings'
 >;
 
 export interface WorkspaceHeaderMenu {
@@ -56,7 +72,11 @@ export interface WorkspaceHeaderMenu {
 
 export function WorkspaceRail({
   workspace,
+  globalActions,
   primaryLabel,
+  primaryHeading,
+  primaryCollapsible = false,
+  primaryExpanded = true,
   primaryActions,
   settings,
   footer,
@@ -71,30 +91,45 @@ export function WorkspaceRail({
   */
   const [folds, setFolds] = useState<Record<string, boolean>>({});
   const [compactFolds, setCompactFolds] = useState<Record<string, boolean>>({});
+  const [primaryOpen, setPrimaryOpen] = useState(primaryExpanded);
   const [isCompact, setIsCompact] = useState(false);
   useEffect(() => {
-    const media = window.matchMedia('(max-width: 980px)');
+    const media = window.matchMedia('(max-width: 900px)');
     const update = () => setIsCompact(media.matches);
     update();
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
 
-  const isExpanded = (action: WorkspaceRailAction) =>
-    (isCompact ? compactFolds : folds)[action.label] ??
+  const isExpanded = (action: WorkspaceRailAction) => {
+    if (action.children?.length && action.collapsible === false) return true;
+    return (isCompact ? compactFolds : folds)[action.label] ??
       (isCompact ? false : Boolean(action.expanded));
+  };
   const toggleFold = (action: WorkspaceRailAction) => {
     const setFold = isCompact ? setCompactFolds : setFolds;
     setFold((open) => ({ ...open, [action.label]: !isExpanded(action) }));
   };
+  const selectAction = (action: WorkspaceRailAction, canCollapse: boolean) => {
+    if (isCompact && canCollapse) {
+      toggleFold(action);
+      return;
+    }
+
+    // A desktop directory is a short-lived picker. Once a destination is
+    // chosen, close it so it cannot obscure the new page's first column.
+    if (!isCompact) setFolds({});
+    action.onSelect?.();
+  };
 
   const renderRow = (action: WorkspaceRailAction) => {
     const expanded = isExpanded(action);
+    const canCollapse = Boolean(action.children?.length) && action.collapsible !== false;
     return (
       <>
         {/* A separate control, because it does a different thing to the row —
             and because a button cannot nest inside a button. */}
-        {action.children?.length ? (
+        {canCollapse ? (
           <button
             type="button"
             className="projects-workspace__desktop-row-caret"
@@ -120,7 +155,7 @@ export function WorkspaceRail({
             action.active ? 'is-active' : null,
           ].filter(Boolean).join(' ')}
           aria-current={action.active ? 'page' : undefined}
-          onClick={isCompact && action.children?.length ? () => toggleFold(action) : action.onSelect}
+          onClick={() => selectAction(action, canCollapse)}
         >
           {action.icon}<span>{action.label}</span>
         </button>
@@ -128,7 +163,10 @@ export function WorkspaceRail({
     );
   };
 
-  const renderAction = (action: WorkspaceRailAction) => (
+  const hasActiveDescendant = (action: WorkspaceRailAction): boolean =>
+    Boolean(action.children?.some((child) => child.active || hasActiveDescendant(child)));
+
+  const renderAction = (action: WorkspaceRailAction, depth = 0) => (
     <div
       key={action.label}
       /* `has-children` / `is-open` are what the compact bar keys off to flatten
@@ -137,6 +175,8 @@ export function WorkspaceRail({
         'projects-workspace__desktop-row',
         action.children?.length ? 'has-children' : null,
         isExpanded(action) ? 'is-open' : null,
+        `is-depth-${depth}`,
+        hasActiveDescendant(action) ? 'has-active-descendant' : null,
       ].filter(Boolean).join(' ')}
     >
       <div className="projects-workspace__desktop-row-line">
@@ -146,7 +186,7 @@ export function WorkspaceRail({
       {action.children?.length ? (
         <div className="projects-workspace__desktop-subnav" aria-hidden={!isExpanded(action)}>
           <div className="projects-workspace__desktop-subnav-content">
-            {action.children.map(renderAction)}
+            {action.children.map((child) => renderAction(child, depth + 1))}
           </div>
         </div>
       ) : null}
@@ -169,11 +209,8 @@ export function WorkspaceRail({
           <strong>Vitrines</strong>
         </a>
       ) : null}
-      {/*
-        * Only a surface that owns a menu (it passes `expanded`) gets a button and
-        * a caret. Everywhere else this is a plain identity row: a caret with no
-        * menu behind it read as a dropdown and, on Admin, navigated away instead.
-        */}
+      {/* Only a surface that owns a menu (it passes `expanded`) gets a button.
+          Everywhere else this is a plain identity row. */}
       {!workspace ? null : workspace.expanded === undefined ? (
         <div className="projects-workspace__desktop-workspace projects-workspace__desktop-workspace--static">
           <span className="projects-team-rail__avatar" aria-hidden="true">{workspace.initial}</span>
@@ -194,26 +231,37 @@ export function WorkspaceRail({
           {workspace.name ? (
             <span className="projects-workspace__desktop-workspace-name">{workspace.name}</span>
           ) : null}
-          <svg
-            className="projects-workspace__desktop-workspace-caret"
-            width="10"
-            height="10"
-            viewBox="0 0 12 12"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M2.5 4.5L6 8l3.5-3.5"
-              stroke="currentColor"
-              strokeWidth="1.25"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
         </button>
       )}
+      {globalActions?.length ? (
+        <nav className="projects-workspace__desktop-nav projects-workspace__desktop-nav--global" aria-label="App navigation">
+          {globalActions.map(renderAction)}
+        </nav>
+      ) : null}
       <nav className="projects-workspace__desktop-nav projects-workspace__desktop-nav--primary" aria-label={primaryLabel}>
-        {primaryActions.map(renderAction)}
+        {primaryHeading && primaryCollapsible ? (
+          <button
+            type="button"
+            className="projects-workspace__desktop-group-toggle"
+            aria-label={`${primaryOpen ? 'Collapse' : 'Expand'} ${primaryHeading}`}
+            aria-expanded={primaryOpen}
+            onClick={() => setPrimaryOpen((open) => !open)}
+          >
+            <span>{primaryHeading}</span>
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path
+                d="M2.5 4.5L6 8l3.5-3.5"
+                stroke="currentColor"
+                strokeWidth="1.25"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        ) : primaryHeading ? (
+          <span className="projects-workspace__desktop-nav-heading">{primaryHeading}</span>
+        ) : null}
+        {(!primaryCollapsible || primaryOpen || isCompact) && primaryActions.map((action) => renderAction(action))}
       </nav>
       {settings || footer ? (
         <div className="projects-workspace__desktop-footer">

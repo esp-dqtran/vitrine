@@ -1,25 +1,18 @@
 import {
   BookIcon,
   BookmarkHollowIcon,
-  CogIcon,
   FolderIcon,
   GridIcon,
   SparkleIcon,
 } from '@storybook/icons';
 
-import type { DesignerCanvasFileSummary } from '../../designerCanvas.ts';
-import type { ResearchProjectIcon, ResearchProjectSummary } from '../../researchProject.ts';
+import type { ResearchProjectIcon } from '../../researchProject.ts';
 import { navigate } from '../router.ts';
-import type { ProjectDocumentView } from '../projectDocumentsApi.ts';
 import type { WorkspaceRailAction } from './WorkspaceChrome.tsx';
-import type { ProjectWorkspaceArea } from './ProjectWorkspaceNav.tsx';
 
-/*
- * One definition of the project tree, shared by the Projects index and the
- * project workspace. Built here rather than per page so the rail does not
- * change shape as you move between them — stepping into a project should
- * expand a row, not swap the navigation out.
- */
+/* The global rail is intentionally flat. A project has its own Canvas,
+   Documents, and Settings navigation in the page header; forcing those paths
+   into an 80px app rail was the source of the awkward flyout. */
 
 /* The project's own glyph at row size — the page hero's mark is a 56px box,
    which is four times a rail row. */
@@ -32,30 +25,16 @@ export function projectGlyph(icon: ResearchProjectIcon, title: string) {
 }
 
 export interface ProjectRailNavInput {
-  projects: ResearchProjectSummary[];
-  /* The project being viewed, if any. It is the only expanded row: opening
-     another navigates to it, which expands it, so there is no collapse state
-     to persist or to fall out of sync with the route. */
-  openProjectId?: string;
-  area?: ProjectWorkspaceArea;
-  /* The open project's own canvases/documents, so Canvas and Documents expand
-     to the files themselves instead of just linking to their listing page.
-     Omitted (rather than defaulted to []) whenever the caller has not loaded
-     them — e.g. the Projects index, which never has an open project. */
-  canvases?: DesignerCanvasFileSummary[];
-  documents?: ProjectDocumentView[];
   /* True on the Projects index, where the header row is the destination. */
   projectsActive?: boolean;
+  /* True while viewing the collections workspace or a collection inside it. */
+  collectionsActive?: boolean;
   onOpenProjects: () => void;
 }
 
 export function projectRailNav({
-  projects,
-  openProjectId,
-  area,
-  canvases,
-  documents,
   projectsActive = false,
+  collectionsActive = false,
   onOpenProjects,
 }: ProjectRailNavInput): WorkspaceRailAction[] {
   return [
@@ -63,79 +42,13 @@ export function projectRailNav({
       label: 'Projects',
       icon: <FolderIcon aria-hidden="true" />,
       active: projectsActive,
-      expanded: true,
       onSelect: onOpenProjects,
-      children: projects.map((project) => {
-        const projectId = String(project.id);
-        const isOpen = projectId === openProjectId;
-        return {
-          label: project.title,
-          icon: (
-            <span className="projects-workspace__desktop-row-glyph">
-              {projectGlyph(project.icon ?? 'initial', project.title)}
-            </span>
-          ),
-          active: isOpen,
-          expanded: isOpen,
-          onSelect: () => navigate({ name: 'project', projectId }),
-          /* Settings is the project's own cog, not a third area row — it edits
-             the project rather than opening one of its file areas. */
-          trailing: isOpen ? (
-            <button
-              type="button"
-              className="projects-workspace__desktop-row-action"
-              aria-label={`${project.title} settings`}
-              onClick={() => navigate({ name: 'project-settings', projectId })}
-            >
-              <CogIcon aria-hidden="true" />
-            </button>
-          ) : undefined,
-          children: isOpen
-            ? [
-                {
-                  label: 'Canvas',
-                  icon: <GridIcon aria-hidden="true" />,
-                  active: area === 'canvas',
-                  expanded: area === 'canvas',
-                  onSelect: () => navigate({ name: 'project', projectId }),
-                  children: canvases?.map((canvas) => ({
-                    label: canvas.title,
-                    icon: <GridIcon aria-hidden="true" />,
-                    onSelect: () =>
-                      navigate({ name: 'project-canvas', projectId, canvasId: canvas.id }),
-                  })),
-                },
-                {
-                  label: 'Documents',
-                  icon: <BookIcon aria-hidden="true" />,
-                  active: area === 'documents',
-                  expanded: area === 'documents',
-                  onSelect: () => navigate({ name: 'project-documents', projectId }),
-                  children: documents?.map((document) => ({
-                    label: document.title,
-                    icon: <BookIcon aria-hidden="true" />,
-                    onSelect: () =>
-                      navigate({
-                        name: 'project-document-file',
-                        projectId,
-                        documentId: document.id,
-                      }),
-                  })),
-                },
-              ]
-            : undefined,
-        };
-      }),
     },
     {
       label: 'Collections',
       icon: <BookmarkHollowIcon aria-hidden="true" />,
+      active: collectionsActive,
       onSelect: () => navigate({ name: 'collections' }),
-      children: [{
-        label: 'All collections',
-        icon: <BookmarkHollowIcon aria-hidden="true" />,
-        onSelect: () => navigate({ name: 'collections' }),
-      }],
     },
   ];
 }

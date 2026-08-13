@@ -260,6 +260,7 @@ interface DiscoveryFilterMenuProps {
   onPreview: (option: DiscoveryFilterOption) => void;
   onToggleOption: (option: DiscoveryFilterOption) => void;
   onClear: () => void;
+  filterClassName?: string;
 }
 
 export const DISCOVERY_FILTER_OPTION_RENDER_LIMIT = 200;
@@ -299,6 +300,7 @@ export function DiscoveryFilterMenu({
   onPreview,
   onToggleOption,
   onClear,
+  filterClassName,
 }: DiscoveryFilterMenuProps) {
   const selectedCount = group.selected.length;
   const selectedKey = group.selected.join('\0');
@@ -361,7 +363,7 @@ export function DiscoveryFilterMenu({
 
   return (
     <div
-      className={`apps-filterbar__filter ${selectedCount ? 'apps-filterbar__filter--selected' : ''}`}
+      className={`apps-filterbar__filter ${selectedCount ? 'apps-filterbar__filter--selected' : ''} ${filterClassName ?? ''}`}
       data-filter-group={group.id}
       ref={containerRef}
     >
@@ -438,6 +440,28 @@ export function DiscoveryFilterMenu({
   );
 }
 
+export function DiscoveryActiveFilter({
+  label,
+  onClear,
+}: {
+  label: string;
+  onClear(): void;
+}) {
+  return (
+    <div className="apps-filterbar__filter apps-filterbar__filter--selected advanced-search-filter-pill">
+      <span className="apps-filterbar__filter-label">{label}</span>
+      <IconButton
+        label={`Remove ${label} filter`}
+        icon={<Icon icon="close" size="sm" />}
+        variant="ghost"
+        size="sm"
+        className="apps-filterbar__clear"
+        onClick={onClear}
+      />
+    </div>
+  );
+}
+
 export interface DiscoveryFilterBarProps {
   kind: 'apps' | 'sites' | 'flows';
   ariaLabel: string;
@@ -450,6 +474,7 @@ export interface DiscoveryFilterBarProps {
   filters: DiscoveryFilterGroup[];
   resultCount: number;
   resultLabels: readonly [string, string];
+  showPlatform?: boolean;
   showResultCount?: boolean;
   showSort?: boolean;
   sort: string;
@@ -466,6 +491,7 @@ export function DiscoveryFilterBar({
   filters,
   resultCount,
   resultLabels,
+  showPlatform = true,
   showResultCount = false,
   showSort = true,
   sort,
@@ -530,30 +556,34 @@ export function DiscoveryFilterBar({
       }}
     >
       <div className="apps-filterbar__controls">
-        <div
-          className="apps-filterbar__filter apps-filterbar__filter--platform"
-          aria-label={platform.ariaLabel}
-          ref={isMenuOpen({ type: 'platform' }) ? openMenuContainerRef : undefined}
-        >
-          <AstryxDropdown
-            label={PLATFORM_LABEL[platform.value]}
-            ariaLabel={`${platform.ariaLabel}: ${PLATFORM_LABEL[platform.value]}`}
-            open={isMenuOpen({ type: 'platform' })}
-            triggerClassName="apps-filterbar__filter-button"
-            triggerVariant="primary"
-            onOpenChange={(open) => setSingleSelectOpen({ type: 'platform' }, open)}
-          >
-            <DiscoveryPlatformFilterOptions
-              value={platform.value}
-              platforms={platform.platforms}
-              onSelect={(value) => {
-                platform.onChange(value);
-                setOpenMenu(null);
-              }}
-            />
-          </AstryxDropdown>
-        </div>
-        <span className="apps-filterbar__divider" aria-hidden="true" />
+        {showPlatform ? (
+          <>
+            <div
+              className="apps-filterbar__filter apps-filterbar__filter--platform"
+              aria-label={platform.ariaLabel}
+              ref={isMenuOpen({ type: 'platform' }) ? openMenuContainerRef : undefined}
+            >
+              <AstryxDropdown
+                label={PLATFORM_LABEL[platform.value]}
+                ariaLabel={`${platform.ariaLabel}: ${PLATFORM_LABEL[platform.value]}`}
+                open={isMenuOpen({ type: 'platform' })}
+                triggerClassName="apps-filterbar__filter-button"
+                triggerVariant="primary"
+                onOpenChange={(open) => setSingleSelectOpen({ type: 'platform' }, open)}
+              >
+                <DiscoveryPlatformFilterOptions
+                  value={platform.value}
+                  platforms={platform.platforms}
+                  onSelect={(value) => {
+                    platform.onChange(value);
+                    setOpenMenu(null);
+                  }}
+                />
+              </AstryxDropdown>
+            </div>
+            <span className="apps-filterbar__divider" aria-hidden="true" />
+          </>
+        ) : null}
         <div className="apps-filterbar__filter apps-filterbar__filter--merged">
           <AstryxDropdown
             label="Filters"

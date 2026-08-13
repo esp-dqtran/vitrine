@@ -1,4 +1,5 @@
 import { Button } from '@astryxdesign/core';
+import type { ReactNode } from 'react';
 import type { FeatureDocumentRevisionView } from '../../featureDocument.ts';
 import type {
   DocumentFlowEvidenceLink,
@@ -6,7 +7,7 @@ import type {
 } from '../documentFlowModel.ts';
 import { PlaceholderImage } from './PlaceholderImage.tsx';
 
-export type DocumentFlowSection = 'requirements' | 'questions';
+export type DocumentFlowSection = 'requirements' | 'questions' | 'handoff';
 
 export interface DocumentFlowReadyViewProps {
   presentation: DocumentFlowPresentation;
@@ -14,6 +15,7 @@ export interface DocumentFlowReadyViewProps {
   activeSection: DocumentFlowSection;
   onSectionChange(section: DocumentFlowSection): void;
   onOpenVisualStep(stepNumber: number): void;
+  handoff?: ReactNode;
 }
 
 function EvidenceCard({
@@ -197,11 +199,13 @@ export function DocumentFlowReadyView({
   activeSection,
   onSectionChange,
   onOpenVisualStep,
+  handoff,
 }: DocumentFlowReadyViewProps) {
   const { summary } = presentation;
   const sections: Array<{ id: DocumentFlowSection; label: string }> = [
     { id: 'requirements', label: 'Requirements' },
     { id: 'questions', label: `Open questions (${summary.openQuestionCount})` },
+    ...(handoff ? [{ id: 'handoff' as const, label: 'Handoff' }] : []),
   ];
   return (
     <section className="document-flow document-flow--ready" aria-label="Document Flow">
@@ -346,6 +350,8 @@ export function DocumentFlowReadyView({
               )
             : <p>No open questions identified in this revision.</p>
         )}
+
+        {activeSection === 'handoff' && handoff}
       </div>
 
       <TechnicalDetails revision={revision} />

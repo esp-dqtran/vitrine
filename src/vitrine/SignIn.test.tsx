@@ -26,6 +26,7 @@ test("renders only the real email/password authentication controls", () => {
       authenticate={async () => ({ id: 1, email: "admin@example.com", role: "admin" })}
       register={async () => ({ id: 1, email: "admin@example.com", role: "admin" })}
       onSignedIn={() => {}}
+      onForgotPassword={() => {}}
     />
   );
 
@@ -35,6 +36,7 @@ test("renders only the real email/password authentication controls", () => {
   assert.match(html, /data-sign-in-layout="page"/);
   assert.match(html, /src="\/favicon\.svg"[^>]*width="26"/);
   assert.match(html, /Welcome back/);
+  assert.match(html, /Forgot password\?/);
   assert.match(html, /data-sign-in-showcase="true"/);
   assert.doesNotMatch(html, /Continue with Google/);
 });

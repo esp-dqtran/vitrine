@@ -82,6 +82,26 @@ test("shows an unpublished Stage 2 flow inventory only to admins", () => {
   assert.doesNotMatch(userHtml, /Authenticate to workspace/);
 });
 
+test("keeps incomplete Stage 3 evidence in the admin draft view", () => {
+  const partialFlow = {
+    id: 'launch-bot',
+    title: 'Set up bot for website',
+    description: 'Open the launch configuration.',
+    tags: ['crawl-draft', 'needs-more-evidence'],
+    steps: [{ label: 'Open launch', evidence: [{ imageId: 11, imageUrl: '/api/media/launch', description: 'Launch setup' }] }],
+  };
+  const adminHtml = renderToStaticMarkup(<FlowsPanel flows={[loginFlow, partialFlow]} app="cxgenie" userRole="admin" />);
+  const userHtml = renderToStaticMarkup(<FlowsPanel flows={[loginFlow, partialFlow]} app="cxgenie" userRole="user" />);
+
+  assert.match(adminHtml, /Admin draft · Stage 3 · 1 flow needs result evidence/);
+  assert.match(adminHtml, /Draft flow/);
+  assert.match(adminHtml, /Set up bot for website/);
+  assert.match(adminHtml, /Screens pending Stage 3/);
+  assert.match(userHtml, /Login/);
+  assert.doesNotMatch(userHtml, /Set up bot for website/);
+  assert.doesNotMatch(userHtml, /Admin draft/);
+});
+
 test("does not offer the retired FLOW.md editor", () => {
   const html = renderToStaticMarkup(<FlowsPanel flows={[loginFlow]} app="linear" platform="web" />);
   assert.doesNotMatch(html, /FLOW\.md/);

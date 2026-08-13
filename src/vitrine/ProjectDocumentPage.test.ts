@@ -34,7 +34,12 @@ test("presents the BlockNote document as a Notion-like native page", async () =>
     /new Map\(next\.map\(\(user\) => \[user\.name, user\]\)\)/,
   );
   assert.match(component, /Page width/);
-  assert.match(component, /Contextual review/);
+  assert.match(component, /Review hub/);
+  assert.match(component, /Request review/);
+  assert.match(component, /Resolve all open threads before approval/);
+  assert.match(component, /Start from a workspace template/);
+  assert.match(component, /Product requirements/);
+  assert.match(component, /Recent activity/);
   assert.match(component, /parentCommentId/);
   assert.match(component, /deleteProjectDocumentCommentById/);
   assert.match(component, /label="Reply"/);
@@ -55,7 +60,7 @@ test("presents the BlockNote document as a Notion-like native page", async () =>
   assert.match(css, /\.project-document__connection--saved/);
   assert.match(component, /project-document-discussion__error/);
   assert.match(component, /label="Retry"/);
-  assert.match(component, /editable=\{document\.role === "editor"\}/);
+  assert.match(component, /editable=\{document\.role === "editor" && document\.reviewStatus !== "approved"\}/);
   assert.match(component, /readOnly=\{document\.role !== "editor"\}/);
   assert.match(component, /formattingToolbar/);
   assert.match(component, /linkToolbar/);

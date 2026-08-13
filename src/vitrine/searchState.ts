@@ -46,6 +46,14 @@ function canonical(values: string[]): string[] {
     .sort((left, right) => left.localeCompare(right));
 }
 
+export function parseComparisonApps(search: string): string[] {
+  const params = new URLSearchParams(search);
+  return [...new Set(params.getAll("compare")
+    .flatMap((value) => value.split(","))
+    .map((value) => value.trim())
+    .filter(Boolean))].slice(0, 5);
+}
+
 export function parseSearchState(search: string): SearchPageState {
   const params = new URLSearchParams(search);
   const typeValue = params.get("type") ?? "all";
@@ -70,7 +78,10 @@ export function parseSearchState(search: string): SearchPageState {
   };
 }
 
-export function serializeSearchState(state: SearchPageState): string {
+export function serializeSearchState(
+  state: SearchPageState,
+  comparisonApps: string[] = [],
+): string {
   const params = new URLSearchParams();
   if (state.query.trim()) params.set("q", state.query.trim());
   if (state.scope !== "all") params.set("scope", state.scope);
@@ -79,6 +90,9 @@ export function serializeSearchState(state: SearchPageState): string {
     for (const value of canonical(state.filters[key])) params.append(key, value);
   }
   if (state.sort !== "relevance") params.set("sort", state.sort);
+  for (const app of [...new Set(comparisonApps.map((value) => value.trim()).filter(Boolean))].slice(0, 5)) {
+    params.append("compare", app);
+  }
   return params.toString();
 }
 

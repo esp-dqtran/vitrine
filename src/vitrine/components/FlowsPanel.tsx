@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
 import type { Platform } from '../../platformFromUrl.ts';
+import type { ResearchCollection } from '../../db.ts';
 import { buildFlowTreeGroups } from '../flowTree.ts';
 import { FlowsWorkspace } from './FlowsWorkspace.tsx';
 import { ReferenceGallerySection } from './ReferenceGallerySection.tsx';
@@ -26,6 +27,10 @@ function draftFlows(draft: CrawlPlanView): DesignFlow<EvidenceView>[] {
   }));
 }
 
+function isEvidenceDraft(flow: DesignFlow<EvidenceView>): boolean {
+  return flow.tags.includes('crawl-draft');
+}
+
 export function FlowsPanel({
   flows,
   app,
@@ -38,6 +43,8 @@ export function FlowsPanel({
   sourceAppIconUrl,
   draftPlan,
   onDraftCountChange,
+  collections,
+  onCollectionsChange,
 }: {
   flows: DesignFlow<EvidenceView>[];
   app?: string;
@@ -53,11 +60,19 @@ export function FlowsPanel({
   /** Provided by tests or an already-loaded admin surface; never rendered for non-admin users. */
   draftPlan?: CrawlPlanView;
   onDraftCountChange?(count: number): void;
+  collections?: ResearchCollection[];
+  onCollectionsChange?: (collections: ResearchCollection[]) => void;
 }) {
-  const groups = useMemo(() => buildFlowTreeGroups(flows), [flows]);
+  const completedFlows = useMemo(
+    () => flows.filter((flow) => !isEvidenceDraft(flow)),
+    [flows],
+  );
+  const visibleFlows = userRole === 'admin' ? flows : completedFlows;
+  const persistedDraftCount = flows.length - completedFlows.length;
+  const groups = useMemo(() => buildFlowTreeGroups(visibleFlows), [visibleFlows]);
   const [loadedDraft, setLoadedDraft] = useState<CrawlPlanView>();
   const selectedFlow = selectedFlowId
-    ? flows.find(({ id }) => id === selectedFlowId)
+    ? visibleFlows.find(({ id }) => id === selectedFlowId)
     : undefined;
   const invalidFlowId = selectedFlowId && !selectedFlow
     ? selectedFlowId
@@ -105,6 +120,9 @@ export function FlowsPanel({
           sourceAppName={sourceAppName}
           sourceAppIconUrl={sourceAppIconUrl}
           cardVariant="draft"
+          collections={collections}
+          onCollectionsChange={onCollectionsChange}
+          plan={userRole === 'admin' ? 'pro' : 'free'}
           analysisControls={(
             <div className="flow-workspace__notice" data-flow-draft-status="true">
               <span>Draft · Stage 2 · {visibleDraftFlows.length} flows · Screens pending Stage 3</span>
@@ -132,6 +150,14 @@ export function FlowsPanel({
       userRole={userRole}
       sourceAppName={sourceAppName}
       sourceAppIconUrl={sourceAppIconUrl}
+      collections={collections}
+      onCollectionsChange={onCollectionsChange}
+      plan={userRole === 'admin' ? 'pro' : 'free'}
+      analysisControls={userRole === 'admin' && persistedDraftCount > 0 ? (
+        <div className="flow-workspace__notice" data-flow-draft-status="true">
+          <span>Admin draft · Stage 3 · {persistedDraftCount} {persistedDraftCount === 1 ? 'flow needs' : 'flows need'} result evidence</span>
+        </div>
+      ) : undefined}
       onSelectionChange={onSelectionChange}
     />
   );

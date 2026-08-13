@@ -48,23 +48,24 @@ test('shows the Design System tab only when the App has a snapshot', () => {
   assert.doesNotMatch(html, /Design System/);
   assert.doesNotMatch(html, /aria-label="Review"/);
   assert.doesNotMatch(html, /Crawler/);
+  assert.doesNotMatch(html, /aria-label="Open Screens filters"/);
 });
 
-test('does not expose the crawler workspace in App information tabs', () => {
+test('never exposes AI Crawl in App detail navigation', () => {
   assert.deepEqual(appDetailTabs(false).map(({ id }) => id), [
     'screens',
     'flows',
   ]);
-  assert.equal(appDetailTabs(false).some(({ id }) => id === 'crawl'), false);
 });
 
-test('falls back removed Crawl selections to Screens', () => {
+test('falls back a removed AI Crawl route to Screens', () => {
   const html = renderToStaticMarkup(
     <ScreenDetail
       collections={[]}
       onCollectionsChange={() => undefined}
       role="admin"
       initialSection="crawl"
+      initialPlatform="web"
       app={{
         id: 'linear',
         app: 'Linear',
@@ -80,6 +81,34 @@ test('falls back removed Crawl selections to Screens', () => {
 
   assert.doesNotMatch(html, /AI Crawl|Intelligent crawler/);
   assert.match(html, /aria-selected="true"[^>]*aria-label="Screens"/);
+});
+
+test('does not mount AI Crawl from the App detail route', () => {
+  const source = readFileSync(
+    new URL('./components/ScreenDetail.tsx', import.meta.url),
+    'utf8',
+  );
+  assert.doesNotMatch(source, /AI Crawl|CrawlWorkspacePanel|section === 'crawl'/);
+});
+
+test('keeps the portaled screen category menu open while a checkbox is clicked', () => {
+  const source = readFileSync(
+    new URL('./components/ScreenDetail.tsx', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(source, /isInsideAstryxDropdownPortal/);
+  assert.match(source, /if \(isInsideAstryxDropdownPortal\(event\.target\)\) return;/);
+});
+
+test('uses the shared selected-filter control for Screen categories', () => {
+  const source = readFileSync(
+    new URL('./components/ScreenDetail.tsx', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(source, /label: 'Screens'/);
+  assert.doesNotMatch(source, /keepGroupLabelWhenSelected/);
 });
 
 test('falls back removed Review selections to Screens', () => {
@@ -566,7 +595,7 @@ test('renders the Mobbin-style App detail navigation rail with real version stat
   );
 });
 
-test('adds section-specific metadata filters for Screens, UI Elements, and Flows', () => {
+test('only renders the Screens filter when the current App has classified screen categories', () => {
   const renderSection = (initialSection: 'screens' | 'elements' | 'flows') => renderToStaticMarkup(
     <ScreenDetail
       collections={[]}
@@ -593,12 +622,13 @@ test('adds section-specific metadata filters for Screens, UI Elements, and Flows
   const flowsHtml = renderSection('flows');
   const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
   const css = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
+  const discoveryCss = readFileSync(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
 
-  assert.match(screensHtml, /class="reference-detail__tab-controls"/);
-  assert.match(screensHtml, /aria-label="Open Screens filters"/);
+  assert.doesNotMatch(screensHtml, /class="reference-detail__tab-controls"/);
+  assert.doesNotMatch(screensHtml, /aria-label="Open Screens filters"/);
   assert.match(elementsHtml, /aria-label="Open UI Elements filters"/);
   assert.match(flowsHtml, /aria-label="Open Flows filters"/);
-  assert.match(screensHtml, /class="[^"]*apps-filterbar__filter-button/);
+  assert.match(source, /section === 'screens' && screenFilterOptions\.types\.length > 0/);
   assert.match(source, /tabControls=\{activeMetadataFilter \?/);
   assert.match(source, /app-detail__navigation-tools/);
   assert.doesNotMatch(source, /adminSectionControl|More sections|app-detail__more-selector/);
@@ -606,7 +636,15 @@ test('adds section-specific metadata filters for Screens, UI Elements, and Flows
   assert.match(source, /<DiscoveryFilterMenu/);
   assert.match(source, /flows=\{filteredFlows\}/);
   assert.match(source, /No flows match these filters/);
-  assert.match(source, /Found in Flows/);
+  assert.match(source, /Screen categories/);
+  assert.match(
+    discoveryCss,
+    /:is\(\.apps-filterbar, \.reference-detail__tab-controls, \.quick-search__quick-filters, \.advanced-search-active-filters, \.admin-users-filter-control\) \.apps-filterbar__filter \.apps-filterbar__filter-button/,
+  );
+  assert.match(source, /ALL_SCREEN_TYPES\.filter/);
+  assert.doesNotMatch(source, /label: 'Found in Flows'/);
+  assert.doesNotMatch(source, /label: 'Layouts'/);
+  assert.doesNotMatch(screensHtml, />Layouts</);
   assert.doesNotMatch(source, /toolbar=\{section === 'screens'/);
   assert.doesNotMatch(source, /app-detail-screen-filter/);
   assert.doesNotMatch(css, /\.app-detail-screen-filter/);

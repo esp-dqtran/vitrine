@@ -2,6 +2,7 @@ import { Spinner } from './Spinner.tsx';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button, EmptyState } from '@astryxdesign/core';
 import type { Platform } from '../../platformFromUrl.ts';
+import type { ResearchCollection } from '../../db.ts';
 import {
   effectiveExpandedFlowGroupIds,
   filterFlowTreeGroups,
@@ -25,6 +26,9 @@ export interface FlowsWorkspaceProps {
   sourceAppIconUrl?: string | null;
   analysisControls?: ReactNode;
   cardVariant?: 'captured' | 'draft';
+  collections?: ResearchCollection[];
+  onCollectionsChange?: (collections: ResearchCollection[]) => void;
+  plan?: 'free' | 'pro';
   onSelectionChange(flowId?: string, step?: number, flowView?: FlowRepresentation): void;
 }
 
@@ -62,6 +66,9 @@ export function FlowsWorkspace({
   sourceAppIconUrl,
   analysisControls,
   cardVariant,
+  collections,
+  onCollectionsChange,
+  plan = 'free',
   onSelectionChange,
 }: FlowsWorkspaceProps) {
   const groupSignature = groups.map(({ id }) => id).join('\u0000');
@@ -152,9 +159,17 @@ export function FlowsWorkspace({
             platform={platform}
             version={version}
             userRole={userRole}
+            collections={collections}
+            onCollectionsChange={onCollectionsChange}
+            plan={plan}
             sourceAppName={sourceAppName}
             sourceAppIconUrl={sourceAppIconUrl}
-            cardPropsForFlow={cardVariant ? () => ({ variant: cardVariant }) : undefined}
+            cardPropsForFlow={(flow) => {
+              const variant = flow.tags.includes('crawl-draft')
+                ? 'draft'
+                : cardVariant;
+              return variant ? { variant } : undefined;
+            }}
           />
         ) : (
           <EmptyState

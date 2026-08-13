@@ -10,6 +10,7 @@ import type {
   ProjectDocumentIcon,
   ProjectDocumentPatch,
   ProjectDocumentPageWidth,
+  ProjectDocumentReviewStatus,
   ProjectDocumentStore,
   ProjectDocumentView,
 } from "../../../src/projectDocumentStore.ts";
@@ -27,6 +28,7 @@ const pageIcons = new Set<ProjectDocumentIcon>([
   "none", "document", "idea", "task", "schedule", "build",
 ]);
 const pageWidths = new Set<ProjectDocumentPageWidth>(["standard", "full"]);
+const reviewStatuses = new Set<ProjectDocumentReviewStatus>(["draft", "in_review", "approved"]);
 
 function asyncRoute(
   handler: (req: express.Request, res: express.Response) => Promise<void>,
@@ -68,7 +70,7 @@ const sendComment = (
 function documentPatch(body: unknown): ProjectDocumentPatch | undefined {
   if (!body || typeof body !== "object" || Array.isArray(body)) return undefined;
   const input = body as Record<string, unknown>;
-  const allowed = new Set(["title", "icon", "isFavorite", "pageWidth"]);
+  const allowed = new Set(["title", "icon", "isFavorite", "pageWidth", "reviewStatus"]);
   if (!Object.keys(input).length || Object.keys(input).some((key) => !allowed.has(key))) {
     return undefined;
   }
@@ -95,6 +97,13 @@ function documentPatch(body: unknown): ProjectDocumentPatch | undefined {
       return undefined;
     }
     patch.pageWidth = input.pageWidth as ProjectDocumentPageWidth;
+  }
+  if ("reviewStatus" in input) {
+    if (typeof input.reviewStatus !== "string"
+      || !reviewStatuses.has(input.reviewStatus as ProjectDocumentReviewStatus)) {
+      return undefined;
+    }
+    patch.reviewStatus = input.reviewStatus as ProjectDocumentReviewStatus;
   }
   return patch;
 }

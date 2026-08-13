@@ -10,6 +10,7 @@ import {
 } from "./featureDocuments.ts";
 import type { FeatureDocumentStore } from "../../../src/featureDocumentStore.ts";
 import { InvalidFeatureDocumentReviewTransitionError } from "../../../src/featureDocumentStore.ts";
+import type { FeatureDocumentContent, FeatureDocumentReviewStatus } from "../../../src/featureDocument.ts";
 
 const app = express();
 app.use(express.json());
@@ -20,6 +21,7 @@ const missingObjects = new Set<number>();
 let publicHash = "";
 let allowApp = true;
 let reviewTransitionInvalid = false;
+let currentReviewStatus: FeatureDocumentReviewStatus = "draft";
 let ownedJobStatus: typeof job.status | "error" | "cancelled" | "stale" = "running";
 const sseOrder: string[] = [];
 
@@ -49,6 +51,36 @@ const job = {
   updatedAt: "2026-07-22T00:00:00.000Z",
 };
 
+const proposedClaim = (id: string, text: string) => ({
+  id,
+  kind: "proposed" as const,
+  text,
+  evidenceIds: [] as string[],
+});
+
+let reviewContent: FeatureDocumentContent = {
+  executiveSummary: {
+    purpose: proposedClaim("purpose", "Checkout"),
+    userValue: proposedClaim("value", "Complete a purchase"),
+    recommendation: proposedClaim("recommendation", "Preserve progress"),
+  },
+  observedFlow: {
+    userGoal: proposedClaim("goal", "Checkout"),
+    entryPoint: proposedClaim("entry", "Cart"),
+    completionPoint: proposedClaim("complete", "Confirmation"),
+    journey: [], actors: [], visibleStates: [],
+  },
+  flowAnalysis: {
+    effectivePatterns: [], friction: [], missingStates: [], inconsistencies: [], risksAndAssumptions: [],
+  },
+  proposedFeature: {
+    problem: proposedClaim("problem", "Progress can be lost"),
+    targetUsers: [], goals: [], nonGoals: [], behavior: [], journey: [],
+  },
+  requirements: [],
+  edgeCases: [], successMetrics: [], guardrailMetrics: [], analyticsEvents: [], dependencies: [], openQuestions: [],
+};
+
 const store = {
   async createGeneration(userId: number, input: Record<string, unknown>) {
     created.push({ userId, input });
@@ -59,7 +91,7 @@ const store = {
   },
   async getDocument(userId: number) {
     return userId === 7
-      ? { id: 12, title: "Checkout", reviewStatus: "draft", sourceChanged: false, revisions: [], shares: [], currentJob: job, currentRevision: { id: 5, source: { app: "linear", platform: "web", versionId: 5, flowId: "checkout", title: "Checkout", description: "", tags: [] }, focusInstruction: "" } }
+      ? { id: 12, title: "Checkout", reviewStatus: currentReviewStatus, sourceChanged: false, revisions: [], shares: [], currentJob: job, currentRevision: { id: 5, reviewStatus: currentReviewStatus, content: reviewContent, source: { app: "linear", platform: "web", versionId: 5, flowId: "checkout", title: "Checkout", description: "", tags: [] }, focusInstruction: "" } }
       : undefined;
   },
   async getDocumentBySource(userId: number, source: {
@@ -275,6 +307,20 @@ test("rejects review lifecycle shortcuts with a stable conflict code", async () 
   reviewTransitionInvalid = false;
   assert.equal(response.status, 409);
   assert.equal((await response.json() as { code: string }).code, "invalid_review_transition");
+});
+
+test("blocks approval when the current revision has hard readiness gaps", async () => {
+  currentReviewStatus = "in_review";
+  const response = await fetch(`${base}/feature-documents/12/review-status`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ revisionId: 5, status: "approved" }),
+  });
+  currentReviewStatus = "draft";
+  assert.equal(response.status, 409);
+  const body = await response.json() as { code: string; blockers: Array<{ id: string }> };
+  assert.equal(body.code, "review_not_ready");
+  assert.deepEqual(body.blockers.map(({ id }) => id), ["requirements-missing"]);
 });
 
 test("public share is non-enumerating and exposes only allowlisted media", async () => {

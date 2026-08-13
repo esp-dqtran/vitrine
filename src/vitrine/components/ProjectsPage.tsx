@@ -31,6 +31,7 @@ import type {
   CreateResearchProjectInput,
   ResearchProjectSummary,
 } from "../../researchProject.ts";
+import type { ResearchCollection } from "../../db.ts";
 import {
   createResearchProject,
   deleteResearchProject,
@@ -39,6 +40,7 @@ import {
   updateResearchProject,
 } from "../researchProjectsApi.ts";
 import { navigate } from "../router.ts";
+import { listCollections } from "../researchApi.ts";
 import { DiscoveryCard } from "./DiscoveryCard.tsx";
 import {
   addTeamMember,
@@ -63,6 +65,35 @@ export interface ProjectActions {
   setPinned(project: ResearchProjectSummary, pinned: boolean): Promise<void>;
   duplicate(projectId: string): Promise<void>;
   remove(projectId: string): Promise<void>;
+}
+
+export function FirstProjectGuide({
+  onCreate,
+  onBrowse,
+}: {
+  onCreate: () => void;
+  onBrowse: () => void;
+}) {
+  return (
+    <section className="first-project-guide" aria-labelledby="first-project-guide-title">
+      <div className="first-project-guide__intro">
+        <span><SparkleIcon aria-hidden="true" /> First project</span>
+        <Heading level={2} id="first-project-guide-title">Turn product evidence into a decision</Heading>
+        <Text color="secondary">
+          Start with a question, collect real product evidence, then shape it into a visual decision or reviewable requirement.
+        </Text>
+      </div>
+      <ol className="first-project-guide__steps">
+        <li><span>1</span><div><strong>Create a project</strong><small>Name the product question or decision you are exploring.</small></div></li>
+        <li><span>2</span><div><strong>Save evidence</strong><small>Browse Apps, Sites, and Flows and add useful references.</small></div></li>
+        <li><span>3</span><div><strong>Decide and hand off</strong><small>Compare on Canvas or write a requirement, request review, and approve the outcome.</small></div></li>
+      </ol>
+      <div className="first-project-guide__actions">
+        <Button variant="primary" label="Create first project" clickAction={onCreate} />
+        <Button variant="secondary" label="Browse Apps first" clickAction={onBrowse} />
+      </div>
+    </section>
+  );
 }
 
 export function CreateProjectDialog({
@@ -495,12 +526,14 @@ function ProjectGrid({
 
 export function ResearchProjectsView({
   projects,
+  collections = [],
   teams = [],
   loading,
   error,
   actions,
 }: {
   projects: ResearchProjectSummary[];
+  collections?: ResearchCollection[];
   teams?: TeamSummary[];
   loading: boolean;
   error: string;
@@ -798,10 +831,13 @@ export function ResearchProjectsView({
       },
       nav: {
         primaryLabel: "Workspace",
-        /* Same tree the project workspace publishes, so stepping into a project
-           expands a row rather than swapping the navigation out. */
+        primaryHeading: "Workspace",
+        globalActions: [{
+          label: "Apps",
+          icon: <GridIcon aria-hidden="true" />,
+          onSelect: () => navigate({ name: "apps" }),
+        }],
         primaryActions: projectRailNav({
-          projects: visibleProjects,
           projectsActive: section === "projects",
           onOpenProjects: () => selectSection("projects"),
         }),
@@ -812,7 +848,7 @@ export function ResearchProjectsView({
           onSelect: openWorkspaceSettings,
         },
       },
-      onBrandSelect: () => selectSection("projects"),
+      onBrandSelect: () => navigate({ name: "apps" }),
       drawer: (
       <div
         className={`projects-workspace__drawer-layer${workspaceMenuOpen ? " is-open" : ""}`}
@@ -828,8 +864,8 @@ export function ResearchProjectsView({
         <aside
           ref={workspaceMenuRef}
           className="projects-team-drawer"
-          role="dialog"
-          aria-label="Team navigation"
+          role="menu"
+          aria-label="Switch workspace"
         >
           <section
             className="projects-team-switcher__spaces"
@@ -839,6 +875,8 @@ export function ResearchProjectsView({
               type="button"
               className={!selectedTeamId ? "is-active" : ""}
               aria-current={!selectedTeamId ? "true" : undefined}
+              role="menuitemradio"
+              aria-checked={!selectedTeamId}
               onClick={selectPersonal}
             >
               <UserIcon aria-hidden="true" />
@@ -850,23 +888,26 @@ export function ResearchProjectsView({
                 type="button"
                 className={selectedTeamId === team.id ? "is-active" : ""}
                 aria-current={selectedTeamId === team.id ? "true" : undefined}
+                role="menuitemradio"
+                aria-checked={selectedTeamId === team.id}
                 onClick={() => selectTeam(team.id)}
               >
                 <UsersIcon aria-hidden="true" />
                 <span>{team.name}</span>
               </button>
             ))}
-            <button
-              type="button"
-              className="projects-team-switcher__create"
-              onClick={runWorkspacePrimaryAction}
-            >
-              <PlusIcon aria-hidden="true" />
-              <span>{workspacePrimaryActionLabel}</span>
-            </button>
           </section>
 
           <div className="projects-team-drawer__divider" />
+          <button
+            type="button"
+            className="projects-team-switcher__create"
+            role="menuitem"
+            onClick={runWorkspacePrimaryAction}
+          >
+            <PlusIcon aria-hidden="true" />
+            <span>{workspacePrimaryActionLabel}</span>
+          </button>
           <nav
             className="projects-team-drawer__nav"
             aria-label={`${selectedTeam?.name ?? "Personal"} sections`}
@@ -957,23 +998,22 @@ export function ResearchProjectsView({
                 </div>
               ) : visibleProjects.length === 0 ? (
                 <div className="projects-workspace__empty">
-                  <EmptyState
-                    title={
-                      selectedTeam
-                        ? `No projects in ${selectedTeam.name} yet`
-                        : "Create your first project"
-                    }
-                    description={
-                      selectedTeam
-                        ? "Create a shared project so the whole Team can contribute to its flows, Canvas, and Notes."
-                        : "Give your application idea a home. You can shape its modules and flows when you open it."
-                    }
-                  />
-                  {(
-                    <Button
-                      variant="primary"
-                      label="New project"
-                      clickAction={openCreate}
+                  {selectedTeam ? (
+                    <>
+                      <EmptyState
+                        title={`No projects in ${selectedTeam.name} yet`}
+                        description="Create a shared project so the whole Team can contribute to its flows, Canvas, and Notes."
+                      />
+                      <Button
+                        variant="primary"
+                        label="New project"
+                        clickAction={openCreate}
+                      />
+                    </>
+                  ) : (
+                    <FirstProjectGuide
+                      onCreate={openCreate}
+                      onBrowse={() => navigate({ name: "apps" })}
                     />
                   )}
                 </div>
@@ -1324,17 +1364,20 @@ export function ResearchProjectsView({
 
 export function ProjectsPage() {
   const [projects, setProjects] = useState<ResearchProjectSummary[]>([]);
+  const [collections, setCollections] = useState<ResearchCollection[]>([]);
   const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const refresh = useCallback(async () => {
     try {
-      const [nextProjects, nextTeams] = await Promise.all([
+      const [nextProjects, nextTeams, nextCollections] = await Promise.all([
         listResearchProjects(),
         listTeams().catch(() => []),
+        listCollections().catch(() => []),
       ]);
       setProjects(nextProjects);
       setTeams(nextTeams);
+      setCollections(nextCollections);
       setError("");
     } catch (cause) {
       setError((cause as Error).message);
@@ -1359,6 +1402,7 @@ export function ProjectsPage() {
   return (
     <ResearchProjectsView
       projects={projects}
+      collections={collections}
       teams={teams}
       loading={loading}
       error={error}

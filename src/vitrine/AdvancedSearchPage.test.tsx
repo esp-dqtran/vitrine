@@ -35,3 +35,15 @@ test("content type navigation implements the tabs accessibility pattern", async 
   assert.match(source, /aria-label="Search scope"/);
   assert.match(source, /compatibleFilterKeys\(state\.scope\)/);
 });
+
+test("searches, sharing, and app comparison stay in one URL-owned workflow", async () => {
+  const source = await readFile(
+    new URL("./components/AdvancedSearchPage.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /Copy search link/);
+  assert.match(source, /parseComparisonApps/);
+  assert.match(source, /compareCatalogApps/);
+  assert.match(source, /Compare selected apps/);
+  assert.doesNotMatch(source, /window\.open/);
+});

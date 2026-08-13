@@ -475,6 +475,13 @@ export interface AppEvidencePage {
   nextCursor: string | null;
 }
 
+export interface AppScreenTypeInput {
+  app: string;
+  platform: string;
+  versionNumber?: number | null;
+  publishedOnly?: boolean;
+}
+
 export interface UiElementSummaryItem {
   component_type: string;
   component_group: string;
@@ -757,6 +764,7 @@ export async function appEvidencePage(input: {
   cursor?: string | null;
   limit?: number;
   publishedOnly?: boolean;
+  screenTypes?: string[];
 }): Promise<AppEvidencePage> {
   const requestedLimit = Math.min(Math.max(Math.floor(input.limit ?? 48), 1), 48);
   const cursorId = input.cursor ? decodeImageCursor(input.cursor) : null;
@@ -821,6 +829,7 @@ export async function appEvidencePage(input: {
        ) reference ON i.kind = 'ui_element'
        WHERE a.name = $1 AND p.name = $3 AND i.kind = $2
          AND $4::integer IS NULL AND $5::boolean = false
+         AND ($8::text[] IS NULL OR i.analysis->>'pageType' = ANY($8))
          AND NOT (i.kind = 'ui_element' AND i.image_url LIKE 'mobbin-bulk:ui_element:%'
            AND EXISTS (
              SELECT 1 FROM ui_element_extractions e
@@ -879,6 +888,7 @@ export async function appEvidencePage(input: {
          LIMIT 1
        ) reference ON i.kind = 'ui_element'
        WHERE i.kind = $2 AND ($4::integer IS NOT NULL OR $5::boolean = true)
+         AND ($8::text[] IS NULL OR i.analysis->>'pageType' = ANY($8))
          AND NOT (i.kind = 'ui_element' AND i.image_url LIKE 'mobbin-bulk:ui_element:%'
            AND EXISTS (
              SELECT 1 FROM ui_element_extractions e
@@ -897,6 +907,7 @@ export async function appEvidencePage(input: {
       input.publishedOnly ?? false,
       cursorId,
       requestedLimit + 1,
+      input.screenTypes?.length ? input.screenTypes : null,
     ],
   );
   const hasMore = res.rows.length > requestedLimit;
@@ -905,6 +916,37 @@ export async function appEvidencePage(input: {
     rows,
     nextCursor: hasMore && rows.length ? encodeImageCursor(rows[rows.length - 1].id) : null,
   };
+}
+
+/** Complete distinct screen categories for the selected App/version, independent of gallery pagination. */
+export async function appScreenTypes(input: AppScreenTypeInput): Promise<string[]> {
+  const res = await query<{ page_type: string }>(
+    `WITH selected_version AS (
+       SELECT av.id
+       FROM app_versions av JOIN apps a ON a.id = av.app_id
+       WHERE a.name = $1 AND av.platform = $2
+         AND (($3::integer IS NOT NULL AND av.version_number = $3)
+           OR ($3::integer IS NULL AND av.status = 'published'))
+         AND ($4::boolean = false OR av.status = 'published')
+       ORDER BY av.version_number DESC LIMIT 1
+     )
+     SELECT DISTINCT trimmed.page_type
+     FROM (
+       SELECT trim(i.analysis->>'pageType') AS page_type
+       FROM apps a JOIN platforms p ON p.app_id = a.id JOIN images i ON i.platform_id = p.id
+       WHERE a.name = $1 AND p.name = $2 AND i.kind = 'screen'
+         AND $3::integer IS NULL AND $4::boolean = false
+       UNION ALL
+       SELECT trim(i.analysis->>'pageType') AS page_type
+       FROM selected_version sv JOIN version_images vi ON vi.version_id = sv.id
+       JOIN images i ON i.id = vi.image_id
+       WHERE i.kind = 'screen' AND ($3::integer IS NOT NULL OR $4::boolean = true)
+     ) trimmed
+     WHERE trimmed.page_type <> ''
+     ORDER BY trimmed.page_type`,
+    [input.app, input.platform, input.versionNumber ?? null, input.publishedOnly ?? false],
+  );
+  return res.rows.map(({ page_type }) => page_type);
 }
 
 export async function appUiElementSummary(input: {
@@ -2189,6 +2231,11 @@ export interface ResearchCollection {
   items: CollectionItem[];
 }
 
+export interface CollectionScreen extends CrawledImage {
+  item_id: number;
+  accent_color: string | null;
+}
+
 export interface NewCollectionItem {
   kind: CollectionItemKind;
   app: string;
@@ -2220,6 +2267,44 @@ export async function listCollections(userId: number): Promise<ResearchCollectio
      GROUP BY c.id
      ORDER BY c.updated_at DESC`,
     [userId]
+  );
+  return res.rows;
+}
+
+/**
+ * Returns the exact screen captures saved in one personal collection. The
+ * collection ownership constraint is part of the query so a collection id
+ * alone cannot reveal another member's saved captures.
+ */
+export async function listCollectionScreens(
+  userId: number,
+  collectionId: number,
+): Promise<CollectionScreen[]> {
+  const res = await query<CollectionScreen>(
+    `SELECT ci.id AS item_id,
+       i.id, a.name AS app, p.name AS platform, i.image_url, i.kind,
+       i.description, i.analysis, i.image_url AS capture_url,
+       i.created_at AS captured_at, a.accent_color,
+       COALESCE((
+         SELECT jsonb_agg(jsonb_build_object('group', 'screens', 'value', pattern.name)
+           ORDER BY pattern.position, pattern.id)
+         FROM screen_pattern_assignments assignment
+         JOIN screen_patterns pattern ON pattern.id = assignment.screen_pattern_id
+         WHERE assignment.image_id = i.id
+       ), '[]'::jsonb) AS matched_facets
+     FROM collections c
+     JOIN collection_items ci ON ci.collection_id = c.id
+     JOIN apps a ON a.name = ci.app
+     JOIN platforms p ON p.app_id = a.id
+     JOIN images i ON i.platform_id = p.id
+       AND i.id::text = ci.reference_id
+       AND i.kind = 'screen'
+     WHERE c.id = $2
+       AND c.user_id = $1
+       AND ci.kind = 'screen'
+       AND ci.reference_id ~ '^[1-9][0-9]*$'
+     ORDER BY ci.updated_at DESC, ci.id DESC`,
+    [userId, collectionId],
   );
   return res.rows;
 }

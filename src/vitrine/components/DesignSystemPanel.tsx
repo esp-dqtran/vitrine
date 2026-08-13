@@ -24,6 +24,45 @@ type Snapshot = DesignSystemSnapshot<EvidenceView>;
 
 const markdownText = (value: string): string => value.replace(/\|/g, '\\|').replace(/\n+/g, ' ');
 
+function canonicalProductCopy(value: string | undefined, productName: string): string | undefined {
+  if (!value || productName.length < 4) return value;
+  const stem = productName.slice(0, -1).toLocaleLowerCase();
+  return value.replace(/\b[A-Za-z][A-Za-z0-9-]*\b/g, (word) => {
+    if (word.toLocaleLowerCase() === productName.toLocaleLowerCase()) return word;
+    return word.length === productName.length && word.slice(0, -1).toLocaleLowerCase() === stem
+      ? productName
+      : word;
+  });
+}
+
+function snapshotWithCanonicalProductName(snapshot: Snapshot, productName: string): Snapshot {
+  return {
+    ...snapshot,
+    app: productName,
+    summary: canonicalProductCopy(snapshot.summary, productName),
+    tokens: snapshot.tokens.map((token) => ({
+      ...token,
+      name: canonicalProductCopy(token.name, productName) ?? token.name,
+      role: canonicalProductCopy(token.role, productName) ?? token.role,
+    })),
+    components: snapshot.components.map((component) => ({
+      ...component,
+      name: canonicalProductCopy(component.name, productName) ?? component.name,
+      description: canonicalProductCopy(component.description, productName) ?? component.description,
+      variants: component.variants.map((variant) => ({
+        ...variant,
+        name: canonicalProductCopy(variant.name, productName) ?? variant.name,
+        description: canonicalProductCopy(variant.description, productName) ?? variant.description,
+      })),
+    })),
+    rules: snapshot.rules?.map((rule) => ({
+      ...rule,
+      name: canonicalProductCopy(rule.name, productName) ?? rule.name,
+      description: canonicalProductCopy(rule.description, productName) ?? rule.description,
+    })),
+  };
+}
+
 export function designSystemMarkdown(snapshot: Snapshot): string {
   const lines = [
     `# ${titleCase(snapshot.app)} Design System`,
@@ -175,6 +214,37 @@ function GenerationBanner(props: {
   );
 }
 
+function DesignSystemTrustSummary({ snapshot }: { snapshot: Snapshot }) {
+  const candidates = [
+    ...snapshot.tokens,
+    ...snapshot.components.flatMap((component) => component.variants),
+    ...(snapshot.rules ?? []),
+  ];
+  const evidenceLinks = candidates.reduce((total, candidate) => total + candidate.evidence.length, 0);
+  const inferred = candidates.filter((candidate) => candidate.source === 'llm_inferred').length;
+  const reviewed = candidates.filter((candidate) => candidate.reviewStatus === 'reviewed').length;
+  const needsReview = candidates.filter((candidate) => candidate.reviewStatus === 'needs_review').length;
+
+  return (
+    <aside className="ds-trust" aria-labelledby="design-system-trust-title">
+      <div className="ds-trust__copy">
+        <span className="ds-page__eyebrow">Evidence and review</span>
+        <h3 id="design-system-trust-title">How to read this Design System</h3>
+        <p>
+          Source links are captured product evidence. Inferred previews and candidate names are AI reconstructions,
+          not canonical source UI. Verify a source screen before using an unreviewed value.
+        </p>
+      </div>
+      <dl className="ds-trust__stats">
+        <div><dt>Evidence links</dt><dd>{evidenceLinks.toLocaleString()}</dd></div>
+        <div><dt>AI-inferred</dt><dd>{inferred.toLocaleString()}</dd></div>
+        <div><dt>Reviewed</dt><dd>{reviewed.toLocaleString()}</dd></div>
+        <div><dt>Needs review</dt><dd>{needsReview.toLocaleString()}</dd></div>
+      </dl>
+    </aside>
+  );
+}
+
 export function DesignSystemPanel({
   snapshot,
   status,
@@ -214,13 +284,15 @@ export function DesignSystemPanel({
     );
   }
 
+  const displayName = appName ?? snapshot.app;
+  const displaySnapshot = snapshotWithCanonicalProductName(snapshot, displayName);
   const tokenGroups = (Object.keys(KIND_LABELS) as TokenKind[])
-    .map((kind) => [kind, snapshot.tokens.filter((token) => token.kind === kind)] as const)
+    .map((kind) => [kind, displaySnapshot.tokens.filter((token) => token.kind === kind)] as const)
     .filter(([, tokens]) => tokens.length > 0);
-  const hasComponents = snapshot.components.length > 0;
-  const usageRules = (snapshot.rules ?? []).filter(isActionableUsageRule);
+  const hasComponents = displaySnapshot.components.length > 0;
+  const usageRules = (displaySnapshot.rules ?? []).filter(isActionableUsageRule);
   const hasRules = usageRules.length > 0;
-  const showcase = pickShowcaseComponent(snapshot.components);
+  const showcase = pickShowcaseComponent(displaySnapshot.components);
 
   if (!tokenGroups.length && !hasComponents && !hasRules) {
     if (cropOverview) return <div className="ds-page">{cropOverview}</div>;
@@ -228,8 +300,16 @@ export function DesignSystemPanel({
   }
 
   let sectionIndex = 0;
-  const screenshot = snapshot.provenance?.screenshotUrl ?? snapshot.provenance?.thumbnailUrl;
-  const isRefero = snapshot.provenance?.provider === 'refero';
+  const screenshot = displaySnapshot.provenance?.screenshotUrl ?? displaySnapshot.provenance?.thumbnailUrl;
+  const isRefero = displaySnapshot.provenance?.provider === 'refero';
+  const isGetDesign = displaySnapshot.provenance?.provider === 'getdesign'
+    || displaySnapshot.components.some((component) => /imported from the GetDesign system/i.test(component.description));
+  const isExternal = isRefero || isGetDesign;
+  const hasAiInferences = [
+    ...displaySnapshot.tokens,
+    ...displaySnapshot.components.flatMap((component) => component.variants),
+    ...(displaySnapshot.rules ?? []),
+  ].some((candidate) => candidate.source === 'llm_inferred');
   const resolveCropUrl = (variant: Snapshot['components'][number]['variants'][number]) =>
     variant.occurrences?.find((occurrence) => occurrence.crop)?.crop?.imageUrl;
   return (
@@ -237,23 +317,28 @@ export function DesignSystemPanel({
       <style>{DESIGN_SYSTEM_REFERENCE_STYLES}</style>
       {generation ? <GenerationBanner generation={generation} onRetry={onRetryGeneration} /> : null}
       <DesignSystemHeader
-        eyebrow={isRefero ? 'Imported style reference' : 'Design system analysis'}
-        title={titleCase(snapshot.app)}
-        summary={snapshot.summary ?? 'A living styleguide reconstructed from the available product evidence.'}
-        sourceLabel={isRefero ? 'Refero source · External import' : 'Vitrines · Observed evidence'}
-        originalUrl={snapshot.provenance?.originalUrl}
-        sourceUrl={snapshot.provenance?.sourceUrl}
-        tokenCount={snapshot.tokens.length}
-        componentCount={snapshot.components.length}
+        eyebrow={isExternal ? 'Imported style reference' : 'Design system analysis'}
+        title={titleCase(displayName)}
+        summary={displaySnapshot.summary ?? 'A living styleguide reconstructed from the available product evidence.'}
+        sourceLabel={isExternal
+          ? `${isRefero ? 'Refero' : 'GetDesign'} source · External import`
+          : hasAiInferences
+            ? 'Vitrines · Evidence-backed AI analysis'
+            : 'Vitrines · Observed evidence'}
+        originalUrl={displaySnapshot.provenance?.originalUrl}
+        sourceUrl={displaySnapshot.provenance?.sourceUrl}
+        tokenCount={displaySnapshot.tokens.length}
+        componentCount={displaySnapshot.components.length}
         patternCount={usageRules.length}
       />
+      {!isExternal ? <DesignSystemTrustSummary snapshot={displaySnapshot} /> : null}
 
       <div className="ds-refero-layout">
         <div className="ds-refero-reference">
-          {screenshot ? <figure className="ds-refero-hero"><img src={screenshot} alt={`${titleCase(snapshot.app)} source website`} /></figure> : null}
+          {screenshot ? <figure className="ds-refero-hero"><img src={screenshot} alt={`${titleCase(displayName)} source website`} /></figure> : null}
           {cropOverview}
           <ThemeCanvas
-            title={`${titleCase(snapshot.app)} foundations & components`}
+            title={`${titleCase(displayName)} foundations & components`}
             description="Visual specimens reconstructed from the design tokens, component definitions, and product rules available in Vitrines."
             showcase={showcase
               ? <ComponentSample componentName={showcase.component.name} variant={showcase.variant} resolveCropUrl={resolveCropUrl} />
@@ -265,11 +350,11 @@ export function DesignSystemPanel({
               if (kind === 'typography') return <TypographySection key={kind} index={sectionIndex} tokens={tokens} showReviewMetadata={showReviewMetadata} />;
               return <FoundationSection key={kind} index={sectionIndex} kind={kind} tokens={tokens} renderEvidence={renderEvidence} showReviewMetadata={showReviewMetadata} />;
             })}
-            {hasComponents ? <ComponentsSection index={(sectionIndex += 1)} components={snapshot.components} renderEvidence={renderEvidence} resolveCropUrl={resolveCropUrl} showReviewMetadata={showReviewMetadata} /> : null}
+            {hasComponents ? <ComponentsSection index={(sectionIndex += 1)} components={displaySnapshot.components} renderEvidence={renderEvidence} resolveCropUrl={resolveCropUrl} showReviewMetadata={showReviewMetadata} /> : null}
             {hasRules ? <PatternsSection index={(sectionIndex += 1)} rules={usageRules} renderEvidence={renderEvidence} showReviewMetadata={showReviewMetadata} /> : null}
           </ThemeCanvas>
         </div>
-        <DesignSystemReferencePane snapshot={snapshot} markdown={designSystemMarkdown(snapshot)} />
+        <DesignSystemReferencePane snapshot={displaySnapshot} markdown={designSystemMarkdown(displaySnapshot)} />
       </div>
     </div>
   );

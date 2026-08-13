@@ -1,6 +1,7 @@
 import { Button } from "@astryxdesign/core";
 import type { SearchFilters } from "../../searchTypes.ts";
 import { emptySearchFilters } from "../searchState.ts";
+import { DiscoveryActiveFilter } from "./AppsFilterBar.tsx";
 
 export function ActiveSearchFilters({
   filters,
@@ -15,12 +16,10 @@ export function ActiveSearchFilters({
   return (
     <div className="advanced-search-active-filters" aria-label="Active search filters">
       {active.map(({ key, value }) => (
-        <Button
-          label={`${value} ×`}
-          variant="ghost"
-          size="sm"
+        <DiscoveryActiveFilter
           key={`${key}:${value}`}
-          onClick={() => onChange({
+          label={value}
+          onClear={() => onChange({
             ...filters,
             [key]: filters[key].filter((selected) => selected !== value),
           })}

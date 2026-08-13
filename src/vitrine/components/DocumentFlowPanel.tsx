@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Button, EmptyState } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
 import type {
+  FeatureDocumentJobView,
   FeatureDocumentRevisionView,
   FeatureDocumentView,
 } from '../../featureDocument.ts';
@@ -21,6 +22,7 @@ import {
 } from './DocumentFlowReadyView.tsx';
 import { FeatureDocumentProgress } from './FeatureDocumentProgress.tsx';
 import { FeatureDocumentSetupDialog } from './FeatureDocumentSetupDialog.tsx';
+import { FeatureDocumentHandoffPanel } from './FeatureDocumentHandoffPanel.tsx';
 
 export interface DocumentFlowPanelProps {
   flow: DesignFlow<EvidenceView>;
@@ -48,6 +50,8 @@ export interface DocumentFlowPanelViewProps {
   onCancel?(): void;
   onRetry?(): void;
   onReconnect?(): void;
+  onDocumentChange?(document: FeatureDocumentView): void;
+  onJobStarted?(job: FeatureDocumentJobView): void;
   onOpenVisualStep(stepNumber: number): void;
 }
 
@@ -71,6 +75,8 @@ export function DocumentFlowPanelView({
   onCancel,
   onRetry,
   onReconnect,
+  onDocumentChange,
+  onJobStarted,
   onOpenVisualStep,
 }: DocumentFlowPanelViewProps) {
   const [activeSection, setActiveSection] = useState<DocumentFlowSection>('requirements');
@@ -136,6 +142,19 @@ export function DocumentFlowPanelView({
       activeSection={activeSection}
       onSectionChange={setActiveSection}
       onOpenVisualStep={onOpenVisualStep}
+      handoff={(
+        <FeatureDocumentHandoffPanel
+          document={state.document}
+          revision={state.revision}
+          onDocumentChange={(document) => {
+            const next = classifyDocumentFlow(document);
+            if (next.kind === 'ready') setActiveSection('handoff');
+            onDocumentChange?.(document);
+          }}
+          onJobStarted={(job) => onJobStarted?.(job)}
+          onOpenVisualStep={onOpenVisualStep}
+        />
+      )}
     />
   );
 }
@@ -247,6 +266,13 @@ export function DocumentFlowPanel(props: DocumentFlowPanelProps) {
         onCancel={() => void cancel()}
         onRetry={() => void retry()}
         onReconnect={() => setSubscriptionVersion((current) => current + 1)}
+        onDocumentChange={(document) => setState(classifyDocumentFlow(document))}
+        onJobStarted={(job) => setState((current) => current.kind === 'ready'
+          ? {
+              kind: 'pending',
+              document: { ...current.document, currentJob: job },
+            }
+          : current)}
         onOpenVisualStep={props.onOpenVisualStep}
       />
       {app && platform && version && setupOpen && (

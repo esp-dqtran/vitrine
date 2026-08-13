@@ -3,12 +3,15 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { WorkspaceHeader, WorkspaceRail } from './components/WorkspaceChrome.tsx';
+import { projectRailNav } from './components/projectRailNav.tsx';
 
 test('renders the shared workspace rail as one group of buttons', () => {
   const html = renderToStaticMarkup(
     <WorkspaceRail
       workspace={{ label: 'Switch Team', initial: 'P', expanded: false, onSelect: () => undefined }}
       primaryLabel="Workspace"
+      primaryHeading="Workspace"
+      primaryCollapsible
       primaryActions={[{ label: 'Projects', icon: <span>P</span>, active: true }]}
       settings={{ label: 'Account settings', icon: <span>S</span> }}
     />,
@@ -16,11 +19,54 @@ test('renders the shared workspace rail as one group of buttons', () => {
 
   assert.match(html, /aria-label="Workspace navigation"/);
   assert.match(html, /aria-label="Workspace"/);
+  assert.match(html, /aria-label="Collapse Workspace"/);
+  assert.match(html, /aria-expanded="true"/);
   assert.match(html, /aria-current="page"/);
   assert.match(html, /class="projects-workspace__desktop-footer"/);
+  assert.doesNotMatch(html, /projects-workspace__desktop-workspace-caret/);
   // Every row navigates through onSelect — no <a href> rows to style separately.
   assert.doesNotMatch(html, /<a [^>]*class="projects-workspace__desktop/);
   assert.doesNotMatch(html, /projects-workspace__desktop-destination/);
+});
+
+test('can make the Workspace group collapsible without making Projects a disclosure', () => {
+  const html = renderToStaticMarkup(
+    <WorkspaceRail
+      primaryLabel="Workspace"
+      primaryHeading="Workspace"
+      primaryCollapsible
+      primaryActions={[
+        { label: 'Projects', icon: <span>P</span>, active: true },
+        { label: 'Collections', icon: <span>C</span> },
+      ]}
+    />,
+  );
+
+  assert.match(html, /projects-workspace__desktop-group-toggle/);
+  assert.match(html, /aria-label="Collapse Workspace"/);
+  assert.doesNotMatch(html, /aria-label="Collapse Projects"/);
+});
+
+test('keeps a project tree open without adding nested collapse controls', () => {
+  const html = renderToStaticMarkup(
+    <WorkspaceRail
+      primaryLabel="Workspace"
+      primaryHeading="Workspace"
+      primaryCollapsible
+      primaryActions={[
+        {
+          label: 'Projects',
+          icon: <span>P</span>,
+          collapsible: false,
+          children: [{ label: 'Hi', icon: <span>H</span> }],
+        },
+      ]}
+    />,
+  );
+
+  assert.doesNotMatch(html, /projects-workspace__desktop-row-caret/);
+  assert.doesNotMatch(html, /aria-label="Collapse Projects"/);
+  assert.match(html, /projects-workspace__desktop-subnav" aria-hidden="false"/);
 });
 
 /*
@@ -113,4 +159,82 @@ test('marks a disclosing row as one and leaves leaves alone', () => {
   assert.doesNotMatch(css, /\.projects-workspace__desktop-row-line > button:first-child/);
   assert.match(css, /\.projects-workspace__desktop-subnav\s*\{[^}]*grid-template-rows:\s*0fr;[^}]*opacity:\s*0;/s);
   assert.match(css, /\.projects-workspace__desktop-row\.is-open > \.projects-workspace__desktop-subnav\s*\{[^}]*grid-template-rows:\s*1fr;/s);
+});
+
+test('keeps sibling workspace destinations at the root level', () => {
+  const html = renderToStaticMarkup(
+    <WorkspaceRail
+      primaryLabel="Workspace"
+      primaryActions={[
+        { label: 'Projects', icon: <span>P</span>, children: [{ label: 'Hi', icon: <span>H</span> }] },
+        { label: 'Collections', icon: <span>C</span>, children: [{ label: 'Research', icon: <span>R</span> }] },
+      ]}
+    />,
+  );
+
+  const rootRows = html.match(/projects-workspace__desktop-row has-children is-depth-0/g) ?? [];
+  assert.equal(rootRows.length, 2);
+  assert.equal((html.match(/projects-workspace__desktop-row is-depth-1/g) ?? []).length, 2);
+});
+
+test('publishes a flat app rail instead of a project directory', () => {
+  const actions = projectRailNav({
+    projectsActive: true,
+    onOpenProjects: () => undefined,
+  });
+
+  assert.deepEqual(actions.map(({ label, active, children }) => ({ label, active, children })), [
+    { label: 'Projects', active: true, children: undefined },
+    { label: 'Collections', active: false, children: undefined },
+  ]);
+});
+
+test('uses a compact visual rail for global navigation', () => {
+  const html = renderToStaticMarkup(
+    <WorkspaceRail
+      primaryLabel="Workspace"
+      primaryActions={[
+        {
+          label: 'Projects',
+          icon: <span>P</span>,
+          active: true,
+        },
+      ]}
+    />,
+  );
+
+  assert.match(html, /projects-workspace__desktop-row is-depth-0/);
+  assert.doesNotMatch(html, /projects-workspace__desktop-subnav/);
+
+  const css = readFileSync(new URL('./projectsWorkspace.css', import.meta.url), 'utf8');
+  assert.match(css, /--projects-rail-width:\s*96px;/);
+  assert.match(css, /--projects-rail-surface:\s*light-dark\(#f8fafb,\s*#151516\);/);
+  assert.match(css, /--projects-rail-active:\s*light-dark\(#e6f4fa,\s*#27282c\);/);
+  assert.match(
+    css,
+    /@media \(min-width:\s*901px\)[\s\S]*?\.projects-workspace__desktop-nav > \.projects-workspace__desktop-row > \.projects-workspace__desktop-row-line > \.projects-workspace__desktop-row-link\s*\{[^}]*grid-template-rows:\s*36px 16px;/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__desktop-nav > \.projects-workspace__desktop-row > \.projects-workspace__desktop-row-line > \.projects-workspace__desktop-row-link::before\s*\{[^}]*width:\s*52px;[^}]*height:\s*52px;/s,
+  );
+  assert.match(
+    css,
+    /@media \(min-width:\s*901px\)[\s\S]*?\.projects-workspace \.projects-workspace__desktop-settings\s*\{[^}]*width:\s*68px;[^}]*grid-template-rows:\s*36px 16px;/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__desktop-settings::before\s*\{[^}]*width:\s*52px;[^}]*height:\s*52px;/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__desktop-nav > \.projects-workspace__desktop-row > \.projects-workspace__desktop-row-line > \.projects-workspace__desktop-row-link\.is-active::after,[\s\S]*?\.projects-workspace__desktop-nav--primary > \.projects-workspace__desktop-row\.is-depth-0\.has-active-descendant > \.projects-workspace__desktop-row-line > \.projects-workspace__desktop-row-link::after\s*\{[^}]*width:\s*2px;[^}]*height:\s*28px;[^}]*background:\s*var\(--color-text-primary\);/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__desktop-nav > \.projects-workspace__desktop-row:not\(\.has-active-descendant\) > \.projects-workspace__desktop-row-line > \.projects-workspace__desktop-row-link:not\(\.is-active\):hover::before/,
+  );
+  assert.doesNotMatch(css, /\.projects-workspace__desktop-subnav-content > \.projects-workspace__desktop-row::before/);
+  assert.doesNotMatch(css, /\.projects-workspace__desktop-subnav-content::before/);
+  assert.doesNotMatch(css, /box-shadow:\s*inset 2px 0 0 var\(--color-accent\);/);
 });

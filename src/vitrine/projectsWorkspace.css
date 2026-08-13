@@ -8,8 +8,12 @@
   --color-border: var(--vitrine-color-border);
   --color-border-emphasized: var(--vitrine-color-border-emphasized);
   --color-border-focus: var(--vitrine-color-border-emphasized);
+  /* Lumin's rail is a distinct navigation plane. These paired values keep that
+     separation in both themes without forcing the rest of Vitrines into one. */
+  --projects-rail-surface: light-dark(#f8fafb, #151516);
+  --projects-rail-active: light-dark(#e6f4fa, #27282c);
   /* One source of truth for the rail: the rail itself and this page offset. */
-  --projects-rail-width: 200px;
+  --projects-rail-width: 96px;
   /* Inset of the content panel inside the page (Linear-style floating surface). */
   --projects-panel-inset: 8px;
   width: 100%;
@@ -19,7 +23,7 @@
      through this element and offsets the whole page. */
   padding: var(--projects-panel-inset) var(--projects-panel-inset)
     var(--projects-panel-inset) var(--projects-rail-width);
-  background: var(--color-background-body);
+  background: var(--projects-rail-surface);
   color: var(--color-text-primary);
   color-scheme: inherit;
 }
@@ -57,8 +61,9 @@
   flex-direction: column;
   align-items: center;
   gap: 0;
-  padding: 12px;
-  background: transparent;
+  padding: 10px 8px;
+  border-right: 0;
+  background: var(--color-background-body);
 }
 
 .projects-workspace__desktop-workspace,
@@ -78,48 +83,37 @@
   display: flex;
   width: 100%;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   /* Keep the Vitrines mark clearly separated from the workspace dropdown. */
-  padding: 4px 0 0;
-  margin-bottom: 24px;
+  padding: 4px 2px 0;
+  margin-bottom: 12px;
   color: var(--color-text-primary);
   text-decoration: none;
 }
 
 .projects-workspace__rail-brand img {
-  width: 28px;
+  width: 24px;
   height: auto;
   border-radius: var(--radius-element);
 }
 
 .projects-workspace__rail-brand strong {
-  font-size: 18px;
-  line-height: 24px;
+  font-size: 16px;
+  line-height: 20px;
 }
 
 .projects-workspace__desktop-workspace {
   width: 100%;
-  min-height: 36px;
+  min-height: 32px;
   grid-template-columns: 24px minmax(0, 1fr) 10px;
   align-items: center;
   justify-items: stretch;
   gap: 8px;
   padding: 4px 8px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-element);
+  border-radius: 6px;
   font-size: 14px;
   line-height: 20px;
   text-align: left;
-}
-
-/* Points down at rest, up while the workspace menu is open. */
-.projects-workspace__desktop-workspace-caret {
-  color: var(--color-text-secondary);
-  transition: transform 0.15s;
-}
-
-.projects-workspace__desktop-workspace[aria-expanded="true"] .projects-workspace__desktop-workspace-caret {
-  transform: rotate(180deg);
 }
 
 .projects-workspace__desktop-workspace-name {
@@ -129,18 +123,10 @@
   white-space: nowrap;
 }
 
-.projects-workspace__desktop-workspace:hover {
-  border-color: var(--color-border-emphasized);
-}
-
 /* Identity-only variant: nothing to open, so it must not invite a click. */
 .projects-workspace__desktop-workspace--static {
   grid-template-columns: 24px minmax(0, 1fr);
   cursor: default;
-}
-
-.projects-workspace__desktop-workspace--static:hover {
-  border-color: var(--color-border);
 }
 
 .projects-workspace__desktop-workspace:hover,
@@ -258,6 +244,393 @@
   transform: rotate(0deg);
 }
 
+/*
+ * The desktop rail follows the compact, icon-over-label pattern used by the
+ * reference. Projects and Collections still expose their real hierarchy, but
+ * do so in a nearby directory instead of turning the rail into a file browser.
+ */
+@media (min-width: 901px) {
+  .projects-workspace__rail-brand {
+    width: 68px;
+    align-self: center;
+    justify-content: center;
+    padding: 3px 0;
+    margin-bottom: 8px;
+    margin-inline: auto;
+  }
+
+  .projects-workspace__rail-brand img {
+    width: 32px;
+  }
+
+  .projects-workspace__rail-brand strong {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .projects-workspace__desktop-workspace {
+    position: relative;
+    width: 68px;
+    min-height: 62px;
+    grid-template-columns: 1fr;
+    grid-template-rows: 28px minmax(0, 1fr);
+    gap: 2px;
+    padding: 4px 2px;
+    font-size: 11px;
+    line-height: 16px;
+    text-align: center;
+    margin-top: 6px;
+  }
+
+  .projects-workspace__desktop-workspace--static {
+    grid-template-columns: 1fr;
+  }
+
+  .projects-workspace__desktop-workspace .projects-team-rail__avatar {
+    justify-self: center;
+  }
+
+  .projects-workspace__desktop-workspace-name {
+    width: 100%;
+    text-align: center;
+  }
+
+  .projects-workspace__desktop-nav {
+    justify-items: center;
+  }
+
+  .projects-workspace__desktop-nav--global {
+    margin-top: 10px;
+  }
+
+  .projects-workspace__desktop-nav--primary {
+    margin-top: 12px;
+  }
+
+  .projects-workspace__desktop-nav-heading {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .projects-workspace__desktop-nav--primary
+    > .projects-workspace__desktop-row.is-depth-0 {
+    position: relative;
+    width: 68px;
+    margin-top: 4px;
+  }
+
+  .projects-workspace__desktop-nav > .projects-workspace__desktop-row {
+    position: relative;
+    width: 68px;
+  }
+
+  .projects-workspace__desktop-nav
+    > .projects-workspace__desktop-row
+    > .projects-workspace__desktop-row-line {
+    position: relative;
+    width: 68px;
+    justify-content: center;
+  }
+
+  .projects-workspace__desktop-nav
+    > .projects-workspace__desktop-row
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-link {
+    position: relative;
+    width: 68px;
+    min-height: 66px;
+    grid-template-columns: 1fr;
+    grid-template-rows: 36px 16px;
+    align-content: center;
+    justify-items: center;
+    gap: 0;
+    padding: 2px;
+    background: transparent !important;
+    font-size: 11px;
+    line-height: 16px;
+    text-align: center;
+  }
+
+  .projects-workspace__desktop-nav
+    > .projects-workspace__desktop-row
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-link::before {
+    position: absolute;
+    z-index: 0;
+    top: 0;
+    left: 50%;
+    width: 52px;
+    height: 52px;
+    border-radius: 8px;
+    background: transparent;
+    content: "";
+    transform: translateX(-50%);
+    transition: background var(--vitrine-transition-fast);
+  }
+
+  .projects-workspace__desktop-nav
+    > .projects-workspace__desktop-row:not(.has-active-descendant)
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-link:not(.is-active):hover::before,
+  .projects-workspace__desktop-nav
+    > .projects-workspace__desktop-row:not(.has-active-descendant)
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-link:not(
+      .is-active
+    ):focus-visible::before {
+    background: var(--projects-rail-active);
+  }
+
+  .projects-workspace__desktop-nav
+    > .projects-workspace__desktop-row
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-link.is-active::after,
+  .projects-workspace__desktop-nav--primary
+    > .projects-workspace__desktop-row.is-depth-0.has-active-descendant
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-link::after {
+    position: absolute;
+    z-index: 1;
+    top: 12px;
+    left: 7px;
+    width: 2px;
+    height: 28px;
+    border-radius: var(--radius-full);
+    background: var(--color-text-primary);
+    content: "";
+  }
+
+  .projects-workspace__desktop-nav
+    > .projects-workspace__desktop-row
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-link
+    > svg,
+  .projects-workspace__desktop-nav
+    > .projects-workspace__desktop-row
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-link
+    > span {
+    position: relative;
+    z-index: 1;
+  }
+
+  .projects-workspace__desktop-nav
+    > .projects-workspace__desktop-row
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-link
+    > svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .projects-workspace__desktop-nav
+    > .projects-workspace__desktop-row
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-link
+    > span:last-child {
+    max-width: 76px;
+    letter-spacing: -0.01em;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
+  }
+
+  /* Settings is another destination in the rail, not a compact footer link.
+     Match the icon-over-label geometry used above so it does not collapse into
+     the old inline row at the bottom of the screen. */
+  .projects-workspace__desktop-footer {
+    width: 68px;
+  }
+
+  .projects-workspace .projects-workspace__desktop-settings {
+    position: relative;
+    width: 68px;
+    min-height: 66px;
+    grid-template-columns: 1fr;
+    grid-template-rows: 36px 16px;
+    align-content: center;
+    justify-items: center;
+    gap: 0;
+    padding: 2px;
+    background: transparent !important;
+    color: var(--color-text-secondary);
+    font-size: 11px;
+    line-height: 16px;
+    text-align: center;
+  }
+
+  .projects-workspace .projects-workspace__desktop-settings::before {
+    position: absolute;
+    z-index: 0;
+    top: 0;
+    left: 50%;
+    width: 52px;
+    height: 52px;
+    border-radius: 8px;
+    background: transparent;
+    content: "";
+    transform: translateX(-50%);
+    transition: background var(--vitrine-transition-fast);
+  }
+
+  .projects-workspace
+    .projects-workspace__desktop-settings:not(.is-active):hover::before,
+  .projects-workspace
+    .projects-workspace__desktop-settings:not(
+      .is-active
+    ):focus-visible::before {
+    background: var(--projects-rail-active);
+  }
+
+  .projects-workspace .projects-workspace__desktop-settings.is-active::after {
+    position: absolute;
+    z-index: 1;
+    top: 12px;
+    left: 7px;
+    width: 2px;
+    height: 28px;
+    border-radius: var(--radius-full);
+    background: var(--color-text-primary);
+    content: "";
+  }
+
+  .projects-workspace .projects-workspace__desktop-settings > svg,
+  .projects-workspace .projects-workspace__desktop-settings > span {
+    position: relative;
+    z-index: 1;
+  }
+
+  .projects-workspace .projects-workspace__desktop-settings > svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .projects-workspace .projects-workspace__desktop-settings > span {
+    max-width: 76px;
+    letter-spacing: -0.01em;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
+  }
+
+  .projects-workspace__desktop-nav
+    > .projects-workspace__desktop-row
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-caret {
+    position: absolute;
+    z-index: 1;
+    top: 2px;
+    right: -1px;
+    width: 18px;
+    min-height: 18px;
+  }
+
+  .projects-workspace__desktop-nav
+    > .projects-workspace__desktop-row
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-caret
+    svg {
+    width: 9px;
+    height: 9px;
+  }
+
+  .projects-workspace__desktop-nav--primary
+    > .projects-workspace__desktop-row.is-depth-0.has-active-descendant
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-link,
+  .projects-workspace__desktop-nav
+    > .projects-workspace__desktop-row
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-link.is-active {
+    color: var(--color-text-primary);
+  }
+
+  .projects-workspace__desktop-nav--primary
+    > .projects-workspace__desktop-row.is-depth-0
+    > .projects-workspace__desktop-subnav {
+    position: absolute;
+    z-index: 20;
+    top: 0;
+    left: calc(100% + 8px);
+    width: 236px;
+    padding: 6px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-background-surface);
+    box-shadow: var(--shadow-med);
+  }
+
+  .projects-workspace__desktop-nav--primary
+    > .projects-workspace__desktop-row.is-depth-0
+    > .projects-workspace__desktop-subnav
+    > .projects-workspace__desktop-subnav-content {
+    gap: 1px;
+    padding: 0;
+  }
+
+  .projects-workspace__desktop-nav--primary
+    > .projects-workspace__desktop-row.is-depth-0
+    > .projects-workspace__desktop-subnav
+    .projects-workspace__desktop-row {
+    width: 100%;
+  }
+
+  .projects-workspace__desktop-nav--primary
+    > .projects-workspace__desktop-row.is-depth-0
+    > .projects-workspace__desktop-subnav
+    .projects-workspace__desktop-row-line {
+    min-width: 0;
+  }
+
+  .projects-workspace__desktop-nav--primary
+    > .projects-workspace__desktop-row.is-depth-0
+    > .projects-workspace__desktop-subnav
+    .projects-workspace__desktop-row-link {
+    min-height: 34px;
+    grid-template-columns: var(--vitrine-icon-size-inline) minmax(0, 1fr);
+    grid-template-rows: none;
+    justify-items: start;
+    gap: 8px;
+    padding: 0 8px;
+    font-size: 13px;
+    line-height: 18px;
+    text-align: left;
+  }
+
+  .projects-workspace__desktop-nav--primary
+    > .projects-workspace__desktop-row.is-depth-0
+    > .projects-workspace__desktop-subnav
+    .projects-workspace__desktop-row-link
+    > span:last-child {
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .projects-workspace__desktop-nav--primary
+    > .projects-workspace__desktop-row.is-depth-0
+    > .projects-workspace__desktop-subnav
+    .projects-workspace__desktop-subnav {
+    padding-left: 16px;
+  }
+
+  .projects-workspace__desktop-nav--primary
+    > .projects-workspace__desktop-row.is-depth-0
+    > .projects-workspace__desktop-subnav
+    .projects-workspace__desktop-row-action {
+    opacity: 1;
+  }
+}
+
 /* A project's own glyph at row size: an initial needs sizing, an svg is already
    covered by the nav's icon rule. */
 .projects-workspace__desktop-row-glyph {
@@ -284,7 +657,8 @@
 
 /* Revealed on hover or keyboard focus; always present for touch, where there is
    no hover to reveal it. */
-.projects-workspace__desktop-row-line:hover .projects-workspace__desktop-row-action,
+.projects-workspace__desktop-row-line:hover
+  .projects-workspace__desktop-row-action,
 .projects-workspace__desktop-row-action:focus-visible {
   opacity: 1;
 }
@@ -295,30 +669,80 @@
   }
 }
 
-/* Carries the gap the group caption used to sit in — but only when a workspace
-   row precedes it. Without one the brand's own 24px is already the gap, and both
-   would stack into 40px. */
+.projects-workspace__desktop-nav--global {
+  margin-top: 8px;
+}
+
 .projects-workspace__desktop-nav--primary {
-  margin-top: 0;
+  margin-top: 18px;
 }
 
-.projects-workspace__desktop-workspace + .projects-workspace__desktop-nav--primary {
-  margin-top: 16px;
+.projects-workspace__desktop-nav-heading {
+  display: block;
+  padding: 0 8px 4px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
 }
 
-/* Rail rows sit on the 36px switcher height, the body type size, and the
-   foundation's inline icon size, rather than a compact 28px/13px of their own. */
+/* Workspace is a single foldable group, like Linear's sidebar. Project and
+   Collection rows remain ordinary destinations instead of nested disclosures. */
+.projects-workspace__desktop-group-toggle {
+  display: grid;
+  width: 100%;
+  min-height: 28px;
+  grid-template-columns: minmax(0, 1fr) 10px;
+  gap: 8px;
+  padding: 0 8px 4px;
+  border: 0;
+  border-radius: var(--radius-inner);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: left;
+}
+
+.projects-workspace__desktop-group-toggle span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projects-workspace__desktop-group-toggle svg {
+  width: 10px;
+  height: 10px;
+  align-self: center;
+  justify-self: end;
+  transform: rotate(0deg);
+  transition: transform var(--vitrine-transition-fast);
+}
+
+.projects-workspace__desktop-group-toggle[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
+}
+
+.projects-workspace__desktop-group-toggle:hover,
+.projects-workspace__desktop-group-toggle:focus-visible {
+  background: var(--color-background-muted);
+  color: var(--color-text-primary);
+}
+
+/* Rail rows stay light and compact so a short workspace does not look like a
+   stack of large cards. */
 .projects-workspace__desktop-nav button,
 .projects-workspace__desktop-nav a,
 .projects-workspace__desktop-settings {
   width: 100%;
-  min-height: 36px;
+  min-height: 32px;
   grid-template-columns: var(--vitrine-icon-size-inline) minmax(0, 1fr);
   align-items: center;
   justify-items: start;
-  gap: 10px;
-  padding: 0 10px;
-  border-radius: var(--radius-element);
+  gap: 8px;
+  padding: 0 8px;
+  border-radius: 6px;
   color: var(--color-text-secondary);
   font-size: 14px;
   font-weight: 500;
@@ -430,7 +854,7 @@
 
 .projects-workspace__brand {
   /* The rail carries the Vitrines mark on desktop; the header shows it only
-     below 980px, where the rail is swapped for the drawer. */
+     below 900px, where the rail is swapped for the drawer. */
   display: none;
   width: 208px;
   flex: 0 0 208px;
@@ -619,28 +1043,27 @@
 .projects-team-drawer {
   position: absolute;
   z-index: 1;
-  /* Opens just under the rail switcher and matches its column, not a 320px
-     sheet: rail padding 12 + brand 28 + brand margin 24 + switcher 36 + 4 gap. */
-  top: 104px;
-  left: 12px;
+  /* The compact rail has no room for a useful workspace menu. Open a compact
+     panel beside it, so switching workspaces never obscures the current page. */
+  top: 16px;
+  left: calc(var(--projects-rail-width) + 8px);
   display: grid;
   align-content: start;
   grid-auto-rows: max-content;
-  width: calc(var(--projects-rail-width, 200px) - 24px);
+  width: min(300px, calc(100vw - var(--projects-rail-width) - 24px));
   max-height: calc(100dvh - 120px);
-  gap: 0;
+  gap: 2px;
   padding: 6px;
   overflow-y: auto;
-  border: 0;
-  border-radius: var(--radius-container);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
   background: var(--color-background-surface);
   color: var(--color-text-primary);
   box-shadow:
-    inset 0 0 2px rgb(255 255 255 / 64%),
-    0 0 2px rgb(0 0 0 / 16%),
-    0 3px 3px rgb(0 0 0 / 10%);
+    0 10px 24px rgb(0 0 0 / 20%),
+    0 1px 3px rgb(0 0 0 / 18%);
   opacity: 0;
-  transform: translateY(-6px) scale(0.98);
+  transform: translateY(-4px) scale(0.98);
   transform-origin: top left;
   transition:
     opacity 0.15s,
@@ -655,20 +1078,21 @@
 .projects-team-drawer__workspace,
 .projects-team-drawer__invite,
 .projects-team-drawer__nav button,
-.projects-team-switcher__spaces button {
+.projects-team-switcher__spaces button,
+.projects-team-switcher__create {
   display: flex;
   width: 100%;
   min-width: 0;
   align-items: center;
   gap: 8px;
-  min-height: 28px;
+  min-height: 36px;
   padding: 0 8px;
   border: 0;
   border-radius: var(--radius-element);
   background: transparent;
   color: var(--color-text-secondary);
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   text-align: left;
   cursor: pointer;
@@ -752,9 +1176,9 @@
 }
 
 .projects-team-drawer__divider {
-  display: none;
+  display: block;
   height: 1px;
-  margin: 0 8px;
+  margin: 4px 0;
   background: var(--color-border);
 }
 
@@ -851,8 +1275,19 @@
 }
 
 .projects-team-switcher__create {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius-element);
+  background: transparent;
   color: var(--color-accent);
+  font: inherit;
   font-weight: 600;
+  text-align: left;
+  cursor: pointer;
 }
 
 .projects-team-switcher__spaces {
@@ -968,10 +1403,33 @@
 }
 
 .project-discovery-card > .app-discovery-card {
+  display: flex;
+  flex-direction: column;
   height: 100%;
+  border-radius: 18px;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 14%);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.project-discovery-card > .app-discovery-card:hover,
+.project-discovery-card > .app-discovery-card:focus-within {
+  border-color: color-mix(
+    in srgb,
+    var(--color-text-primary) 28%,
+    var(--color-border)
+  );
+  box-shadow: 0 16px 34px rgb(0 0 0 / 20%);
+  transform: translateY(-2px);
 }
 
 .project-discovery-card .app-discovery-card__media {
+  width: calc(100% - 24px);
+  aspect-ratio: 16 / 9;
+  margin: 12px 12px 0;
+  border-radius: 12px;
   background:
     radial-gradient(circle at 18% 12%, rgb(117 92 255 / 22%), transparent 42%),
     linear-gradient(145deg, rgb(26 28 38), rgb(16 17 22));
@@ -1086,6 +1544,7 @@
 
 .project-discovery-card .discovery-card__identity {
   width: 100%;
+  padding: 16px 18px 18px;
 }
 
 .projects-workspace__menu {
@@ -1174,6 +1633,97 @@
     var(--color-background-surface) 70%,
     transparent
   );
+}
+
+.first-project-guide {
+  width: min(100%, 880px);
+  display: grid;
+  gap: 24px;
+  padding: clamp(24px, 4vw, 40px);
+}
+
+.first-project-guide__intro {
+  display: grid;
+  gap: 8px;
+  text-align: center;
+}
+
+.first-project-guide__intro > span {
+  display: inline-flex;
+  align-items: center;
+  justify-self: center;
+  gap: 6px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.first-project-guide__intro > span svg {
+  width: 16px;
+  height: 16px;
+}
+
+.first-project-guide__steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.first-project-guide__steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-background-surface);
+}
+
+.first-project-guide__steps li > span {
+  display: grid;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-background-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.first-project-guide__steps li > div {
+  display: grid;
+  gap: 4px;
+}
+
+.first-project-guide__steps small {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.first-project-guide__actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .first-project-guide__steps {
+    grid-template-columns: 1fr;
+  }
+
+  .first-project-guide__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }
 
 .projects-workspace__error {
@@ -1511,6 +2061,39 @@
   place-items: center;
 }
 
+.project-access-dialog__link {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-background-muted);
+}
+
+.project-access-dialog__link > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.project-access-dialog__link-controls {
+  display: flex;
+  min-width: 0;
+  gap: 8px;
+}
+
+.project-access-dialog__link-controls input {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-background);
+  color: var(--color-text);
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 20px;
+}
+
 .project-access-dialog__invite {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 128px 112px;
@@ -1659,7 +2242,7 @@
   }
 }
 
-@media (max-width: 980px) and (min-width: 701px) {
+@media (max-width: 900px) and (min-width: 701px) {
   .projects-workspace {
     --projects-header-height: 72px;
   }
@@ -1669,7 +2252,7 @@
   }
 }
 
-@media (max-width: 980px) {
+@media (max-width: 900px) {
   .projects-workspace {
     padding: 0;
   }
@@ -1695,6 +2278,13 @@
 
   .projects-team-drawer__nav {
     display: grid;
+  }
+
+  .projects-team-drawer {
+    top: 64px;
+    left: 16px;
+    width: min(288px, calc(100vw - 32px));
+    max-height: calc(100dvh - 80px);
   }
 
   .projects-workspace__context-bar {
@@ -1754,6 +2344,11 @@
 
   .project-access-dialog__invite {
     grid-template-columns: 1fr;
+  }
+
+  .project-access-dialog__link-controls {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .team-people__stats {
@@ -1827,14 +2422,14 @@
  * Compact layout for every rail surface.
  *
  * The rail used to be `display: none` here, and the projects-variant shell
- * renders no header to replace it — so below 980px Projects, Collections, Admin
+ * renders no header to replace it — so below 900px Projects, Collections, Admin
  * and Project files all lost their navigation entirely. Rather than build a
  * compact header and a trigger, the rail itself reflows into a top bar: the
  * workspace switcher travels with it, and since that button is what opens the
  * team drawer, the drawer (already fully built and styled) becomes reachable
  * again with no new markup or state.
  */
-@media (max-width: 980px) {
+@media (max-width: 900px) {
   .projects-workspace {
     display: flex;
     flex-direction: column;
@@ -1872,7 +2467,8 @@
     flex: 0 0 auto;
   }
 
-  .projects-workspace__desktop-workspace + .projects-workspace__desktop-nav--primary {
+  .projects-workspace__desktop-nav--global,
+  .projects-workspace__desktop-nav--primary {
     margin-top: 0;
   }
 
@@ -1881,6 +2477,14 @@
     width: auto;
     flex: 0 0 auto;
     gap: 4px;
+  }
+
+  .projects-workspace__desktop-nav-heading {
+    display: none;
+  }
+
+  .projects-workspace__desktop-group-toggle {
+    display: none;
   }
 
   .projects-workspace__desktop-nav button,
@@ -1921,12 +2525,18 @@
     width: 100%;
   }
 
-  .projects-workspace__desktop-nav--primary > .projects-workspace__desktop-row > .projects-workspace__desktop-row-line > .projects-workspace__desktop-row-link {
+  .projects-workspace__desktop-nav--primary
+    > .projects-workspace__desktop-row
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-link {
     width: auto;
     flex: 0 0 auto;
   }
 
-  .projects-workspace__desktop-nav--primary > .projects-workspace__desktop-row > .projects-workspace__desktop-row-line > .projects-workspace__desktop-row-caret {
+  .projects-workspace__desktop-nav--primary
+    > .projects-workspace__desktop-row
+    > .projects-workspace__desktop-row-line
+    > .projects-workspace__desktop-row-caret {
     order: 2;
     width: 28px;
     min-height: 36px;
@@ -1951,14 +2561,6 @@
   .projects-workspace__shell {
     min-height: 0;
     flex: 1 1 auto;
-  }
-
-  /* The drawer's 104px top was measured down the vertical rail (brand + margin +
-     switcher). Against a bar it hangs off the bar's height instead: 10px padding
-     + a 36px row + 10px + the hairline, plus a small gap. */
-  .projects-team-drawer {
-    top: 64px;
-    max-height: calc(100dvh - 80px);
   }
 }
 

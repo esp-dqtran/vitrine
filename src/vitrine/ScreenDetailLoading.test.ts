@@ -23,7 +23,8 @@ test('maps visible sections to dedicated lazy dependencies', async () => {
 
 test('synchronizes the visible section when browser history changes the route', async () => {
   const source = await readFile(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
-  assert.match(source, /useEffect\(\(\) => setSectionState\(resolveSection\(initialSection, role\)\), \[initialSection, role\]\)/);
+  assert.match(source, /setSectionState\(resolveSection\(initialSection, role, selectedPlatform\)\)/);
+  assert.match(source, /\[initialSection, role, selectedPlatform\]/);
 });
 
 test('streams automatic design generation without hiding an existing snapshot', async () => {

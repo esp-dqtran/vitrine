@@ -105,7 +105,6 @@ test('routes product dropdown menus through the shared Astryx menu surface', asy
   const productMenuFiles = [
     './Home.tsx',
     './Pricing.tsx',
-    './components/CollectionPicker.tsx',
     './components/UserDirectory.tsx',
   ];
 
@@ -114,6 +113,19 @@ test('routes product dropdown menus through the shared Astryx menu surface', asy
     assert.doesNotMatch(source, /<DropdownMenu(?:\s|>)/, path);
     assert.match(source, /<AstryxMenu(?:\s|>)/, path);
   }
+});
+
+test('uses a focused modal rather than a dropdown to save a screen to a collection', async () => {
+  const source = await readFile(
+    new URL('./components/CollectionPicker.tsx', import.meta.url),
+    'utf8',
+  );
+
+  assert.doesNotMatch(source, /<AstryxMenu(?:\s|>)/);
+  assert.doesNotMatch(source, /<DropdownMenu(?:\s|>)/);
+  assert.match(source, /<AstryxModal(?:\s|>)/);
+  assert.match(source, /Use in project/);
+  assert.match(source, /Create new collection/);
 });
 
 test('renders the shared dropdown section divider', () => {

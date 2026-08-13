@@ -67,7 +67,8 @@ test('defines compact, medium, and wide Apps behavior without page overflow', as
   assert.match(mediumStyles, /\.apps-filterbar__controls\s*\{[^}]*overflow-x:\s*auto/);
   assert.match(styles, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(styles, /@media \(max-width:\s*720px\)/);
-  assert.match(styles, /grid-template-columns:\s*32px minmax\(132px, 1fr\) 44px 72px/);
+  assert.match(styles, /grid-template-columns:\s*32px minmax\(132px, 1fr\) 44px 44px/);
+  assert.match(compactStyles, /\.apps-top-nav \.reference-discovery-nav__actions\s*\{[^}]*width:\s*44px;[^}]*max-width:\s*44px/);
   assert.match(styles, /\.apps-top-nav \.reference-discovery-nav__types\s*\{[^}]*align-self:\s*center\s*!important/);
   assert.match(styles, /\.apps-filterbar\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-wrap:\s*nowrap/);
   assert.match(compactStyles, /\.apps-filterbar__controls > \.apps-filterbar__filter\[data-filter-group\]\s*\{[^}]*display:\s*none/);

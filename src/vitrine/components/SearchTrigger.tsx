@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { Button, Icon } from '@astryxdesign/core';
 
 interface AstryxInputTextProps {
@@ -16,11 +16,22 @@ const promptsForSearch = (label: string) => {
   return [label, 'Find real product evidence…', 'Browse patterns and flows…'];
 };
 
-function TypedSearchPrompt({ label }: { label: string }) {
+const promptLetters = (prompt: string) => Array.from(prompt).map((letter, index) => (
+  <span
+    key={`${prompt}-${index}`}
+    className="reference-search-trigger__letter"
+    style={{ '--letter-index': index } as CSSProperties}
+  >
+    {letter === ' ' ? '\u00a0' : letter}
+  </span>
+));
+
+function AnimatedSearchPrompt({ label }: { label: string }) {
   const prompts = useMemo(() => promptsForSearch(label), [label]);
-  const [promptIndex, setPromptIndex] = useState(0);
-  const [characterCount, setCharacterCount] = useState(label.length);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [promptState, setPromptState] = useState<{ current: number; previous: number | null }>({
+    current: 0,
+    previous: null,
+  });
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -32,36 +43,41 @@ function TypedSearchPrompt({ label }: { label: string }) {
   }, []);
 
   useEffect(() => {
-    setPromptIndex(0);
-    setCharacterCount(label.length);
-    setIsDeleting(false);
+    setPromptState({ current: 0, previous: null });
   }, [label]);
 
   useEffect(() => {
     if (prefersReducedMotion) return;
-    const prompt = prompts[promptIndex] ?? label;
-    const isComplete = characterCount === prompt.length;
-    const delay = isComplete ? 1_600 : isDeleting ? 26 : 42;
-    const timeout = window.setTimeout(() => {
-      if (!isDeleting && !isComplete) {
-        setCharacterCount((count) => count + 1);
-      } else if (!isDeleting) {
-        setIsDeleting(true);
-      } else if (characterCount > 0) {
-        setCharacterCount((count) => count - 1);
-      } else {
-        setIsDeleting(false);
-        setPromptIndex((index) => (index + 1) % prompts.length);
-      }
-    }, delay);
-    return () => window.clearTimeout(timeout);
-  }, [characterCount, isDeleting, label, prefersReducedMotion, promptIndex, prompts]);
+    const interval = window.setInterval(() => {
+      setPromptState(({ current }) => ({
+        previous: current,
+        current: (current + 1) % prompts.length,
+      }));
+    }, 2_400);
+    return () => window.clearInterval(interval);
+  }, [prefersReducedMotion, prompts]);
 
-  const prompt = prefersReducedMotion ? label : prompts[promptIndex]?.slice(0, characterCount);
+  const currentIndex = prefersReducedMotion ? 0 : promptState.current;
+  const previousIndex = prefersReducedMotion ? null : promptState.previous;
+  const currentPrompt = prompts[currentIndex] ?? label;
+  const previousPrompt = previousIndex === null ? null : prompts[previousIndex];
+
   return (
-    <span className="reference-search-trigger__typed-label" aria-hidden="true">
-      {prompt}
-      <span className="reference-search-trigger__caret" />
+    <span className="reference-search-trigger__animated-label" aria-hidden="true">
+      {previousPrompt ? (
+        <span
+          key={`leaving-${previousPrompt}-${currentIndex}`}
+          className="reference-search-trigger__line reference-search-trigger__line--leave"
+        >
+          {promptLetters(previousPrompt)}
+        </span>
+      ) : null}
+      <span
+        key={`entering-${currentPrompt}-${currentIndex}`}
+        className="reference-search-trigger__line reference-search-trigger__line--enter"
+      >
+        {promptLetters(currentPrompt)}
+      </span>
     </span>
   );
 }
@@ -83,7 +99,7 @@ export function AstryxInputText({
       icon={<Icon icon="search" size="sm" color="disabled" />}
       endContent={endContent}
     >
-      <TypedSearchPrompt label={label} />
+      <AnimatedSearchPrompt label={label} />
     </Button>
   );
 }

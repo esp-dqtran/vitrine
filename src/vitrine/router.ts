@@ -31,6 +31,8 @@ export type Route =
   | { name: "billing-success" }
   | { name: "settings-billing" }
   | { name: "signin" }
+  | { name: "forgot-password" }
+  | { name: "reset-password"; token?: string }
   | { name: "search" }
   | { name: "apps" }
   | { name: "flows" }
@@ -53,7 +55,7 @@ export type Route =
   | { name: "project"; projectId: string }
   | { name: "project-documents"; projectId: string }
   | { name: "project-settings"; projectId: string }
-  | { name: "project-canvas"; projectId: string; canvasId: string }
+  | { name: "project-canvas"; projectId: string; canvasId: string; insert?: string }
   | { name: "project-document-file"; projectId: string; documentId: number }
   | { name: "project-document"; projectId: string }
   | { name: "project-playground"; projectId: string }
@@ -108,6 +110,8 @@ export function parseRoutePath(pathname: string): Route {
   if (path === "/billing/success") return { name: "billing-success" };
   if (path === "/settings/billing") return { name: "settings-billing" };
   if (path === "/signin") return { name: "signin" };
+  if (path === "/forgot-password") return { name: "forgot-password" };
+  if (path === "/reset-password") return { name: "reset-password" };
   if (path === "/search") return { name: "search" };
   if (path === "/apps") return { name: "apps" };
   if (path === "/flows") return { name: "flows" };
@@ -271,12 +275,24 @@ function bounded(
 
 export function parseRouteLocation(pathname: string, search = ""): Route {
   const route = parseRoutePath(pathname);
+  if (route.name === "reset-password") {
+    const token = bounded(new URLSearchParams(search).get("token"), /^[A-Za-z0-9_-]{43}$/, 43);
+    return token ? { ...route, token } : route;
+  }
   if (route.name === "site-version" && "siteSlug" in route) {
     const version = positive(new URLSearchParams(search).get("version"));
     return {
       ...route,
       ...(version ? { version } : {}),
     };
+  }
+  if (route.name === "project-canvas") {
+    const insert = bounded(
+      new URLSearchParams(search).get("insert"),
+      /^[A-Za-z0-9-]{16,80}$/,
+      80,
+    );
+    return insert ? { ...route, insert } : route;
   }
   if (route.name !== "app") return route;
   const normalizedRoute =
@@ -327,6 +343,10 @@ export function routeToPath(route: Route): string {
       return "/settings/billing";
     case "signin":
       return "/signin";
+    case "forgot-password":
+      return "/forgot-password";
+    case "reset-password":
+      return `/reset-password${route.token ? `?token=${encodeURIComponent(route.token)}` : ""}`;
     case "search":
       return "/search";
     case "apps":
@@ -366,7 +386,7 @@ export function routeToPath(route: Route): string {
     case "project-settings":
       return `/projects/${route.projectId}/settings`;
     case "project-canvas":
-      return `/projects/${route.projectId}/canvases/${route.canvasId}`;
+      return `/projects/${route.projectId}/canvases/${route.canvasId}${route.insert ? `?insert=${encodeURIComponent(route.insert)}` : ""}`;
     case "project-document-file":
       return `/projects/${route.projectId}/documents/${route.documentId}`;
     case "project-document":

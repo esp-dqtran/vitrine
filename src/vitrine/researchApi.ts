@@ -2,6 +2,7 @@ import type { CatalogComparison, CatalogSearchResult, CatalogSearchResultItem, C
 import { apiFetch } from './apiFetch.ts';
 import type { CollectionItemKind, ResearchCollection } from '../db';
 import type { AppVersion } from '../db';
+import type { Screen } from './types.ts';
 import type { ExportFormat, ExportScope } from '../exportEngine';
 import type { CuratorAction } from '../curatorReview';
 import type { DesignSystemSnapshot } from '../designSystem';
@@ -84,6 +85,14 @@ export function compareCatalogApps(apps: string[], signal?: AbortSignal): Promis
 }
 
 export const listCollections = (): Promise<ResearchCollection[]> => json('/api/collections');
+export interface CollectionScreenView {
+  itemId: number;
+  app: string;
+  accent: string;
+  screen: Screen;
+}
+export const listCollectionScreens = (collectionId: number): Promise<{ screens: CollectionScreenView[] }> =>
+  json(`/api/collections/${collectionId}/screens`);
 export const createCollection = (name: string, description = ''): Promise<ResearchCollection> =>
   json('/api/collections', { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ name, description }) });
 export const deleteCollection = (id: number): Promise<void> => json(`/api/collections/${id}`, { method: 'DELETE' });
