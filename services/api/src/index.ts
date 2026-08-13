@@ -48,9 +48,6 @@ await startApi({
     const seed = adminSeedFromEnv(process.env);
     const config = billingConfigFromEnv(process.env);
     const passwordResetEmailConfig = passwordResetEmailConfigFromEnv(process.env);
-    if (process.env.NODE_ENV === "production" && !passwordResetEmailConfig) {
-      throw new Error("RESEND_API_KEY and EMAIL_FROM are required in production for password reset");
-    }
     const auth = createJwtAuth(jwtAuthConfigFromEnv(process.env));
     const typesenseConfig = typesenseCatalogConfigFromEnv(process.env);
     const typesenseCatalog = typesenseConfig ? createTypesenseCatalogClient(typesenseConfig) : undefined;
