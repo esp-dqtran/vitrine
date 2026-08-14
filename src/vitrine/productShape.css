@@ -73,6 +73,7 @@
     .document-flow *,
     .flow-workspace *,
     .flows-discovery *,
+    .flow-strip-card__track,
     .flow-preview-dialog *,
     .excalidraw *
   ) {

@@ -24,6 +24,8 @@ interface ScreenGridCardProps {
   flowNames?: string[];
   selected?: boolean;
   onSelectedChange?: (selected: boolean) => void;
+  showActions?: boolean;
+  showCategory?: boolean;
 }
 
 const cleanLabel = (value: string | null | undefined) => {
@@ -70,6 +72,8 @@ export function ScreenGridCard({
   flowNames = [],
   selected = false,
   onSelectedChange,
+  showActions = true,
+  showCategory = true,
 }: ScreenGridCardProps) {
   const screenLabel = screenAccessibleLabel(screen, appName, flowNames);
   // Source facets are intentionally many-to-many. Cards show only the single
@@ -77,7 +81,7 @@ export function ScreenGridCard({
   const screenCategory = screenCategoryForType(screen.type)
     ? cleanLabel(screen.type)
     : null;
-  const actions = (
+  const actions = showActions ? (
     <div
       className="screen-grid-card__actions"
       onClick={(event) => event.stopPropagation()}
@@ -132,7 +136,7 @@ export function ScreenGridCard({
         className="screen-grid-card__copy"
       />
     </div>
-  );
+  ) : null;
   return (
     <article className="screen-grid-card" data-selected={selected || undefined}>
       <div className="screen-grid-card__media">
@@ -149,7 +153,7 @@ export function ScreenGridCard({
           delay={delay}
           onOpen={onOpen}
         />
-        {screenCategory ? (
+        {showCategory && screenCategory ? (
           <div className="screen-grid-card__patterns" aria-label={`Screen category: ${screenCategory}`}>
             <span>{screenCategory}</span>
           </div>

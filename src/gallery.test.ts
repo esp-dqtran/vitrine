@@ -100,6 +100,14 @@ test("groups images, preserves metadata, maps local media, and caps screens", ()
       theme: "light" as const,
       visibleStates: ["focused input"],
       componentNames: ["Text input", "Primary button"],
+      visibleText: ["Continue"],
+      layoutPatterns: ["Centered form"],
+      icons: ["Lock"],
+      imagery: ["Product mark"],
+      contentPatterns: ["Helper text"],
+      interactionPatterns: ["Password disclosure"],
+      responsiveViewport: "desktop" as const,
+      confidence: 0.94,
     } : null,
   }));
 
@@ -118,6 +126,12 @@ test("groups images, preserves metadata, maps local media, and caps screens", ()
   assert.equal(app.screens[0].productArea, "Authentication");
   assert.equal(app.screens[0].theme, "light");
   assert.deepEqual(app.screens[0].visibleStates, ["focused input"]);
+  assert.equal(app.screens[0].purpose, "Authenticate an existing user");
+  assert.deepEqual(app.screens[0].icons, ["Lock"]);
+  assert.deepEqual(app.screens[0].imagery, ["Product mark"]);
+  assert.deepEqual(app.screens[0].contentPatterns, ["Helper text"]);
+  assert.deepEqual(app.screens[0].interactionPatterns, ["Password disclosure"]);
+  assert.equal(app.screens[0].responsiveViewport, "desktop");
 });
 
 test("builds lightweight admin cards from database summaries", () => {

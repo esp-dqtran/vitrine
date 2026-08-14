@@ -98,12 +98,23 @@ function screen(
     || !item.visibleStates.every((state) => typeof state === "string")
     || (item.platform !== "web" && item.platform !== "ios" && item.platform !== "android")
     || !(item.description === null || typeof item.description === "string")
+    || !optionalNullableString(item, "purpose")
     || !(typeof item.url === "string" || (allowNullUrl && item.url === null))
     || !optionalNullableString(item, "thumbnailUrl")
     || !optionalNullableString(item, "sourceUrl")
     || !optionalStringArray(item, "layoutPatterns")
     || !optionalStringArray(item, "componentNames")
     || !optionalStringArray(item, "visibleText")
+    || !optionalStringArray(item, "icons")
+    || !optionalStringArray(item, "imagery")
+    || !optionalStringArray(item, "contentPatterns")
+    || !optionalStringArray(item, "interactionPatterns")
+    || !(item.responsiveViewport === undefined
+      || item.responsiveViewport === null
+      || item.responsiveViewport === "desktop"
+      || item.responsiveViewport === "tablet"
+      || item.responsiveViewport === "mobile"
+      || item.responsiveViewport === "unknown")
     || !optionalMatchedFacets(item)
     || !optionalNullableString(item, "capturedAt")
     || !optionalNullableString(item, "stateContext")

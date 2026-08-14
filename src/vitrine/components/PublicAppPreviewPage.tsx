@@ -1,11 +1,14 @@
 import { useState, type ReactNode } from 'react';
 import { Button, Heading, Icon, IconButton, Text } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
+import { screenAspectRatio } from '../screenAspect.ts';
 import type { PublicAppPreview } from '../publicAppPreviewApi.ts';
 import { AppIcon } from './AppIcon.tsx';
 import { AstryxModal } from './AstryxModal.tsx';
 import { FlowCard } from './FlowCard.tsx';
 import { ReferenceDetailNavigation } from './ReferenceDetailPage.tsx';
+import { ReferenceGalleryGrid } from './ReferenceGallerySection.tsx';
+import { ScreenGridCard } from './ScreenGridCard.tsx';
 
 const evidenceCardStyle = {
   minWidth: 0,
@@ -17,9 +20,22 @@ const evidenceCardStyle = {
 
 const PUBLIC_FLOW_LIMIT = 6;
 
-function LockedEvidenceCard({ kind, onUnlock }: { kind: string; onUnlock: () => void }) {
+function LockedEvidenceCard({
+  kind,
+  onUnlock,
+  aspectRatio,
+}: {
+  kind: string;
+  onUnlock: () => void;
+  aspectRatio?: string;
+}) {
   return (
-    <div style={{ ...evidenceCardStyle, position: 'relative', minHeight: 174 }}>
+    <div style={{
+      ...evidenceCardStyle,
+      position: 'relative',
+      minHeight: aspectRatio ? undefined : 174,
+      aspectRatio,
+    }}>
       <div aria-hidden="true" style={{ padding: 14, filter: 'blur(5px)', opacity: 0.72 }}>
         <div style={{ height: 92, padding: 14, boxSizing: 'border-box', borderRadius: 10, background: 'color-mix(in srgb, var(--color-text-primary) 16%, var(--color-background-muted))' }}>
           <div style={{ width: '58%', height: 10, borderRadius: 5, background: 'color-mix(in srgb, var(--color-text-primary) 38%, transparent)' }} />
@@ -48,22 +64,39 @@ function EvidenceSection({
   summary,
   children,
   onUnlock,
+  galleryLayout,
+  lockedAspectRatio,
 }: {
   title: string;
   summary: string;
   children: ReactNode;
   onUnlock: () => void;
+  galleryLayout?: 'mobile-screens' | 'web-screens';
+  lockedAspectRatio?: string;
 }) {
+  const evidence = (
+    <>
+      {children}
+      <LockedEvidenceCard kind={title.toLowerCase()} onUnlock={onUnlock} aspectRatio={lockedAspectRatio} />
+      <LockedEvidenceCard kind={title.toLowerCase()} onUnlock={onUnlock} aspectRatio={lockedAspectRatio} />
+    </>
+  );
   return (
     <section aria-label={title} style={{ marginTop: 34 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 16, flexWrap: 'wrap' }}>
         <Heading level={2}>{title}</Heading>
         <Text color="secondary">{summary}</Text>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(174px, 1fr))', gap: 14, marginTop: 16 }}>
-        {children}
-        <LockedEvidenceCard kind={title.toLowerCase()} onUnlock={onUnlock} />
-        <LockedEvidenceCard kind={title.toLowerCase()} onUnlock={onUnlock} />
+      <div style={{ marginTop: 16 }}>
+        {galleryLayout ? (
+          <ReferenceGalleryGrid minCardWidth={240} layout={galleryLayout}>
+            {evidence}
+          </ReferenceGalleryGrid>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(174px, 1fr))', gap: 14 }}>
+            {evidence}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -81,7 +114,8 @@ function previewFlowAsDesignFlow(
       label: screen.label,
       evidence: [{
         imageId: index + 1,
-        imageUrl: screen.thumbnailUrl,
+        imageUrl: screen.imageUrl
+          ?? screen.thumbnailUrl.replace(/([?&])variant=thumb(?=&|$)/, '$1variant=full'),
         thumbnailUrl: screen.thumbnailUrl,
         description: null,
       }],
@@ -112,6 +146,8 @@ function PublicAppPreviewContent({
     : showAllFlows
       ? previewFlows
       : previewFlows.slice(0, PUBLIC_FLOW_LIMIT);
+  const screenPlatform = previewScreens[0]?.platform ?? app.platforms[0] ?? 'web';
+  const screenGalleryLayout = screenPlatform === 'web' ? 'web-screens' : 'mobile-screens';
 
   return (
     <div
@@ -137,18 +173,20 @@ function PublicAppPreviewContent({
           title="Screens"
           summary={`Showing ${previewScreens.length} of ${app.totalScreens}`}
           onUnlock={onUnlock}
+          galleryLayout={screenGalleryLayout}
+          lockedAspectRatio={screenAspectRatio(screenPlatform)}
         >
-          {previewScreens.map((screen) => (
-            <figure key={screen.id} style={{ ...evidenceCardStyle, margin: 0 }}>
-              <div style={{ aspectRatio: '4 / 3', display: 'grid', placeItems: 'center', overflow: 'hidden', background: 'var(--color-background-muted)' }}>
-                <img
-                  src={screen.url}
-                  alt={`${app.app} ${screen.type}`}
-                  loading="lazy"
-                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                />
-              </div>
-            </figure>
+          {previewScreens.map((screen, index) => (
+            <ScreenGridCard
+              key={screen.id}
+              screen={screen}
+              accent={app.accent}
+              delay={Math.min(index * 0.04, 0.32)}
+              appName={app.app}
+              onOpen={onUnlock}
+              showActions={false}
+              showCategory={false}
+            />
           ))}
         </EvidenceSection>
 
@@ -169,7 +207,7 @@ function PublicAppPreviewContent({
                 <FlowCard
                   flow={previewFlowAsDesignFlow(flow)}
                   onOpen={onUnlock}
-                  platform="web"
+                  platform={flow.platform ?? app.platforms[0] ?? 'web'}
                   metaLabel={`${flow.stepCount} steps · ${screenLabel}`}
                   syncPreviewUrl={false}
                 />

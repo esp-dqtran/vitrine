@@ -55,6 +55,7 @@ test('standardizes shared buttons and dropdown selectors at 40px', async () => {
   assert.match(sharedControlRule, /min-height:\s*var\(--vitrine-control-height\)\s*!important/);
   assert.match(sharedControlRule, /flow-workspace/);
   assert.match(sharedControlRule, /flows-discovery/);
+  assert.match(sharedControlRule, /flow-strip-card__track/);
   assert.doesNotMatch(sharedControlRule, /reference-detail__metadata/);
   assert.match(sharedControlRule, /project-document__editor/);
   assert.match(sharedControlRule, /project-canvas-document-editor/);

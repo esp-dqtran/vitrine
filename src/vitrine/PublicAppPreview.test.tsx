@@ -24,17 +24,24 @@ const preview: PublicAppPreview = {
   }],
   previewFlows: [{
     id: 'create-project', title: 'Creating a project',
-    description: 'Start a new project', stepCount: 4,
-    screens: [{ label: 'Choose template', thumbnailUrl: '/flow-template.png' },
-      { label: 'Create project', thumbnailUrl: '/flow-create.png' }],
+    description: 'Start a new project', platform: 'web', stepCount: 4,
+    screens: [{
+      label: 'Choose template',
+      imageUrl: '/api/flows/media/linear/web/11/22/1?variant=full',
+      thumbnailUrl: '/api/flows/media/linear/web/11/22/1?variant=thumb',
+    }, {
+      label: 'Create project',
+      thumbnailUrl: '/api/flows/media/linear/web/11/22/2?variant=thumb',
+    }],
   }, {
     id: 'invite-team', title: 'Inviting the team',
-    description: 'Add collaborators', stepCount: 3,
+    description: 'Add collaborators', platform: 'web', stepCount: 3,
     screens: [{ label: 'Invite people', thumbnailUrl: '/flow-invite.png' }],
   }, ...Array.from({ length: 6 }, (_, index) => ({
     id: `flow-${index + 3}`,
     title: `Flow ${index + 3}`,
     description: null,
+    platform: 'web' as const,
     stepCount: 2,
     screens: [{ label: `Step ${index + 1}`, thumbnailUrl: `/flow-${index + 3}.png` }],
   }))],
@@ -73,9 +80,12 @@ test('public app preview emphasizes the app identity and keeps conversion on loc
   assert.match(html, /data-flow-strip-card="true"/);
   assert.match(html, /Preview Creating a project flow screens/);
   assert.match(html, /data-flow-preview-url-sync="false"/);
+  assert.match(html, /data-platform="web"/);
   assert.doesNotMatch(html, /data-public-preview-featured-flow="true"/);
   assert.doesNotMatch(html, /data-public-preview-flow-screen-strip="true"/);
-  assert.match(html, /src="\/flow-template.png"/);
+  assert.match(html, /src="\/api\/flows\/media\/linear\/web\/11\/22\/1\?variant=full"/);
+  assert.match(html, /src="\/api\/flows\/media\/linear\/web\/11\/22\/2\?variant=full"/);
+  assert.doesNotMatch(html, /src="[^"]*variant=thumb"/);
   assert.match(html, /4 steps · 2 real screens/);
   assert.doesNotMatch(html, /Choose template/);
   assert.match(html, /Unlock more/);
@@ -83,8 +93,43 @@ test('public app preview emphasizes the app identity and keeps conversion on loc
   assert.match(html, /src="\/preview-1\.png"/);
   assert.doesNotMatch(html, /preview-1-thumb\.webp/);
   assert.match(html, /object-fit:contain/);
+  assert.match(html, /data-reference-gallery-layout="web-screens"/);
+  assert.equal((html.match(/class="screen-grid-card"/g) ?? []).length, 3);
+  assert.match(html, /class="[^"]*astryx-clickable-card/);
+  assert.match(html, /Open Linear, Screen 1/);
+  assert.doesNotMatch(html, /screen-grid-card__actions/);
+  assert.doesNotMatch(html, /screen-grid-card__patterns/);
   assert.match(html, /data-variant="primary"/);
   assert.doesNotMatch(html, /astryx-badge/);
+});
+
+test('public app preview renders mobile flows with the shared mobile FlowCard geometry', () => {
+  const mobilePreview: PublicAppPreview = {
+    ...preview,
+    app: { ...preview.app, platforms: ['ios'] },
+    previewScreens: preview.previewScreens.map((screen) => ({
+      ...screen,
+      platform: 'ios',
+    })),
+    previewFlows: preview.previewFlows.slice(0, 1).map((flow) => ({
+      ...flow,
+      platform: 'ios',
+    })),
+  };
+  const html = renderToStaticMarkup(
+    <PublicAppPreviewPage
+      preview={mobilePreview}
+      freeUnlocksRemaining={null}
+      isGuest
+      onOpenSearch={() => undefined}
+      onUnlock={() => undefined}
+    />,
+  );
+
+  assert.match(html, /data-flow-strip-card="true"/);
+  assert.match(html, /data-platform="ios"/);
+  assert.match(html, /data-reference-gallery-layout="mobile-screens"/);
+  assert.doesNotMatch(html, /data-platform="web"/);
 });
 
 test('public app preview omits the old guest and exhausted account panels', () => {

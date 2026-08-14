@@ -15,9 +15,11 @@ export interface PublicAppPreview {
     id: string;
     title: string;
     description: string | null;
+    platform: AppMetadata['platforms'][number];
     stepCount: number;
     screens: Array<{
       label: string;
+      imageUrl?: string;
       thumbnailUrl: string;
     }>;
   }>;

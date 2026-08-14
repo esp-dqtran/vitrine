@@ -491,10 +491,16 @@ dialog.flow-preview-dialog-shell::backdrop {
 .flow-preview-dialog__info {
   right: 30px;
   bottom: 86px;
-  width: min(300px, calc(100vw - 96px));
+  width: min(460px, calc(100vw - 96px));
+  max-height: min(640px, calc(100% - 132px));
   display: grid;
-  gap: 7px;
-  padding: 16px;
+  gap: 18px;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.flow-preview-dialog__info[hidden] {
+  display: none;
 }
 
 .flow-preview-dialog__info strong {
@@ -505,6 +511,69 @@ dialog.flow-preview-dialog-shell::backdrop {
 .flow-preview-dialog__info p {
   margin: 0;
   color: var(--flow-preview-muted);
+  font: var(--vitrine-type-detail);
+}
+
+.app-screen-preview-dialog__analysis-header {
+  display: grid;
+  gap: 4px;
+}
+
+.app-screen-preview-dialog__analysis section {
+  display: grid;
+  gap: 7px;
+}
+
+.app-screen-preview-dialog__analysis h3,
+.app-screen-preview-dialog__analysis dt,
+.app-screen-preview-dialog__analysis dd {
+  margin: 0;
+}
+
+.app-screen-preview-dialog__analysis h3,
+.app-screen-preview-dialog__analysis dt {
+  color: var(--flow-preview-muted);
+  font: var(--vitrine-type-detail);
+  font-weight: 700;
+}
+
+.app-screen-preview-dialog__analysis-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.app-screen-preview-dialog__analysis-facts > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--vitrine-color-surface-muted);
+}
+
+.app-screen-preview-dialog__analysis-facts dd {
+  overflow-wrap: anywhere;
+  color: var(--vitrine-color-text-primary);
+  font: var(--vitrine-type-detail);
+  text-transform: capitalize;
+}
+
+.app-screen-preview-dialog__analysis-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-screen-preview-dialog__analysis-list li {
+  padding: 5px 8px;
+  border: 1px solid var(--vitrine-color-border);
+  border-radius: 999px;
+  color: var(--vitrine-color-text-primary);
   font: var(--vitrine-type-detail);
 }
 
@@ -748,7 +817,13 @@ dialog.flow-preview-dialog-shell::backdrop {
 
   .flow-preview-dialog__info {
     right: 16px;
-    bottom: 64px;
+    bottom: 98px;
+    width: calc(100vw - 32px);
+    max-height: calc(100% - 182px);
+  }
+
+  .app-screen-preview-dialog__analysis-facts {
+    grid-template-columns: 1fr;
   }
 
   .flow-preview-dialog__arrow {

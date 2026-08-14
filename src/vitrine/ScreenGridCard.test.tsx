@@ -40,6 +40,26 @@ test("renders Screen cards from the full source without cropping or badge overla
   assert.doesNotMatch(html, />Default</);
 });
 
+test("can render the shared Screen card as image-only evidence", () => {
+  const html = renderToStaticMarkup(
+    <ScreenGridCard
+      screen={screen}
+      accent="#3399ff"
+      delay={0}
+      onOpen={() => undefined}
+      showActions={false}
+      showCategory={false}
+    />,
+  );
+
+  assert.match(html, /class="screen-grid-card"/);
+  assert.match(html, /class="[^"]*astryx-clickable-card/);
+  assert.match(html, /Open Settings/);
+  assert.doesNotMatch(html, /screen-grid-card__actions/);
+  assert.doesNotMatch(html, /screen-grid-card__patterns/);
+  assert.doesNotMatch(html, />Copy image</);
+});
+
 test("uses a consistent 16:10 frame without cropping Web Screen images", () => {
   const html = renderToStaticMarkup(
     <ScreenGridCard

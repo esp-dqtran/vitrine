@@ -28,12 +28,14 @@ import { HeroButton } from '../../vitrine/components/HeroButton';
 import { ProgressBannerView } from '../../vitrine/components/ProgressBanner';
 import { ReferenceDiscoveryFacetGroup } from '../../vitrine/components/ReferenceDiscoveryFacetGroup';
 import { ApplicationHeader } from '../../vitrine/components/ApplicationHeader';
+import { ScreenPreviewDialog } from '../../vitrine/components/ScreenPreviewDialog';
 import {
   AstryxInputText,
   SearchTrigger,
 } from '../../vitrine/components/SearchTrigger';
 import '../../vitrine/styles.css';
 import '../../vitrine/referenceDiscovery.css';
+import '../../vitrine/flowPreviewDialog.css';
 import '../../vitrine/components/AstryxDropdown.css';
 import './AppsScreenComponents.css';
 
@@ -687,4 +689,41 @@ function AppsScreenComponents() {
 
 export const Overview: Story = {
   render: () => <AppsScreenComponents />,
+};
+
+const analyzedScreen: Screen = {
+  id: 42,
+  type: 'Dashboard',
+  productArea: 'Workspace analytics',
+  theme: 'light',
+  visibleStates: ['Selected navigation', 'Active filter'],
+  platform: 'web',
+  description: 'A workspace dashboard with persistent navigation, summary metrics, filters, and a dense activity table.',
+  purpose: 'Monitor workspace performance and investigate recent activity.',
+  url: 'http://localhost:5173/api/preview-media/aboard-ea683077-aadb-47c5-a771-d21fd9676510/web/1?variant=full',
+  sourceUrl: 'https://mobbin.com',
+  componentNames: ['Sidebar navigation', 'Metric card', 'Filter bar', 'Data table'],
+  visibleText: ['Overview', 'Active users', 'Recent activity'],
+  layoutPatterns: ['Fixed sidebar', 'Dashboard grid', 'Dense table'],
+  icons: ['Search', 'Filter', 'Chevron down'],
+  imagery: ['User avatars'],
+  contentPatterns: ['Summary metric', 'Metadata row'],
+  interactionPatterns: ['Tabs', 'Filter menu', 'Pagination'],
+  responsiveViewport: 'desktop',
+  capturedAt: '2026-08-14T00:00:00.000Z',
+  confidence: 0.94,
+};
+
+export const ScreenAnalysisDialog: Story = {
+  render: () => (
+    <ScreenPreviewDialog
+      appName="Aboard"
+      screen={analyzedScreen}
+      index={0}
+      total={1}
+      foundInFlows={['Reviewing workspace performance']}
+      onClose={() => undefined}
+      onNavigate={() => undefined}
+    />
+  ),
 };

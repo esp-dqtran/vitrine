@@ -19,6 +19,7 @@ export interface CatalogScreen {
   visibleStates: string[];
   platform: string;
   description: string | null;
+  purpose: string | null;
   url: string | null;
   /** Resized grid-tile preview; falls back to the full image server-side if none was generated. */
   thumbnailUrl: string | null;
@@ -26,6 +27,11 @@ export interface CatalogScreen {
   layoutPatterns: string[];
   componentNames: string[];
   visibleText: string[];
+  icons: string[];
+  imagery: string[];
+  contentPatterns: string[];
+  interactionPatterns: string[];
+  responsiveViewport: "desktop" | "tablet" | "mobile" | "unknown" | null;
   capturedAt: string | null;
   stateContext: string | null;
   confidence: number | null;
@@ -139,10 +145,16 @@ function screen(
     visibleStates: image.analysis?.visibleStates ?? [],
     platform: image.platform,
     description: image.description,
+    purpose: image.analysis?.purpose ?? null,
     sourceUrl: image.capture_url ?? null,
     layoutPatterns: image.analysis?.layoutPatterns ?? [],
     componentNames: image.analysis?.componentNames ?? [],
     visibleText: image.analysis?.visibleText ?? [],
+    icons: image.analysis?.icons ?? [],
+    imagery: image.analysis?.imagery ?? [],
+    contentPatterns: image.analysis?.contentPatterns ?? [],
+    interactionPatterns: image.analysis?.interactionPatterns ?? [],
+    responsiveViewport: image.analysis?.responsiveViewport ?? null,
     capturedAt: image.captured_at ?? null,
     stateContext: image.state_context ?? null,
     confidence: image.analysis?.confidence ?? null,

@@ -10,6 +10,7 @@ export interface Screen {
   visibleStates: string[];
   platform: string;
   description: string | null;
+  purpose?: string | null;
   url: string;
   /** Resized grid-tile preview; use for dense grids, fall back to `url` for lightbox/full view. */
   thumbnailUrl?: string | null;
@@ -17,6 +18,11 @@ export interface Screen {
   layoutPatterns?: string[];
   componentNames?: string[];
   visibleText?: string[];
+  icons?: string[];
+  imagery?: string[];
+  contentPatterns?: string[];
+  interactionPatterns?: string[];
+  responsiveViewport?: 'desktop' | 'tablet' | 'mobile' | 'unknown' | null;
   capturedAt?: string | null;
   stateContext?: string | null;
   confidence?: number | null;

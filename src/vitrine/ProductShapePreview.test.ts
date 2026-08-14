@@ -45,6 +45,7 @@ test('rolls the approved shape hierarchy across normal product screens', async (
 
   assert.match(styles, /\.flows-discovery \*/);
   assert.match(styles, /\.flow-workspace \*/);
+  assert.match(styles, /\.flow-strip-card__track/);
   assert.match(styles, /\.project-document__editor \*/);
   assert.match(styles, /\.project-canvas-document-editor \*/);
   assert.match(styles, /\.document-flow \*/);

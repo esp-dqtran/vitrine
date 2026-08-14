@@ -1662,11 +1662,13 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           id: flow.source_flow_id,
           title: flow.title,
           description: flow.description || null,
+          platform,
           stepCount: flow.steps.length,
           screens: observedSteps.slice(0, 3).map((step, index) => ({
             label: typeof step.label === "string" && step.label.trim()
               ? step.label
               : `Step ${index + 1}`,
+            imageUrl: `${mediaBase}/${index + 1}?variant=full`,
             thumbnailUrl: `${mediaBase}/${index + 1}?variant=thumb`,
           })),
         };

@@ -12,10 +12,19 @@ const screen: Screen = {
   visibleStates: ['Default'],
   platform: 'ios',
   description: 'An observed Amazon Shopping order detail screen.',
+  purpose: 'Review a completed order and its delivery details.',
   url: '/media/order-detail.png',
   sourceUrl: 'https://www.amazon.com/orders/42',
   capturedAt: '2026-08-01T12:00:00.000Z',
   confidence: 0.93,
+  componentNames: ['Status timeline', 'Order summary'],
+  visibleText: ['Delivered', 'Track package'],
+  layoutPatterns: ['Stacked detail sections'],
+  icons: ['Package'],
+  imagery: ['Product thumbnail'],
+  contentPatterns: ['Metadata row'],
+  interactionPatterns: ['Disclosure'],
+  responsiveViewport: 'mobile',
 };
 
 test('renders a Mobbin-style app screen viewer with identity, navigation, actions, and metadata', () => {
@@ -44,6 +53,18 @@ test('renders a Mobbin-style app screen viewer with identity, navigation, action
   assert.doesNotMatch(html, /aria-label="More screen actions"/);
   assert.match(html, /iOS \(393×852\)/);
   assert.match(html, />More info</);
+  assert.match(html, /aria-controls="screen-analysis-42"/);
+  assert.match(html, /aria-label="Screen analysis"/);
+  assert.match(html, /Review a completed order and its delivery details/);
+  assert.match(html, />Visual description</);
+  assert.match(html, />Mobile viewport</);
+  assert.match(html, />Status timeline</);
+  assert.match(html, />Stacked detail sections</);
+  assert.match(html, />Disclosure</);
+  assert.match(html, />Metadata row</);
+  assert.match(html, />Package</);
+  assert.match(html, />Product thumbnail</);
+  assert.match(html, />Track package</);
   assert.match(html, /aria-label="Evidence trust details"/);
   assert.match(html, />93%</);
   assert.match(html, />Not assessed</);

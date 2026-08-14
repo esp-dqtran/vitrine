@@ -41,6 +41,11 @@ const usefulLabel = (value: string | null | undefined) => (
   value && value !== 'Unclassified' ? value : null
 );
 
+const viewportName = (viewport: Screen['responsiveViewport']) => {
+  if (!viewport || viewport === 'unknown') return 'Unknown viewport';
+  return `${viewport[0].toUpperCase()}${viewport.slice(1)} viewport`;
+};
+
 export function ScreenPreviewDialog({
   appName,
   appIconUrl,
@@ -68,6 +73,17 @@ export function ScreenPreviewDialog({
   const resolution = screenResolution(screen);
   const dimensions = mediaDimensions[screen.id];
   const showNext = canNavigateNext ?? index < total - 1;
+  const analysisGroups = [
+    { label: 'Visible states', values: screen.visibleStates },
+    { label: 'Components', values: screen.componentNames ?? [] },
+    { label: 'Layout patterns', values: screen.layoutPatterns ?? [] },
+    { label: 'Interaction patterns', values: screen.interactionPatterns ?? [] },
+    { label: 'Content patterns', values: screen.contentPatterns ?? [] },
+    { label: 'Icons', values: screen.icons ?? [] },
+    { label: 'Imagery', values: screen.imagery ?? [] },
+    { label: 'Visible text', values: screen.visibleText ?? [] },
+  ].filter(({ values }) => values.length > 0);
+  const analysisPanelId = `screen-analysis-${screen.id}`;
 
   const registerMediaDimensions = (image: HTMLImageElement) => {
     if (!image.naturalWidth || !image.naturalHeight) return;
@@ -266,9 +282,10 @@ export function ScreenPreviewDialog({
           <div className="flow-preview-dialog__metadata">
             <span>{platformName(screen.platform)}{resolution ? ` (${resolution})` : ''}</span>
             <Button
-              label="More info"
+              label={infoOpen ? 'Hide info' : 'More info'}
               variant="ghost"
               aria-expanded={infoOpen}
+              aria-controls={analysisPanelId}
               onClick={() => {
                 setInfoOpen((value) => !value);
               }}
@@ -282,18 +299,49 @@ export function ScreenPreviewDialog({
             confidence={screen.confidence}
           />
 
-          {infoOpen ? (
-            <aside className="flow-preview-dialog__info">
+          <aside
+            id={analysisPanelId}
+            className="flow-preview-dialog__info app-screen-preview-dialog__analysis"
+            aria-label="Screen analysis"
+            hidden={!infoOpen}
+          >
+            <header className="app-screen-preview-dialog__analysis-header">
               <strong>{usefulLabel(screen.type) ?? `${appName} screen`}</strong>
               <span>{platformName(screen.platform)}{resolution ? ` · ${resolution}` : ''}</span>
-              {screen.description ? <p>{screen.description}</p> : null}
-              {foundInFlows.length
-                ? <p>Found in {foundInFlows.join(', ')}</p>
-                : context
-                  ? <p>Found in {context}</p>
-                  : null}
-            </aside>
-          ) : null}
+            </header>
+            {screen.purpose ? (
+              <section>
+                <h3>Purpose</h3>
+                <p>{screen.purpose}</p>
+              </section>
+            ) : null}
+            {screen.description ? (
+              <section>
+                <h3>Visual description</h3>
+                <p>{screen.description}</p>
+              </section>
+            ) : null}
+            <dl className="app-screen-preview-dialog__analysis-facts">
+              {usefulLabel(screen.productArea) ? (
+                <div><dt>Product area</dt><dd>{screen.productArea}</dd></div>
+              ) : null}
+              <div><dt>Theme</dt><dd>{screen.theme}</dd></div>
+              <div><dt>Viewport</dt><dd>{viewportName(screen.responsiveViewport)}</dd></div>
+            </dl>
+            {analysisGroups.map(({ label, values }) => (
+              <section key={label}>
+                <h3>{label}</h3>
+                <ul className="app-screen-preview-dialog__analysis-list">
+                  {values.map((value) => <li key={value}>{value}</li>)}
+                </ul>
+              </section>
+            ))}
+            {foundInFlows.length
+              ? <p>Found in {foundInFlows.join(', ')}</p>
+              : context
+                ? <p>Found in {context}</p>
+                : null}
+          </aside>
         </div>
       </AstryxModalSurface>
     </AstryxModal>
