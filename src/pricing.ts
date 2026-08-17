@@ -4,6 +4,7 @@ export type SubscriptionStatus =
   | "incomplete"
   | "incomplete_expired"
   | "active"
+  | "trialing"
   | "past_due"
   | "canceled"
   | "unpaid"
@@ -14,6 +15,9 @@ export interface SubscriptionRecord {
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   stripe_price_id: string | null;
+  paddle_customer_id?: string | null;
+  paddle_subscription_id?: string | null;
+  paddle_price_id?: string | null;
   billing_interval: BillingInterval | null;
   status: SubscriptionStatus | null;
   current_period_start: string | null;
@@ -22,9 +26,36 @@ export interface SubscriptionRecord {
   grace_expires_at: string | null;
 }
 
-// Stripe only hands us price IDs, never amounts, so the Pro list price lives here —
+/** A Team subscription belongs to an organization, never an individual user. */
+export interface OrganizationSubscriptionRecord {
+  organization_id: number;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  stripe_price_id: string | null;
+  paddle_customer_id?: string | null;
+  paddle_subscription_id?: string | null;
+  paddle_price_id?: string | null;
+  seat_count: number;
+  status: SubscriptionStatus | null;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  grace_expires_at: string | null;
+}
+
+// Paddle sends price IDs, never amounts, so the Pro list price lives here —
 // the marketing page and the admin revenue panel must read the same numbers.
 export const PRO_PRICE_CENTS: Record<BillingInterval, number> = { month: 899, year: 7999 };
+
+// Team is intentionally annual-only at launch. The price is per editor; every
+// current organization member can edit shared work, so each is a billable seat.
+export const TEAM_EDITOR_PRICE_CENTS = 2900;
+export const TEAM_MINIMUM_EDITORS = 3;
+
+export function teamAnnualPriceCents(editors = TEAM_MINIMUM_EDITORS): number {
+  const normalizedEditors = Math.max(TEAM_MINIMUM_EDITORS, Math.floor(editors));
+  return TEAM_EDITOR_PRICE_CENTS * normalizedEditors * 12;
+}
 
 export interface RevenueSummary {
   mrrCents: number;
@@ -52,7 +83,7 @@ export function effectivePlan(
   subscription: Pick<SubscriptionRecord, "status" | "grace_expires_at"> | undefined,
   now = new Date(),
 ): Plan {
-  if (subscription?.status === "active") return "pro";
+  if (subscription?.status === "active" || subscription?.status === "trialing") return "pro";
   if (
     subscription?.status === "past_due" &&
     subscription.grace_expires_at &&

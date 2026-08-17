@@ -46,7 +46,7 @@ export function CatalogAdminView({
   error: string | null;
 }) {
   const stats = growth?.stats;
-  /* MRR from the plan mix, since Stripe only ever hands the app price IDs.
+  /* MRR from the plan mix, since Paddle only ever hands the app price IDs.
      Yearly is amortised so the two lines are comparable. */
   const mrrCents = stats
     ? stats.active_monthly * PRO_PRICE_CENTS.month
@@ -113,4 +113,3 @@ export function CatalogAdminView({
     </CatalogShell>
   );
 }
-

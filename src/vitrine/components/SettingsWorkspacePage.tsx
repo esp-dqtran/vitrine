@@ -115,7 +115,7 @@ export function SettingsWorkspacePage({
     setBillingBusy(true);
     setBillingError('');
     try {
-      const portal = await createPortal();
+      const portal = await createPortal(subscription?.team?.organizationId);
       const target = new URL(portal.url);
       if (target.protocol !== 'https:') throw new Error('Billing returned an unsafe redirect');
       window.location.assign(target.href);

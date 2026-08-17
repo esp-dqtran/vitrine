@@ -45,7 +45,7 @@ export function CatalogSettingsPage(props: CatalogSettingsPageProps) {
   );
 }
 
-/* Split so every plan state renders in a test — billing needs auth and Stripe. */
+/* Split so every plan state renders in a test — billing needs auth and Paddle. */
 export function CatalogSettingsView({
   accountControls,
   email,
@@ -167,4 +167,3 @@ export function CatalogSettingsView({
     </CatalogShell>
   );
 }
-

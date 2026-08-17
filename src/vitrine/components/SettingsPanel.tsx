@@ -51,19 +51,25 @@ export function BillingSettings({ subscription, onUpgrade, onManage, busy = fals
 }) {
   const isPro = subscription.plan === 'pro';
   const isPaid = subscription.entitlementSource === 'paid';
+  const isTeam = subscription.entitlementSource === 'team';
   const isPromotion = subscription.entitlementSource === 'promotion';
   const isAdminGrant = subscription.entitlementSource === 'admin_grant';
   return (
     <section style={{ marginTop: 24 }}>
       <h3 style={{ margin: '0 0 10px', fontSize: 13.5 }}>Subscription</h3>
       <div style={{ display: 'grid', gap: 6, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
-        <strong style={{ color: 'var(--color-text-primary)' }}>{isPromotion ? 'Promotional Pro' : isAdminGrant ? 'Administrator-granted Pro' : isPro ? 'Pro plan' : 'Free plan'}</strong>
+        <strong style={{ color: 'var(--color-text-primary)' }}>{isTeam ? 'Team plan' : isPromotion ? 'Promotional Pro' : isAdminGrant ? 'Administrator-granted Pro' : isPro ? 'Pro plan' : 'Free plan'}</strong>
         {isPaid ? (
           <>
             <span>{subscription.interval === 'year' ? 'Yearly billing' : 'Monthly billing'}</span>
             {subscription.currentPeriodEnd && <span>{subscription.cancelAtPeriodEnd ? 'Access ends' : 'Renews'} {formatDate(subscription.currentPeriodEnd)}</span>}
             {subscription.status === 'past_due' && subscription.graceExpiresAt && <span style={{ color: 'var(--color-text-danger)' }}>Payment past due · grace ends {formatDate(subscription.graceExpiresAt)}</span>}
             <span>{subscription.exportUsage.used} of {subscription.exportUsage.limit} exports used</span>
+          </>
+        ) : isTeam ? (
+          <>
+            <span>{subscription.team?.organizationName} · {subscription.team?.seats} editor seats</span>
+            <span>{subscription.exportUsage.used} of {subscription.exportUsage.limit} shared exports used</span>
           </>
         ) : isPromotion ? (
           <>
@@ -78,7 +84,7 @@ export function BillingSettings({ subscription, onUpgrade, onManage, busy = fals
         ) : <span>{3 - subscription.freeUnlocksRemaining} of 3 apps unlocked</span>}
       </div>
       <div style={{ marginTop: 12 }}>
-        {isAdminGrant && !subscription.hasBillingCustomer ? null : isPaid || subscription.hasBillingCustomer
+        {isAdminGrant && !subscription.hasBillingCustomer ? null : isPaid || isTeam || subscription.hasBillingCustomer
           ? <Button label="Manage billing" size="sm" variant="secondary" isLoading={busy} isDisabled={busy} clickAction={onManage} />
           : <Button label="Upgrade to Pro" size="sm" variant="primary" clickAction={onUpgrade} />}
       </div>
@@ -396,7 +402,7 @@ export function SettingsPanel({ user, subscription, onUpgrade = () => undefined,
     setBillingBusy(true);
     setBillingError('');
     try {
-      const portal = await createPortal();
+      const portal = await createPortal(subscription?.team?.organizationId);
       const target = new URL(portal.url);
       if (target.protocol !== 'https:') throw new Error('Billing returned an unsafe redirect');
       window.location.assign(target.href);

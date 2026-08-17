@@ -12,10 +12,12 @@ export function adminSeedFromEnv(env: Record<string, string | undefined>) {
 }
 
 export interface BillingConfig {
-  stripeSecretKey: string;
-  stripeWebhookSecret: string;
+  paddleApiKey: string;
+  paddleWebhookSecret: string;
+  paddleEnvironment: "sandbox" | "production";
   monthlyPriceId: string;
   yearlyPriceId: string;
+  teamYearlyPriceId: string | undefined;
   appUrl: string;
   mediaSigningSecret: string;
   crawlSessionEncryptionKey: string;
@@ -44,10 +46,15 @@ function positiveInt(value: string | undefined, fallback: number, name: string):
 }
 
 export function billingConfigFromEnv(env: Record<string, string | undefined>): BillingConfig {
-  const stripeSecretKey = required(env, "STRIPE_SECRET_KEY");
-  const stripeWebhookSecret = required(env, "STRIPE_WEBHOOK_SECRET");
-  const monthlyPriceId = required(env, "STRIPE_PRO_MONTHLY_PRICE_ID");
-  const yearlyPriceId = required(env, "STRIPE_PRO_YEARLY_PRICE_ID");
+  const paddleApiKey = required(env, "PADDLE_API_KEY");
+  const paddleWebhookSecret = required(env, "PADDLE_WEBHOOK_SECRET");
+  const paddleEnvironment = env.PADDLE_ENVIRONMENT?.trim() || "sandbox";
+  if (paddleEnvironment !== "sandbox" && paddleEnvironment !== "production") {
+    throw new Error("PADDLE_ENVIRONMENT must be sandbox or production");
+  }
+  const monthlyPriceId = required(env, "PADDLE_PRO_MONTHLY_PRICE_ID");
+  const yearlyPriceId = required(env, "PADDLE_PRO_YEARLY_PRICE_ID");
+  const teamYearlyPriceId = env.PADDLE_TEAM_YEARLY_PRICE_ID?.trim() || undefined;
   const appUrl = required(env, "APP_URL");
   const mediaSigningSecret = required(env, "MEDIA_SIGNING_SECRET");
   const crawlSessionEncryptionKey = required(env, "CRAWL_SESSION_ENCRYPTION_KEY");
@@ -57,10 +64,12 @@ export function billingConfigFromEnv(env: Record<string, string | undefined>): B
   }
   decodeSessionKey(crawlSessionEncryptionKey);
   return {
-    stripeSecretKey,
-    stripeWebhookSecret,
+    paddleApiKey,
+    paddleWebhookSecret,
+    paddleEnvironment,
     monthlyPriceId,
     yearlyPriceId,
+    teamYearlyPriceId,
     appUrl: appUrl.replace(/\/$/, ""),
     mediaSigningSecret,
     crawlSessionEncryptionKey,

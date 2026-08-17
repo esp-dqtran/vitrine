@@ -1,274 +1,70 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
-import { Badge, Button, Divider, Heading, Icon, SegmentedControl, SegmentedControlItem, Text, useMediaQuery } from '@astryxdesign/core';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Button, Divider, Heading, Icon, Text, useMediaQuery } from '@astryxdesign/core';
 import type { AuthUser } from './authApi';
-import { createCheckout, loadSubscription, type SubscriptionView } from './billingApi';
-import { PRO_PRICE_CENTS } from '../pricing.ts';
+import { createCheckout, createTeamCheckout, loadSubscription, type SubscriptionView } from './billingApi';
+import { openPaddleCheckout } from './paddleCheckout';
+import { createTeam, listTeams } from './organizationsApi.ts';
+import { PRO_PRICE_CENTS, TEAM_EDITOR_PRICE_CENTS, TEAM_MINIMUM_EDITORS, teamAnnualPriceCents } from '../pricing.ts';
 import { AstryxMenu } from './components/AstryxDropdown';
-import { useSegmentedIndicator } from './components/useSegmentedIndicator.ts';
 
-const wrap: CSSProperties = { maxWidth: 1080, margin: '0 auto', padding: '0 32px' };
+type ComparisonValue = string | boolean;
 
-function Check({ on }: { on: boolean }) {
-  return <Icon icon={on ? 'check' : 'close'} size="sm" color={on ? 'success' : 'secondary'} />;
-}
-
-function FeatureRow({ text }: { text: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-      <Check on />
-      <span style={{ fontSize: 14.5, lineHeight: 1.5, color: 'var(--color-text-primary)' }}>{text}</span>
-    </div>
-  );
-}
-
-const FREE_FEATURES = [
-  'Public catalog metadata and limited previews',
-  '3 applications, unlocked permanently',
-  'Complete screens, flows, components, tokens and evidence for those apps',
-  '1 personal collection',
-];
-
-const PRO_FEATURES = [
-  'Every current and future published application while subscribed',
-  'Complete screens, flows, components, foundation tokens and evidence',
-  'Full catalog search, filters and cross-application comparison',
-  'Unlimited personal collections and research notes',
-  'Selected editable exports within the fair-use policy',
-];
-
-const COMPARE_ROWS: [string, string | boolean, string | boolean][] = [
-  ['Catalog access', '3 apps, chosen by you, unlocked for good', 'Every app — current and future'],
-  ['Screens, flows, components, tokens, evidence', 'Full depth on your 3 apps', 'Full depth across the catalog'],
-  ['Search, filters and comparison', 'Basic browse', 'Full search, filters and cross-app comparison'],
-  ['Personal collections', '1', 'Unlimited'],
-  ['Research notes', false, true],
-  ['Editable exports', false, 'Selected, fair-use'],
+const FEATURES: Array<{ icon: 'search' | 'bookOpen' | 'folder' | 'download' | 'users'; label: string; detail: string; free: ComparisonValue; pro: ComparisonValue; team: ComparisonValue }> = [
+  { icon: 'bookOpen', label: 'Catalog access', detail: 'How much of the library you can study.', free: '3 apps, unlocked for good', pro: 'Every app, current and future', team: 'Every app for every editor' },
+  { icon: 'search', label: 'Depth and insight', detail: 'Screens, flows, components, tokens and evidence.', free: 'Full depth on your 3 apps', pro: 'Full depth across the catalog', team: 'Full depth across the catalog' },
+  { icon: 'folder', label: 'Research workspace', detail: 'Save, organize and return to what matters.', free: '1 personal collection', pro: 'Unlimited personal collections', team: 'Shared organization projects' },
+  { icon: 'download', label: 'Compare and export', detail: 'Turn selected evidence into useful output.', free: false, pro: 'Search, compare and selected exports', team: 'Team-wide comparison and exports' },
+  { icon: 'users', label: 'Collaboration', detail: 'Build a shared research habit.', free: false, pro: false, team: 'Shared workspace and member management' },
 ];
 
 const FAQS = [
-  {
-    q: 'What happens after I use my 3 free unlocks?',
-    a: 'Nothing is taken away — your 3 unlocked applications stay fully accessible for good. To reach the rest of the catalog, upgrade to Pro.',
-  },
-  {
-    q: 'Can I swap an unlocked app for a different one?',
-    a: 'No. Selecting an application is a deliberate choice: you confirm an "Unlock this app" action and see how many unlocks remain. Once unlocked, an app can’t be exchanged for another.',
-  },
-  {
-    q: 'Does opening a preview use up an unlock?',
-    a: 'No. Browsing public catalog previews never consumes an unlock — only the explicit "Unlock this app" confirmation does.',
-  },
-  {
-    q: 'What’s the difference between monthly and yearly Pro?',
-    a: 'None, other than price. Monthly and yearly Pro subscriptions carry identical entitlements — yearly is simply billed once a year at a lower effective rate.',
-  },
-  {
-    q: 'What exports are included with Pro?',
-    a: 'Editable Figma exports for selected evidence or a complete observed application design system, plus secondary token and component formats, within the fair-use policy. Pro does not include a raw API, database export, bulk catalog download, or complete offline catalog.',
-  },
-  {
-    q: 'Do you offer Team or Enterprise plans?',
-    a: 'Not yet. Team pricing, seat billing, and shared workspaces launch once the corresponding collaboration features exist.',
-  },
-  {
-    q: 'Can I get my own app analyzed?',
-    a: 'Private application analysis isn’t part of the catalog subscription today. It may become a separate, credit-based add-on later.',
-  },
-];
+  ['What happens after I use my 3 free unlocks?', 'Nothing is taken away — your 3 unlocked applications stay fully accessible for good. Pro opens the rest of the catalog.'],
+  ['What changes with yearly Pro?', 'Nothing except the price. Yearly Pro has the same entitlements and is billed once a year at a lower effective rate.'],
+  ['How does Team billing work?', 'Team is annual-only at launch: $29 per editor per month, billed annually, with a three-editor minimum. Every Team member is an editor today.'],
+  ['What is included in an export?', 'Selected editable evidence and complete observed design-system exports are included within the fair-use policy.'],
+] as const;
 
-function FaqRow({ q, a, open, onToggle, isLast }: { q: string; a: string; open: boolean; onToggle: () => void; isLast: boolean }) {
-  return (
-    <div style={{ borderBottom: isLast ? 'none' : '1px solid var(--color-border)' }}>
+function Value({ value, pro = false }: { value: ComparisonValue; pro?: boolean }) {
+  if (typeof value === 'boolean') return value ? <Icon icon="check" size="sm" color={pro ? 'inherit' : 'success'} /> : <span className="pricing-v2__dash">—</span>;
+  return <span className="pricing-v2__cell-copy">{value}</span>;
+}
+
+function Section({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return <section className={`pricing-v2__section ${className}`}>{children}</section>;
+}
+
+function Faq() {
+  const [open, setOpen] = useState(0);
+  return <div className="pricing-v2__faq">
+    {FAQS.map(([question, answer], index) => <div className="pricing-v2__faq-row" key={question}>
       <Button
-        label={q}
+        label={question}
         variant="ghost"
-        onClick={onToggle}
-        aria-expanded={open}
-        endContent={<span style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform .2s cubic-bezier(.16,1,.3,1)' }}><Icon icon="chevronDown" size="sm" /></span>}
-        style={{
-          justifyContent: 'space-between',
-          textAlign: 'left',
-          width: '100%',
-          padding: '20px 12px',
-          fontSize: 15.5,
-          fontWeight: 600,
-        }}
+        aria-expanded={open === index}
+        clickAction={() => setOpen(open === index ? -1 : index)}
+        endContent={<Icon icon={open === index ? 'chevronUp' : 'chevronDown'} size="sm" />}
+        className="pricing-v2__faq-button"
       />
-      <div style={{ display: 'grid', gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows .22s cubic-bezier(.16,1,.3,1)' }}>
-        <div style={{ overflow: 'hidden' }}>
-          <div style={{ padding: '0 12px 22px', maxWidth: 700 }}>
-            <Text type="body" color="secondary">{a}</Text>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+      {open === index ? <Text color="secondary" className="pricing-v2__faq-answer">{answer}</Text> : null}
+    </div>)}
+  </div>;
 }
 
-function PlanCard({
-  highlighted,
-  badge,
-  name,
-  tagline,
-  price,
-  priceNote,
-  features,
-  cta,
-  ctaVariant,
-  clickAction,
-  disabled,
-  loading,
-}: {
-  highlighted?: boolean;
-  badge?: string;
-  name: string;
-  tagline: string;
-  price: string;
-  priceNote: string;
-  features: string[];
-  cta: string;
-  ctaVariant: 'primary' | 'secondary';
-  clickAction?: () => void;
-  disabled?: boolean;
-  loading?: boolean;
-}) {
-  return (
-    <div
-      style={{
-        position: 'relative',
-        flex: '1 1 320px',
-      minWidth: 'min(300px, 100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 20,
-        padding: '26px 28px 28px',
-        borderRadius: 'var(--radius-container)',
-        background: highlighted
-          ? 'linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 16%, var(--color-background-surface)) 0%, var(--color-background-surface) 130px)'
-          : 'var(--color-background-surface)',
-        border: highlighted ? '1.5px solid var(--color-accent)' : '1px solid var(--color-border)',
-        boxShadow: highlighted ? 'var(--shadow-med)' : 'var(--shadow-low)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-        <div>
-          <Heading level={3}>{name}</Heading>
-          <div style={{ marginTop: 4 }}>
-            <Text type="supporting" color="secondary">{tagline}</Text>
-          </div>
-        </div>
-        {badge ? <Badge variant={highlighted ? 'blue' : 'neutral'} label={badge} /> : null}
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-        <span style={{ fontSize: 40, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>{price}</span>
-        <Text type="supporting" color="secondary">{priceNote}</Text>
-      </div>
-
-      <Divider />
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
-        {features.map((f) => (
-          <FeatureRow key={f} text={f} />
-        ))}
-      </div>
-
-      <Button variant={ctaVariant} label={cta} clickAction={clickAction} isDisabled={disabled} isLoading={loading} style={{ width: '100%' }} />
-    </div>
-  );
-}
-
-function Cell({ value }: { value: string | boolean }) {
-  return (
-    <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-      {typeof value === 'boolean' ? <Check on={value} /> : <Text type="supporting" color="secondary">{value}</Text>}
-    </div>
-  );
-}
-
-function Section({ style, children }: { style?: CSSProperties; children: ReactNode }) {
-  return <div style={{ ...wrap, ...style }}>{children}</div>;
-}
-
-function FreeUnlockUsage({
-  subscription,
-  onBrowse,
-  onCheckout,
-  loading,
-}: {
-  subscription: SubscriptionView;
-  onBrowse: () => void;
-  onCheckout: () => void;
-  loading: boolean;
-}) {
-  const limit = subscription.freeUnlocks.length + subscription.freeUnlocksRemaining;
+function FreeUnlockUsage({ subscription, onBrowse, onCheckout, loading }: { subscription: SubscriptionView; onBrowse: () => void; onCheckout: () => void; loading: boolean }) {
   const used = subscription.freeUnlocks.length;
-  const exhausted = subscription.freeUnlocksRemaining < 1;
-
-  return (
-    <Section style={{ padding: '8px 32px 24px' }}>
-      <div
-        data-testid="free-unlock-usage"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 24,
-          padding: '22px 24px',
-          border: '1px solid var(--color-border)',
-          borderRadius: 'var(--radius-container)',
-          background: 'linear-gradient(110deg, color-mix(in srgb, var(--color-accent) 10%, var(--color-background-surface)), var(--color-background-surface) 56%)',
-          boxShadow: 'var(--shadow-low)',
-        }}
-      >
-        <div style={{ minWidth: 240, flex: '1 1 420px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <Text type="label" weight="semibold">Your Free access</Text>
-            <Badge
-              variant={exhausted ? 'neutral' : 'blue'}
-              label={exhausted ? 'All unlocks used' : `${subscription.freeUnlocksRemaining} remaining`}
-            />
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <Heading level={3}>{`${used} of ${limit} permanent app unlocks used`}</Heading>
-          </div>
-          <div style={{ display: 'flex', gap: 7, marginTop: 14, maxWidth: 360 }} aria-label={`${used} of ${limit} app unlocks used`}>
-            {Array.from({ length: limit }, (_, index) => (
-              <span
-                key={index}
-                aria-hidden="true"
-                style={{
-                  height: 7,
-                  flex: 1,
-                  borderRadius: 999,
-                  background: index < used ? 'var(--color-accent)' : 'var(--color-background-muted)',
-                  border: index < used ? 'none' : '1px solid var(--color-border)',
-                }}
-              />
-            ))}
-          </div>
-          <div style={{ marginTop: 12, maxWidth: 650 }}>
-            <Text type="supporting" color="secondary">
-              {exhausted
-                ? 'Your unlocked apps stay available forever. Pro opens every current and future published app.'
-                : 'Browse public previews freely. An unlock is only used when you confirm full access to an app.'}
-            </Text>
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <Button variant="secondary" label="Browse apps" clickAction={onBrowse} />
-          <Button
-            variant="primary"
-            label={exhausted ? 'Open the full catalog' : 'Upgrade to Pro'}
-            clickAction={onCheckout}
-            isDisabled={loading}
-            isLoading={loading}
-          />
-        </div>
-      </div>
-    </Section>
-  );
+  const limit = used + subscription.freeUnlocksRemaining;
+  const exhausted = subscription.freeUnlocksRemaining === 0;
+  return <Section className="pricing-v2__unlock">
+    <div>
+      <span className="pricing-v2__eyebrow">Your Free access</span>
+      <Heading level={3}>{used} of {limit} permanent app unlocks used</Heading>
+      {exhausted ? <Text color="secondary"><strong>All unlocks used.</strong> Your unlocked apps stay available forever; Pro opens the complete library.</Text> : <Text color="secondary">{subscription.freeUnlocksRemaining} remaining. Browse public previews freely, then choose the applications you want to keep. Your unlocked apps are yours for good.</Text>}
+    </div>
+    <div className="pricing-v2__unlock-actions">
+      <Button label="Browse apps" variant="secondary" clickAction={onBrowse} />
+      <Button label={exhausted ? 'Open the full catalog' : 'Upgrade to Pro'} variant="primary" clickAction={onCheckout} isDisabled={loading} isLoading={loading} />
+    </div>
+  </Section>;
 }
 
 interface PricingViewProps {
@@ -277,190 +73,92 @@ interface PricingViewProps {
   onBrowse: () => void;
   onSignIn: () => void;
   onCheckout: () => void;
+  onTeamCheckout?: () => void;
   yearly?: boolean;
   onYearlyChange?: (yearly: boolean) => void;
   loading?: boolean;
   error?: string;
 }
 
-export function PricingView({
-  user,
-  subscription,
-  onBrowse,
-  onSignIn,
-  onCheckout,
-  yearly = false,
-  onYearlyChange = () => undefined,
-  loading = false,
-  error = '',
-}: PricingViewProps) {
-  const isCompactNav = useMediaQuery('(max-width: 640px)', false);
-  const billingPeriodRef = useSegmentedIndicator(yearly ? 'yearly' : 'monthly');
-  const proPrice = `$${(PRO_PRICE_CENTS[yearly ? 'year' : 'month'] / 100).toFixed(2)}`;
-  const proNote = yearly ? '/year' : '/month';
-  const proSub = yearly ? 'billed yearly · save 26% vs monthly' : 'billed monthly';
-  const navLink: CSSProperties = { fontSize: 14, fontWeight: 500, color: 'var(--color-text-secondary)' };
+export function PricingView({ user, subscription, onBrowse, onSignIn, onCheckout, onTeamCheckout = () => undefined, yearly = false, onYearlyChange = () => undefined, loading = false, error = '' }: PricingViewProps) {
+  const compact = useMediaQuery('(max-width: 720px)', false);
+  const proAmount = (PRO_PRICE_CENTS[yearly ? 'year' : 'month'] / 100).toFixed(2);
+  const teamAnnual = `$${(teamAnnualPriceCents() / 100).toLocaleString()}`;
+  const nav = <>{compact ? <AstryxMenu button={{ label: 'Menu', icon: <Icon icon="menu" />, isIconOnly: true, variant: 'ghost', size: 'sm' }} items={[{ label: 'Browse', onClick: onBrowse }, { label: 'Sign in', onClick: onSignIn }]} /> : <><Button label="Browse" variant="ghost" clickAction={onBrowse} /><Button label="Sign in" variant="ghost" clickAction={onSignIn} /></>}<Button label="Get started" variant="primary" size="sm" clickAction={onSignIn} /></>;
 
-  return (
-    <div className="vitrine-page" style={{ minHeight: '100vh', color: 'var(--color-text-primary)' }}>
-      <div
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-          background: 'var(--color-background-body)',
-          backdropFilter: 'none',
-          borderBottom: '1px solid var(--color-border)',
-        }}
-      >
-        <Section style={{ padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
-          <Button type="button" label="Vitrines" variant="ghost" onClick={onBrowse} icon={<img src="/favicon.svg" alt="" aria-hidden="true" width={26} />} style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '0 0 auto' }}>
-            {isCompactNav ? (
-              <AstryxMenu
-                button={{ label: 'Menu', icon: <Icon icon="menu" />, isIconOnly: true, variant: 'ghost', size: 'sm' }}
-                items={[
-                  { label: 'Browse', onClick: onBrowse },
-                  { label: 'Sign in', onClick: onSignIn },
-                ]}
-              />
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
-                <Button label="Browse" variant="ghost" onClick={onBrowse} style={navLink} />
-                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)', borderBottom: '2px solid var(--color-text-primary)', paddingBottom: 2 }}>Pricing</span>
-                <Button variant="primary" size="sm" label="Sign in" clickAction={onSignIn} />
-              </div>
-            )}
-            <Button variant="primary" size="sm" label="Get started" clickAction={onSignIn} />
-          </div>
-        </Section>
+  return <main className="vitrine-page pricing-v2">
+    <header className="pricing-v2__nav">
+      <Button label="Vitrines" variant="ghost" clickAction={onBrowse} icon={<img src="/favicon.svg" alt="" width={23} />} className="pricing-v2__wordmark" />
+      <nav aria-label="Pricing navigation" className="pricing-v2__nav-links"><Button label="Library" variant="ghost" clickAction={onBrowse} /><span>Pricing</span></nav>
+      <div className="pricing-v2__nav-actions">{nav}</div>
+    </header>
+
+    <Section className="pricing-v2__hero">
+      <div>
+        <span className="pricing-v2__eyebrow">Vitrines membership</span>
+        <Heading level={1} type="display-2">Choose the depth<br />of your research.</Heading>
+        <Text type="large" color="secondary">From surface scans to deep system analysis — access the observed design systems you need to ship with confidence.</Text>
       </div>
+      <div className="pricing-v2__billing-control">
+        <Text type="label">Save with annual billing</Text>
+        <div className="pricing-v2__billing-toggle" role="radiogroup" aria-label="Billing period">
+          <button type="button" role="radio" aria-checked={!yearly} onClick={() => onYearlyChange(false)}>Monthly</button>
+          <button type="button" role="radio" aria-checked={yearly} onClick={() => onYearlyChange(true)}>Annual</button>
+        </div>
+        <Text type="supporting" color="secondary">{yearly ? 'Save 26% on Pro' : 'Switch to annual and save 26%'}</Text>
+      </div>
+    </Section>
 
-      <Section style={{ padding: '64px 32px 32px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
-          <Badge variant="neutral" label="Pricing" />
-        </div>
-        <Heading level={1} type="display-2">Free to explore. $8.99/month to go deeper.</Heading>
-        <div style={{ margin: '16px auto 0', maxWidth: 560 }}>
-          <Text type="large" color="secondary">
-            Vitrines is a research library of observed application design systems — screens, flows, components, tokens and evidence, reconstructed once and reused by every subscriber.
-          </Text>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
-          <SegmentedControl ref={billingPeriodRef} label="Billing period" value={yearly ? 'yearly' : 'monthly'} onChange={(v) => onYearlyChange(v === 'yearly')}>
-            <SegmentedControlItem label="Monthly" value="monthly" />
-            <SegmentedControlItem label="Yearly · save 26%" value="yearly" />
-          </SegmentedControl>
-        </div>
-      </Section>
+    {user?.role === 'user' && subscription?.plan === 'free' ? <FreeUnlockUsage subscription={subscription} onBrowse={onBrowse} onCheckout={onCheckout} loading={loading} /> : null}
 
-      {user?.role === 'user' && subscription?.plan === 'free' ? (
-        <FreeUnlockUsage
-          subscription={subscription}
-          onBrowse={onBrowse}
-          onCheckout={onCheckout}
-          loading={loading}
-        />
-      ) : null}
+    <Section className="pricing-v2__board-section">
+      <div className="pricing-v2__board" role="table" aria-label="Vitrines pricing comparison">
+        <div className="pricing-v2__board-head" role="row">
+          <div className="pricing-v2__feature-head" role="columnheader"><span>What’s included</span><Text type="supporting" color="secondary">Compare each level of access.</Text></div>
+          <div role="columnheader" className="pricing-v2__plan-head"><strong>Free</strong><span>For individual explorers</span><b>$0</b><small>Forever</small></div>
+          <div role="columnheader" className="pricing-v2__plan-head pricing-v2__pro"><strong>Pro</strong><span>For dedicated researchers</span><b>${proAmount}<small>{yearly ? ' /year' : ' /month'}</small></b><small>{yearly ? `Billed $${proAmount} annually` : 'Billed monthly'}</small></div>
+          <div role="columnheader" className="pricing-v2__plan-head"><strong>Team</strong><span>For design and product teams</span><b>${(TEAM_EDITOR_PRICE_CENTS / 100).toFixed(0)}<small> / editor / month</small></b><small>Billed annually · {TEAM_MINIMUM_EDITORS}-editor minimum</small></div>
+        </div>
+        {FEATURES.map((feature) => <div className="pricing-v2__board-row" role="row" key={feature.label}>
+          <div role="rowheader" className="pricing-v2__feature"><Icon icon={feature.icon} size="md" /><div><strong>{feature.label}</strong><span>{feature.detail}</span></div></div>
+          <div role="cell"><Value value={feature.free} /></div>
+          <div role="cell" className="pricing-v2__pro"><Value value={feature.pro} pro /></div>
+          <div role="cell"><Value value={feature.team} /></div>
+        </div>)}
+        <div className="pricing-v2__board-footer" role="row">
+          <div role="cell" className="pricing-v2__footer-note">Your free apps stay unlocked.</div>
+          <div role="cell"><Button label={user ? subscription?.plan === 'pro' ? 'Included with Pro' : 'Current Free plan' : 'Start free'} variant="secondary" clickAction={user ? undefined : onSignIn} isDisabled={Boolean(user)} /></div>
+          <div role="cell" className="pricing-v2__pro"><Button label={subscription?.plan === 'pro' ? 'Current Pro plan' : 'Upgrade to Pro'} variant="secondary" clickAction={user ? onCheckout : onSignIn} isDisabled={loading || subscription?.plan === 'pro' || user?.role === 'admin'} isLoading={loading} /></div>
+          <div role="cell"><Button label={user ? subscription?.entitlementSource === 'team' ? 'Current Team plan' : 'Set up Team' : 'Start with a team'} variant="ghost" clickAction={user ? onTeamCheckout : onSignIn} isDisabled={loading || subscription?.entitlementSource === 'team'} /></div>
+        </div>
+      </div>
+      {error ? <p role="alert" className="pricing-v2__error">{error}</p> : null}
+      <Text type="supporting" color="secondary" className="pricing-v2__team-note">Team starts at {teamAnnual}/year for {TEAM_MINIMUM_EDITORS} editors. Team checkout is organization-scoped and access is confirmed by Paddle.</Text>
+    </Section>
 
-      <Section style={{ padding: '24px 32px 64px' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'stretch' }}>
-          <PlanCard
-            name="Free"
-            tagline="Evaluate the product, no card required"
-            price="$0"
-            priceNote="forever"
-            features={FREE_FEATURES}
-            cta={user ? subscription?.plan === 'pro' ? 'Included with Pro' : 'Current Free plan' : 'Start free'}
-            ctaVariant="secondary"
-            clickAction={user ? undefined : onSignIn}
-            disabled={Boolean(user)}
-          />
-          <PlanCard
-            highlighted
-            badge="Full catalog"
-            name="Pro"
-            tagline="Everything in Free, plus the whole library"
-            price={proPrice}
-            priceNote={proNote}
-            features={PRO_FEATURES}
-            cta={subscription?.plan === 'pro' ? 'Current Pro plan' : 'Upgrade to Pro'}
-            ctaVariant="primary"
-            clickAction={user ? onCheckout : onSignIn}
-            disabled={loading || subscription?.plan === 'pro' || user?.role === 'admin'}
-            loading={loading}
-          />
-        </div>
-        <div style={{ textAlign: 'center', marginTop: 14 }}>
-          <Text type="supporting" color="secondary">{`${proSub} · no exports on Free`}</Text>
-          {error && <div role="alert" style={{ marginTop: 10, color: 'var(--color-text-danger)' }}>{error}</div>}
-        </div>
-      </Section>
+    <Section className="pricing-v2__proof">
+      <div><Icon icon="search" size="md" /><strong>Observed, not guessed</strong><span>Every system starts with real shipped products.</span></div>
+      <div><Icon icon="bookOpen" size="md" /><strong>Repeatable method</strong><span>Structured research makes decisions traceable.</span></div>
+      <div><Icon icon="refresh" size="md" /><strong>Continuously updated</strong><span>The catalog evolves as products evolve.</span></div>
+    </Section>
 
-      <Section style={{ padding: '8px 32px 64px' }}>
-        <div style={{ marginBottom: 24 }}>
-          <Heading level={2}>Compare plans</Heading>
-        </div>
-        {/* Horizontal scroll (not a JS breakpoint) so the 3-column grid never squeezes
-            illegibly — it only kicks in once real content width exceeds the viewport. */}
-        <div style={{ overflowX: 'auto' }}>
-          <div
-            style={{
-              minWidth: 480,
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-container)',
-              overflow: 'hidden',
-              background: 'var(--color-background-surface)',
-              boxShadow: 'var(--shadow-low)',
-            }}
-          >
-            <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', background: 'var(--color-background-muted)', borderBottom: '1px solid var(--color-border)' }}>
-              <div style={{ padding: '14px 20px' }}><Text type="label" color="secondary">Feature</Text></div>
-              <div style={{ padding: '14px 20px', textAlign: 'center' }}><Text weight="semibold">Free</Text></div>
-              <div style={{ padding: '14px 20px', textAlign: 'center' }}><Text weight="semibold">Pro</Text></div>
-            </div>
-            {COMPARE_ROWS.map(([label, freeVal, proVal], i) => (
-              <div
-                key={label}
-                style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', borderBottom: i < COMPARE_ROWS.length - 1 ? '1px solid var(--color-border)' : 'none' }}
-              >
-                <div style={{ padding: '16px 20px' }}><Text type="body">{label}</Text></div>
-                <Cell value={freeVal} />
-                <Cell value={proVal} />
-              </div>
-            ))}
-          </div>
-        </div>
-        <div style={{ marginTop: 20, padding: 20, borderRadius: 'var(--radius-container)', background: 'var(--color-background-muted)' }}>
-          <Text type="label" color="secondary">Not part of the initial launch: </Text>
-          <Text type="body" color="secondary">
-            Team and Enterprise plans, seat-based billing, shared collections, a raw API, database or bulk catalog export, a complete offline catalog, and private or user-submitted app analysis.
-          </Text>
-        </div>
-      </Section>
+    <Section className="pricing-v2__questions">
+      <div className="pricing-v2__section-title"><div><span className="pricing-v2__eyebrow">Common questions</span><Heading level={2}>Straight answers before you choose.</Heading></div><Button label="Browse the library" variant="ghost" clickAction={onBrowse} endContent={<Icon icon="arrowRight" size="sm" />} /></div>
+      <Faq />
+    </Section>
 
-      <Section style={{ padding: '8px 32px 80px' }}>
-        <div style={{ marginBottom: 24, maxWidth: 640 }}>
-          <Heading level={2}>Questions</Heading>
-          <div style={{ marginTop: 8 }}>
-            <Text type="body" color="secondary">The details behind the Free and Pro plans.</Text>
-          </div>
-        </div>
-        <Faq />
-      </Section>
-
-      <Section style={{ padding: '0 32px 48px' }}>
-        <Divider />
-        <div style={{ paddingTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <Text type="supporting" color="secondary">Vitrines · a research library of observed application design systems.</Text>
-          <div style={{ display: 'flex', gap: 20 }}>
-            <Button label="Browse" variant="ghost" size="sm" onClick={onBrowse} style={{ ...navLink, fontSize: 13 }} />
-            <Button label="Sign in" variant="primary" size="sm" onClick={onSignIn} />
-          </div>
-        </div>
-      </Section>
-    </div>
-  );
+    <footer className="pricing-v2__footer">
+      <Divider />
+      <div className="pricing-v2__footer-row">
+        <Text type="supporting" color="secondary">Vitrines · a research library of observed application design systems.</Text>
+        <nav aria-label="Legal information" className="pricing-v2__legal-links">
+          <a href="/terms">Terms</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/refunds">Refunds</a>
+        </nav>
+      </div>
+    </footer>
+  </main>;
 }
 
 export function Pricing({ user, onBrowse, onSignIn }: { user: AuthUser | null; onBrowse: () => void; onSignIn: () => void }) {
@@ -468,55 +166,8 @@ export function Pricing({ user, onBrowse, onSignIn }: { user: AuthUser | null; o
   const [subscription, setSubscription] = useState<SubscriptionView | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (user?.role !== 'user') {
-      setSubscription(null);
-      setLoading(false);
-      return;
-    }
-    let active = true;
-    setLoading(true);
-    loadSubscription()
-      .then((view) => { if (active) { setSubscription(view); setError(''); } })
-      .catch((reason: Error) => { if (active) setError(reason.message); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [user?.id, user?.role]);
-
-  const onCheckout = async () => {
-    if (user?.role !== 'user' || subscription?.plan === 'pro') return;
-    setLoading(true);
-    setError('');
-    try {
-      const session = await createCheckout(yearly ? 'year' : 'month');
-      const target = new URL(session.url);
-      if (target.protocol !== 'https:') throw new Error('Billing returned an unsafe redirect');
-      window.location.assign(target.href);
-    } catch (reason) {
-      setError((reason as Error).message);
-      setLoading(false);
-    }
-  };
-
-  return <PricingView user={user} subscription={subscription} onBrowse={onBrowse} onSignIn={onSignIn} onCheckout={() => void onCheckout()} yearly={yearly} onYearlyChange={setYearly} loading={loading} error={error} />;
-}
-
-function Faq() {
-  const [openIdx, setOpenIdx] = useState(0);
-  return (
-    <div
-      style={{
-        border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius-container)',
-        background: 'var(--color-background-surface)',
-        boxShadow: 'var(--shadow-low)',
-        padding: '6px 24px',
-      }}
-    >
-      {FAQS.map((f, i) => (
-        <FaqRow key={f.q} q={f.q} a={f.a} isLast={i === FAQS.length - 1} open={openIdx === i} onToggle={() => setOpenIdx(openIdx === i ? -1 : i)} />
-      ))}
-    </div>
-  );
+  useEffect(() => { if (user?.role !== 'user') { setSubscription(null); return; } let active = true; setLoading(true); loadSubscription().then((view) => { if (active) setSubscription(view); }).catch((reason: Error) => { if (active) setError(reason.message); }).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, [user?.id, user?.role]);
+  const onCheckout = async () => { if (user?.role !== 'user' || subscription?.plan === 'pro') return; setLoading(true); setError(''); try { await openPaddleCheckout((await createCheckout(yearly ? 'year' : 'month')).transactionId); } catch (reason) { setError((reason as Error).message); } finally { setLoading(false); } };
+  const onTeamCheckout = async () => { if (user?.role !== 'user') return; setLoading(true); setError(''); try { const teams = await listTeams(); const owned = teams.filter((team) => team.role === 'owner'); let team = owned[0]; if (owned.length > 1) { const selected = Number(window.prompt(`Choose the Team workspace to bill:\n${owned.map((candidate) => `${candidate.id}: ${candidate.name}`).join('\n')}`)); team = owned.find((candidate) => candidate.id === selected); if (!team) throw new Error('Choose one of your Team workspaces before starting checkout'); } if (!team) { const name = window.prompt('Name your shared Vitrines workspace'); if (!name?.trim()) return; team = await createTeam(name.trim()); } await openPaddleCheckout((await createTeamCheckout(team.id)).transactionId); } catch (reason) { setError((reason as Error).message); } finally { setLoading(false); } };
+  return <PricingView user={user} subscription={subscription} onBrowse={onBrowse} onSignIn={onSignIn} onCheckout={() => void onCheckout()} onTeamCheckout={() => void onTeamCheckout()} yearly={yearly} onYearlyChange={setYearly} loading={loading} error={error} />;
 }

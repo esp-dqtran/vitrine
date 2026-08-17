@@ -2,7 +2,12 @@
 // surveys, and other extensions must be explicitly added, which keeps this
 // initial anonymous implementation small and intentionally limited.
 import posthog from 'posthog-js/dist/module.slim.no-external.js';
-import { analyticsPageUrl, analyticsPathname } from './analyticsEvents.ts';
+import {
+  analyticsPageUrl,
+  analyticsPathname,
+  analyticsTrafficSource,
+  type AnalyticsTrafficSource,
+} from './analyticsEvents.ts';
 
 type AnalyticsProperties = Record<string, boolean | number | string | undefined>;
 
@@ -13,6 +18,13 @@ interface AnalyticsEnvironment {
 }
 
 let initialized = false;
+let activeTrafficSource: AnalyticsTrafficSource | null = null;
+
+function currentTrafficSource(url: string): AnalyticsTrafficSource {
+  const source = analyticsTrafficSource(url);
+  if (source !== 'direct') activeTrafficSource = source;
+  return activeTrafficSource ?? source;
+}
 
 export function shouldTrackAnalyticsForHost(hostname: string): boolean {
   return !['localhost', '127.0.0.1', '::1'].includes(hostname);
@@ -59,6 +71,7 @@ export function trackAnalyticsEvent(name: string, properties?: AnalyticsProperti
   posthog.capture(name, {
     path: analyticsPathname(url),
     $current_url: analyticsPageUrl(url),
+    traffic_source: currentTrafficSource(url),
     ...properties,
   });
 }

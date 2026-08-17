@@ -258,7 +258,9 @@ const IMPORTS_DISABLED_RESPONSE = { error: "Imports are disabled" } as const;
 export const DEFAULT_API_PORT = 3010;
 const disabledBilling: BillingService = {
   createCheckout: async () => { throw new Error("Billing is not configured"); },
+  createTeamCheckout: async () => { throw new Error("Billing is not configured"); },
   createPortal: async () => { throw new Error("Billing is not configured"); },
+  reconcileCheckoutSession: async () => { throw new Error("Billing is not configured"); },
   handleWebhook: async () => { throw new Error("Billing is not configured"); },
 };
 const apiCrawlRunService = createCrawlRunService({ workerId: "api" });
@@ -949,11 +951,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     try {
       const result = await deps.billing.handleWebhook(
         req.body as Buffer,
-        req.header("stripe-signature"),
+        req.header("paddle-signature"),
       );
       res.json({ received: true, result });
     } catch {
-      res.status(400).json({ error: "Invalid Stripe webhook" });
+      res.status(400).json({ error: "Invalid Paddle webhook" });
     }
   });
   app.use(express.json());
@@ -2945,14 +2947,48 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         outcome: "created",
         metadata: { interval },
       });
-      res.status(201).json({ url: result.url });
+      res.status(201).json({ transactionId: result.transactionId });
     }
   });
 
-  app.post("/billing/portal", async (_req, res) => {
-    const portal = await deps.billing.createPortal(res.locals.user.id);
+  app.post("/billing/team/checkout", async (req, res) => {
+    const organizationId = Number(req.body?.organizationId);
+    if (!Number.isInteger(organizationId) || organizationId <= 0) {
+      res.status(400).json({ error: "organizationId must be a positive integer" });
+      return;
+    }
+    const result = await deps.billing.createTeamCheckout(res.locals.user, organizationId);
+    if (result.status === "not_owner") {
+      res.status(403).json({ error: "Only the organization owner can manage Team billing" });
+    } else if (result.status === "already_subscribed") {
+      res.status(409).json({ error: "Team is already subscribed", code: "already_subscribed" });
+    } else {
+      await deps.recordAccessEvent({
+        userId: res.locals.user.id,
+        ipPrefix: ipPrefix(req.ip ?? "unknown"),
+        action: "team_checkout_started",
+        outcome: "created",
+        metadata: { organizationId },
+      });
+      res.status(201).json({ transactionId: result.transactionId });
+    }
+  });
+
+  app.post("/billing/portal", async (req, res) => {
+    const organizationId = req.body?.organizationId === undefined ? undefined : Number(req.body.organizationId);
+    if (organizationId !== undefined && (!Number.isInteger(organizationId) || organizationId <= 0)) {
+      res.status(400).json({ error: "organizationId must be a positive integer" });
+      return;
+    }
+    const portal = await deps.billing.createPortal(res.locals.user.id, organizationId);
     if (!portal) res.status(404).json({ error: "Billing customer not found" });
     else res.json(portal);
+  });
+
+  app.get("/billing/checkout-sessions/:sessionId", async (req, res) => {
+    const result = await deps.billing.reconcileCheckoutSession(res.locals.user.id, req.params.sessionId);
+    if (result === "not_found") { res.status(404).json({ error: "Checkout session not found" }); return; }
+    res.json({ status: result });
   });
 
   app.get("/billing/subscription", async (_req, res) => {
@@ -2966,7 +3002,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       currentPeriodEnd: view.subscription?.current_period_end ?? null,
       cancelAtPeriodEnd: view.subscription?.cancel_at_period_end ?? false,
       graceExpiresAt: view.subscription?.grace_expires_at ?? null,
-      hasBillingCustomer: Boolean(view.subscription?.stripe_customer_id),
+      hasBillingCustomer: Boolean(view.subscription?.paddle_customer_id) || Boolean(view.team),
+      team: view.team,
       freeUnlocks: view.freeUnlocks,
       freeUnlocksRemaining: view.freeUnlocksRemaining,
       exportUsage: view.exportUsage,

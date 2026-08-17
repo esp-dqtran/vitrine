@@ -48,6 +48,7 @@ import './threadsMarketing.css';
 import './components/ColorPackStack.css';
 import './colorGallery.css';
 import './colorPostStudio.css';
+import './Pricing.css';
 import './legalPages.css';
 
 // No token overrides — @astryxdesign/core/astryx.css already ships Vitrines' palette at :root.
@@ -60,8 +61,6 @@ const Home = lazy(() => import('./Home').then((module) => ({ default: module.Hom
 const BuildInPublicPage = lazy(() => import('./BuildInPublic').then((module) => ({ default: module.BuildInPublicPage })));
 const Pricing = lazy(() => import('./Pricing').then((module) => ({ default: module.Pricing })));
 const LegalPage = lazy(() => import('./LegalPages.tsx').then((module) => ({ default: module.LegalPage })));
-const CatalogPricingPage = lazy(() => import('./components/CatalogPricingPage.tsx')
-  .then((module) => ({ default: module.CatalogPricingPage })));
 const CatalogBuildInPublicPage = lazy(() => import('./components/CatalogStaticPages.tsx')
   .then((module) => ({ default: module.CatalogBuildInPublicPage })));
 const CatalogBillingSuccessPage = lazy(() => import('./components/CatalogStaticPages.tsx')
@@ -144,16 +143,7 @@ function Root() {
             />
           );
         case 'browse-pricing':
-          return (
-            <CatalogPricingPage
-              plan={user ? 'free' : null}
-              onSignIn={goSignIn}
-              onBrowse={() => navigate({ name: 'browse' })}
-              /* Checkout lives in App's billing flow; until this route is the
-                 real one, Pro sends a signed-in reader to the existing page. */
-              onCheckout={() => navigate({ name: 'pricing' })}
-            />
-          );
+          return <Pricing user={user} onBrowse={() => navigate({ name: 'browse' })} onSignIn={goSignIn} />;
         case 'pricing':
           return <Pricing user={user} onBrowse={goApps} onSignIn={goSignIn} />;
         case 'terms':

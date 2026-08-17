@@ -30,7 +30,7 @@ export interface OrganizationStore {
   listForUser(userId: number): Promise<OrganizationSummary[]>;
   membershipRole(orgId: number, userId: number): Promise<OrgRole | undefined>;
   listMembers(orgId: number, requesterUserId: number): Promise<OrganizationMember[] | undefined>;
-  addMember(orgId: number, actorUserId: number, targetUserId: number, role: "admin" | "member"): Promise<OrganizationMember | undefined>;
+  addMember(orgId: number, actorUserId: number, targetUserId: number, role: "admin" | "member"): Promise<AddMemberResult>;
   addMemberByEmail(orgId: number, actorUserId: number, email: string, role: "admin" | "member"): Promise<AddMemberByEmailResult>;
   removeMember(orgId: number, actorUserId: number, targetUserId: number): Promise<boolean>;
 }
@@ -38,7 +38,15 @@ export interface OrganizationStore {
 export type AddMemberByEmailResult =
   | { status: "added"; member: OrganizationMember }
   | { status: "forbidden" }
-  | { status: "user_not_found" };
+  | { status: "user_not_found" }
+  | { status: "team_subscription_required" }
+  | { status: "seat_limit" };
+
+export type AddMemberResult =
+  | { status: "added"; member: OrganizationMember }
+  | { status: "forbidden" }
+  | { status: "team_subscription_required" }
+  | { status: "seat_limit" };
 
 const text = (value: unknown): string => (value == null ? "" : String(value));
 const number = (value: unknown): number => Number(value);
@@ -140,7 +148,32 @@ export function createOrganizationStore(
     async addMember(orgId, actorUserId, targetUserId, role) {
       if (role !== "admin" && role !== "member") throw new Error("Invalid member role");
       return runTransaction(async (tx) => {
-        if (!canManage(await roleOf(tx, orgId, actorUserId))) return undefined;
+        if (!canManage(await roleOf(tx, orgId, actorUserId))) return { status: "forbidden" };
+        const existing = await tx(
+          "SELECT role FROM organization_members WHERE organization_id = $1 AND user_id = $2",
+          [orgId, targetUserId],
+        );
+        // Reassigning an existing member does not consume a seat.
+        if (!existing.rows[0]) {
+          const subscription = await tx(
+            `SELECT seat_count, status, grace_expires_at::text
+             FROM organization_subscriptions WHERE organization_id = $1 FOR UPDATE`,
+            [orgId],
+          );
+          const billing = subscription.rows[0];
+          const active = billing && (
+            billing.status === "active"
+            || (billing.status === "past_due" && billing.grace_expires_at && new Date(String(billing.grace_expires_at)) > new Date())
+          );
+          if (!active) return { status: "team_subscription_required" };
+          const memberCount = await tx(
+            "SELECT count(*)::integer AS count FROM organization_members WHERE organization_id = $1",
+            [orgId],
+          );
+          if (Number(memberCount.rows[0]?.count ?? 0) >= Number(billing.seat_count)) {
+            return { status: "seat_limit" };
+          }
+        }
         // ON CONFLICT keeps an existing owner from being demoted and lets an
         // admin/member role be updated in place.
         const upserted = await tx(
@@ -153,14 +186,12 @@ export function createOrganizationStore(
           [orgId, targetUserId, role],
         );
         const row = upserted.rows[0];
-        if (!row) return undefined;
+        if (!row) return { status: "forbidden" };
         const emailResult = await tx("SELECT email FROM users WHERE id = $1", [targetUserId]);
-        return {
-          userId: number(row.user_id),
-          email: text(emailResult.rows[0]?.email),
-          role: row.role as OrgRole,
-          createdAt: isoDate(row.created_at),
-        };
+        return { status: "added", member: {
+          userId: number(row.user_id), email: text(emailResult.rows[0]?.email),
+          role: row.role as OrgRole, createdAt: isoDate(row.created_at),
+        } };
       });
     },
 
@@ -170,8 +201,7 @@ export function createOrganizationStore(
       const found = await runQuery("SELECT id FROM users WHERE email = $1", [normalized]);
       const target = found.rows[0];
       if (!target) return { status: "user_not_found" };
-      const member = await this.addMember(orgId, actorUserId, number(target.id), role);
-      return member ? { status: "added", member } : { status: "forbidden" };
+      return this.addMember(orgId, actorUserId, number(target.id), role);
     },
 
     async removeMember(orgId, actorUserId, targetUserId) {

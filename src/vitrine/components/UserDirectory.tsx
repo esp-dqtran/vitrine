@@ -106,7 +106,7 @@ function MemberRow({ user, onSetActive, onSetProGrant, onSelectUser }: Pick<User
         title={user.manual_pro_grant ? 'Remove manual Pro access?' : 'Upgrade to Pro?'}
         description={user.manual_pro_grant
           ? `${user.email} will lose the Pro access granted here. Paid subscriptions and promotional access are unchanged.`
-          : `${user.email} will receive Pro access without a Stripe charge or subscription.`}
+          : `${user.email} will receive Pro access without a Paddle charge or subscription.`}
         actionLabel={user.manual_pro_grant ? 'Remove Pro access' : 'Upgrade to Pro'}
         isActionLoading={busy}
         onAction={() => void updateProGrant(!user.manual_pro_grant)}

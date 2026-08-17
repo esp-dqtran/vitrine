@@ -63,10 +63,12 @@ services:
       RABBITMQ_URL: amqp://rabbitmq
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@localhost.test}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-astryx-local-admin-password}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_local_placeholder}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_local_placeholder}
-      STRIPE_PRO_MONTHLY_PRICE_ID: ${STRIPE_PRO_MONTHLY_PRICE_ID:-price_local_monthly}
-      STRIPE_PRO_YEARLY_PRICE_ID: ${STRIPE_PRO_YEARLY_PRICE_ID:-price_local_yearly}
+      PADDLE_ENVIRONMENT: ${PADDLE_ENVIRONMENT:-sandbox}
+      PADDLE_API_KEY: ${PADDLE_API_KEY:-pdl_sdbx_local_placeholder}
+      PADDLE_WEBHOOK_SECRET: ${PADDLE_WEBHOOK_SECRET:-pdl_ntfset_local_placeholder}
+      PADDLE_PRO_MONTHLY_PRICE_ID: ${PADDLE_PRO_MONTHLY_PRICE_ID:-pri_local_monthly}
+      PADDLE_PRO_YEARLY_PRICE_ID: ${PADDLE_PRO_YEARLY_PRICE_ID:-pri_local_yearly}
+      PADDLE_TEAM_YEARLY_PRICE_ID: ${PADDLE_TEAM_YEARLY_PRICE_ID:-pri_local_team_yearly}
       APP_URL: ${APP_URL:-http://localhost:5173}
       JWT_SIGNING_SECRET: ${JWT_SIGNING_SECRET:-local-jwt-signing-secret-at-least-32-bytes}
       JWT_ISSUER: ${JWT_ISSUER:-http://localhost:5173}

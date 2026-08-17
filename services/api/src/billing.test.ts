@@ -1,16 +1,19 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createBillingService, type StripePort } from "./billing.ts";
+import { createHmac } from "node:crypto";
+import { createBillingService, createPaddleClient, type PaddlePort, unmarshalPaddleWebhook } from "./billing.ts";
 import type { BillingConfig } from "./config.ts";
 import type { SubscriptionRecord } from "../../../src/pricing.ts";
-import type { StripeSubscriptionInput } from "../../../src/pricingStore.ts";
+import type { PaddleSubscriptionInput } from "../../../src/pricingStore.ts";
 
 const config: BillingConfig = {
-  stripeSecretKey: "sk_test_x",
-  stripeWebhookSecret: "whsec_x",
-  monthlyPriceId: "price_month",
-  yearlyPriceId: "price_year",
-  appUrl: "https://astryx.example",
+  paddleApiKey: "pdl_test_x",
+  paddleWebhookSecret: "pdl_ntfset_x",
+  paddleEnvironment: "sandbox",
+  monthlyPriceId: "pri_month",
+  yearlyPriceId: "pri_year",
+  teamYearlyPriceId: "pri_team",
+  appUrl: "https://vitrines.example",
   mediaSigningSecret: "0123456789abcdef0123456789abcdef",
   crawlSessionEncryptionKey: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
   generalRateLimit: 300,
@@ -19,56 +22,53 @@ const config: BillingConfig = {
 };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
 
-function fixture(input: {
-  existing?: SubscriptionRecord;
-  status?: "active" | "past_due";
-  eventType?: string;
-} = {}) {
-  const calls = { checkout: [] as Record<string, unknown>[], subscriptions: [] as StripeSubscriptionInput[] };
-  const processed = new Set<string>();
-  const stripe: StripePort = {
-    customers: { create: async () => ({ id: "cus_123" }) },
-    checkout: { sessions: { create: async (params) => {
-      calls.checkout.push(params);
-      return { url: "https://checkout.stripe.test/session" };
-    } } },
-    billingPortal: { sessions: { create: async () => ({ url: "https://billing.stripe.test/portal" }) } },
-    subscriptions: { retrieve: async () => ({
+function subscriptionEvent(input: { status?: string; priceId?: string; customData?: Record<string, string> } = {}) {
+  return {
+    event_id: "evt_123",
+    event_type: "subscription.updated",
+    data: {
       id: "sub_123",
-      customer: "cus_123",
-      metadata: { astryxUserId: String(user.id) },
+      customer_id: "ctm_123",
+      custom_data: input.customData ?? { vitrinesUserId: String(user.id) },
       status: input.status ?? "active",
-      cancel_at_period_end: false,
-      items: { data: [{
-        price: { id: "price_month" },
-        current_period_start: 1_783_036_800,
-        current_period_end: 1_785_715_200,
-      }] },
-    }) },
-    webhooks: { constructEvent: () => ({
-      id: "evt_123",
-      type: input.eventType ?? "customer.subscription.updated",
-      data: { object: { id: "sub_123" } },
-    }) },
+      scheduled_change: null,
+      current_billing_period: { starts_at: "2026-07-01T00:00:00Z", ends_at: "2026-08-01T00:00:00Z" },
+      items: [{ price: { id: input.priceId ?? "pri_month" }, quantity: 1 }],
+    },
   };
-  let subscription = input.existing;
+}
+
+function fixture(input: { existing?: SubscriptionRecord; event?: ReturnType<typeof subscriptionEvent> } = {}) {
+  const calls = { transactions: [] as Record<string, unknown>[], subscriptions: [] as PaddleSubscriptionInput[], portal: [] as string[] };
+  const processed = new Set<string>();
+  const paddle: PaddlePort = {
+    transactions: { create: async (params) => {
+      calls.transactions.push(params);
+      return { id: "txn_123", checkout: { url: "https://checkout.paddle.test/txn_123" } };
+    } },
+    customers: { createPortalSession: async (customerId, subscriptionId) => {
+      calls.portal.push(`${customerId}:${subscriptionId}`);
+      return { url: "https://customer-portal.paddle.test/session" };
+    } },
+    webhooks: { unmarshal: () => input.event ?? subscriptionEvent() },
+  };
   const service = createBillingService({
-    stripe,
+    paddle,
     config,
     now: () => new Date("2026-07-10T00:00:00Z"),
     store: {
-      getSubscription: async () => subscription,
-      upsertStripeCustomer: async (_userId, customerId) => {
-        subscription = { ...(subscription ?? emptySubscription()), stripe_customer_id: customerId };
-      },
-      upsertSubscription: async (value) => {
-        calls.subscriptions.push(value);
-      },
-      hasProcessedStripeEvent: async (eventId) => processed.has(eventId),
-      markStripeEventProcessed: async (eventId) => { processed.add(eventId); },
+      getSubscription: async () => input.existing,
+      getOrganizationSubscription: async () => undefined,
+      getTeamBillingOrganization: async (organizationId, ownerUserId) => (
+        organizationId === 7 && ownerUserId === user.id ? { id: 7, name: "Acme", memberCount: 1 } : undefined
+      ),
+      upsertPaddleSubscription: async (value) => { calls.subscriptions.push(value); },
+      upsertPaddleOrganizationSubscription: async () => undefined,
+      hasProcessedPaddleEvent: async (eventId) => processed.has(eventId),
+      markPaddleEventProcessed: async (eventId) => { processed.add(eventId); },
     },
   });
-  return { service, stripe, calls };
+  return { service, calls };
 }
 
 function emptySubscription(): SubscriptionRecord {
@@ -86,25 +86,32 @@ function emptySubscription(): SubscriptionRecord {
   };
 }
 
-test("creates monthly Checkout with a server-selected Price", async () => {
+test("creates a Paddle transaction with a server-selected price and user identity", async () => {
   const { service, calls } = fixture();
-  assert.deepEqual(await service.createCheckout(user, "month"), {
-    status: "created",
-    url: "https://checkout.stripe.test/session",
+  assert.deepEqual(await service.createCheckout(user, "month"), { status: "created", transactionId: "txn_123" });
+  assert.deepEqual(calls.transactions[0], {
+    collection_mode: "automatic",
+    items: [{ price_id: "pri_month", quantity: 1 }],
+    custom_data: { vitrinesUserId: "2" },
+    checkout: { url: "https://vitrines.example/billing/success" },
   });
-  assert.deepEqual(calls.checkout[0].line_items, [{ price: "price_month", quantity: 1 }]);
-  assert.equal(calls.checkout[0].mode, "subscription");
 });
 
-test("does not create a second Checkout for active Pro", async () => {
-  const existing = { ...emptySubscription(), status: "active" as const, stripe_customer_id: "cus_123" };
-  const { service, calls } = fixture({ existing });
+test("does not create a second checkout for active Pro", async () => {
+  const { service, calls } = fixture({ existing: { ...emptySubscription(), status: "active" } });
   assert.deepEqual(await service.createCheckout(user, "year"), { status: "already_subscribed" });
-  assert.equal(calls.checkout.length, 0);
+  assert.equal(calls.transactions.length, 0);
 });
 
-test("synchronizes authoritative past-due state once with seven-day grace", async () => {
-  const { service, calls } = fixture({ status: "past_due" });
+test("creates a Team transaction with organization-scoped custom data and three-seat minimum", async () => {
+  const { service, calls } = fixture();
+  assert.deepEqual(await service.createTeamCheckout(user, 7), { status: "created", transactionId: "txn_123" });
+  assert.deepEqual(calls.transactions[0].items, [{ price_id: "pri_team", quantity: 3 }]);
+  assert.deepEqual(calls.transactions[0].custom_data, { vitrinesOrganizationId: "7", vitrinesBillingOwnerId: "2" });
+});
+
+test("synchronizes signed Paddle subscription state exactly once", async () => {
+  const { service, calls } = fixture({ event: subscriptionEvent({ status: "past_due" }) });
   assert.equal(await service.handleWebhook(Buffer.from("event"), "signature"), "processed");
   assert.equal(await service.handleWebhook(Buffer.from("event"), "signature"), "duplicate");
   assert.equal(calls.subscriptions.length, 1);
@@ -112,13 +119,23 @@ test("synchronizes authoritative past-due state once with seven-day grace", asyn
   assert.equal(calls.subscriptions[0].graceExpiresAt?.toISOString(), "2026-07-17T00:00:00.000Z");
 });
 
-test("requires a webhook signature", async () => {
-  const { service } = fixture();
-  await assert.rejects(() => service.handleWebhook(Buffer.from("event"), undefined), /signature/i);
+test("verifies Paddle raw-body signatures and rejects replayed payloads", () => {
+  const raw = Buffer.from(JSON.stringify(subscriptionEvent()));
+  const timestamp = "1783641600";
+  const hash = createHmac("sha256", config.paddleWebhookSecret).update(`${timestamp}:${raw.toString("utf8")}`).digest("hex");
+  assert.equal(unmarshalPaddleWebhook(raw, config.paddleWebhookSecret, `ts=${timestamp};h1=${hash}`, 1_783_641_600_000).event_id, "evt_123");
+  assert.throws(() => unmarshalPaddleWebhook(raw, config.paddleWebhookSecret, `ts=${timestamp};h1=${hash}`, 1_783_642_000_001), /Expired/);
 });
 
-test("ignores invoice events and waits for authoritative subscription updates", async () => {
-  const { service, calls } = fixture({ eventType: "invoice.payment_failed" });
-  assert.equal(await service.handleWebhook(Buffer.from("event"), "signature"), "ignored");
-  assert.equal(calls.subscriptions.length, 0);
+test("uses Paddle's sandbox API base URL for server-side transactions", async () => {
+  let receivedUrl = "";
+  let receivedAuthorization = "";
+  const paddle = createPaddleClient("pdl_sdbx_secret", "sandbox", async (input, init) => {
+    receivedUrl = String(input);
+    receivedAuthorization = new Headers(init?.headers).get("authorization") ?? "";
+    return new Response(JSON.stringify({ data: { id: "txn_123", checkout: { url: "https://checkout.paddle.test/txn_123" } } }), { status: 201 });
+  });
+  await paddle.transactions.create({ items: [{ price_id: "pri_month", quantity: 1 }] });
+  assert.equal(receivedUrl, "https://sandbox-api.paddle.com/transactions");
+  assert.equal(receivedAuthorization, "Bearer pdl_sdbx_secret");
 });

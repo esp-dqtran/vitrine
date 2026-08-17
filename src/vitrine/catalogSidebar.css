@@ -856,6 +856,13 @@
   color: var(--color-text-primary);
 }
 
+.catalog-pricing__plan-note {
+  margin: 12px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .catalog-pricing__section {
   margin-top: 44px;
 }
@@ -1583,5 +1590,4 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
-
 

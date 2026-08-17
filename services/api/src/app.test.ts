@@ -3707,12 +3707,14 @@ test("rejects normal users and keeps imports disabled for admins", async (t) => 
   assert.equal(created, false);
 });
 
-test("accepts raw Stripe webhooks before JSON parsing", async (t) => {
+test("accepts raw Paddle webhooks before JSON parsing", async (t) => {
   let received = "";
   const { base, server } = await serve(createApiApp({
     billing: {
       createCheckout: async () => ({ status: "already_subscribed" }),
+      createTeamCheckout: async () => ({ status: "already_subscribed" }),
       createPortal: async () => undefined,
+      reconcileCheckoutSession: async () => "not_found",
       handleWebhook: async (body) => {
         received = body.toString();
         return "processed";
@@ -3722,7 +3724,7 @@ test("accepts raw Stripe webhooks before JSON parsing", async (t) => {
   t.after(() => close(server));
   const response = await fetch(`${base}/billing/webhook`, {
     method: "POST",
-    headers: { "content-type": "application/json", "stripe-signature": "sig" },
+    headers: { "content-type": "application/json", "paddle-signature": "sig" },
     body: '{"id":"evt_1"}',
   });
   assert.equal(response.status, 200);
@@ -3734,8 +3736,10 @@ test("creates Checkout and returns safe subscription state", async (t) => {
   const { base, server } = await serve(createApiApp({
     verifyAuthToken: async () => user,
     billing: {
-      createCheckout: async (_user, interval) => ({ status: "created", url: `https://stripe/${interval}` }),
-      createPortal: async () => ({ url: "https://stripe/portal" }),
+      createCheckout: async (_user, interval) => ({ status: "created", transactionId: `txn_${interval}` }),
+      createTeamCheckout: async () => ({ status: "created", transactionId: "txn_team" }),
+      createPortal: async () => ({ url: "https://paddle/portal" }),
+      reconcileCheckoutSession: async () => "processed",
       handleWebhook: async () => "processed",
     },
     getAccountEntitlements: async () => ({
@@ -3747,6 +3751,9 @@ test("creates Checkout and returns safe subscription state", async (t) => {
         stripe_customer_id: "cus_secret",
         stripe_subscription_id: "sub_secret",
         stripe_price_id: "price_secret",
+        paddle_customer_id: "ctm_secret",
+        paddle_subscription_id: "sub_secret",
+        paddle_price_id: "pri_secret",
         billing_interval: "month",
         status: "active",
         current_period_start: "2026-07-01T00:00:00Z",
@@ -3756,6 +3763,7 @@ test("creates Checkout and returns safe subscription state", async (t) => {
       },
       freeUnlocks: ["linear"],
       freeUnlocksRemaining: 2,
+      team: null,
       exportUsage: { used: 1, limit: 20, resetAt: "2026-08-01T00:00:00Z" },
     }),
     recordAccessEvent: async (event) => { events.push(event); },
@@ -3767,7 +3775,7 @@ test("creates Checkout and returns safe subscription state", async (t) => {
     body: JSON.stringify({ interval: "month" }),
   });
   assert.equal(checkout.status, 201);
-  assert.deepEqual(await checkout.json(), { url: "https://stripe/month" });
+  assert.deepEqual(await checkout.json(), { transactionId: "txn_month" });
   const subscription = await (await fetch(`${base}/billing/subscription`, {
     headers: { authorization: "Bearer user" },
   })).json();

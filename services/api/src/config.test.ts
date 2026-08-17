@@ -35,19 +35,19 @@ test("normalizes a valid admin seed", () => {
 });
 
 test("requires all billing and media-security variables", () => {
-  assert.throws(() => billingConfigFromEnv({}), /STRIPE_SECRET_KEY/);
+  assert.throws(() => billingConfigFromEnv({}), /PADDLE_API_KEY/);
   assert.throws(
-    () => billingConfigFromEnv({ STRIPE_SECRET_KEY: "sk_test_x" }),
-    /STRIPE_WEBHOOK_SECRET/,
+    () => billingConfigFromEnv({ PADDLE_API_KEY: "pdl_test_x" }),
+    /PADDLE_WEBHOOK_SECRET/,
   );
 });
 
 test("requires a 32-byte base64 crawl-session encryption key", () => {
   const base = {
-    STRIPE_SECRET_KEY: "sk_test_x",
-    STRIPE_WEBHOOK_SECRET: "whsec_x",
-    STRIPE_PRO_MONTHLY_PRICE_ID: "price_month",
-    STRIPE_PRO_YEARLY_PRICE_ID: "price_year",
+    PADDLE_API_KEY: "pdl_test_x",
+    PADDLE_WEBHOOK_SECRET: "pdl_ntfset_x",
+    PADDLE_PRO_MONTHLY_PRICE_ID: "pri_month",
+    PADDLE_PRO_YEARLY_PRICE_ID: "pri_year",
     APP_URL: "https://astryx.example",
     MEDIA_SIGNING_SECRET: "0123456789abcdef0123456789abcdef",
   };
@@ -62,10 +62,10 @@ test("parses billing and limiter configuration", () => {
   const crawlSessionEncryptionKey = randomBytes(32).toString("base64");
   assert.deepEqual(
     billingConfigFromEnv({
-      STRIPE_SECRET_KEY: "sk_test_x",
-      STRIPE_WEBHOOK_SECRET: "whsec_x",
-      STRIPE_PRO_MONTHLY_PRICE_ID: "price_month",
-      STRIPE_PRO_YEARLY_PRICE_ID: "price_year",
+      PADDLE_API_KEY: "pdl_test_x",
+      PADDLE_WEBHOOK_SECRET: "pdl_ntfset_x",
+      PADDLE_PRO_MONTHLY_PRICE_ID: "pri_month",
+      PADDLE_PRO_YEARLY_PRICE_ID: "pri_year",
       APP_URL: "https://astryx.example/",
       MEDIA_SIGNING_SECRET: "0123456789abcdef0123456789abcdef",
       CRAWL_SESSION_ENCRYPTION_KEY: crawlSessionEncryptionKey,
@@ -74,10 +74,12 @@ test("parses billing and limiter configuration", () => {
       APP_TRAVERSAL_LIMIT: "20",
     }),
     {
-      stripeSecretKey: "sk_test_x",
-      stripeWebhookSecret: "whsec_x",
-      monthlyPriceId: "price_month",
-      yearlyPriceId: "price_year",
+      paddleApiKey: "pdl_test_x",
+      paddleWebhookSecret: "pdl_ntfset_x",
+      paddleEnvironment: "sandbox",
+      monthlyPriceId: "pri_month",
+      yearlyPriceId: "pri_year",
+      teamYearlyPriceId: undefined,
       appUrl: "https://astryx.example",
       mediaSigningSecret: "0123456789abcdef0123456789abcdef",
       crawlSessionEncryptionKey,
@@ -86,6 +88,19 @@ test("parses billing and limiter configuration", () => {
       appTraversalLimit: 20,
     },
   );
+});
+
+test("rejects an unknown Paddle environment", () => {
+  assert.throws(() => billingConfigFromEnv({
+    PADDLE_API_KEY: "pdl_test_x",
+    PADDLE_WEBHOOK_SECRET: "pdl_ntfset_x",
+    PADDLE_ENVIRONMENT: "test",
+    PADDLE_PRO_MONTHLY_PRICE_ID: "pri_month",
+    PADDLE_PRO_YEARLY_PRICE_ID: "pri_year",
+    APP_URL: "https://astryx.example",
+    MEDIA_SIGNING_SECRET: "0123456789abcdef0123456789abcdef",
+    CRAWL_SESSION_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+  }), /PADDLE_ENVIRONMENT/);
 });
 
 test("parses the bounded launch referral campaign", () => {

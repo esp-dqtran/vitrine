@@ -1,6 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { effectivePlan, exportWindow, revenueSummary } from "./pricing.ts";
+import {
+  effectivePlan,
+  exportWindow,
+  revenueSummary,
+  TEAM_EDITOR_PRICE_CENTS,
+  TEAM_MINIMUM_EDITORS,
+  teamAnnualPriceCents,
+} from "./pricing.ts";
 
 test("prices yearly plans as monthly recurring revenue and rates churn against live subs", () => {
   assert.deepEqual(revenueSummary({ active_monthly: 0, active_yearly: 0, canceled_30d: 0 }), {
@@ -46,4 +53,12 @@ test("uses anniversary windows and shorter month ends", () => {
       end: new Date("2026-03-15T12:00:00Z"),
     },
   );
+});
+
+test("prices Team annually per editor with a three-editor minimum", () => {
+  assert.equal(TEAM_EDITOR_PRICE_CENTS, 2900);
+  assert.equal(TEAM_MINIMUM_EDITORS, 3);
+  assert.equal(teamAnnualPriceCents(), 104400);
+  assert.equal(teamAnnualPriceCents(5), 174000);
+  assert.equal(teamAnnualPriceCents(1), 104400);
 });

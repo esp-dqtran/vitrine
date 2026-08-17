@@ -8,18 +8,19 @@ import {
   effectivePlan,
   exportWindow,
   type BillingInterval,
+  type OrganizationSubscriptionRecord,
   type SubscriptionRecord,
   type SubscriptionStatus,
 } from "./pricing.ts";
 
 const FREE_APP_LIMIT = 3;
-const EXPORT_LIMIT = 20 as const;
+const EXPORT_LIMIT = 20;
 
 export type UnlockResult =
   | { status: "unlocked" | "already_unlocked"; remaining: number }
   | { status: "limit_reached" | "app_not_found"; remaining: number };
 
-export interface StripeSubscriptionInput {
+export interface PaddleSubscriptionInput {
   userId: number;
   customerId: string;
   subscriptionId: string;
@@ -32,18 +33,47 @@ export interface StripeSubscriptionInput {
   graceExpiresAt: Date | null;
 }
 
+export interface PaddleOrganizationSubscriptionInput {
+  organizationId: number;
+  customerId: string;
+  subscriptionId: string;
+  priceId: string;
+  seatCount: number;
+  status: SubscriptionStatus;
+  periodStart: Date;
+  periodEnd: Date;
+  cancelAtPeriodEnd: boolean;
+  graceExpiresAt: Date | null;
+}
+
+export interface TeamBillingOrganization {
+  id: number;
+  name: string;
+  memberCount: number;
+}
+
+export interface TeamEntitlement {
+  organization: TeamBillingOrganization;
+  subscription: OrganizationSubscriptionRecord;
+}
+
 export interface AccountEntitlements {
   plan: "free" | "pro";
-  entitlementSource: "paid" | "promotion" | "admin_grant" | "free";
+  entitlementSource: "paid" | "team" | "promotion" | "admin_grant" | "free";
   promotionExpiresAt: string | null;
   subscription: SubscriptionRecord | null;
   freeUnlocks: string[];
   freeUnlocksRemaining: number;
-  exportUsage: { used: number; limit: 20; resetAt: string | null };
+  team?: { organizationId: number; organizationName: string; seats: number } | null;
+  exportUsage: { used: number; limit: number; resetAt: string | null };
 }
 
-const subscriptionColumns = `user_id, stripe_customer_id, stripe_subscription_id,
-  stripe_price_id, billing_interval, status, current_period_start::text,
+const subscriptionColumns = `user_id, stripe_customer_id, stripe_subscription_id, stripe_price_id,
+  paddle_customer_id, paddle_subscription_id, paddle_price_id, billing_interval, status, current_period_start::text,
+  current_period_end::text, cancel_at_period_end, grace_expires_at::text`;
+
+const organizationSubscriptionColumns = `organization_id, stripe_customer_id, stripe_subscription_id, stripe_price_id,
+  paddle_customer_id, paddle_subscription_id, paddle_price_id, seat_count, status, current_period_start::text,
   current_period_end::text, cancel_at_period_end, grace_expires_at::text`;
 
 export async function getSubscription(userId: number): Promise<SubscriptionRecord | undefined> {
@@ -52,6 +82,58 @@ export async function getSubscription(userId: number): Promise<SubscriptionRecor
     [userId],
   );
   return result.rows[0];
+}
+
+export async function getOrganizationSubscription(
+  organizationId: number,
+): Promise<OrganizationSubscriptionRecord | undefined> {
+  const result = await query<OrganizationSubscriptionRecord & QueryResultRow>(
+    `SELECT ${organizationSubscriptionColumns} FROM organization_subscriptions WHERE organization_id = $1`,
+    [organizationId],
+  );
+  return result.rows[0];
+}
+
+/** Returns the Team subscription that currently entitles this member, if any. */
+export async function getTeamEntitlement(userId: number, now = new Date()): Promise<TeamEntitlement | undefined> {
+  const result = await query<TeamEntitlement["subscription"] & QueryResultRow & {
+    organization_name: string;
+    member_count: number;
+  }>(
+    `SELECT s.organization_id, s.stripe_customer_id, s.stripe_subscription_id, s.stripe_price_id,
+            s.paddle_customer_id, s.paddle_subscription_id, s.paddle_price_id, s.seat_count, s.status,
+            s.current_period_start::text, s.current_period_end::text, s.cancel_at_period_end, s.grace_expires_at::text,
+            o.name AS organization_name,
+            (SELECT count(*)::integer FROM organization_members m2 WHERE m2.organization_id = o.id) AS member_count
+     FROM organization_members m
+     JOIN organizations o ON o.id = m.organization_id
+     JOIN organization_subscriptions s ON s.organization_id = o.id
+     WHERE m.user_id = $1
+     ORDER BY s.updated_at DESC, o.id DESC`,
+    [userId],
+  );
+  const row = result.rows.find((candidate) => effectivePlan(candidate, now) === "pro");
+  return row && {
+    organization: { id: row.organization_id, name: row.organization_name, memberCount: Number(row.member_count) },
+    subscription: row,
+  };
+}
+
+/** Only an organization owner may start or manage its Team billing. */
+export async function getTeamBillingOrganization(
+  organizationId: number,
+  ownerUserId: number,
+): Promise<TeamBillingOrganization | undefined> {
+  const result = await query<{ id: number; name: string; member_count: number }>(
+    `SELECT o.id, o.name,
+            (SELECT count(*)::integer FROM organization_members m WHERE m.organization_id = o.id) AS member_count
+     FROM organizations o
+     JOIN organization_members owner ON owner.organization_id = o.id
+     WHERE o.id = $1 AND owner.user_id = $2 AND owner.role = 'owner'`,
+    [organizationId, ownerUserId],
+  );
+  const row = result.rows[0];
+  return row && { id: Number(row.id), name: row.name, memberCount: Number(row.member_count) };
 }
 
 export async function hasAdminProGrant(userId: number): Promise<boolean> {
@@ -63,12 +145,13 @@ export async function hasAdminProGrant(userId: number): Promise<boolean> {
 }
 
 export async function isProUser(userId: number, now = new Date()): Promise<boolean> {
-  const [subscription, promotion, adminGrant] = await Promise.all([
+  const [subscription, promotion, adminGrant, team] = await Promise.all([
     getSubscription(userId),
     activePromotionalEntitlement(userId, now),
     hasAdminProGrant(userId),
+    getTeamEntitlement(userId, now),
   ]);
-  return effectivePlan(subscription, now) === "pro" || Boolean(promotion) || adminGrant;
+  return effectivePlan(subscription, now) === "pro" || Boolean(promotion) || adminGrant || Boolean(team);
 }
 
 export async function countUserCollections(userId: number): Promise<number> {
@@ -147,26 +230,17 @@ export async function unlockFreeApp(userId: number, appSlug: string): Promise<Un
   });
 }
 
-export async function upsertStripeCustomer(userId: number, customerId: string): Promise<void> {
-  await query(
-    `INSERT INTO subscriptions (user_id, stripe_customer_id) VALUES ($1, $2)
-     ON CONFLICT (user_id) DO UPDATE SET stripe_customer_id = EXCLUDED.stripe_customer_id,
-       updated_at = now()`,
-    [userId, customerId],
-  );
-}
-
-export async function upsertSubscription(input: StripeSubscriptionInput): Promise<void> {
+export async function upsertPaddleSubscription(input: PaddleSubscriptionInput): Promise<void> {
   await query(
     `INSERT INTO subscriptions (
-       user_id, stripe_customer_id, stripe_subscription_id, stripe_price_id,
+       user_id, paddle_customer_id, paddle_subscription_id, paddle_price_id,
        billing_interval, status, current_period_start, current_period_end,
        cancel_at_period_end, grace_expires_at, updated_at
      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,now())
      ON CONFLICT (user_id) DO UPDATE SET
-       stripe_customer_id = EXCLUDED.stripe_customer_id,
-       stripe_subscription_id = EXCLUDED.stripe_subscription_id,
-       stripe_price_id = EXCLUDED.stripe_price_id,
+       paddle_customer_id = EXCLUDED.paddle_customer_id,
+       paddle_subscription_id = EXCLUDED.paddle_subscription_id,
+       paddle_price_id = EXCLUDED.paddle_price_id,
        billing_interval = EXCLUDED.billing_interval,
        status = EXCLUDED.status,
        current_period_start = EXCLUDED.current_period_start,
@@ -189,31 +263,86 @@ export async function upsertSubscription(input: StripeSubscriptionInput): Promis
   );
 }
 
-function usageWindow(subscription: SubscriptionRecord, now: Date): { start: Date; end: Date } | undefined {
+export async function upsertPaddleOrganizationSubscription(
+  input: PaddleOrganizationSubscriptionInput,
+): Promise<void> {
+  await query(
+    `INSERT INTO organization_subscriptions (
+       organization_id, paddle_customer_id, paddle_subscription_id, paddle_price_id,
+       seat_count, status, current_period_start, current_period_end,
+       cancel_at_period_end, grace_expires_at, updated_at
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,now())
+     ON CONFLICT (organization_id) DO UPDATE SET
+       paddle_customer_id = EXCLUDED.paddle_customer_id,
+       paddle_subscription_id = EXCLUDED.paddle_subscription_id,
+       paddle_price_id = EXCLUDED.paddle_price_id,
+       seat_count = EXCLUDED.seat_count,
+       status = EXCLUDED.status,
+       current_period_start = EXCLUDED.current_period_start,
+       current_period_end = EXCLUDED.current_period_end,
+       cancel_at_period_end = EXCLUDED.cancel_at_period_end,
+       grace_expires_at = EXCLUDED.grace_expires_at,
+       updated_at = now()`,
+    [
+      input.organizationId,
+      input.customerId,
+      input.subscriptionId,
+      input.priceId,
+      Math.max(3, Math.floor(input.seatCount)),
+      input.status,
+      input.periodStart,
+      input.periodEnd,
+      input.cancelAtPeriodEnd,
+      input.graceExpiresAt,
+    ],
+  );
+}
+
+function usageWindow(
+  subscription: Pick<SubscriptionRecord, "current_period_start">,
+  now: Date,
+): { start: Date; end: Date } | undefined {
   return subscription.current_period_start
     ? exportWindow(new Date(subscription.current_period_start), now)
     : undefined;
 }
 
 export async function getAccountEntitlements(userId: number, now = new Date()): Promise<AccountEntitlements> {
-  const [subscription, promotion, adminGrant, freeUnlocks] = await Promise.all([
+  const [subscription, promotion, adminGrant, freeUnlocks, team] = await Promise.all([
     getSubscription(userId),
     activePromotionalEntitlement(userId, now),
     hasAdminProGrant(userId),
     listFreeUnlocks(userId),
+    getTeamEntitlement(userId, now),
   ]);
   const paid = effectivePlan(subscription, now) === "pro";
-  const plan = paid || promotion || adminGrant ? "pro" : "free";
-  const entitlementSource = paid ? "paid" : promotion ? "promotion" : adminGrant ? "admin_grant" : "free";
+  const plan = paid || team || promotion || adminGrant ? "pro" : "free";
+  const entitlementSource = paid
+    ? "paid"
+    : team
+      ? "team"
+      : promotion
+        ? "promotion"
+        : adminGrant
+          ? "admin_grant"
+          : "free";
   const window = paid && subscription
     ? usageWindow(subscription, now)
+    : team
+      ? usageWindow(team.subscription, now)
     : promotion
       ? { start: new Date(promotion.startsAt), end: new Date(promotion.expiresAt) }
       : adminGrant
         ? calendarMonthWindow(now)
       : undefined;
   let used = 0;
-  if (window) {
+  if (window && team && !paid) {
+    const result = await query<{ operation_count: number }>(
+      "SELECT operation_count FROM organization_export_usage WHERE organization_id = $1 AND window_start = $2",
+      [team.organization.id, window.start],
+    );
+    used = result.rows[0]?.operation_count ?? 0;
+  } else if (window) {
     const result = await query<{ operation_count: number }>(
       "SELECT operation_count FROM export_usage WHERE user_id = $1 AND window_start = $2",
       [userId, window.start],
@@ -227,7 +356,16 @@ export async function getAccountEntitlements(userId: number, now = new Date()): 
     subscription: subscription ?? null,
     freeUnlocks,
     freeUnlocksRemaining: Math.max(0, FREE_APP_LIMIT - freeUnlocks.length),
-    exportUsage: { used, limit: EXPORT_LIMIT, resetAt: window?.end.toISOString() ?? null },
+    team: team ? {
+      organizationId: team.organization.id,
+      organizationName: team.organization.name,
+      seats: team.subscription.seat_count,
+    } : null,
+    exportUsage: {
+      used,
+      limit: team && !paid ? team.subscription.seat_count * EXPORT_LIMIT : EXPORT_LIMIT,
+      resetAt: window?.end.toISOString() ?? null,
+    },
   };
 }
 
@@ -242,9 +380,9 @@ export async function reserveExportOperation(
   userId: number,
   now = new Date(),
 ): Promise<
-  | { status: "reserved"; used: number; limit: 20; resetAt: string }
-  | { status: "not_pro"; used: 0; limit: 20; resetAt: null }
-  | { status: "limit_reached"; used: 20; limit: 20; resetAt: string }
+  | { status: "reserved"; used: number; limit: number; resetAt: string }
+  | { status: "not_pro"; used: 0; limit: number; resetAt: null }
+  | { status: "limit_reached"; used: number; limit: number; resetAt: string }
 > {
   return withTransaction(async (client) => {
     const result = await client.query<SubscriptionRecord & QueryResultRow>(
@@ -265,17 +403,47 @@ export async function reserveExportOperation(
     );
     const adminGrant = adminGrantResult.rowCount === 1;
     const paid = Boolean(subscription && effectivePlan(subscription, now) === "pro");
-    if (!paid && !promotion && !adminGrant) {
+    const teamResult = !paid && !promotion && !adminGrant
+      ? await client.query<OrganizationSubscriptionRecord & QueryResultRow>(
+        `SELECT ${organizationSubscriptionColumns}
+         FROM organization_members m
+         JOIN organization_subscriptions s ON s.organization_id = m.organization_id
+         WHERE m.user_id = $1
+         ORDER BY s.updated_at DESC, s.organization_id DESC
+         FOR UPDATE`,
+        [userId],
+      )
+      : undefined;
+    const team = teamResult?.rows.find((candidate) => effectivePlan(candidate, now) === "pro");
+    if (!paid && !promotion && !adminGrant && !team) {
       return { status: "not_pro", used: 0, limit: EXPORT_LIMIT, resetAt: null };
     }
     const window = paid && subscription
       ? usageWindow(subscription, now)
+      : team
+        ? usageWindow(team, now)
       : promotion
         ? { start: new Date(promotion.starts_at), end: new Date(promotion.expires_at) }
         : adminGrant
           ? calendarMonthWindow(now)
         : undefined;
     if (!window) return { status: "not_pro", used: 0, limit: EXPORT_LIMIT, resetAt: null };
+    if (team) {
+      const limit = team.seat_count * EXPORT_LIMIT;
+      if (!window) return { status: "not_pro", used: 0, limit, resetAt: null };
+      const reserved = await client.query<{ operation_count: number }>(
+        `INSERT INTO organization_export_usage (organization_id, window_start, operation_count) VALUES ($1, $2, 1)
+         ON CONFLICT (organization_id, window_start) DO UPDATE
+           SET operation_count = organization_export_usage.operation_count + 1
+           WHERE organization_export_usage.operation_count < $3
+         RETURNING operation_count`,
+        [team.organization_id, window.start, limit],
+      );
+      if (!reserved.rows[0]) {
+        return { status: "limit_reached", used: limit, limit, resetAt: window.end.toISOString() };
+      }
+      return { status: "reserved", used: reserved.rows[0].operation_count, limit, resetAt: window.end.toISOString() };
+    }
     const reserved = await client.query<{ operation_count: number }>(
       `INSERT INTO export_usage (user_id, window_start, operation_count) VALUES ($1, $2, 1)
        ON CONFLICT (user_id, window_start) DO UPDATE
@@ -408,12 +576,12 @@ export async function authorizedExportObject(input: {
   return { metadata, filename: row.output_filename };
 }
 
-export async function hasProcessedStripeEvent(eventId: string): Promise<boolean> {
-  return (await query("SELECT 1 FROM stripe_events WHERE event_id = $1", [eventId])).rowCount === 1;
+export async function hasProcessedPaddleEvent(eventId: string): Promise<boolean> {
+  return (await query("SELECT 1 FROM paddle_events WHERE event_id = $1", [eventId])).rowCount === 1;
 }
 
-export async function markStripeEventProcessed(eventId: string): Promise<void> {
-  await query("INSERT INTO stripe_events (event_id) VALUES ($1) ON CONFLICT DO NOTHING", [eventId]);
+export async function markPaddleEventProcessed(eventId: string): Promise<void> {
+  await query("INSERT INTO paddle_events (event_id) VALUES ($1) ON CONFLICT DO NOTHING", [eventId]);
 }
 
 export async function recordAccessEvent(input: {

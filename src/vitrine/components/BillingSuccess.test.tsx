@@ -12,7 +12,7 @@ const free: SubscriptionView = {
   exportUsage: { used: 0, limit: 20, resetAt: null },
 };
 
-test('waits for Stripe webhook authority before reporting Pro', async () => {
+test('waits for Paddle webhook authority before reporting Pro', async () => {
   let calls = 0;
   const result = await waitForPro(async () => {
     calls += 1;

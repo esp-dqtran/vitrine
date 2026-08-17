@@ -42,7 +42,7 @@ export function BillingSuccessView({ state, error = '', onRetry, onContinue }: {
             {state === 'ready'
               ? 'Your full catalog and Pro exports are ready.'
               : state === 'checking'
-                ? 'Stripe has returned you to Astryx. We are waiting for the signed subscription update.'
+                ? 'Paddle has returned you to Vitrines. We are waiting for the signed subscription update.'
                 : state === 'pending'
                   ? 'Your payment is complete, but the signed subscription update is still arriving. Retry in a moment.'
                   : error || 'Billing is temporarily unavailable.'}

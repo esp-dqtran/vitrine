@@ -22,6 +22,19 @@ test('shows sign-in actions to a visitor', () => {
   const html = renderToStaticMarkup(<PricingView user={null} subscription={null} onBrowse={() => undefined} onSignIn={() => undefined} onCheckout={() => undefined} />);
   assert.match(html, /Start free/);
   assert.match(html, /Upgrade to Pro/);
+  assert.match(html, /Choose the depth/);
+  assert.match(html, /Vitrines pricing comparison/);
+  assert.match(html, /href="\/terms"/);
+  assert.match(html, /href="\/privacy"/);
+  assert.match(html, /href="\/refunds"/);
+});
+
+test('includes the selected board treatment for light and dark themes', () => {
+  const styles = readFileSync(new URL('./Pricing.css', import.meta.url), 'utf8');
+  assert.match(styles, /\.pricing-v2__board/);
+  assert.match(styles, /@media \(prefers-color-scheme: dark\)/);
+  assert.match(styles, /\.pricing-v2__billing-toggle/);
+  assert.match(styles, /\[aria-checked='true'\]/);
 });
 
 test('shows the approved monthly and yearly launch prices', () => {
@@ -33,6 +46,14 @@ test('shows the approved monthly and yearly launch prices', () => {
   assert.match(yearly, /\$79\.99/);
   assert.match(yearly, /\/year/);
   assert.match(yearly, /save 26%/i);
+});
+
+test('shows the annual Team model with its editor minimum', () => {
+  const html = renderToStaticMarkup(<PricingView user={null} subscription={null} onBrowse={() => undefined} onSignIn={() => undefined} onCheckout={() => undefined} />);
+  assert.match(html, /Team/);
+  assert.match(html, /\$29/);
+  assert.match(html, /3 editors/);
+  assert.match(html, /\$1,044\/year/);
 });
 
 test('marks the effective customer plan and keeps only the valid upgrade action', () => {
@@ -74,6 +95,8 @@ test('turns exhausted Free usage into a full-catalog upsell without removing own
 test('wires the selected interval to Checkout and exposes billing errors', () => {
   const source = readFileSync(new URL('./Pricing.tsx', import.meta.url), 'utf8');
   assert.match(source, /createCheckout\(yearly \? 'year' : 'month'\)/);
+  assert.match(source, /openPaddleCheckout\(\(await createCheckout/);
+  assert.match(source, /createTeamCheckout\(team\.id\)\)\.transactionId/);
   assert.match(source, /clickAction=\{user \? onCheckout : onSignIn\}/);
   const html = renderToStaticMarkup(<PricingView user={{ id: 1, email: 'free@example.com', role: 'user' }} subscription={free} error="Billing is unavailable" onBrowse={() => undefined} onSignIn={() => undefined} onCheckout={() => undefined} />);
   assert.match(html, /Billing is unavailable/);

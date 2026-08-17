@@ -36,16 +36,19 @@ test("only owners and admins can add members", async () => {
   const asRole = (role: string | undefined) => {
     const query: DatabaseQuery = async (sql) => {
       if (/SELECT role FROM organization_members/.test(sql)) return result(role ? [{ role }] : []);
+      if (/SELECT seat_count, status/.test(sql)) return result([{ seat_count: 3, status: "active", grace_expires_at: null }]);
+      if (/SELECT count\(\*\)::integer AS count/.test(sql)) return result([{ count: 1 }]);
       if (/INSERT INTO organization_members/.test(sql)) return result([{ user_id: 9, role: "member", created_at: NOW }]);
       if (/SELECT email FROM users/.test(sql)) return result([{ email: "new@team.co" }]);
       return result();
     };
     return createOrganizationStore(query);
   };
-  assert.equal(await asRole(undefined).addMember(1, 2, 9, "member"), undefined);
-  assert.equal(await asRole("member").addMember(1, 2, 9, "member"), undefined);
+  assert.deepEqual(await asRole(undefined).addMember(1, 2, 9, "member"), { status: "forbidden" });
+  assert.deepEqual(await asRole("member").addMember(1, 2, 9, "member"), { status: "forbidden" });
   assert.deepEqual(await asRole("admin").addMember(1, 2, 9, "member"), {
-    userId: 9, email: "new@team.co", role: "member", createdAt: NOW,
+    status: "added",
+    member: { userId: 9, email: "new@team.co", role: "member", createdAt: NOW },
   });
 });
 
@@ -57,11 +60,29 @@ test("addMember refuses roles outside admin/member (no owner escalation via invi
   );
 });
 
+test("requires an active Team subscription and an available editor seat for a new member", async () => {
+  const build = (subscription: Record<string, unknown> | undefined, memberCount = 1) => createOrganizationStore(async (sql, values) => {
+    if (/SELECT role FROM organization_members/.test(sql)) {
+      return result(values?.[1] === 2 ? [{ role: "owner" }] : []);
+    }
+    if (/SELECT seat_count, status/.test(sql)) return result(subscription ? [subscription] : []);
+    if (/SELECT count\(\*\)::integer AS count/.test(sql)) return result([{ count: memberCount }]);
+    return result();
+  });
+  assert.deepEqual(await build(undefined).addMember(1, 2, 9, "member"), { status: "team_subscription_required" });
+  assert.deepEqual(
+    await build({ seat_count: 3, status: "active", grace_expires_at: null }, 3).addMember(1, 2, 9, "member"),
+    { status: "seat_limit" },
+  );
+});
+
 test("addMemberByEmail resolves the user, then reports not-found / forbidden / added", async () => {
   const build = (userRow: Record<string, unknown> | undefined, actorRole: string | undefined) => {
     const query: DatabaseQuery = async (sql) => {
       if (/SELECT id FROM users WHERE email/.test(sql)) return result(userRow ? [userRow] : []);
       if (/SELECT role FROM organization_members/.test(sql)) return result(actorRole ? [{ role: actorRole }] : []);
+      if (/SELECT seat_count, status/.test(sql)) return result([{ seat_count: 3, status: "active", grace_expires_at: null }]);
+      if (/SELECT count\(\*\)::integer AS count/.test(sql)) return result([{ count: 1 }]);
       if (/INSERT INTO organization_members/.test(sql)) return result([{ user_id: 9, role: "member", created_at: NOW }]);
       if (/SELECT email FROM users/.test(sql)) return result([{ email: "new@team.co" }]);
       return result();

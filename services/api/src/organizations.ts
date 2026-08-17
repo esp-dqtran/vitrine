@@ -57,6 +57,14 @@ export function mountOrganizationRoutes(app: express.Express, deps: Organization
     const result = await deps.store.addMemberByEmail(orgId, res.locals.user.id, email, role);
     if (result.status === "user_not_found") { res.status(404).json({ error: "no user with that email" }); return; }
     if (result.status === "forbidden") { res.status(403).json({ error: "not permitted" }); return; }
+    if (result.status === "team_subscription_required") {
+      res.status(402).json({ error: "An active Team subscription is required before inviting members", code: result.status });
+      return;
+    }
+    if (result.status === "seat_limit") {
+      res.status(409).json({ error: "All Team editor seats are in use", code: result.status });
+      return;
+    }
     res.status(201).json(result.member);
   }));
 

@@ -40,7 +40,7 @@ Edit `.env` and fill in at minimum:
   ```
   To use local Postgres instead, leave `DATABASE_URL` unset — `docker-compose.yml` falls back to the bundled `postgres` container automatically.
 - `ADMIN_EMAIL` / `ADMIN_PASSWORD` — bootstrap credentials for the initial admin account.
-- The `STRIPE_*`, `MEDIA_SIGNING_SECRET`, and `JWT_SIGNING_SECRET` placeholders in `.env.example` are fine as-is for local dev. Use independent random secrets before deployment.
+- The `PADDLE_*`, `MEDIA_SIGNING_SECRET`, and `JWT_SIGNING_SECRET` placeholders in `.env.example` are fine as-is for local dev. Use a separate Paddle sandbox account and credentials before testing checkout; use independent production secrets before deployment.
 - `REFERRAL_CAMPAIGN_ID`, `REFERRAL_CAMPAIGN_START`, and `REFERRAL_CAMPAIGN_END` — the immutable campaign identifier and actual 90-day UTC launch window. Set these explicitly before staging or production deployment instead of relying on Compose defaults.
 
 ## 3. Run database migrations

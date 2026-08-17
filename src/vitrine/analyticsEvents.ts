@@ -9,6 +9,10 @@ export const analyticsEvent = {
   colorPostImageCopied: 'color post image copied',
 } as const;
 
+export type AnalyticsTrafficSource = 'threads' | 'instagram' | 'x' | 'other' | 'direct';
+
+const trackedTrafficSources = new Set<AnalyticsTrafficSource>(['threads', 'instagram', 'x']);
+
 export function paletteAnalyticsProperties(
   palette: Pick<ColorPalette, 'id' | 'kind'>,
 ): { palette_id: string; palette_type: ColorPaletteKind } {
@@ -25,4 +29,17 @@ export function analyticsPathname(url: string): string {
 export function analyticsPageUrl(url: string): string {
   const parsed = new URL(url);
   return `${parsed.origin}${parsed.pathname}`;
+}
+
+/**
+ * Keeps paid/organic social attribution intentionally small and anonymous.
+ * We use only the controlled `utm_source` value; arbitrary query parameters
+ * and referrer URLs never enter analytics.
+ */
+export function analyticsTrafficSource(url: string): AnalyticsTrafficSource {
+  const source = new URL(url).searchParams.get('utm_source')?.trim().toLowerCase();
+  if (!source) return 'direct';
+  return trackedTrafficSources.has(source as AnalyticsTrafficSource)
+    ? source as AnalyticsTrafficSource
+    : 'other';
 }

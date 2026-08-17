@@ -4,6 +4,7 @@ import {
   analyticsEvent,
   analyticsPageUrl,
   analyticsPathname,
+  analyticsTrafficSource,
   paletteAnalyticsProperties,
 } from './analyticsEvents.ts';
 import { getPostHogConfig, shouldTrackAnalyticsForHost } from './analytics.ts';
@@ -25,6 +26,17 @@ test('does not include query values in page analytics', () => {
     analyticsPageUrl('https://vitrines.ai/colors?query=private-search#section'),
     'https://vitrines.ai/colors',
   );
+});
+
+test('attributes only the supported social UTM sources', () => {
+  assert.equal(
+    analyticsTrafficSource('https://vitrines.ai/colors?utm_source=threads&utm_campaign=color_daily'),
+    'threads',
+  );
+  assert.equal(analyticsTrafficSource('https://vitrines.ai/colors?utm_source=Instagram'), 'instagram');
+  assert.equal(analyticsTrafficSource('https://vitrines.ai/colors?utm_source=x'), 'x');
+  assert.equal(analyticsTrafficSource('https://vitrines.ai/colors?utm_source=unknown-network'), 'other');
+  assert.equal(analyticsTrafficSource('https://vitrines.ai/colors?query=private-search'), 'direct');
 });
 
 test('requires explicit enablement and uses the regional ingestion host by default', () => {

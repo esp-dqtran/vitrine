@@ -25,10 +25,10 @@ test('creates checkout and portal sessions with the selected interval', async ()
   const calls: Array<{ url: string; init?: RequestInit }> = [];
   const fetcher = async (input: string | URL | Request, init?: RequestInit) => {
     calls.push({ url: String(input), init });
-    return new Response(JSON.stringify({ url: `https://billing.example/${calls.length}` }), { status: 200 });
+    return new Response(JSON.stringify({ transactionId: `txn_${calls.length}`, url: `https://billing.example/${calls.length}` }), { status: 200 });
   };
 
-  assert.equal((await createCheckout('year', fetcher)).url, 'https://billing.example/1');
+  assert.equal((await createCheckout('year', fetcher)).transactionId, 'txn_1');
   assert.equal((await createPortal(fetcher)).url, 'https://billing.example/2');
   assert.equal(calls[0].url, '/api/billing/checkout');
   assert.deepEqual(JSON.parse(String(calls[0].init?.body)), { interval: 'year' });

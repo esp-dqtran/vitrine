@@ -1,5 +1,10 @@
 import { useState, type ReactNode } from 'react';
-import { PRO_PRICE_CENTS } from '../../pricing.ts';
+import {
+  PRO_PRICE_CENTS,
+  TEAM_EDITOR_PRICE_CENTS,
+  TEAM_MINIMUM_EDITORS,
+  teamAnnualPriceCents,
+} from '../../pricing.ts';
 import { CatalogShell } from './CatalogShell.tsx';
 
 /* Same entitlements the product enforces — kept here so the rebuilt page never
@@ -19,13 +24,20 @@ const PRO_FEATURES = [
   'Selected editable exports within the fair-use policy',
 ];
 
-const COMPARE: [string, string, string][] = [
-  ['Catalog access', '3 apps, chosen by you', 'Every app, current and future'],
-  ['Screens, flows, tokens, evidence', 'Full depth on your 3 apps', 'Full depth across the catalog'],
-  ['Search and comparison', 'Basic browse', 'Full search, filters, cross-app comparison'],
-  ['Personal collections', '1', 'Unlimited'],
-  ['Research notes', '—', 'Included'],
-  ['Editable exports', '—', 'Selected, fair-use'],
+const TEAM_FEATURES = [
+  'Everything in Pro for every editor',
+  'Shared research projects and organization workspaces',
+  'Team member management and shared project access',
+  `Annual billing from ${TEAM_MINIMUM_EDITORS} editors`,
+];
+
+const COMPARE: [string, string, string, string][] = [
+  ['Catalog access', '3 apps, chosen by you', 'Every app, current and future', 'Every app for every editor'],
+  ['Screens, flows, tokens, evidence', 'Full depth on your 3 apps', 'Full depth across the catalog', 'Full depth across the catalog'],
+  ['Search and comparison', 'Basic browse', 'Full search, filters, cross-app comparison', 'Full search and team-wide comparison'],
+  ['Collections and research notes', '1 personal collection', 'Unlimited personal', 'Shared organization projects'],
+  ['Team workspace and member management', '—', '—', 'Included'],
+  ['Editable exports', '—', 'Selected, fair-use', 'Selected, fair-use per editor'],
 ];
 
 const FAQS: [string, string][] = [
@@ -44,6 +56,10 @@ const FAQS: [string, string][] = [
   [
     'What is the difference between monthly and yearly Pro?',
     'Only the price. Both carry identical entitlements; yearly is billed once a year at a lower effective rate.',
+  ],
+  [
+    'How does Team pricing work?',
+    'Team is annual-only at $29 per editor per month, with a three-editor minimum. Every Team member is an editor today; viewer-only access will come with a distinct permission level.',
   ],
 ];
 
@@ -139,6 +155,21 @@ export function CatalogPricingPage({
               {plan === 'pro' ? 'Current plan' : loading ? 'Opening checkout…' : 'Upgrade to Pro'}
             </button>
           </section>
+          <section className="catalog-pricing__plan">
+            <h2>Team <span>Shared research</span></h2>
+            <p className="catalog-pricing__price">${(TEAM_EDITOR_PRICE_CENTS / 100).toFixed(0)}<small>per editor / month, billed annually</small></p>
+            <ul>
+              {TEAM_FEATURES.map((feature) => <li key={feature}>{feature}</li>)}
+            </ul>
+            <button
+              type="button"
+              className="catalog-pricing__cta catalog-pricing__cta--ghost"
+              onClick={() => (plan ? onBrowse() : onSignIn?.())}
+            >
+              {plan ? 'Explore team workspaces' : 'Start with a team'}
+            </button>
+            <p className="catalog-pricing__plan-note">Starts at ${(teamAnnualPriceCents() / 100).toLocaleString()}/year for {TEAM_MINIMUM_EDITORS} editors.</p>
+          </section>
         </div>
 
         <section className="catalog-pricing__section" aria-label="Plan comparison">
@@ -146,14 +177,15 @@ export function CatalogPricingPage({
           <div className="catalog-pricing__tablewrap">
             <table className="catalog-pricing__table">
               <thead>
-                <tr><th scope="col">&nbsp;</th><th scope="col">Free</th><th scope="col">Pro</th></tr>
+                <tr><th scope="col">&nbsp;</th><th scope="col">Free</th><th scope="col">Pro</th><th scope="col">Team</th></tr>
               </thead>
               <tbody>
-                {COMPARE.map(([label, free, pro]) => (
+                {COMPARE.map(([label, free, pro, team]) => (
                   <tr key={label}>
                     <th scope="row">{label}</th>
                     <td>{free}</td>
                     <td>{pro}</td>
+                    <td>{team}</td>
                   </tr>
                 ))}
               </tbody>
@@ -176,4 +208,3 @@ export function CatalogPricingPage({
     </CatalogShell>
   );
 }
-

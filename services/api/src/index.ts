@@ -6,14 +6,15 @@ import {
   pool, query,
 } from "../../../src/db.ts";
 import { assertMigrationsCurrent } from "../../../src/migrations.ts";
-import Stripe from "stripe";
-import { createBillingService, type StripePort } from "./billing.ts";
+import { createBillingService, createPaddleClient } from "./billing.ts";
 import {
   getSubscription,
-  hasProcessedStripeEvent,
-  markStripeEventProcessed,
-  upsertStripeCustomer,
-  upsertSubscription,
+  getOrganizationSubscription,
+  getTeamBillingOrganization,
+  hasProcessedPaddleEvent,
+  markPaddleEventProcessed,
+  upsertPaddleSubscription,
+  upsertPaddleOrganizationSubscription,
 } from "../../../src/pricingStore.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../../../src/objectStoreConfig.ts";
 import { publishedFlowCatalogPage } from "../../../src/flowCatalogStore.ts";
@@ -75,16 +76,17 @@ await startApi({
     };
     const referralCampaign = referralCampaignFromEnv(process.env);
     await seedAdmin(seed.email, seed.password);
-    const stripe = new Stripe(config.stripeSecretKey);
     const billing = createBillingService({
-      stripe: stripe as unknown as StripePort,
+      paddle: createPaddleClient(config.paddleApiKey, config.paddleEnvironment),
       config,
       store: {
         getSubscription,
-        upsertStripeCustomer,
-        upsertSubscription,
-        hasProcessedStripeEvent,
-        markStripeEventProcessed,
+        getOrganizationSubscription,
+        getTeamBillingOrganization,
+        upsertPaddleSubscription,
+        upsertPaddleOrganizationSubscription,
+        hasProcessedPaddleEvent,
+        markPaddleEventProcessed,
       },
     });
     void (async () => {

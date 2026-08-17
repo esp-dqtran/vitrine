@@ -84,7 +84,7 @@ export function CatalogBillingSuccessPage(props: CatalogStaticPageProps) {
           application, full search and comparison, unlimited collections, and
           the exports covered by the fair-use policy.
         </p>
-        {/* Stripe's webhook lands separately from this redirect, so the plan
+        {/* Paddle's webhook lands separately from this redirect, so the plan
             can read Free for a moment. Saying so beats a reader thinking the
             payment failed. */}
         <p className="catalog-static__note">
@@ -214,4 +214,3 @@ export function CatalogBuildInPublicPage(props: CatalogStaticPageProps) {
     </StaticShell>
   );
 }
-
