@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   analyticsEvent,
+  analyticsPageUrl,
   analyticsPathname,
   paletteAnalyticsProperties,
 } from './analyticsEvents.ts';
@@ -19,6 +20,10 @@ test('does not include query values in page analytics', () => {
   assert.equal(
     analyticsPathname('https://vitrines.ai/colors?query=private-search'),
     '/colors',
+  );
+  assert.equal(
+    analyticsPageUrl('https://vitrines.ai/colors?query=private-search#section'),
+    'https://vitrines.ai/colors',
   );
 });
 

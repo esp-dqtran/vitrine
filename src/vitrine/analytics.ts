@@ -2,7 +2,7 @@
 // surveys, and other extensions must be explicitly added, which keeps this
 // initial anonymous implementation small and intentionally limited.
 import posthog from 'posthog-js/dist/module.slim.no-external.js';
-import { analyticsPathname } from './analyticsEvents.ts';
+import { analyticsPageUrl, analyticsPathname } from './analyticsEvents.ts';
 
 type AnalyticsProperties = Record<string, boolean | number | string | undefined>;
 
@@ -47,7 +47,7 @@ export function initializeAnalytics() {
     disable_session_recording: true,
     person_profiles: 'never',
     persistence: 'memory',
-    property_denylist: ['$current_url', '$referrer', '$referring_domain'],
+    property_denylist: ['$referrer', '$referring_domain'],
   });
   initialized = true;
   return true;
@@ -62,5 +62,8 @@ export function trackAnalyticsEvent(name: string, properties?: AnalyticsProperti
 }
 
 export function trackPageView(url = globalThis.location.href) {
-  trackAnalyticsEvent('$pageview', { path: analyticsPathname(url) });
+  trackAnalyticsEvent('$pageview', {
+    path: analyticsPathname(url),
+    $current_url: analyticsPageUrl(url),
+  });
 }

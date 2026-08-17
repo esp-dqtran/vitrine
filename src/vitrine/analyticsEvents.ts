@@ -21,3 +21,8 @@ export function paletteAnalyticsProperties(
 export function analyticsPathname(url: string): string {
   return new URL(url).pathname;
 }
+
+export function analyticsPageUrl(url: string): string {
+  const parsed = new URL(url);
+  return `${parsed.origin}${parsed.pathname}`;
+}
