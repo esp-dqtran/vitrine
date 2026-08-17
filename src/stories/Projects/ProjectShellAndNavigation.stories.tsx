@@ -1,24 +1,20 @@
 import { useState, type ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Button, IconButton, TextInput } from "@astryxdesign/core";
+import { IconButton } from "@astryxdesign/core";
 import {
   BellIcon,
   BookmarkHollowIcon,
+  CheckIcon,
   CogIcon,
-  FolderIcon,
+  FilesIcon,
   MenuIcon,
   PlusIcon,
   QuestionIcon,
-  SearchIcon,
+  SwitchAltIcon,
   UserIcon,
   UsersIcon,
 } from "@storybook/icons";
 
-import { DiscoverySortDropdown } from "../../vitrine/components/AppsFilterBar.tsx";
-import {
-  AstryxDropdown,
-  AstryxDropdownItem,
-} from "../../vitrine/components/AstryxDropdown.tsx";
 import {
   WorkspaceHeader,
   WorkspaceRail,
@@ -30,7 +26,6 @@ import "@fontsource/figtree/700.css";
 import "../../vitrine/styles.css";
 import "../../vitrine/referenceDiscovery.css";
 import "../../vitrine/projectsWorkspace.css";
-import "../../vitrine/components/AstryxDropdown.css";
 import "../../vitrine/productTypography.css";
 import "../../vitrine/productSpacing.css";
 import "../../vitrine/productShape.css";
@@ -69,7 +64,7 @@ function ReviewSection({
   children: ReactNode;
 }) {
   return (
-    <section className="project-shell-review__section">
+    <section id={`review-${index}`} className="project-shell-review__section">
       <header className="project-shell-review__section-header">
         <span>{index}</span>
         <div>
@@ -84,10 +79,12 @@ function ReviewSection({
 
 function HeaderSpecimen() {
   const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
   return (
     <div className="project-shell-review__header-frame projects-workspace">
       <WorkspaceHeader
         variant="projects"
+        searching={searching}
         menu={{
           label: "Open workspace menu",
           expanded: false,
@@ -101,6 +98,16 @@ function HeaderSpecimen() {
               className="projects-workspace__header-divider"
               aria-hidden="true"
             />
+            <button
+              type="button"
+              className="projects-workspace__search-toggle"
+              aria-label={
+                searching ? "Close project search" : "Open project search"
+              }
+              onClick={() => setSearching((open) => !open)}
+            >
+              <SearchIcon aria-hidden="true" />
+            </button>
             <IconButton
               label="Help"
               tooltip="Help"
@@ -144,14 +151,16 @@ function RailSpecimen() {
         workspace={{
           label: "Switch Team",
           initial: "P",
+          icon: <SwitchAltIcon aria-hidden="true" />,
           expanded: false,
           onSelect: () => undefined,
         }}
+        onBrandSelect={() => undefined}
         primaryLabel="Workspace"
         primaryActions={[
           {
             label: "Projects",
-            icon: <FolderIcon aria-hidden="true" />,
+            icon: <FilesIcon aria-hidden="true" />,
             active: true,
           },
           {
@@ -174,116 +183,33 @@ function TeamMenuSpecimen() {
       className="projects-team-drawer project-shell-review__team-menu"
       aria-label="Team navigation"
     >
-      <section className="projects-team-switcher__current">
-        <span className="projects-team-rail__avatar" aria-hidden="true">
-          P
-        </span>
-        <strong>Personal</strong>
-        <small>Personal workspace</small>
-        <div className="projects-team-drawer__actions">
-          <Button
-            label="Create Team"
-            variant="ghost"
-            icon={<PlusIcon aria-hidden="true" />}
-          />
-          <IconButton
-            label="Account settings"
-            variant="ghost"
-            icon={<CogIcon aria-hidden="true" />}
-          />
-        </div>
-      </section>
+      <header className="projects-team-drawer__header">
+        <strong>Workspaces</strong>
+        <small>Choose where projects live</small>
+      </header>
       <section
         className="projects-team-switcher__spaces"
         aria-label="Switch workspace"
       >
-        <span className="projects-team-switcher__label">
-          Personal workspace
-        </span>
         <button type="button" className="is-active">
           <UserIcon aria-hidden="true" />
-          <span>
-            <strong>Personal</strong>
-            <small>Your private projects</small>
-          </span>
+          <span>Personal</span>
+          <CheckIcon
+            className="projects-team-switcher__check"
+            aria-hidden="true"
+          />
         </button>
-        <span className="projects-team-switcher__label">Teams</span>
         <button type="button">
           <UsersIcon aria-hidden="true" />
-          <span>
-            <strong>Product design</strong>
-            <small>8 members</small>
-          </span>
+          <span>Product design</span>
         </button>
       </section>
       <div className="projects-team-drawer__divider" />
-      <nav className="projects-team-drawer__nav" aria-label="Personal sections">
-        <button type="button" className="is-active">
-          <FolderIcon aria-hidden="true" /> Projects
-        </button>
-        <button type="button">
-          <BookmarkHollowIcon aria-hidden="true" /> Collections
-        </button>
-      </nav>
+      <button type="button" className="projects-team-switcher__create">
+        <PlusIcon aria-hidden="true" />
+        <span>Create Team</span>
+      </button>
     </aside>
-  );
-}
-
-function NavigationControlsSpecimen() {
-  const [query, setQuery] = useState("");
-  const [sort, setSort] = useState("updated");
-  const [sortOpen, setSortOpen] = useState(false);
-  const [actionsOpen, setActionsOpen] = useState(false);
-
-  return (
-    <div className="project-shell-review__control-board projects-workspace">
-      <div className="project-shell-review__control project-shell-review__control--search">
-        <TextInput
-          label="Search projects"
-          isLabelHidden
-          value={query}
-          placeholder="Search projects"
-          startIcon={<SearchIcon aria-hidden="true" />}
-          hasClear={Boolean(query)}
-          onChange={setQuery}
-          width="100%"
-        />
-      </div>
-      <div className="project-shell-review__control project-shell-review__dropdown-card">
-        <div className="projects-workspace__toolbar project-shell-review__sort-control">
-          <span className="project-shell-review__control-label">Sort by</span>
-          <DiscoverySortDropdown
-            value={sort}
-            open={sortOpen}
-            onOpenChange={setSortOpen}
-            onChange={setSort}
-            options={[
-              { value: "updated", label: "Last updated" },
-              { value: "name", label: "Name" },
-            ]}
-          />
-        </div>
-      </div>
-      <div className="project-shell-review__control project-shell-review__dropdown-card">
-        <AstryxDropdown
-          label="More actions"
-          ariaLabel="More project actions"
-          open={actionsOpen}
-          hasChevron={false}
-          triggerVariant="primary"
-          onOpenChange={setActionsOpen}
-        >
-          <AstryxDropdownItem label="Share" onSelect={() => undefined} />
-          <AstryxDropdownItem label="Rename" onSelect={() => undefined} />
-          <AstryxDropdownItem label="Duplicate" onSelect={() => undefined} />
-          <AstryxDropdownItem
-            label="Delete"
-            tone="destructive"
-            onSelect={() => undefined}
-          />
-        </AstryxDropdown>
-      </div>
-    </div>
   );
 }
 
@@ -331,14 +257,6 @@ function ShellAndNavigationReview() {
 
       <ReviewSection
         index="03"
-        title="Search and menus"
-        description="Search, sort, and contextual actions share one input, trigger, panel, item, focus, and motion contract."
-      >
-        <NavigationControlsSpecimen />
-      </ReviewSection>
-
-      <ReviewSection
-        index="04"
         title="Responsive contract"
         description="The same components adapt by priority instead of introducing a second mobile navigation system."
       >

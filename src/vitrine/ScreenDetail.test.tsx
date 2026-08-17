@@ -639,7 +639,7 @@ test('only renders the Screens filter when the current App has classified screen
   assert.match(source, /Screen categories/);
   assert.match(
     discoveryCss,
-    /:is\(\.apps-filterbar, \.reference-detail__tab-controls, \.quick-search__quick-filters, \.advanced-search-active-filters, \.admin-users-filter-control\) \.apps-filterbar__filter \.apps-filterbar__filter-button/,
+    /\.discovery-filter-control \.apps-filterbar__filter-button/,
   );
   assert.match(source, /ALL_SCREEN_TYPES\.filter/);
   assert.doesNotMatch(source, /label: 'Found in Flows'/);

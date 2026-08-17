@@ -147,7 +147,10 @@ class FakeStore {
     return this.job;
   }
   async workerJob(): Promise<FeatureDocumentWorkerJob> {
-    if (this.cancelAfterFirstImage && this.stepAnalyses.length > 0) this.job.cancelRequested = true;
+    if (
+      this.cancelAfterFirstImage
+      && this.progress.some(([stage, done]) => stage === "analyzing" && done > 0)
+    ) this.job.cancelRequested = true;
     return this.job;
   }
   async updateProgress(_jobId: number, stage: FeatureDocumentJobStage, doneCount: number): Promise<void> {
@@ -176,19 +179,31 @@ class FakeStore {
   }
 }
 
-function setup(options: { store?: FakeStore; synthesis?: unknown; currentSha256?: string; analyzeImage?: FeatureDocumentProvider["analyzeImage"]; maxImageBytes?: number } = {}) {
+type FlowCall = { evidenceIds: string[]; imageIds: number[]; validationError?: string };
+
+function setup(options: {
+  store?: FakeStore;
+  document?: unknown;
+  currentSha256?: string;
+  analyzeFlow?: (call: FlowCall, attempt: number) => unknown;
+  maxImageBytes?: number;
+} = {}) {
   const store = options.store ?? new FakeStore();
-  const imageCalls: Array<{ prompt: { evidenceId: string; validationError?: string } }> = [];
-  const synthesisCalls: Array<{ validationError?: string }> = [];
+  const flowCalls: FlowCall[] = [];
   const provider: FeatureDocumentProvider = {
     model: "research-model",
-    async analyzeImage(prompt) {
-      imageCalls.push({ prompt });
-      return options.analyzeImage ? options.analyzeImage(prompt, { bytes: Buffer.alloc(0), contentType: "image/png" }, AbortSignal.timeout(1_000)) : analysis(prompt.evidenceId);
-    },
-    async synthesize(prompt) {
-      synthesisCalls.push({ validationError: prompt.validationError });
-      return options.synthesis ?? documentFixture();
+    async analyzeFlow(prompt, images) {
+      const call: FlowCall = {
+        evidenceIds: prompt.allowedEvidenceIds,
+        imageIds: images.map(({ evidence }) => evidence.imageId),
+        ...(prompt.validationError ? { validationError: prompt.validationError } : {}),
+      };
+      flowCalls.push(call);
+      if (options.analyzeFlow) return options.analyzeFlow(call, flowCalls.length);
+      return {
+        analyses: images.map(({ evidence }) => analysis(evidence.evidenceId)),
+        document: options.document ?? documentFixture(),
+      };
     },
   };
   const objects = new Map(manifest.map(({ imageId }) => [imageId, metadata(imageId)]));
@@ -218,14 +233,21 @@ function setup(options: { store?: FakeStore; synthesis?: unknown; currentSha256?
     retryDelayMs: 0,
     ...(options.maxImageBytes ? { maxImageBytes: options.maxImageBytes } : {}),
   });
-  return { store, service, imageCalls, synthesisCalls, objects };
+  return { store, service, flowCalls, objects };
 }
 
-test("analyzes every ordered image then creates one validated revision", async () => {
-  const { store, service, imageCalls } = setup();
-  await service.generate(String(store.job.id));
+test("analyzes every ordered image in one whole-Flow call then creates one validated revision", async () => {
+  const { store, service, flowCalls } = setup();
 
-  assert.deepEqual(imageCalls.map((call) => call.prompt.evidenceId), manifest.map(({ evidenceId }) => evidenceId));
+  assert.equal(await service.generate(String(store.job.id)), "done");
+  assert.deepEqual(flowCalls, [{
+    evidenceIds: manifest.map(({ evidenceId }) => evidenceId),
+    imageIds: manifest.map(({ imageId }) => imageId),
+  }]);
+  assert.deepEqual(
+    store.stepAnalyses.map(({ evidenceId }) => evidenceId),
+    manifest.map(({ evidenceId }) => evidenceId),
+  );
   assert.equal(store.completed[0].content.requirements.length, 1);
   assert.deepEqual(store.progress, [
     ["preparing", 0], ["analyzing", 0], ["analyzing", 1], ["analyzing", 2], ["analyzing", 3],
@@ -233,157 +255,59 @@ test("analyzes every ordered image then creates one validated revision", async (
   ]);
 });
 
-test("uses verified crawl observations without sending screenshots to the analysis provider", async () => {
-  const store = new FakeStore();
-  store.job.evidenceManifest = manifest.map((item) => ({
-    ...item,
-    observation: analysis(item.evidenceId),
-  }));
-  const { service, imageCalls, synthesisCalls } = setup({ store });
-
-  assert.equal(await service.generate(String(store.job.id)), "done");
-  assert.equal(imageCalls.length, 0);
-  assert.equal(synthesisCalls.length, 1);
-  assert.deepEqual(
-    store.stepAnalyses.map(({ evidenceId }) => evidenceId),
-    manifest.map(({ evidenceId }) => evidenceId),
-  );
-});
-
-test("analyzes only the screenshot steps that lack crawl observations", async () => {
-  const store = new FakeStore();
-  store.job.evidenceManifest = manifest.map((item, index) => ({
-    ...item,
-    ...(index === 0 ? { observation: analysis(item.evidenceId) } : {}),
-  }));
-  const { service, imageCalls } = setup({ store });
-
-  assert.equal(await service.generate(String(store.job.id)), "done");
-  assert.deepEqual(
-    imageCalls.map(({ prompt }) => prompt.evidenceId),
-    manifest.slice(1).map(({ evidenceId }) => evidenceId),
-  );
-});
-
-test("analyzes every ordered image in one whole-Flow provider call", async () => {
-  const state = setup();
-  const calls: Array<{ evidenceIds: string[]; imageIds: number[] }> = [];
-  const provider: FeatureDocumentProvider = {
-    model: "research-model",
-    async analyzeFlow(prompt, images) {
-      calls.push({
-        evidenceIds: prompt.allowedEvidenceIds,
-        imageIds: images.map(({ evidence }) => evidence.imageId),
-      });
-      return {
-        analyses: images.map(({ evidence }) => analysis(evidence.evidenceId)),
-        document: documentFixture(),
-      };
-    },
-    async analyzeImage() {
-      throw new Error("whole-Flow provider must not analyze images separately");
-    },
-    async synthesize() {
-      throw new Error("whole-Flow provider must not synthesize separately");
-    },
-  };
-  const service = createFeatureDocumentService({
-    store: state.store as unknown as FeatureDocumentStore,
-    provider,
-    objectStore: {
-      get: async (key: string) => {
-        const object = [...state.objects.values()].find((candidate) => candidate.key === key)!;
-        return { metadata: object, body: object.body };
-      },
-    } as unknown as ObjectStore,
-    imageObjectById: async (imageId) => state.objects.get(imageId),
-    currentSourceManifest: async () => ({ sha256: state.store.job.evidenceManifestSha256 }),
-    timeoutMs: 1_000,
-    retryDelayMs: 0,
-  });
-
-  assert.equal(await service.generate(String(state.store.job.id)), "done");
-  assert.deepEqual(calls, [{
-    evidenceIds: manifest.map(({ evidenceId }) => evidenceId),
-    imageIds: manifest.map(({ imageId }) => imageId),
-  }]);
-  assert.deepEqual(
-    state.store.stepAnalyses.map(({ evidenceId }) => evidenceId),
-    manifest.map(({ evidenceId }) => evidenceId),
-  );
-  assert.equal(state.store.completed.length, 1);
-  assert.deepEqual(state.store.progress, [
-    ["preparing", 0], ["analyzing", 0], ["analyzing", 1], ["analyzing", 2], ["analyzing", 3],
-    ["synthesizing", 3], ["validating", 3], ["saving", 3],
-  ]);
-});
-
-test("resumes from persisted analyses and retries only missing images", async () => {
-  const store = new FakeStore();
-  store.stepAnalyses = [{
-    jobId: store.job.id,
-    stepIndex: 0,
-    imageIndex: 0,
-    imageId: 42,
-    evidenceId: manifest[0].evidenceId,
-    result: analysis(manifest[0].evidenceId),
-    attemptCount: 1,
-  }];
-  const { service, imageCalls } = setup({ store });
-  await service.generate(String(store.job.id));
-  assert.deepEqual(imageCalls.map((call) => call.prompt.evidenceId), manifest.slice(1).map(({ evidenceId }) => evidenceId));
-});
-
 test("never saves a partial document after cancellation", async () => {
   const store = new FakeStore();
   store.cancelAfterFirstImage = true;
-  const { service, imageCalls } = setup({ store });
+  const { service, flowCalls } = setup({ store });
   await service.generate(String(store.job.id));
 
-  assert.equal(imageCalls.length, 1);
+  assert.equal(flowCalls.length, 0);
   assert.equal(store.completed.length, 0);
   assert.equal(store.job.status, "cancelled");
 });
 
-test("marks the job stale instead of saving after source drift", async () => {
-  const { store, service } = setup({ currentSha256: "b".repeat(64) });
-  await service.generate(String(store.job.id));
+test("marks a drifted source stale before spending a provider call", async () => {
+  const { store, service, flowCalls } = setup({ currentSha256: "b".repeat(64) });
+
+  assert.equal(await service.generate(String(store.job.id)), "stale");
+  assert.equal(flowCalls.length, 0);
   assert.equal(store.stale, true);
   assert.equal(store.completed.length, 0);
 });
 
-test("repairs one invalid synthesis with the exact validation error", async () => {
-  let attempt = 0;
-  const state = setup();
-  const provider = state.service;
-  void provider;
-  const baseProvider: FeatureDocumentProvider = {
-    model: "research-model",
-    analyzeImage: async (prompt) => analysis(prompt.evidenceId),
-    async synthesize(prompt) {
-      state.synthesisCalls.push({ validationError: prompt.validationError });
-      attempt += 1;
-      return attempt === 1 ? { invalid: true } : documentFixture();
-    },
-  };
-  const objects = state.objects;
-  const service = createFeatureDocumentService({
-    store: state.store as unknown as FeatureDocumentStore,
-    provider: baseProvider,
-    objectStore: {
-      get: async (key: string) => {
-        const object = [...objects.values()].find((candidate) => candidate.key === key)!;
-        return { metadata: object, body: object.body };
+test("repairs one invalid document with the exact validation error", async () => {
+  const { store, service, flowCalls } = setup({
+    analyzeFlow: (_call, attempt) => attempt === 1
+      ? { invalid: true }
+      : {
+        analyses: manifest.map(({ evidenceId }) => analysis(evidenceId)),
+        document: documentFixture(),
       },
-    } as unknown as ObjectStore,
-    imageObjectById: async (imageId) => objects.get(imageId),
-    currentSourceManifest: async () => ({ sha256: state.store.job.evidenceManifestSha256 }),
   });
-  await service.generate("27");
 
-  assert.equal(state.synthesisCalls.length, 2);
-  assert.match(state.synthesisCalls[1].validationError ?? "", /sourceAssessment/);
-  assert.equal(state.store.completed.length, 1);
+  assert.equal(await service.generate(String(store.job.id)), "done");
+  assert.equal(flowCalls.length, 2);
+  assert.match(flowCalls[1].validationError ?? "", /whole Flow analysis/);
+  assert.equal(store.completed.length, 1);
+});
+
+test("reports every broken policy rule in one validation error", async () => {
+  const broken = documentFixture();
+  broken.requirements[0].id = "REQUIREMENT-1";
+  broken.requirements[0].priority = "must";
+  broken.openQuestions = [{ id: "OQ-1", kind: "observed", text: "Unresolved", evidenceIds: [manifest[0].evidenceId] }];
+  const { store, service, flowCalls } = setup({
+    analyzeFlow: (_call, attempt) => ({
+      analyses: manifest.map(({ evidenceId }) => analysis(evidenceId)),
+      document: attempt === 1 ? broken : documentFixture(),
+    }),
+  });
+
+  assert.equal(await service.generate(String(store.job.id)), "done");
+  const reported = flowCalls[1].validationError ?? "";
+  assert.match(reported, /REQ-001 format/);
+  assert.match(reported, /priority must be unranked/);
+  assert.match(reported, /openQuestions must be classified as unknown/);
 });
 
 test("rejects mismatched image bytes with a stable code and no partial revision", async () => {
@@ -397,17 +321,21 @@ test("rejects mismatched image bytes with a stable code and no partial revision"
   assert.equal(state.store.failed?.message.includes("tampered"), false);
 });
 
-test("retries one transient provider failure without repeating completed evidence", async () => {
+test("retries one transient provider failure", async () => {
   let calls = 0;
   const state = setup({
-    analyzeImage: async (prompt) => {
+    analyzeFlow: () => {
       calls += 1;
       if (calls === 1) throw new Error("provider unavailable");
-      return analysis(prompt.evidenceId);
+      return {
+        analyses: manifest.map(({ evidenceId }) => analysis(evidenceId)),
+        document: documentFixture(),
+      };
     },
   });
+
   assert.equal(await state.service.generate("27"), "done");
-  assert.equal(calls, manifest.length + 1);
+  assert.equal(calls, 2);
   assert.equal(state.store.completed.length, 1);
 });
 
@@ -416,13 +344,20 @@ test("rejects excessive image metadata before loading object bytes", async () =>
   let getCalls = 0;
   const service = createFeatureDocumentService({
     store: state.store as unknown as FeatureDocumentStore,
-    provider: { model: "research-model", analyzeImage: async (prompt) => analysis(prompt.evidenceId), synthesize: async () => documentFixture() },
+    provider: {
+      model: "research-model",
+      analyzeFlow: async () => ({
+        analyses: manifest.map(({ evidenceId }) => analysis(evidenceId)),
+        document: documentFixture(),
+      }),
+    },
     objectStore: { get: async () => { getCalls += 1; throw new Error("must not load"); } } as unknown as ObjectStore,
     imageObjectById: async (imageId) => state.objects.get(imageId),
     currentSourceManifest: async () => ({ sha256: state.store.job.evidenceManifestSha256 }),
     retryDelayMs: 0,
     maxImageBytes: 4,
   });
+
   assert.equal(await service.generate("27"), "error");
   assert.equal(state.store.failed?.code, "image_size_excessive");
   assert.equal(getCalls, 0);

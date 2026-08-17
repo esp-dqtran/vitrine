@@ -82,7 +82,6 @@ full-view comparison, so an additional crop is not needed.
   computed preview color is `#ffe299` / `rgb(255, 226, 153)`, then cancel it.
 
 final result: passed
-
 ---
 
 # Design QA — Savee-inspired shared discovery search
@@ -1660,5 +1659,60 @@ Viewport and state: the source remains the saved `1288 × 959` Lumin capture; th
 - Colors and visual tokens: the existing dark rail and compact active tile remain unchanged.
 - Image quality and assets: existing Vitrines mark and icon-library assets are retained.
 - Copy and content: Projects and Collections remain distinct top-level destinations.
+
+final result: passed
+
+---
+
+# Projects header design QA
+
+- Source visual truth: `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/TemporaryItems/NSIRD_screencaptureui_ru55xf/Screenshot 2026-08-15 at 09.52.59.png`
+- Rendered implementation: `http://127.0.0.1:5173/projects/3d48a5c7-20b5-480a-a268-c3de515d8344`
+- Implementation screenshot: `/Users/kai/works/eastplayers/Astryx/artifacts/projects-header-implementation.png`
+- Combined comparison: `/Users/kai/works/eastplayers/Astryx/artifacts/projects-header-comparison.png`
+- Viewport: 813 x 400 CSS px; compared header region: 813 x 72 CSS px
+- Source pixels: 1626 x 144 at 2x density, normalized to 813 x 72
+- Implementation pixels: 813 x 72 at 1x density
+- State: authenticated project detail, desktop rail open, global header idle, dark product theme
+
+## Full-view comparison evidence
+
+The combined comparison places the normalized reference above the rendered Vitrines header. Both use a 72 px full-width header, left-aligned menu and brand lockup, and a right-aligned sequence of Search, Help, Notifications, and Account. The implementation intentionally maps the light Lumin reference to the active Vitrines dark-theme tokens and uses the existing Vitrines logo and account initial.
+
+## Focused region comparison evidence
+
+No additional crop was needed because the source visual is itself a focused 813 x 72 header component and every icon, label, spacing interval, border, and account control is legible in the combined comparison.
+
+## Required fidelity surfaces
+
+- Fonts and typography: existing Figtree product typography retained; brand weight and vertical alignment match the reference hierarchy without copying the Lumin wordmark.
+- Spacing and layout rhythm: header height, left cluster, right action centers, edge insets, and one-pixel borders align with the normalized reference.
+- Colors and visual tokens: structure follows the reference while foreground, surface, border, hover, and account colors use the current Vitrines theme tokens. The light-to-dark difference is an intentional runtime-theme adaptation.
+- Image quality and asset fidelity: existing `/favicon.svg` brand asset and Storybook icon library are used; no placeholder, CSS-drawn, or inline-SVG replacement was introduced.
+- Copy and content: Lumin is correctly replaced with Vitrines; accessible action names are Search, Help, Notifications, Account menu, and workspace navigation.
+
+## Findings
+
+No actionable P0, P1, or P2 differences remain.
+
+## Interaction and responsive evidence
+
+- Search opens the existing Vitrines search dialog and focuses its search field.
+- Hamburger toggles the workspace rail on desktop and opens it as a compact overlay at 390 x 844.
+- Mobile keeps Search and Account visible and removes lower-priority Help and Notifications controls from the constrained header.
+- Account menu remains the existing authenticated dropdown.
+- Browser console errors checked: none.
+
+## Comparison history
+
+1. Initial comparison found a P2 horizontal-rhythm mismatch: the left brand began too far from the viewport edge, right actions were spread too widely, and the expanded menu state showed a filled circular background absent from the reference.
+2. Fixed the header to 14 px left / 18 px right insets, a 14 px left-cluster gap, 4 px action gaps, and a transparent expanded state with hover-only background.
+3. Post-fix evidence in `artifacts/projects-header-comparison.png` confirms the menu, brand, search, help, bell, and account controls now share the reference alignment and density.
+
+## Verification
+
+- `npm exec -- tsx --test src/vitrine/WorkspaceChrome.test.tsx src/vitrine/ResearchProjects.test.tsx`: 30 passed
+- `npm run build`: passed
+- Responsive browser checks: desktop and 390 x 844 mobile passed
 
 final result: passed

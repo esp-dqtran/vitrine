@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { FeatureStepPrompt, FeatureSynthesisPrompt } from "./featureDocument.ts";
+import type { FeatureSynthesisPrompt } from "./featureDocument.ts";
 import {
   claudeCliFeatureDocumentConfigFromEnvironment,
   createClaudeCliFeatureDocumentProvider,
@@ -24,10 +24,7 @@ const source = {
   tags: ["cart"],
 };
 
-const step: FeatureStepPrompt = {
-  source,
-  stepIndex: 0,
-  imageIndex: 0,
+const step = {
   evidenceId: "FLOW-STEP-01-IMAGE-42",
   stepLabel: "Open cart",
   focusInstruction: "Document only visible behavior",
@@ -77,22 +74,18 @@ test("invokes claude in headless print mode with only the Read tool", async () =
   let invocation: KiroCliInvocation | undefined;
   const provider = createClaudeCliFeatureDocumentProvider(environment, async (input) => {
     invocation = input;
-    return JSON.stringify({
-      evidenceId: step.evidenceId,
-      visibleUi: ["Cart"],
-      visibleText: ["Proceed to checkout"],
-      likelyIntent: "Review cart contents",
-      availableActions: [],
-      systemFeedback: [],
-      friction: [],
-      missingOrUncertainStates: [],
-      accessibility: [],
-      confidence: 0.9,
-    });
+    throw new Error("stop after prompt capture");
   })!;
 
-  const image = { contentType: "image/png" as const, bytes: Buffer.from([137, 80]) };
-  await provider.analyzeImage(step, image, new AbortController().signal);
+  await assert.rejects(() => provider.analyzeFlow({
+    source,
+    focusInstruction: step.focusInstruction,
+    evidenceManifest: synthesis.evidenceManifest,
+    allowedEvidenceIds: [step.evidenceId],
+  }, [{
+    evidence: synthesis.evidenceManifest[0],
+    image: { contentType: "image/png" as const, bytes: Buffer.from([137, 80]) },
+  }], new AbortController().signal), /stop after prompt capture/);
 
   assert.equal(invocation?.binary, "/opt/claude");
   assert.equal(invocation?.label, "Claude CLI");
@@ -105,29 +98,32 @@ test("invokes claude in headless print mode with only the Read tool", async () =
   ]);
   assert.equal(invocation?.args[5], "--allowedTools");
   assert.equal(invocation?.args[6], "Read");
-  assert.match(invocation?.args.at(-1) ?? "", /Read the screenshot at this exact absolute path/);
+  assert.match(invocation?.args.at(-1) ?? "", /Read every absolute image path below with the Read tool/);
 });
 
-test("enables WebSearch only for official documentation synthesis", async () => {
+test("enables WebSearch only for official documentation runs", async () => {
   let invocation: KiroCliInvocation | undefined;
   const provider = createClaudeCliFeatureDocumentProvider({
     ...environment,
     CLAUDE_CLI_FEATURE_DOCUMENT_OFFICIAL_DOCUMENTATION: "true",
   }, async (input) => {
     invocation = input;
-    return JSON.stringify({
-      documentedContext: { status: "not-found", sources: [], claims: [] },
-      executiveSummary: {},
-      observedFlow: {},
-      requirements: [],
-    });
+    throw new Error("stop after prompt capture");
   })!;
 
-  await provider.synthesize(synthesis, new AbortController().signal);
+  await assert.rejects(() => provider.analyzeFlow({
+    source,
+    focusInstruction: step.focusInstruction,
+    evidenceManifest: synthesis.evidenceManifest,
+    allowedEvidenceIds: [step.evidenceId],
+  }, [{
+    evidence: synthesis.evidenceManifest[0],
+    image: { contentType: "image/png" as const, bytes: Buffer.from([137, 80]) },
+  }], new AbortController().signal), /stop after prompt capture/);
 
   assert.equal(provider.model, "claude-cli:claude-sonnet-5+official-docs");
   assert.equal(invocation?.args[5], "--allowedTools");
-  assert.equal(invocation?.args[6], "WebSearch");
+  assert.equal(invocation?.args[6], "Read,WebSearch");
 });
 
 test("selects the provider from FEATURE_DOCUMENT_PROVIDER", () => {

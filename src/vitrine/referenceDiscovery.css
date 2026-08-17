@@ -745,7 +745,8 @@
 }
 
 /* Apps filter bar — measured from the selected Mobbin web Apps reference. */
-.apps-discovery__content {
+.apps-discovery__content,
+.colors-discovery__content {
   padding-inline: 24px;
 }
 
@@ -840,6 +841,11 @@
   background: transparent;
 }
 
+.apps-filterbar__filter--primary {
+  border-color: transparent;
+  background: transparent;
+}
+
 .apps-filterbar__filter--platform .apps-filterbar__filter-button {
   width: 100% !important;
   justify-content: space-between !important;
@@ -848,6 +854,7 @@
 .apps-filterbar__filter-button {
   min-width: 0 !important;
   height: 34px !important;
+  min-height: 34px !important;
   padding: 0 12px !important;
   border: 0 !important;
   border-radius: 999px !important;
@@ -856,8 +863,8 @@
   white-space: nowrap;
 }
 
-:is(.apps-filterbar, .reference-detail__tab-controls, .quick-search__quick-filters, .advanced-search-active-filters, .admin-users-filter-control) .apps-filterbar__filter .apps-filterbar__filter-button,
-:is(.apps-filterbar, .reference-detail__tab-controls, .quick-search__quick-filters, .advanced-search-active-filters, .admin-users-filter-control) .apps-filterbar__filter .apps-filterbar__filter-label {
+.discovery-filter-control .apps-filterbar__filter-button,
+.discovery-filter-control .apps-filterbar__filter-label {
   border: 0 !important;
   box-shadow: none !important;
 }
@@ -865,12 +872,12 @@
 /* Unselected discovery dropdowns use the same shared outlined trigger as
  * App Detail. Selected filters remain composite pills with a separate clear
  * action, and the platform control keeps its primary treatment. */
-:is(.apps-filterbar, .reference-detail__tab-controls, .quick-search__quick-filters, .advanced-search-active-filters, .admin-users-filter-control) .apps-filterbar__filter:not(.apps-filterbar__filter--platform):not(.apps-filterbar__filter--selected) {
+.discovery-filter-control:not(.apps-filterbar__filter--platform):not(.apps-filterbar__filter--primary):not(.apps-filterbar__filter--selected) {
   border: 0;
   background: transparent;
 }
 
-:is(.apps-filterbar, .reference-detail__tab-controls, .quick-search__quick-filters, .advanced-search-active-filters, .admin-users-filter-control) .apps-filterbar__filter:not(.apps-filterbar__filter--platform):not(.apps-filterbar__filter--selected) .apps-filterbar__filter-button.apps-filterbar__filter-button {
+.discovery-filter-control:not(.apps-filterbar__filter--platform):not(.apps-filterbar__filter--primary):not(.apps-filterbar__filter--selected) .apps-filterbar__filter-button.apps-filterbar__filter-button {
   height: var(--vitrine-control-height) !important;
   min-height: var(--vitrine-control-height) !important;
   border: 1px solid var(--vitrine-color-border-emphasized) !important;
@@ -879,14 +886,14 @@
   font-weight: 600 !important;
 }
 
-.apps-filterbar__filter:not(.apps-filterbar__filter--platform) .apps-filterbar__filter-button {
+.apps-filterbar__filter:not(.apps-filterbar__filter--platform):not(.apps-filterbar__filter--primary) .apps-filterbar__filter-button {
   background: transparent !important;
   color: var(--reference-chrome-muted) !important;
 }
 
-.apps-filterbar__filter:not(.apps-filterbar__filter--platform) .apps-filterbar__filter-button:hover,
-.apps-filterbar__filter:not(.apps-filterbar__filter--platform) .apps-filterbar__filter-button:focus-visible,
-.apps-filterbar__filter--selected:not(.apps-filterbar__filter--platform) .apps-filterbar__filter-button {
+.apps-filterbar__filter:not(.apps-filterbar__filter--platform):not(.apps-filterbar__filter--primary) .apps-filterbar__filter-button:hover,
+.apps-filterbar__filter:not(.apps-filterbar__filter--platform):not(.apps-filterbar__filter--primary) .apps-filterbar__filter-button:focus-visible,
+.apps-filterbar__filter--selected:not(.apps-filterbar__filter--platform):not(.apps-filterbar__filter--primary) .apps-filterbar__filter-button {
   background: transparent !important;
   color: var(--reference-chrome-text) !important;
 }
@@ -931,10 +938,12 @@
   line-height: 1;
 }
 
-.apps-filterbar__clear {
+.apps-filterbar__clear.astryx-button {
   width: 26px !important;
   min-width: 26px !important;
   height: 26px !important;
+  min-height: 26px !important;
+  flex: 0 0 26px;
   margin-right: 4px;
   padding: 0 !important;
   border-radius: 999px !important;
@@ -1054,6 +1063,24 @@
   border-color: var(--color-accent) !important;
   background: var(--color-accent) !important;
   color: var(--color-on-accent) !important;
+}
+
+.apps-filterbar__option-swatches {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.apps-filterbar__option-swatch {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  border: 1px solid rgb(255 255 255 / 32%);
+  border-radius: 50%;
+}
+
+.apps-filterbar__option-swatch + .apps-filterbar__option-swatch {
+  margin-left: -4px;
 }
 
 .apps-filterbar__options > p {
@@ -1246,6 +1273,7 @@
 }
 
 .apps-discovery__grid,
+.colors-discovery__grid,
 .apps-discovery__screen-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1333,6 +1361,7 @@
 
 @media (min-width: 721px) and (max-width: 1080px) {
   .apps-discovery__grid,
+  .colors-discovery__grid,
   .apps-discovery__screen-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1511,6 +1540,7 @@
   }
 
   .apps-discovery__grid,
+  .colors-discovery__grid,
   .apps-discovery__screen-grid {
     grid-template-columns: 1fr;
     gap: 28px;

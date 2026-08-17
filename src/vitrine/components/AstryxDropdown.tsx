@@ -180,11 +180,13 @@ export function AstryxDropdown({
 
 export function AstryxDropdownItem({
   label,
+  icon,
   selected = false,
   tone = 'default',
   onSelect,
 }: {
   label: string;
+  icon?: ReactNode;
   selected?: boolean;
   tone?: 'default' | 'destructive';
   onSelect: () => void;
@@ -199,9 +201,11 @@ export function AstryxDropdownItem({
       size="sm"
       className={[
         'astryx-dropdown__item',
+        icon ? 'astryx-dropdown__item--with-icon' : '',
         selected ? 'astryx-dropdown__item--selected' : '',
         tone === 'destructive' ? 'astryx-dropdown__item--destructive' : '',
       ].filter(Boolean).join(' ')}
+      icon={icon}
       onClick={onSelect}
       endContent={selected ? (
         <span className="astryx-dropdown__check" aria-label="Selected">

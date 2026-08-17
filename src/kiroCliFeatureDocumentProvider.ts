@@ -6,12 +6,10 @@ import sharp from "sharp";
 import type { RasterImage } from "./evidenceAnalysisProvider.ts";
 import {
   featureDocumentClaimBudget,
+  featureDocumentRequirementBudget,
   type FeatureFlowPrompt,
-  type FeatureStepPrompt,
-  type FeatureSynthesisPrompt,
 } from "./featureDocument.ts";
 import {
-  FEATURE_STEP_SYSTEM_PROMPT,
   FEATURE_SYNTHESIS_SYSTEM_PROMPT,
   type FeatureDocumentProvider,
 } from "./featureDocumentProvider.ts";
@@ -45,6 +43,13 @@ const IMAGE_EXTENSIONS: Record<RasterImage["contentType"], string> = {
   "image/jpeg": "jpg",
   "image/webp": "webp",
 };
+// Claims expandCompactFlowResult emits regardless of the model's output: the three
+// summary claims, the three observedFlow singles, the risk, the six proposedFeature
+// claims, and the edge-case, success-metric, guardrail-metric, analytics, and dependency
+// claims. Both the prompt's claim allowance and the trim below subtract it, so a claim
+// added to the expansion without updating this number silently blows the budget.
+// Guarded by "expansion emits exactly EXPANSION_FIXED_CLAIMS" in the provider tests.
+export const EXPANSION_FIXED_CLAIMS = 18;
 // Kiro caps the base64 string at 5 MiB, so leave headroom for 4:3 encoding growth.
 const MAX_KIRO_IMAGE_BYTES = 3_500_000;
 const MAX_KIRO_IMAGE_DIMENSION = 2_000;
@@ -245,51 +250,30 @@ function argumentsFor(
   ];
 }
 
-function stepPrompt(prompt: FeatureStepPrompt, imagePath: string): string {
-  return [
-    FEATURE_STEP_SYSTEM_PROMPT,
-    `Read the screenshot at this exact absolute path with the read tool: ${imagePath}`,
-    "Return only one raw JSON object with this exact shape:",
-    "{\"evidenceId\":string,\"visibleUi\":string[],\"visibleText\":string[],\"likelyIntent\":string,\"availableActions\":string[],\"systemFeedback\":string[],\"friction\":string[],\"missingOrUncertainStates\":string[],\"accessibility\":string[],\"confidence\":number}",
-    "The confidence value must be between 0 and 1.",
-    `Flow context: ${JSON.stringify(prompt)}`,
-  ].join("\n");
-}
-
-function documentShape(officialDocumentationEnabled: boolean): string {
-  return [
-    "{",
-    "\"sourceAssessment\":{\"captureType\":\"complete-journey\"|\"partial-journey\"|\"static-screen\"|\"state-gallery\"|\"content-scroll\",\"completeness\":\"complete\"|\"partial\",\"rationale\":string,\"evidenceIds\":string[]},",
-    "\"unscopedEvidence\":[{\"evidenceId\":string,\"reason\":string}],",
-    ...(officialDocumentationEnabled
-      ? [
-        "\"documentedContext\":{\"status\":\"researched\"|\"not-found\",\"sources\":[{\"id\":string,\"title\":string,\"url\":string,\"retrievedAt\":string,\"platform\":\"ios\"|\"android\"|\"web\"|\"all\",\"region\":string}],\"claims\":[{\"id\":string,\"text\":string,\"sourceIds\":string[],\"relationship\":\"supports\"|\"extends\"|\"conflicts\"|\"unrelated\",\"visualEvidenceIds\":string[],\"unresolved\":boolean}]},",
-      ]
-      : []),
-    "\"executiveSummary\":{\"purpose\":Claim,\"userValue\":Claim,\"recommendation\":Claim},",
-    "\"observedFlow\":{\"userGoal\":Claim,\"entryPoint\":Claim,\"completionPoint\":Claim,\"journey\":Claim[],\"actors\":Claim[],\"visibleStates\":Claim[]},",
-    "\"flowAnalysis\":{\"effectivePatterns\":Claim[],\"friction\":Claim[],\"missingStates\":Claim[],\"inconsistencies\":Claim[],\"risksAndAssumptions\":Claim[]},",
-    "\"proposedFeature\":{\"problem\":Claim,\"targetUsers\":Claim[],\"goals\":Claim[],\"nonGoals\":Claim[],\"behavior\":Claim[],\"journey\":Claim[]},",
-    "\"requirements\":Requirement[],",
-    "\"edgeCases\":Claim[],\"successMetrics\":Claim[],\"guardrailMetrics\":Claim[],\"analyticsEvents\":Claim[],\"dependencies\":Claim[],\"openQuestions\":Claim[]",
-    "}",
-  ].join("");
-}
-
-function documentInstructions(
+function flowPrompt(
   prompt: FeatureFlowPrompt,
+  images: Array<{
+    evidenceId: string;
+    stepIndex: number;
+    imageIndex: number;
+    stepLabel: string;
+    interaction?: string;
+    path: string;
+  }>,
   officialDocumentationEnabled: boolean,
   officialDomains: readonly string[],
-): string[] {
-  const maximumRequirements = Math.max(
-    1,
-    Math.min(6, Math.floor(prompt.allowedEvidenceIds.length / 2)),
-  );
+  readTool = "fs_read",
+): string {
+  const maximumRequirements = featureDocumentRequirementBudget(prompt.allowedEvidenceIds.length);
   const interactionCount = prompt.evidenceManifest.filter(
     ({ interaction }) => Boolean(interaction?.trim()),
   ).length;
   const claimBudget = featureDocumentClaimBudget(prompt.allowedEvidenceIds.length);
-  const officialResearch = officialDocumentationEnabled
+  const maximumEvidenceClaims = Math.max(
+    3,
+    claimBudget - EXPANSION_FIXED_CLAIMS - maximumRequirements,
+  );
+  const documentedContext = officialDocumentationEnabled
     ? [
       ...(officialDomains.length > 0
         ? [
@@ -306,71 +290,6 @@ function documentInstructions(
       "Official documentation is documented context only. It must never be described as observed, must never receive screenshot evidence IDs, and must never upgrade an unknown visual behavior into an observed behavior.",
       "If no relevant first-party official source is found, return documentedContext with status not-found and empty sources and claims. Do not substitute third-party material.",
       "Classify every documented claim relative to the screenshots as supports, extends, conflicts, or unrelated. Preserve conflicts and uncertainty.",
-    ]
-    : [];
-  return [
-    FEATURE_SYNTHESIS_SYSTEM_PROMPT,
-    ...officialResearch,
-    `This capture contains ${prompt.allowedEvidenceIds.length} evidence images and ${interactionCount} explicit interaction annotations. Generate at most ${maximumRequirements} replication requirements and at most ${claimBudget} total Claims.`,
-    "Claim is exactly {\"id\":string,\"kind\":\"observed\"|\"inferred\"|\"proposed\"|\"unknown\",\"text\":string,\"evidenceIds\":string[],\"confidence\"?:number}.",
-    "Requirement is an observed or inferred Claim plus {\"userStory\":string,\"priority\":\"unranked\",\"preconditions\":string[],\"acceptanceCriteria\":AcceptanceCriterion[]}.",
-    "AcceptanceCriterion is exactly {\"id\":string,\"kind\":\"observed\"|\"inferred\",\"given\":string,\"when\":string,\"then\":string,\"evidenceIds\":string[]}.",
-    "Use globally unique id values across all claims, requirements, and acceptance criteria.",
-    "Include at least one requirement. Every must requirement must include at least one acceptance criterion.",
-    "For a Flow with two or more evidence images, every requirement must include at least two evidence-cited acceptance criteria. Group related happy, validation, alternate, or failure outcomes under the same user story instead of creating one-criterion requirements.",
-    "A one-criterion requirement is allowed only when the Flow has one evidence image or only one supportable outcome.",
-    "Every requirement must include at least one acceptance criterion and at least one evidence ID.",
-    "Every acceptance criterion must include at least one evidence ID, and each of those IDs must also appear on its parent requirement.",
-    "Use no null values. Arrays may be empty only when the evidence does not support entries.",
-  ];
-}
-
-function synthesisPrompt(
-  prompt: FeatureSynthesisPrompt,
-  officialDocumentationEnabled: boolean,
-  officialDomains: readonly string[],
-): string {
-  return [
-    ...documentInstructions(prompt, officialDocumentationEnabled, officialDomains),
-    "Every top-level key below is required. Objects must remain objects and lists must remain arrays:",
-    documentShape(officialDocumentationEnabled),
-    "Return only the final raw JSON object. Do not use Markdown fences.",
-    `Synthesis input: ${JSON.stringify(prompt)}`,
-  ].join("\n");
-}
-
-function flowPrompt(
-  prompt: FeatureFlowPrompt,
-  images: Array<{
-    evidenceId: string;
-    stepIndex: number;
-    imageIndex: number;
-    stepLabel: string;
-    interaction?: string;
-    path: string;
-  }>,
-  officialDocumentationEnabled: boolean,
-  officialDomains: readonly string[],
-  readTool = "fs_read",
-): string {
-  const maximumRequirements = Math.max(
-    1,
-    Math.min(6, Math.floor(prompt.allowedEvidenceIds.length / 2)),
-  );
-  const interactionCount = prompt.evidenceManifest.filter(
-    ({ interaction }) => Boolean(interaction?.trim()),
-  ).length;
-  const claimBudget = featureDocumentClaimBudget(prompt.allowedEvidenceIds.length);
-  const maximumEvidenceClaims = Math.max(
-    3,
-    claimBudget - 18 - maximumRequirements,
-  );
-  const documentedContext = officialDocumentationEnabled
-    ? [
-      ...(officialDomains.length
-        ? [`Official documentation sources must use these domains or their subdomains: ${officialDomains.join(", ")}.`]
-        : ["Discover only first-party official documentation and verify publisher ownership."]),
-      "If no relevant official source is found, set documentedContext to {\"status\":\"not-found\",\"sources\":[],\"claims\":[]}.",
       "documentedContext uses the same shape defined by the Feature Document schema.",
     ]
     : [];
@@ -572,10 +491,10 @@ function expandCompactFlowResult(value: unknown, prompt: FeatureFlowPrompt): unk
       }),
     };
   });
-  // Expansion always adds 18 deterministic claims (summary, flow singles, risk,
-  // proposed feature, metrics, dependencies) on top of the requirements, so the
-  // evidence-backed lists get whatever the claim budget leaves. Models do not reliably
-  // honour the prompt's cap, so trim here instead of failing validation downstream.
+  // Expansion always adds EXPANSION_FIXED_CLAIMS deterministic claims on top of the
+  // requirements, so the evidence-backed lists get whatever the claim budget leaves.
+  // Models do not reliably honour the prompt's cap, so trim here instead of failing
+  // validation downstream.
   const evidenceLists = {
     openQuestions: compactList(flow.openQuestions),
     missingStates: compactList(flow.missingStates),
@@ -586,7 +505,7 @@ function expandCompactFlowResult(value: unknown, prompt: FeatureFlowPrompt): unk
   const evidenceAllowance = Math.max(
     0,
     featureDocumentClaimBudget(prompt.allowedEvidenceIds.length)
-      - 18
+      - EXPANSION_FIXED_CLAIMS
       - requirements.length,
   );
   let overflow = Object.values(evidenceLists)
@@ -764,40 +683,6 @@ export function createCliFeatureDocumentProvider(
       } finally {
         await rm(directory, { recursive: true, force: true });
       }
-    },
-    async analyzeImage(prompt, image, signal) {
-      if (image.bytes.byteLength < 1) throw new Error("Feature analysis image is empty");
-      const directory = await mkdtemp(join(tmpdir(), "astryx-cli-feature-"));
-      const imagePath = join(directory, `evidence.${IMAGE_EXTENSIONS[image.contentType]}`);
-      try {
-        await writeFile(imagePath, image.bytes, { mode: 0o600 });
-        const output = await invoke(
-          stepPrompt(prompt, imagePath),
-          { readImages: true, webSearch: false },
-          signal,
-        );
-        return extractKiroCliJson(output, (candidate) =>
-          candidate.evidenceId === prompt.evidenceId
-          && Array.isArray(candidate.visibleUi)
-          && Array.isArray(candidate.visibleText), engine.label);
-      } finally {
-        await rm(directory, { recursive: true, force: true });
-      }
-    },
-    async synthesize(prompt, signal) {
-      const output = await invoke(
-        synthesisPrompt(
-          prompt,
-          engine.officialDocumentationEnabled,
-          engine.officialDocumentationDomains,
-        ),
-        { readImages: false, webSearch: engine.officialDocumentationEnabled },
-        signal,
-      );
-      return extractKiroCliJson(output, (candidate) =>
-        candidate.executiveSummary !== undefined
-        && candidate.observedFlow !== undefined
-        && Array.isArray(candidate.requirements), engine.label);
     },
   };
 }

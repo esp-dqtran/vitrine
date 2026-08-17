@@ -14,6 +14,7 @@ import {
   Icon,
   IconButton,
   TextInput,
+  Tooltip,
   type IconName,
 } from "@astryxdesign/core";
 import {
@@ -2990,6 +2991,9 @@ export function ProjectPlayground({
   const [shapeLibraryOpen, setShapeLibraryOpen] = useState(false);
   const [shapeLibraryQuery, setShapeLibraryQuery] = useState("");
   const [canvasPagesOpen, setCanvasPagesOpen] = useState(false);
+  const [collaboratorsOpen, setCollaboratorsOpen] = useState(false);
+  const collaboratorsMenuRef = useRef<HTMLDivElement>(null);
+  const [canvasTitle, setCanvasTitle] = useState("Canvas");
   // FigJam opens the family with Rectangle as its current tool; no element is
   // inserted until the user clicks or drags on the canvas.
   const [activeShapeOptionId, setActiveShapeOptionId] =
@@ -3199,6 +3203,29 @@ export function ProjectPlayground({
       : collaborationStatus === "connecting"
         ? "Connecting"
         : "Collaboration offline";
+  useEffect(() => {
+    if (!collaboratorsOpen) return;
+
+    const closeOnOutsidePress = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        collaboratorsMenuRef.current?.contains(event.target)
+      ) {
+        return;
+      }
+      setCollaboratorsOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setCollaboratorsOpen(false);
+    };
+
+    window.addEventListener("pointerdown", closeOnOutsidePress);
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.removeEventListener("pointerdown", closeOnOutsidePress);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [collaboratorsOpen]);
   const canvasReadOnly =
     referencesState !== "ready" || references?.access?.role === "viewer";
 
@@ -3513,6 +3540,13 @@ export function ProjectPlayground({
       const canvas = canvasId
         ? await getDesignerCanvasFile(projectId, canvasId)
         : await getDesignerCanvas(projectId);
+      if (activeRef.current) {
+        setCanvasTitle(
+          "title" in canvas && canvas.title.trim()
+            ? canvas.title.trim()
+            : "Canvas",
+        );
+      }
       const remote = isExcalidrawSnapshot(canvas.snapshot)
         ? canvas.snapshot
         : undefined;
@@ -7843,44 +7877,39 @@ export function ProjectPlayground({
             />
           </button>
           <span className="project-canvas-header__divider" aria-hidden="true" />
-          <button
-            type="button"
-            className="project-canvas-header__identity"
-            aria-label="Open canvas pages"
-            aria-expanded={canvasPagesOpen}
-            onClick={() => setCanvasPagesOpen((open) => !open)}
-          >
-            <span>Designer canvas</span>
-            <span className="project-canvas-header__identity-title">
-              <h1>{references?.title ?? "Designer project"}</h1>
-              <span
-                className="project-canvas-header__file-kind"
-                aria-hidden="true"
-              >
-                Canvas
+          <Tooltip content={canvasTitle} placement="below">
+            <button
+              type="button"
+              className="project-canvas-header__identity"
+              aria-label={`Open ${canvasTitle} pages`}
+              aria-expanded={canvasPagesOpen}
+              onClick={() => setCanvasPagesOpen((open) => !open)}
+            >
+              <span className="project-canvas-header__identity-title">
+                <h1>{canvasTitle}</h1>
+                {saveState === "offline" || saveState === "unavailable" ? (
+                  <IconButton
+                    label={saveStatusLabel}
+                    icon={<Icon icon={saveStateIcons[saveState]} size="sm" />}
+                    variant="ghost"
+                    size="sm"
+                    clickAction={retryCanvas}
+                  />
+                ) : (
+                  <span
+                    className="project-playground__identity-status"
+                    role="status"
+                    aria-live="polite"
+                    aria-label={saveStatusLabel}
+                    title={saveStatusLabel}
+                    data-state={saveState}
+                  >
+                    <Icon icon={saveStateIcons[saveState]} size="sm" />
+                  </span>
+                )}
               </span>
-              {saveState === "offline" || saveState === "unavailable" ? (
-                <IconButton
-                  label={saveStatusLabel}
-                  icon={<Icon icon={saveStateIcons[saveState]} size="sm" />}
-                  variant="ghost"
-                  size="sm"
-                  clickAction={retryCanvas}
-                />
-              ) : (
-                <span
-                  className="project-playground__identity-status"
-                  role="status"
-                  aria-live="polite"
-                  aria-label={saveStatusLabel}
-                  title={saveStatusLabel}
-                  data-state={saveState}
-                >
-                  <Icon icon={saveStateIcons[saveState]} size="sm" />
-                </span>
-              )}
-            </span>
-          </button>
+            </button>
+          </Tooltip>
         </div>
         {canvasPagesOpen && (
           <div
@@ -7901,7 +7930,7 @@ export function ProjectPlayground({
               aria-current="page"
               onClick={() => setCanvasPagesOpen(false)}
             >
-              Designer canvas
+              Canvas
             </button>
           </div>
         )}
@@ -7909,32 +7938,91 @@ export function ProjectPlayground({
           className="project-canvas-header__group project-canvas-header__actions"
           data-canvas-toolbar-region="top-right"
         >
-          <button
-            type="button"
-            className="project-canvas-collaborators"
-            data-state={collaborationStatus}
-            aria-label={collaborationStatusLabel}
-            title={collaborationStatusLabel}
-            onClick={syncCanvasCollaborators}
+          <div
+            ref={collaboratorsMenuRef}
+            className="project-canvas-collaborators-wrap"
           >
-            <span
-              className="project-canvas-collaborators__avatars"
-              aria-hidden="true"
+            <button
+              type="button"
+              className="project-canvas-collaborators"
+              data-state={collaborationStatus}
+              aria-label={collaborationStatusLabel}
+              aria-haspopup="dialog"
+              aria-expanded={collaboratorsOpen}
+              title={collaborationStatusLabel}
+              onClick={() => setCollaboratorsOpen((open) => !open)}
             >
-              {onlineCollaborators.slice(0, 1).map((collaborator) => (
-                <span
-                  key={collaborator.id}
-                  style={{
-                    backgroundColor: canvasCollaboratorColor(collaborator.name)
-                      .background,
-                  }}
-                >
-                  {canvasCollaboratorInitials(collaborator.name)}
-                </span>
-              ))}
-            </span>
-            <Icon icon="chevronDown" size="sm" aria-hidden="true" />
-          </button>
+              <span
+                className="project-canvas-collaborators__avatars"
+                aria-hidden="true"
+              >
+                {onlineCollaborators.slice(0, 1).map((collaborator) => (
+                  <span
+                    key={collaborator.id}
+                    style={{
+                      backgroundColor: canvasCollaboratorColor(
+                        collaborator.name,
+                      ).background,
+                    }}
+                  >
+                    {canvasCollaboratorInitials(collaborator.name)}
+                  </span>
+                ))}
+              </span>
+              <Icon icon="chevronDown" size="sm" aria-hidden="true" />
+            </button>
+            {collaboratorsOpen ? (
+              <div
+                className="project-canvas-collaborators-menu"
+                role="dialog"
+                aria-label="People on this canvas"
+              >
+                <header>
+                  <strong>People on this canvas</strong>
+                  <span data-state={collaborationStatus}>
+                    {collaborationStatusLabel}
+                  </span>
+                </header>
+                {collaborationStatus === "live" ? (
+                  <ul>
+                    {onlineCollaborators.map((collaborator) => (
+                      <li key={collaborator.id}>
+                        <span
+                          className="project-canvas-collaborators-menu__avatar"
+                          aria-hidden="true"
+                          style={{
+                            backgroundColor: canvasCollaboratorColor(
+                              collaborator.name,
+                            ).background,
+                          }}
+                        >
+                          {canvasCollaboratorInitials(collaborator.name)}
+                        </span>
+                        <span className="project-canvas-collaborators-menu__identity">
+                          <strong>{collaborator.name}</strong>
+                          <span>
+                            {collaborator.id === `user:${userId}`
+                              ? "You"
+                              : "Online"}
+                          </span>
+                        </span>
+                        <span
+                          className="project-canvas-collaborators-menu__presence"
+                          aria-label="Online"
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>
+                    {collaborationStatus === "connecting"
+                      ? "Connecting to the collaboration room…"
+                      : "The collaboration room is offline."}
+                  </p>
+                )}
+              </div>
+            ) : null}
+          </div>
           <ProjectAccessButton
             project={{
               id: projectId,

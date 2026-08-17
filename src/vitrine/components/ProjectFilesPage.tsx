@@ -1,26 +1,13 @@
-import { Spinner } from './Spinner.tsx';
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Spinner } from "./Spinner.tsx";
+import { useEffect, useMemo, useState } from "react";
+import { Button, Heading, Icon, Text, TextInput } from "@astryxdesign/core";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
-  Button,
-  Heading,
-  Icon,
-  IconButton,
-  SegmentedControl,
-  SegmentedControlItem,
-  Text,
-  TextInput,
-} from "@astryxdesign/core";
-import {
-  BellIcon,
-  BookIcon,
-  BookmarkHollowIcon,
+  ChevronDownIcon,
   CogIcon,
-  FolderIcon,
-  GlobeIcon,
+  DocListIcon,
   GridIcon,
-  QuestionIcon,
-  SparkleIcon,
-  UserIcon,
+  PlusIcon,
 } from "@storybook/icons";
 
 import type { DesignerCanvasFileSummary } from "../../designerCanvas.ts";
@@ -35,21 +22,30 @@ import {
 import {
   createProjectDocument,
   listProjectDocuments,
-  type ProjectDocumentIcon,
   type ProjectDocumentView,
 } from "../projectDocumentsApi.ts";
 import {
   getResearchProject,
   updateResearchProject,
 } from "../researchProjectsApi.ts";
-import { navigate, routeToPath } from "../router.ts";
-import { ProjectAccessButton } from "./ProjectAccessDialog.tsx";
-import { MediaGridCard } from "./MediaGridCard.tsx";
-import { ProjectWorkspaceNav, type ProjectWorkspaceArea } from "./ProjectWorkspaceNav.tsx";
+import { navigate } from "../router.ts";
+import { AstryxModal } from "./AstryxModal.tsx";
+import { AstryxSingleSelectDropdown } from "./AstryxDropdown.tsx";
+import type { ProjectWorkspaceArea } from "./ProjectWorkspaceNav.tsx";
+import {
+  projectCanvasTemplates,
+  type ProjectCanvasTemplate,
+} from "./ProjectTemplateLibrary.tsx";
 import { projectGlyph, projectRailNav } from "./projectRailNav.tsx";
 import type { WorkspaceRailAction } from "./WorkspaceChrome.tsx";
-import { useSegmentedIndicator } from "./useSegmentedIndicator.ts";
-import { useWorkspaceChrome } from "./WorkspaceChromeContext.tsx";
+import {
+  useProjectsWorkspace,
+  useWorkspaceChrome,
+} from "./WorkspaceChromeContext.tsx";
+import designCritiqueThumbnail from "../assets/project-templates/design-critique.png";
+import journeyMapThumbnail from "../assets/project-templates/journey-map.png";
+import moodboardThumbnail from "../assets/project-templates/moodboard.png";
+import userFlowThumbnail from "../assets/project-templates/user-flow.png";
 import "../projectFiles.css";
 
 const blankCanvasSnapshot = {
@@ -60,14 +56,6 @@ const blankCanvasSnapshot = {
   files: {},
   comments: [],
 };
-
-function DocumentGlyph({ icon }: { icon: ProjectDocumentIcon }) {
-  if (icon === "task") return <Icon icon="check" size="md" />;
-  if (icon === "schedule") return <Icon icon="calendar" size="md" />;
-  if (icon === "build") return <Icon icon="wrench" size="md" />;
-  if (icon === "idea") return <Icon icon="info" size="md" />;
-  return <Icon icon="copy" size="md" />;
-}
 
 const updatedLabel = (value: string) =>
   new Intl.DateTimeFormat(undefined, {
@@ -107,67 +95,114 @@ function ProjectMark({
 
 export type CanvasView = "grid" | "list";
 
-/* The list row reuses the document row: same shape, same hit target, canvas
-   icon and meta. Only the media preview is grid-only. */
-function CanvasListRow({
-  canvas,
+type ProjectFileKind = "canvas" | "document";
+type ProjectFileFilter = "all" | ProjectFileKind;
+type ProjectFileSort = "updated" | "title";
+
+const projectFileFilterOptions = [
+  { value: "all", label: "All files" },
+  { value: "canvas", label: "Canvas" },
+  { value: "document", label: "Document" },
+] as const;
+
+const projectFileSortOptions = [
+  { value: "updated", label: "Last updated" },
+  { value: "title", label: "Name" },
+] as const;
+
+interface ProjectLibraryFile {
+  id: string;
+  kind: ProjectFileKind;
+  title: string;
+  updatedAt: string;
+  thumbnail: string;
+}
+
+const templateThumbnails = new Map<string, string>([
+  ["moodboard-starter", moodboardThumbnail],
+  ["design-critique", designCritiqueThumbnail],
+  ["user-flow", userFlowThumbnail],
+  ["journey-map", journeyMapThumbnail],
+]);
+
+const featuredTemplates = projectCanvasTemplates.filter((template) =>
+  templateThumbnails.has(template.id),
+);
+
+const canvasThumbnails = [moodboardThumbnail, userFlowThumbnail];
+const documentThumbnails = [designCritiqueThumbnail, journeyMapThumbnail];
+
+function ProjectFileListRow({
+  file,
   projectId,
 }: {
-  canvas: DesignerCanvasFileSummary;
+  file: ProjectLibraryFile;
   projectId: string;
 }) {
   return (
     <button
       className="project-file-row"
       type="button"
-      onClick={() =>
-        navigate({ name: "project-canvas", projectId, canvasId: canvas.id })
-      }
+      onClick={() => {
+        if (file.kind === "canvas") {
+          navigate({ name: "project-canvas", projectId, canvasId: file.id });
+        } else {
+          navigate({
+            name: "project-document-file",
+            projectId,
+            documentId: Number(file.id),
+          });
+        }
+      }}
     >
-      <span className="project-file-row__icon project-file-row__icon--canvas">
-        <Icon icon="viewColumns" size="lg" />
+      <span
+        className={`project-file-row__preview project-file-row__preview--${file.kind}`}
+      >
+        <img src={file.thumbnail} alt="" />
       </span>
       <span className="project-file-row__meta">
-        <strong>{canvas.title}</strong>
-        <small>Canvas · Updated {updatedLabel(canvas.updatedAt)}</small>
+        <strong>{file.title}</strong>
+        <small>
+          {file.kind === "canvas" ? "Canvas" : "Document"} · Updated{" "}
+          {updatedLabel(file.updatedAt)}
+        </small>
       </span>
       <Icon icon="chevronRight" size="sm" />
     </button>
   );
 }
 
-function CanvasScreenCard({
-  canvas,
+function ProjectFileCard({
+  file,
   projectId,
 }: {
-  canvas: DesignerCanvasFileSummary;
+  file: ProjectLibraryFile;
   projectId: string;
 }) {
   return (
-    <article
-      className="screen-grid-card project-canvas-screen-card"
-      data-canvas-preview="placeholder"
+    <button
+      className={`project-library-card is-${file.kind}`}
+      type="button"
+      onClick={() => {
+        if (file.kind === "canvas") {
+          navigate({ name: "project-canvas", projectId, canvasId: file.id });
+        } else {
+          navigate({
+            name: "project-document-file",
+            projectId,
+            documentId: Number(file.id),
+          });
+        }
+      }}
     >
-      <div className="screen-grid-card__media">
-        <MediaGridCard
-          label={`Open ${canvas.title}`}
-          kind="image"
-          url="/favicon.svg"
-          accent="var(--color-accent)"
-          aspectRatio="16 / 10"
-          imageFit="contain"
-          preferFullImage
-          title={canvas.title}
-          href={routeToPath(
-            {
-              name: "project-canvas",
-              projectId,
-              canvasId: canvas.id,
-            },
-          )}
-        />
-      </div>
-    </article>
+      <span className="project-library-card__thumbnail">
+        <img src={file.thumbnail} alt="" />
+      </span>
+      <span className="project-library-card__copy">
+        <strong>{file.title}</strong>
+        <small>Updated {updatedLabel(file.updatedAt)}</small>
+      </span>
+    </button>
   );
 }
 
@@ -178,6 +213,7 @@ export function ProjectFilesPage({
   projectId: string;
   area: ProjectWorkspaceArea;
 }) {
+  const prefersReducedMotion = useReducedMotion();
   const [project, setProject] = useState<ResearchProjectWorkspace>();
   const [canvases, setCanvases] = useState<DesignerCanvasFileSummary[]>([]);
   const [documents, setDocuments] = useState<ProjectDocumentView[]>([]);
@@ -185,7 +221,12 @@ export function ProjectFilesPage({
   const [creating, setCreating] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
   const [canvasView, setCanvasView] = useState<CanvasView>("grid");
-  const canvasViewRef = useSegmentedIndicator(canvasView);
+  const [fileFilter, setFileFilter] = useState<ProjectFileFilter>("all");
+  const [fileSort, setFileSort] = useState<ProjectFileSort>("updated");
+  const [templatesExpanded, setTemplatesExpanded] = useState(true);
+  const [newFileKind, setNewFileKind] = useState<ProjectFileKind>("canvas");
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<ProjectCanvasTemplate>();
   const [title, setTitle] = useState("");
   const [settingsTitle, setSettingsTitle] = useState("");
   const [settingsIcon, setSettingsIcon] =
@@ -193,23 +234,17 @@ export function ProjectFilesPage({
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
   const [error, setError] = useState("");
-  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
-  const workspaceMenuTriggerRef = useRef<HTMLButtonElement>(null);
-  const workspaceMenuRef = useRef<HTMLElement>(null);
+  const projectsWorkspace = useProjectsWorkspace();
 
   const projectTitle = project?.title ?? "Designer project";
   const projectIcon = project?.icon ?? "initial";
 
-  /* Says what this view is and how much is in it, so the area still identifies
-     itself without a metadata card restating the page it sits on. */
   const areaSummary =
     area === "settings"
       ? "Rename this project and pick the icon it shows across the workspace."
-      : loading
-        ? "Loading…"
-        : area === "canvas"
-          ? `${canvases.length} ${canvases.length === 1 ? "canvas" : "canvases"} · visual exploration for this project.`
-          : `${documents.length} ${documents.length === 1 ? "document" : "documents"} · written knowledge for this project.`;
+      : area === "documents"
+        ? `${documents.length} ${documents.length === 1 ? "document" : "documents"} · written knowledge for this project.`
+        : undefined;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -238,37 +273,103 @@ export function ProjectFilesPage({
   }, [area, projectId]);
 
   useEffect(() => {
-    if (!workspaceMenuOpen) return undefined;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      setWorkspaceMenuOpen(false);
-      workspaceMenuTriggerRef.current?.focus();
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    requestAnimationFrame(() =>
-      workspaceMenuRef.current?.querySelector<HTMLButtonElement>("button")?.focus(),
-    );
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [workspaceMenuOpen]);
+    if (!project || !projectsWorkspace) return;
+    projectsWorkspace.setSelectedTeamId(project.organization?.id);
+  }, [project?.organization?.id, projectsWorkspace?.setSelectedTeamId]);
 
-  const files = useMemo(
-    () =>
-      area === "canvas" ? canvases : area === "documents" ? documents : [],
-    [area, canvases, documents],
+  const libraryFiles = useMemo<ProjectLibraryFile[]>(
+    () => [
+      ...canvases.map((canvas, index) => ({
+        id: canvas.id,
+        kind: "canvas" as const,
+        title: canvas.title,
+        updatedAt: canvas.updatedAt,
+        thumbnail: canvasThumbnails[index % canvasThumbnails.length],
+      })),
+      ...documents.map((document, index) => ({
+        id: String(document.id),
+        kind: "document" as const,
+        title: document.title,
+        updatedAt: document.updatedAt,
+        thumbnail: documentThumbnails[index % documentThumbnails.length],
+      })),
+    ],
+    [canvases, documents],
   );
+
+  const effectiveFileFilter = area === "documents" ? "document" : fileFilter;
+
+  const files = useMemo(() => {
+    const filtered = libraryFiles.filter(
+      (file) =>
+        effectiveFileFilter === "all" || file.kind === effectiveFileFilter,
+    );
+    return [...filtered].sort((left, right) =>
+      fileSort === "title"
+        ? left.title.localeCompare(right.title)
+        : new Date(right.updatedAt).getTime() -
+          new Date(left.updatedAt).getTime(),
+    );
+  }, [effectiveFileFilter, fileSort, libraryFiles]);
+
+  const fileSections = useMemo(
+    () =>
+      [
+        {
+          kind: "canvas" as const,
+          label: "Canvas",
+          files: files.filter((file) => file.kind === "canvas"),
+        },
+        {
+          kind: "document" as const,
+          label: "Document",
+          files: files.filter((file) => file.kind === "document"),
+        },
+      ].filter(
+        (section) =>
+          effectiveFileFilter === "all" || section.kind === effectiveFileFilter,
+      ),
+    [effectiveFileFilter, files],
+  );
+
+  const openComposer = (
+    kind: ProjectFileKind,
+    template?: ProjectCanvasTemplate,
+  ) => {
+    setCreating(false);
+    setError("");
+    setNewFileKind(kind);
+    setSelectedTemplate(template);
+    setTitle(template?.title ?? "");
+    setComposerOpen(true);
+  };
 
   const createFile = async () => {
     const nextTitle =
       title.trim() ||
-      (area === "canvas" ? "Untitled canvas" : "Untitled document");
+      (newFileKind === "canvas" ? "Untitled canvas" : "Untitled document");
     setCreating(true);
     setError("");
     try {
-      if (area === "canvas") {
+      if (newFileKind === "canvas") {
+        let snapshot: object = blankCanvasSnapshot;
+        if (selectedTemplate) {
+          const { convertToExcalidrawElements } =
+            await import("@excalidraw/excalidraw");
+          type ElementSkeleton = NonNullable<
+            Parameters<typeof convertToExcalidrawElements>[0]
+          >[number];
+          snapshot = {
+            ...blankCanvasSnapshot,
+            elements: convertToExcalidrawElements(
+              selectedTemplate.elements as unknown as ElementSkeleton[],
+            ),
+          };
+        }
         const canvas = await createDesignerCanvas(
           projectId,
           nextTitle,
-          blankCanvasSnapshot,
+          snapshot,
         );
         navigate({ name: "project-canvas", projectId, canvasId: canvas.id });
       } else {
@@ -328,25 +429,9 @@ export function ProjectFilesPage({
   useWorkspaceChrome(
     () => ({
       className: "project-files-page",
-      /* Keep the rail identity identical to the Projects index. The current
-         workspace remains switchable on a detail route instead of becoming an
-         inert label. */
-      workspace: {
-        label: "Switch workspace",
-        name: project?.organization?.name ?? "Personal",
-        initial: (project?.organization?.name ?? "Personal").charAt(0).toUpperCase(),
-        expanded: workspaceMenuOpen,
-        buttonRef: workspaceMenuTriggerRef,
-        onSelect: () => setWorkspaceMenuOpen((open) => !open),
-      },
       nav: {
         primaryLabel: "Workspace",
         primaryHeading: "Workspace",
-        globalActions: [{
-          label: "Apps",
-          icon: <GridIcon aria-hidden="true" />,
-          onSelect: () => navigate({ name: "apps" }),
-        }],
         primaryActions: projectTree,
         settings: {
           label: "Settings",
@@ -355,340 +440,410 @@ export function ProjectFilesPage({
         },
       },
       onBrandSelect: () => navigate({ name: "apps" }),
-      drawer: (
-        <div
-          className={`projects-workspace__drawer-layer${workspaceMenuOpen ? " is-open" : ""}`}
-          aria-hidden={!workspaceMenuOpen}
-        >
-          <button
-            type="button"
-            className="projects-workspace__drawer-backdrop"
-            aria-label="Close workspace menu"
-            tabIndex={workspaceMenuOpen ? 0 : -1}
-            onClick={() => setWorkspaceMenuOpen(false)}
-          />
-          <aside
-            ref={workspaceMenuRef}
-            className="projects-team-drawer"
-            role="menu"
-            aria-label="Switch workspace"
-          >
-            <section className="projects-team-switcher__spaces" aria-label="Workspaces">
-              <button
-                type="button"
-                className="is-active"
-                role="menuitemradio"
-                aria-checked="true"
-                onClick={() => {
-                  setWorkspaceMenuOpen(false);
-                  navigate({ name: "projects" });
-                }}
-              >
-                <UserIcon aria-hidden="true" />
-                <span>{project?.organization?.name ?? "Personal"}</span>
-              </button>
-            </section>
-            <div className="projects-team-drawer__divider" />
-            <button
-              type="button"
-              className="projects-team-switcher__create"
-              role="menuitem"
-              onClick={() => {
-                setWorkspaceMenuOpen(false);
-                navigate({ name: "settings-billing" });
-              }}
-            >
-              <CogIcon aria-hidden="true" />
-              <span>Workspace settings</span>
-            </button>
-          </aside>
-        </div>
-      ),
     }),
-    [project?.organization?.name, projectTitle, projectTree, workspaceMenuOpen],
+    [projectTitle, projectTree],
   );
 
   return (
     <>
+      <header className="projects-workspace__page-header project-library__header">
+        <div>
+          <Heading level={1}>{projectTitle}</Heading>
+          {areaSummary ? <Text color="secondary">{areaSummary}</Text> : null}
+        </div>
+      </header>
 
-          {/*
-            * The same page header every other surface uses. The rail already
-            * says which project and which area you are in, so this carries the
-            * project name once and the actions for the view — not a mark, a
-            * restated area name, and a "Workspace: Project" metadata cell.
-            */}
-          <header className="projects-workspace__page-header">
-            <div>
-              <Heading level={1}>{projectTitle}</Heading>
-              <Text color="secondary">{areaSummary}</Text>
-              <ProjectWorkspaceNav projectId={projectId} active={area} />
+      {area === "settings" ? (
+        <section
+          className="project-settings"
+          aria-labelledby="project-settings-title"
+        >
+          <div className="project-settings__heading">
+            <Heading level={2} id="project-settings-title">
+              Project settings
+            </Heading>
+            <Text color="secondary">
+              Update how this project appears across your workspace.
+            </Text>
+          </div>
+          {loading ? (
+            <div className="project-file-index__loading">
+              <Spinner size="lg" />
             </div>
-            <div className="projects-workspace__page-header-actions">
-              {area === "canvas" && canvases.length ? (
-                <SegmentedControl
-                  ref={canvasViewRef}
-                  label="Canvas layout"
-                  size="sm"
-                  value={canvasView}
-                  onChange={(value) => setCanvasView(value as CanvasView)}
-                >
-                  <SegmentedControlItem value="grid" label="Grid" />
-                  <SegmentedControlItem value="list" label="List" />
-                </SegmentedControl>
-              ) : null}
-              {area !== "settings" ? (
-                <Button
-                  label={area === "canvas" ? "New Canvas" : "New Document"}
-                  variant="primary"
-                  onClick={() => {
-                    setComposerOpen(true);
-                    setTitle("");
-                  }}
+          ) : null}
+          {!loading && project ? (
+            <form
+              className="project-settings__card"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void saveSettings();
+              }}
+            >
+              <div className="project-settings__identity">
+                <ProjectMark
+                  icon={settingsIcon}
+                  title={settingsTitle || projectTitle}
                 />
-              ) : null}
-            </div>
-          </header>
-
-          {area === "settings" ? (
-            <section
-              className="project-settings"
-              aria-labelledby="project-settings-title"
-            >
-              <div className="project-settings__heading">
-                <Heading level={2} id="project-settings-title">
-                  Project settings
-                </Heading>
-                <Text color="secondary">
-                  Update how this project appears across your workspace.
-                </Text>
-              </div>
-              {loading ? (
-                <div className="project-file-index__loading">
-                  <Spinner size="lg" />
+                <div>
+                  <strong>{settingsTitle.trim() || projectTitle}</strong>
+                  <span>Project identity</span>
                 </div>
-              ) : null}
-              {!loading && project ? (
-                <form
-                  className="project-settings__card"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    void saveSettings();
-                  }}
-                >
-                  <div className="project-settings__identity">
-                    <ProjectMark
-                      icon={settingsIcon}
-                      title={settingsTitle || projectTitle}
-                    />
-                    <div>
-                      <strong>{settingsTitle.trim() || projectTitle}</strong>
-                      <span>Project identity</span>
-                    </div>
-                  </div>
+              </div>
 
-                  <TextInput
-                    label="Project name"
-                    value={settingsTitle}
-                    placeholder="Project name"
-                    onChange={(value) => {
-                      setSettingsTitle(value);
-                      setSettingsSaved(false);
-                    }}
-                    width="100%"
-                    isDisabled={settingsReadOnly || savingSettings}
-                  />
+              <TextInput
+                label="Project name"
+                value={settingsTitle}
+                placeholder="Project name"
+                onChange={(value) => {
+                  setSettingsTitle(value);
+                  setSettingsSaved(false);
+                }}
+                width="100%"
+                isDisabled={settingsReadOnly || savingSettings}
+              />
 
-                  <fieldset className="project-settings__icon-field">
-                    <legend>Project icon</legend>
-                    <span>Choose an icon for the project header.</span>
-                    <div className="project-settings__icon-options">
-                      {projectIconOptions.map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          className={
-                            settingsIcon === option.value ? "is-selected" : ""
-                          }
-                          aria-label={option.label}
-                          aria-pressed={settingsIcon === option.value}
-                          disabled={settingsReadOnly || savingSettings}
-                          onClick={() => {
-                            setSettingsIcon(option.value);
-                            setSettingsSaved(false);
-                          }}
-                        >
-                          <ProjectMark
-                            icon={option.value}
-                            title={settingsTitle || projectTitle}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  </fieldset>
-
-                  {error ? (
-                    <p
-                      className="project-settings__message is-error"
-                      role="alert"
-                    >
-                      {error}
-                    </p>
-                  ) : null}
-                  {settingsSaved ? (
-                    <p className="project-settings__message" role="status">
-                      Project settings saved.
-                    </p>
-                  ) : null}
-
-                  <div className="project-settings__actions">
-                    <Button
-                      type="submit"
-                      label="Save changes"
-                      variant="primary"
-                      size="md"
-                      isLoading={savingSettings}
-                      isDisabled={
-                        settingsReadOnly || savingSettings || !settingsDirty
+              <fieldset className="project-settings__icon-field">
+                <legend>Project icon</legend>
+                <span>Choose an icon for the project header.</span>
+                <div className="project-settings__icon-options">
+                  {projectIconOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={
+                        settingsIcon === option.value ? "is-selected" : ""
                       }
-                    />
-                  </div>
-                </form>
-              ) : null}
-            </section>
-          ) : (
-            <section
-              className="project-file-index"
-              aria-label={`${area} files`}
-            >
+                      aria-label={option.label}
+                      aria-pressed={settingsIcon === option.value}
+                      disabled={settingsReadOnly || savingSettings}
+                      onClick={() => {
+                        setSettingsIcon(option.value);
+                        setSettingsSaved(false);
+                      }}
+                    >
+                      <ProjectMark
+                        icon={option.value}
+                        title={settingsTitle || projectTitle}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
               {error ? (
-                <p className="project-file-index__error" role="alert">
+                <p className="project-settings__message is-error" role="alert">
                   {error}
                 </p>
               ) : null}
-              {composerOpen ? (
-                <form
-                  className="project-file-index__composer"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    void createFile();
-                  }}
-                >
-                  <TextInput
-                    label={area === "canvas" ? "Canvas name" : "Document name"}
-                    value={title}
-                    placeholder={
-                      area === "canvas"
-                        ? "Untitled canvas"
-                        : "Untitled document"
-                    }
-                    onChange={setTitle}
-                    hasAutoFocus
-                  />
-                  <div>
-                    <Button
-                      label="Cancel"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setComposerOpen(false)}
-                    />
-                    <Button
-                      type="submit"
-                      label="Create"
-                      variant="primary"
-                      size="sm"
-                      isLoading={creating}
-                      isDisabled={creating}
-                    />
-                  </div>
-                </form>
+              {settingsSaved ? (
+                <p className="project-settings__message" role="status">
+                  Project settings saved.
+                </p>
               ) : null}
 
-              {loading ? (
-                <div className="project-file-index__loading">
-                  <Spinner size="lg" />
+              <div className="project-settings__actions">
+                <Button
+                  type="submit"
+                  label="Save changes"
+                  variant="primary"
+                  size="md"
+                  isLoading={savingSettings}
+                  isDisabled={
+                    settingsReadOnly || savingSettings || !settingsDirty
+                  }
+                />
+              </div>
+            </form>
+          ) : null}
+        </section>
+      ) : (
+        <main className="project-file-index" aria-label={`${area} files`}>
+          {error ? (
+            <p className="project-file-index__error" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          {area === "canvas" ? (
+            <section
+              className={`project-template-shelf${templatesExpanded ? " is-expanded" : ""}`}
+              aria-labelledby="project-template-shelf-title"
+            >
+              <button
+                className="project-template-shelf__heading"
+                type="button"
+                aria-expanded={templatesExpanded}
+                onClick={() => setTemplatesExpanded((expanded) => !expanded)}
+              >
+                <span>
+                  <strong id="project-template-shelf-title">Templates</strong>
+                  <small>Start with a proven canvas structure</small>
+                </span>
+                <ChevronDownIcon aria-hidden="true" />
+              </button>
+              {templatesExpanded ? (
+                <div className="project-template-shelf__track">
+                  <button
+                    className="project-template-card project-template-card--blank"
+                    type="button"
+                    aria-label="Create a blank canvas"
+                    onClick={() => openComposer("canvas")}
+                  >
+                    <span className="project-template-card__preview">
+                      <span className="project-template-card__blank-icon">
+                        <PlusIcon aria-hidden="true" />
+                      </span>
+                    </span>
+                    <strong>Blank canvas</strong>
+                  </button>
+                  {featuredTemplates.map((template) => (
+                    <button
+                      className="project-template-card"
+                      type="button"
+                      key={template.id}
+                      onClick={() => openComposer("canvas", template)}
+                    >
+                      <span className="project-template-card__preview">
+                        <img src={templateThumbnails.get(template.id)} alt="" />
+                      </span>
+                      <strong>{template.title}</strong>
+                    </button>
+                  ))}
                 </div>
               ) : null}
-              {!loading && !files.length ? (
-                <button
-                  className="project-file-index__empty"
-                  type="button"
-                  onClick={() => setComposerOpen(true)}
-                >
-                  <span className="project-file-row__icon project-file-row__icon--canvas">
-                    <Icon
-                      icon={area === "canvas" ? "viewColumns" : "copy"}
-                      size="lg"
-                    />
-                  </span>
-                  <span>
-                    <strong>
-                      Create your first{" "}
-                      {area === "canvas" ? "canvas" : "document"}
-                    </strong>
-                    <small>
-                      {area === "canvas"
-                        ? "Start with a blank visual workspace."
-                        : "Start a collaborative page for this project."}
-                    </small>
-                  </span>
-                  <Icon icon="chevronRight" size="sm" />
-                </button>
-              ) : null}
+            </section>
+          ) : null}
 
-              {!loading && files.length ? (
-                <div
-                  className={`project-file-index__grid${
-                    area === "canvas" && canvasView === "grid"
-                      ? " project-file-index__grid--canvas"
-                      : " project-file-index__grid--documents"
-                  }`}
+          <section
+            className="project-library"
+            aria-label={
+              area === "documents" ? "Project documents" : "Project files"
+            }
+          >
+            <div className="project-library__controls">
+              {area === "canvas" ? (
+                <div className="project-library__control">
+                  <span>Filter by</span>
+                  <AstryxSingleSelectDropdown
+                    ariaLabel="Filter project files"
+                    value={fileFilter}
+                    options={projectFileFilterOptions}
+                    triggerClassName="project-library__dropdown"
+                    menuWidth={192}
+                    onChange={(value) =>
+                      setFileFilter(value as ProjectFileFilter)
+                    }
+                  />
+                </div>
+              ) : null}
+              <div className="project-library__control">
+                <span>Sort by</span>
+                <AstryxSingleSelectDropdown
+                  ariaLabel="Sort project files"
+                  value={fileSort}
+                  options={projectFileSortOptions}
+                  triggerClassName="project-library__dropdown"
+                  menuWidth={192}
+                  onChange={(value) => setFileSort(value as ProjectFileSort)}
+                />
+              </div>
+              <div
+                className="project-library__view"
+                role="radiogroup"
+                aria-label="File layout"
+              >
+                <button
+                  type="button"
+                  role="radio"
+                  aria-label="Grid view"
+                  aria-checked={canvasView === "grid"}
+                  className={canvasView === "grid" ? "is-active" : ""}
+                  onClick={() => setCanvasView("grid")}
                 >
-                  {area === "canvas"
-                    ? canvases.map((canvas) =>
-                        canvasView === "grid" ? (
-                          <CanvasScreenCard
-                            key={canvas.id}
-                            canvas={canvas}
-                            projectId={projectId}
-                          />
-                        ) : (
-                          <CanvasListRow
-                            key={canvas.id}
-                            canvas={canvas}
-                            projectId={projectId}
-                          />
-                        ),
-                      )
-                    : documents.map((document) => (
-                        <button
-                          className="project-file-row"
-                          type="button"
-                          key={document.id}
-                          onClick={() =>
-                            navigate({
-                              name: "project-document-file",
-                              projectId,
-                              documentId: document.id,
-                            })
-                          }
+                  <GridIcon aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-label="List view"
+                  aria-checked={canvasView === "list"}
+                  className={canvasView === "list" ? "is-active" : ""}
+                  onClick={() => setCanvasView("list")}
+                >
+                  <DocListIcon aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="project-file-index__loading">
+                <Spinner size="lg" />
+              </div>
+            ) : null}
+            {!loading ? (
+              <AnimatePresence initial={false} mode="wait">
+                <motion.div
+                  key={canvasView}
+                  className="project-library__sections"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={
+                    prefersReducedMotion ? undefined : { opacity: 0, y: -6 }
+                  }
+                  transition={{
+                    duration: prefersReducedMotion ? 0 : 0.18,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                >
+                  {fileSections.map((section) => (
+                    <section
+                      className={`project-library-section is-${section.kind}`}
+                      aria-labelledby={`project-${section.kind}-files-title`}
+                      key={section.kind}
+                    >
+                      <h2 id={`project-${section.kind}-files-title`}>
+                        {section.label}
+                      </h2>
+                      {section.files.length ? (
+                        <div
+                          className={`project-file-index__grid project-file-index__grid--${canvasView}`}
                         >
-                          <span className="project-file-row__icon project-file-row__icon--document">
-                            <DocumentGlyph icon={document.icon} />
+                          {section.files.map((file) =>
+                            canvasView === "grid" ? (
+                              <ProjectFileCard
+                                key={`${file.kind}-${file.id}`}
+                                file={file}
+                                projectId={projectId}
+                              />
+                            ) : (
+                              <ProjectFileListRow
+                                key={`${file.kind}-${file.id}`}
+                                file={file}
+                                projectId={projectId}
+                              />
+                            ),
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          className="project-file-index__empty"
+                          type="button"
+                          onClick={() => openComposer(section.kind)}
+                        >
+                          <span
+                            className={`project-file-row__icon project-file-row__icon--${section.kind}`}
+                          >
+                            <Icon
+                              icon={
+                                section.kind === "document"
+                                  ? "copy"
+                                  : "viewColumns"
+                              }
+                              size="lg"
+                            />
                           </span>
-                          <span className="project-file-row__meta">
-                            <strong>{document.title}</strong>
+                          <span>
+                            <strong>
+                              No {section.label.toLowerCase()} files yet
+                            </strong>
                             <small>
-                              Document · Updated{" "}
-                              {updatedLabel(document.updatedAt)}
+                              Create the first {section.label.toLowerCase()}{" "}
+                              file in this project.
                             </small>
                           </span>
                           <Icon icon="chevronRight" size="sm" />
                         </button>
-                      ))}
-                </div>
-              ) : null}
-            </section>
-          )}
+                      )}
+                    </section>
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+            ) : null}
+          </section>
+        </main>
+      )}
+
+      <AstryxModal
+        isOpen={composerOpen}
+        onOpenChange={(open) => {
+          if (!creating) setComposerOpen(open);
+        }}
+        purpose="form"
+        width={480}
+        aria-labelledby="project-create-dialog-title"
+      >
+        <form
+          className="project-create-dialog"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void createFile();
+          }}
+        >
+          <div className="project-create-dialog__heading">
+            <span className="project-create-dialog__icon" aria-hidden="true">
+              {newFileKind === "canvas" ? (
+                <Icon icon="viewColumns" size="lg" />
+              ) : (
+                <Icon icon="copy" size="lg" />
+              )}
+            </span>
+            <div>
+              <Heading level={2} id="project-create-dialog-title">
+                {selectedTemplate
+                  ? `Create ${selectedTemplate.title}`
+                  : newFileKind === "canvas"
+                    ? "Create a blank canvas"
+                    : "Create a document"}
+              </Heading>
+              <Text color="secondary">
+                {selectedTemplate
+                  ? `Start with this template in ${projectTitle}.`
+                  : `Add a new ${newFileKind} to ${projectTitle}.`}
+              </Text>
+            </div>
+          </div>
+
+          <TextInput
+            label={newFileKind === "canvas" ? "Canvas name" : "Document name"}
+            value={title}
+            placeholder={
+              newFileKind === "canvas" ? "Untitled canvas" : "Untitled document"
+            }
+            onChange={setTitle}
+            hasAutoFocus
+            width="100%"
+          />
+
+          {error ? (
+            <p className="project-create-dialog__error" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          <div className="project-create-dialog__actions">
+            <Button
+              type="button"
+              label="Cancel"
+              variant="ghost"
+              onClick={() => setComposerOpen(false)}
+              isDisabled={creating}
+            />
+            <Button
+              type="submit"
+              label={
+                selectedTemplate
+                  ? "Create from template"
+                  : newFileKind === "canvas"
+                    ? "Create canvas"
+                    : "Create document"
+              }
+              variant="primary"
+              isLoading={creating}
+              isDisabled={creating}
+            />
+          </div>
+        </form>
+      </AstryxModal>
     </>
   );
 }

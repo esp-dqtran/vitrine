@@ -36,6 +36,29 @@ test("round-trips the first-class Flows catalog route", () => {
   assert.equal(routeToPath({ name: "flows" }), "/flows");
 });
 
+test("round-trips the Color palette gallery route", () => {
+  assert.deepEqual(parseRoutePath("/colors"), { name: "color" });
+  assert.deepEqual(parseRoutePath("/color"), { name: "color" });
+  assert.equal(routeToPath({ name: "color" }), "/colors");
+});
+
+test("round-trips the Color post studio with a bounded palette selection", () => {
+  assert.deepEqual(parseRoutePath("/colors/create"), { name: "color-create" });
+  assert.deepEqual(parseRoutePath("/color/create"), { name: "color-create" });
+  assert.deepEqual(
+    parseRouteLocation("/colors/create", "?palette=quiet-authority"),
+    { name: "color-create", paletteId: "quiet-authority" },
+  );
+  assert.equal(
+    routeToPath({ name: "color-create", paletteId: "quiet-authority" }),
+    "/colors/create?palette=quiet-authority",
+  );
+  assert.deepEqual(
+    parseRouteLocation("/colors/create", "?palette=../admin"),
+    { name: "color-create" },
+  );
+});
+
 test("keeps Motion prompts within the Sites route family", () => {
   assert.deepEqual(parseRoutePath("/sites/motion"), { name: "sites-motion" });
   assert.equal(routeToPath({ name: "sites-motion" }), "/sites/motion");
@@ -52,6 +75,28 @@ test("round-trips Collections workspace routes", () => {
     routeToPath({ name: "collections", collectionId: 42 }),
     "/collections/42",
   );
+});
+
+test("keeps Personal and Team project workspaces explicit in the URL", () => {
+  const personal = {
+    name: "projects-workspace" as const,
+    workspace: { kind: "personal" as const },
+  };
+  const teamPeople = {
+    name: "projects-workspace" as const,
+    workspace: { kind: "team" as const, teamId: 4 },
+    section: "people" as const,
+  };
+
+  assert.deepEqual(parseRoutePath("/projects"), { name: "projects" });
+  assert.equal(routeToPath(personal), "/projects/personal");
+  assert.deepEqual(parseRoutePath("/projects/personal"), personal);
+  assert.equal(routeToPath(teamPeople), "/projects/team/4/people");
+  assert.deepEqual(parseRoutePath("/projects/team/4/people"), teamPeople);
+  assert.deepEqual(parseRoutePath("/projects/team/0"), {
+    name: "not-found",
+    pathname: "/projects/team/0",
+  });
 });
 
 test("round-trips the public build-in-public route", () => {

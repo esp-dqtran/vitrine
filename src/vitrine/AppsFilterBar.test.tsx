@@ -105,6 +105,46 @@ test('keeps DiscoveryFilterBar generic across discovery kinds', () => {
   assert.match(html, /2 sites/);
 });
 
+test('supports a primary filter and a right-aligned toolbar action', () => {
+  const html = renderToStaticMarkup(
+    <DiscoveryFilterBar
+      kind="colors"
+      ariaLabel="Color discovery controls"
+      platform={{ value: 'web', ariaLabel: 'Color surface', onChange: () => undefined }}
+      filters={[{
+        id: 'color-types',
+        label: 'Type',
+        selected: ['Mono'],
+        selectionMode: 'single',
+        allowClear: false,
+        options: [
+          { value: 'Mono', section: 'Palette type' },
+          { value: 'Gradient', section: 'Palette type' },
+        ],
+      }]}
+      primaryFilterId="color-types"
+      actions={<button type="button">Create post</button>}
+      resultCount={2}
+      resultLabels={['palette', 'palettes']}
+      showPlatform={false}
+      showSort={false}
+      sort="curated"
+      sortOptions={[]}
+      onSortChange={() => undefined}
+      onToggleFilter={() => undefined}
+      onClearFilter={() => undefined}
+    />,
+  );
+
+  assert.match(html, /apps-filterbar__filter--primary/);
+  assert.match(html, /astryx-dropdown-trigger--primary/);
+  assert.match(html, /aria-label="Type: Mono"/);
+  assert.match(html, />Mono</);
+  assert.match(html, />Gradient</);
+  assert.doesNotMatch(html, /Search Type|type="checkbox"|Clear Type filter/);
+  assert.match(html, />Create post</);
+});
+
 test('can omit platform and sort controls for a web-only Sites catalog', () => {
   const html = renderToStaticMarkup(
     <DiscoveryFilterBar
@@ -154,7 +194,7 @@ test('renders every Apps filter option as a real checkbox', () => {
   const html = renderToStaticMarkup(
     <>
       <DiscoveryFilterOptionCheckbox
-        option={{ value: 'AI', section: 'Categories' }}
+        option={{ value: 'AI', section: 'Categories', swatches: ['#3157D5', '#F5DF4D'] }}
         selected
         onPreview={() => undefined}
         onToggle={() => undefined}
@@ -173,6 +213,9 @@ test('renders every Apps filter option as a real checkbox', () => {
   assert.doesNotMatch(html, /data-pinned/);
   assert.match(html, />AI</);
   assert.match(html, />Finance</);
+  assert.match(html, /apps-filterbar__option-swatch/);
+  assert.match(html, /background-color:#3157D5/);
+  assert.match(html, /background-color:#F5DF4D/);
 });
 
 test('exports the exact Apps filter menu for reuse by detail pages', () => {
@@ -195,7 +238,7 @@ test('exports the exact Apps filter menu for reuse by detail pages', () => {
     />,
   );
 
-  assert.match(html, /class="apps-filterbar__filter /);
+  assert.match(html, /class="discovery-filter-control apps-filterbar__filter /);
   assert.match(html, /class="[^"]*apps-filterbar__filter-button/);
   assert.match(html, /aria-label="Open Screens filters"/);
   assert.match(html, /role="dialog"[^>]*aria-label="Screens filters"/);
@@ -350,7 +393,7 @@ test('uses the Astryx dropdown system for compact selects and searchable facet p
     readFile(new URL('./components/AstryxDropdown.css', import.meta.url), 'utf8'),
   ]);
 
-  assert.equal((source.match(/<AstryxDropdown(?:\s|\n)/g) ?? []).length, 4);
+  assert.equal((source.match(/<AstryxDropdown(?:\s|\n)/g) ?? []).length, 5);
   assert.match(source, /<DiscoveryPlatformFilterOptions/);
   assert.match(source, /<DiscoverySingleSelectOptions/);
   assert.match(source, /triggerVariant="primary"/);
@@ -410,7 +453,7 @@ test('keeps the shared filter panel themed when portalled from App Detail', asyn
 test('matches unselected Apps dropdown triggers to the App Detail control', async () => {
   const css = await readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
   const sharedTriggerRule = css.match(
-    /:is\(\.apps-filterbar, \.reference-detail__tab-controls, \.quick-search__quick-filters, \.advanced-search-active-filters, \.admin-users-filter-control\) \.apps-filterbar__filter:not\(\.apps-filterbar__filter--platform\):not\(\.apps-filterbar__filter--selected\) \.apps-filterbar__filter-button\.apps-filterbar__filter-button\s*\{[^}]+\}/,
+    /\.discovery-filter-control:not\(\.apps-filterbar__filter--platform\):not\(\.apps-filterbar__filter--primary\):not\(\.apps-filterbar__filter--selected\) \.apps-filterbar__filter-button\.apps-filterbar__filter-button\s*\{[^}]+\}/,
   )?.[0] ?? '';
 
   assert.match(sharedTriggerRule, /height:\s*var\(--vitrine-control-height\)\s*!important/);
@@ -420,9 +463,10 @@ test('matches unselected Apps dropdown triggers to the App Detail control', asyn
 });
 
 test('keeps selected Apps filters checked only in their grouped taxonomy with theme-aware controls', async () => {
-  const [source, css] = await Promise.all([
+  const [source, css, spacingCss] = await Promise.all([
     readFile(new URL('./components/AppsFilterBar.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8'),
+    readFile(new URL('./productSpacing.css', import.meta.url), 'utf8'),
   ]);
 
   assert.doesNotMatch(source, /apps-filterbar__selected-options/);
@@ -451,8 +495,21 @@ test('keeps selected Apps filters checked only in their grouped taxonomy with th
   );
   assert.match(
     css,
-    /:is\(\.apps-filterbar, \.reference-detail__tab-controls, \.quick-search__quick-filters, \.advanced-search-active-filters, \.admin-users-filter-control\) \.apps-filterbar__filter \.apps-filterbar__filter-button[\s\S]*?border:\s*0\s*!important;[^}]*box-shadow:\s*none\s*!important;/,
+    /\.discovery-filter-control \.apps-filterbar__filter-button[\s\S]*?border:\s*0\s*!important;[^}]*box-shadow:\s*none\s*!important;/,
   );
+  assert.match(
+    css,
+    /\.apps-filterbar__filter-button\s*\{[^}]*height:\s*34px\s*!important;[^}]*min-height:\s*34px\s*!important;/,
+  );
+  assert.match(
+    css,
+    /\.apps-filterbar__clear\.astryx-button\s*\{[^}]*width:\s*26px\s*!important;[^}]*height:\s*26px\s*!important;[^}]*min-height:\s*26px\s*!important;/,
+  );
+  assert.match(
+    spacingCss,
+    /\.discovery-filter-control\.discovery-filter-control \.apps-filterbar__clear\.apps-filterbar__clear\s*\{[^}]*width:\s*calc\(var\(--vitrine-control-height\) - var\(--spacing-2\)\)\s*!important;/,
+  );
+  assert.doesNotMatch(spacingCss, /color-gallery__collection-picker/);
 });
 
 test('closes an Apps filter menu only for interactions outside its active container', () => {

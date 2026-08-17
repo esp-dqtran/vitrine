@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode, type Ref } from 'react';
+import { MenuIcon } from '@storybook/icons';
 
 export interface WorkspaceRailAction {
   label: string;
@@ -24,6 +25,7 @@ export interface WorkspaceRailProps {
   workspace?: {
     label: string;
     initial: string;
+    icon?: ReactNode;
     /* Display name for the switcher row; `label` stays the action description. */
     name?: string;
     expanded?: boolean;
@@ -45,8 +47,8 @@ export interface WorkspaceRailProps {
   settings?: WorkspaceRailAction;
   /* Extra rail footer content, rendered under the footer action. */
   footer?: ReactNode;
-  /* The Vitrines mark lives at the top of the rail; the header only shows it at
-     compact widths, where the rail is replaced by the drawer. */
+  /* Optional for standalone rail specimens and settings surfaces. Projects
+     place the Vitrines mark in the shared full-width header instead. */
   onBrandSelect?: () => void;
 }
 
@@ -94,7 +96,7 @@ export function WorkspaceRail({
   const [primaryOpen, setPrimaryOpen] = useState(primaryExpanded);
   const [isCompact, setIsCompact] = useState(false);
   useEffect(() => {
-    const media = window.matchMedia('(max-width: 900px)');
+    const media = window.matchMedia('(max-width: 700px)');
     const update = () => setIsCompact(media.matches);
     update();
     media.addEventListener('change', update);
@@ -154,7 +156,9 @@ export function WorkspaceRail({
             'projects-workspace__desktop-row-link',
             action.active ? 'is-active' : null,
           ].filter(Boolean).join(' ')}
+          aria-label={action.label}
           aria-current={action.active ? 'page' : undefined}
+          title={action.label}
           onClick={() => selectAction(action, canCollapse)}
         >
           {action.icon}<span>{action.label}</span>
@@ -165,6 +169,41 @@ export function WorkspaceRail({
 
   const hasActiveDescendant = (action: WorkspaceRailAction): boolean =>
     Boolean(action.children?.some((child) => child.active || hasActiveDescendant(child)));
+
+  const workspaceControl = !workspace ? null : workspace.expanded === undefined ? (
+    <div
+      className="projects-workspace__desktop-workspace projects-workspace__desktop-workspace--static"
+      title={workspace.name}
+    >
+      {workspace.icon ? (
+        <span className="projects-workspace__desktop-workspace-icon" aria-hidden="true">{workspace.icon}</span>
+      ) : (
+        <span className="projects-team-rail__avatar" aria-hidden="true">{workspace.initial}</span>
+      )}
+      {workspace.name ? (
+        <span className="projects-workspace__desktop-workspace-name">{workspace.name}</span>
+      ) : null}
+    </div>
+  ) : (
+    <button
+      ref={workspace.buttonRef}
+      type="button"
+      className="projects-workspace__desktop-workspace"
+      aria-label={workspace.label}
+      aria-expanded={workspace.expanded}
+      title={workspace.label}
+      onClick={workspace.onSelect}
+    >
+      {workspace.icon ? (
+        <span className="projects-workspace__desktop-workspace-icon" aria-hidden="true">{workspace.icon}</span>
+      ) : (
+        <span className="projects-team-rail__avatar" aria-hidden="true">{workspace.initial}</span>
+      )}
+      {workspace.name ? (
+        <span className="projects-workspace__desktop-workspace-name">{workspace.name}</span>
+      ) : null}
+    </button>
+  );
 
   const renderAction = (action: WorkspaceRailAction, depth = 0) => (
     <div
@@ -209,33 +248,9 @@ export function WorkspaceRail({
           <strong>Vitrines</strong>
         </a>
       ) : null}
-      {/* Only a surface that owns a menu (it passes `expanded`) gets a button.
-          Everywhere else this is a plain identity row. */}
-      {!workspace ? null : workspace.expanded === undefined ? (
-        <div className="projects-workspace__desktop-workspace projects-workspace__desktop-workspace--static">
-          <span className="projects-team-rail__avatar" aria-hidden="true">{workspace.initial}</span>
-          {workspace.name ? (
-            <span className="projects-workspace__desktop-workspace-name">{workspace.name}</span>
-          ) : null}
-        </div>
-      ) : (
-        <button
-          ref={workspace.buttonRef}
-          type="button"
-          className="projects-workspace__desktop-workspace"
-          aria-label={workspace.label}
-          aria-expanded={workspace.expanded}
-          onClick={workspace.onSelect}
-        >
-          <span className="projects-team-rail__avatar" aria-hidden="true">{workspace.initial}</span>
-          {workspace.name ? (
-            <span className="projects-workspace__desktop-workspace-name">{workspace.name}</span>
-          ) : null}
-        </button>
-      )}
       {globalActions?.length ? (
         <nav className="projects-workspace__desktop-nav projects-workspace__desktop-nav--global" aria-label="App navigation">
-          {globalActions.map(renderAction)}
+          {globalActions.map((action) => renderAction(action))}
         </nav>
       ) : null}
       <nav className="projects-workspace__desktop-nav projects-workspace__desktop-nav--primary" aria-label={primaryLabel}>
@@ -263,15 +278,17 @@ export function WorkspaceRail({
         ) : null}
         {(!primaryCollapsible || primaryOpen || isCompact) && primaryActions.map((action) => renderAction(action))}
       </nav>
-      {settings || footer ? (
+      {workspaceControl || settings || footer ? (
         <div className="projects-workspace__desktop-footer">
           <span className="projects-workspace__desktop-divider" aria-hidden="true" />
+          {workspaceControl}
           {settings ? (
             <button
               type="button"
               className={`projects-workspace__desktop-settings${settings.active ? ' is-active' : ''}`}
               aria-label={settings.label}
               aria-current={settings.active ? 'page' : undefined}
+              title={settings.label}
               onClick={settings.onSelect}
             >
               {settings.icon}<span>{settings.label}</span>
@@ -372,7 +389,8 @@ export function WorkspaceShell({
   nav: WorkspaceNavSlots;
   railFooter?: ReactNode;
   onBrandSelect: () => void;
-  /* Settings-variant header only; the projects surfaces have no header bar. */
+  /* Pages may replace the shared project header controls when a route needs a
+     specific search or action. */
   menu?: WorkspaceHeaderMenu;
   headerContent?: ReactNode;
   headerActions?: ReactNode;
@@ -385,12 +403,31 @@ export function WorkspaceShell({
   dataset?: Record<`data-${string}`, string>;
   children: ReactNode;
 }) {
+  const [railOpen, setRailOpen] = useState(() =>
+    typeof window === 'undefined' || !window.matchMedia('(max-width: 700px)').matches
+  );
+
+  useEffect(() => {
+    if (variant !== 'projects') return undefined;
+    const media = window.matchMedia('(max-width: 700px)');
+    const syncRailToViewport = () => setRailOpen(!media.matches);
+    syncRailToViewport();
+    media.addEventListener('change', syncRailToViewport);
+    return () => media.removeEventListener('change', syncRailToViewport);
+  }, [variant]);
+
+  const projectMenu: WorkspaceHeaderMenu = menu ?? {
+    label: railOpen ? 'Hide workspace navigation' : 'Show workspace navigation',
+    expanded: railOpen,
+    icon: <MenuIcon aria-hidden="true" />,
+    onSelect: () => setRailOpen((open) => !open),
+  };
   const rail = (
     <WorkspaceRail
       workspace={workspace}
       {...nav}
       footer={railFooter}
-      onBrandSelect={onBrandSelect}
+      onBrandSelect={variant === 'settings' ? onBrandSelect : undefined}
     />
   );
 
@@ -418,9 +455,23 @@ export function WorkspaceShell({
 
   return (
     <main
-      className={['vitrine-page', 'projects-workspace', className].filter(Boolean).join(' ')}
+      className={[
+        'vitrine-page',
+        'projects-workspace',
+        railOpen ? 'is-rail-open' : 'is-rail-collapsed',
+        className,
+      ].filter(Boolean).join(' ')}
       {...dataset}
     >
+      <WorkspaceHeader
+        variant="projects"
+        searching={searching}
+        menu={projectMenu}
+        onBrandSelect={onBrandSelect}
+        actions={headerActions}
+      >
+        {headerContent}
+      </WorkspaceHeader>
       {rail}
       {drawer}
       <div className="projects-workspace__shell">

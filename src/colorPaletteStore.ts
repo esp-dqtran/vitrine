@@ -1,0 +1,111 @@
+import type { QueryResultRow } from 'pg';
+import type {
+  ColorCollection,
+  ColorCollectionFeaturedColor,
+  ColorPalette,
+  ColorPaletteKind,
+  ColorPaletteRole,
+} from './colorPalettes.ts';
+
+export interface ColorPaletteStore {
+  list(): Promise<ColorPalette[]>;
+  listCollections(): Promise<ColorCollection[]>;
+}
+
+interface ColorPaletteRow extends QueryResultRow {
+  palette_id: string;
+  palette_name: string;
+  mood: string;
+  kind: ColorPaletteKind;
+  color_id: string;
+  color_name: string;
+  hex: string;
+  foreground: string;
+  role: ColorPaletteRole;
+  outlined: boolean;
+  gradient_angle: number | null;
+  gradient_end_hex: string | null;
+}
+
+interface ColorCollectionRow extends QueryResultRow {
+  id: string;
+  name: string;
+  description: string;
+  year: number | null;
+  featured_colors: ColorCollectionFeaturedColor[];
+  palette_ids: string[];
+}
+
+export function createColorPaletteStore(
+  query: <R extends QueryResultRow>(sql: string, params?: unknown[]) => Promise<{ rows: R[] }>,
+): ColorPaletteStore {
+  return {
+    async list() {
+      const result = await query<ColorPaletteRow>(
+        `SELECT p.id AS palette_id, p.name AS palette_name, p.mood, p.kind,
+                c.id AS color_id, c.name AS color_name, c.hex, c.foreground, c.role, c.outlined,
+                c.gradient_angle, c.gradient_end_hex
+         FROM color_palettes p
+         JOIN color_palette_colors c ON c.palette_id = p.id
+         WHERE p.is_published = TRUE
+         ORDER BY p.position, c.position`,
+      );
+      const palettes = new Map<string, ColorPalette>();
+      for (const row of result.rows) {
+        let palette = palettes.get(row.palette_id);
+        if (!palette) {
+          palette = {
+            id: row.palette_id,
+            name: row.palette_name,
+            mood: row.mood,
+            kind: row.kind ?? 'solid',
+            cards: [],
+          };
+          palettes.set(row.palette_id, palette);
+        }
+        (palette.cards as Array<ColorPalette['cards'][number]>).push({
+          id: row.color_id,
+          name: row.color_name,
+          hex: row.hex,
+          color: row.gradient_angle !== null && row.gradient_angle !== undefined && row.gradient_end_hex
+            ? `linear-gradient(${row.gradient_angle}deg, ${row.hex} 0%, ${row.gradient_end_hex} 100%)`
+            : row.hex,
+          foreground: row.foreground,
+          role: row.role,
+          ...(row.gradient_angle !== null && row.gradient_angle !== undefined && row.gradient_end_hex
+            ? { gradient: { angle: row.gradient_angle, endHex: row.gradient_end_hex } }
+            : {}),
+          ...(row.outlined ? { outlined: true } : {}),
+        });
+      }
+      return [...palettes.values()].filter((palette) => palette.cards.length === 3);
+    },
+    async listCollections() {
+      const result = await query<ColorCollectionRow>(
+        `SELECT collection.id, collection.name, collection.description, collection.year,
+                collection.featured_colors,
+                COALESCE(
+                  array_agg(membership.palette_id ORDER BY membership.position)
+                    FILTER (WHERE palette.id IS NOT NULL),
+                  ARRAY[]::TEXT[]
+                ) AS palette_ids
+         FROM color_collections collection
+         LEFT JOIN color_collection_palettes membership
+           ON membership.collection_id = collection.id
+         LEFT JOIN color_palettes palette
+           ON palette.id = membership.palette_id AND palette.is_published = TRUE
+         WHERE collection.is_published = TRUE
+         GROUP BY collection.id
+         ORDER BY collection.position`,
+      );
+      return result.rows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        year: row.year ?? 0,
+        featuredColors: row.featured_colors,
+        paletteIds: row.palette_ids,
+      }));
+    },
+  };
+}

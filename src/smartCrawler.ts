@@ -18,6 +18,11 @@ import type { DesignFlow } from "./designSystem.ts";
 import { clearCancel, isCancelRequested, writeProgress, type ProgressState } from "./progress.ts";
 import { imageObjectKey, type ObjectMetadata, type ObjectStore } from "./objectStore.ts";
 import { persistFailureArtifact, type FailureArtifactDependencies } from "./crawlRun.ts";
+import {
+  captureHeightForDocument,
+  captureStablePagePng,
+  publicPageCaptureClip,
+} from "./publicPageBrowser.ts";
 
 const STEP_TIMEOUT_MS = 10_000;
 const OPTIONAL_STEP_TIMEOUT_MS = 5_000;
@@ -29,11 +34,7 @@ const RECORD_POLL_MS = 700;
 // A click can create a page just before Playwright reports the action error; keep the
 // acting-page listener alive briefly so that orphan is observed and closed.
 const ACTION_FAILURE_POPUP_WAIT_MS = 1_000;
-// ponytail: hard cap on capture height — full-page shots of marketing pages reach 20k+ px
-// and crash image decoding in the gallery grid. 6000px keeps ~5 scroll-screens of context;
-// raise only alongside downscaled thumbnails in the UI.
-export const MAX_CAPTURE_HEIGHT_PX = 6_000;
-
+const CAPTURE_VIEWPORT = { width: 1440, height: 900 } as const;
 export function sha16(input: string | Uint8Array): string {
   return createHash("sha256").update(input).digest("hex").slice(0, 16);
 }
@@ -330,13 +331,28 @@ export async function captureIfNew(page: Page, seen: Set<string>, stateContext: 
   const viewport = page.viewportSize() ?? { width: 0, height: 0 };
   const key = dedupeKey(url, bodyText, viewport);
   if (seen.has(key)) return false;
-  // Always clip: measuring first then deciding races lazy-loaded content that grows the
-  // page mid-screenshot. Playwright intersects the clip with the real page bounds, so
-  // short pages come out natural-height and tall ones cap at MAX_CAPTURE_HEIGHT_PX.
-  const png = await page.screenshot({
-    fullPage: true,
-    clip: { x: 0, y: 0, width: viewport.width, height: MAX_CAPTURE_HEIGHT_PX },
-  });
+  // Reuse the Sites renderer instead of Playwright's monolithic fullPage mode.
+  // It produces PNG, freezes motion, avoids repeating fixed chrome while stitching,
+  // and bounds exceptionally tall documents to one reliable designer-facing screen.
+  const documentDimensions = await page.evaluate(() => ({
+    width: Math.max(
+      document.documentElement.scrollWidth,
+      document.body?.scrollWidth ?? 0,
+    ),
+    height: Math.max(
+      document.documentElement.scrollHeight,
+      document.body?.scrollHeight ?? 0,
+    ),
+  }));
+  const captureHeight = captureHeightForDocument(documentDimensions.height);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const png = await captureStablePagePng(
+    page,
+    publicPageCaptureClip(
+      { ...documentDimensions, height: captureHeight },
+      page.viewportSize() ?? CAPTURE_VIEWPORT,
+    ),
+  );
   await sink({ png, sourceUrl: url, stateContext });
   seen.add(key);
   return true;
@@ -879,6 +895,13 @@ async function launchAppContext(appName: string, dataDir: string): Promise<Brows
     () =>
       chromium.launchPersistentContext(join(dataDir, `browser-profile-${appName}`), {
         headless: process.env.HEADLESS === "true",
+        viewport: CAPTURE_VIEWPORT,
+        screen: CAPTURE_VIEWPORT,
+        deviceScaleFactor: 1,
+        serviceWorkers: "block",
+        // The shared capture primitive temporarily injects styles to freeze
+        // animation and scroll snap; allow that only inside our local context.
+        bypassCSP: true,
       }),
     installSettleTracker
   );

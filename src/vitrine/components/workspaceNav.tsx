@@ -4,6 +4,7 @@ import {
   FolderIcon,
   GraphLineIcon,
   GridIcon,
+  LightningIcon,
   UsersIcon,
 } from '@storybook/icons';
 import type { ReactNode } from 'react';
@@ -17,6 +18,7 @@ export type WorkspaceNavSection =
   | 'collections'
   | 'users'
   | 'insights'
+  | 'threads'
   | 'settings';
 
 export function workspaceNav({
@@ -30,6 +32,7 @@ export function workspaceNav({
   admin = false,
   onUsers = () => navigate({ name: 'admin' }),
   onInsights = () => navigate({ name: 'admin' }),
+  onThreads = () => navigate({ name: 'admin', section: 'threads' }),
 }: {
   active?: WorkspaceNavSection;
   label?: string;
@@ -43,6 +46,7 @@ export function workspaceNav({
   /* Admin section handlers; the dashboard keeps its section in local state. */
   onUsers?: () => void;
   onInsights?: () => void;
+  onThreads?: () => void;
 } = {}): {
   globalActions?: WorkspaceRailAction[];
   primaryLabel: string;
@@ -75,6 +79,12 @@ export function workspaceNav({
             icon: <GraphLineIcon aria-hidden="true" />,
             active: active === 'insights',
             onSelect: onInsights,
+          },
+          {
+            label: 'Threads',
+            icon: <LightningIcon aria-hidden="true" />,
+            active: active === 'threads',
+            onSelect: onThreads,
           },
         ]
       : [

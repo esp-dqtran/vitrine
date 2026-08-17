@@ -11,7 +11,7 @@
   /* Lumin's rail is a distinct navigation plane. These paired values keep that
      separation in both themes without forcing the rest of Vitrines into one. */
   --projects-rail-surface: light-dark(#f8fafb, #151516);
-  --projects-rail-active: light-dark(#e6f4fa, #27282c);
+  --projects-rail-active: light-dark(#e9eef2, #34363c);
   /* One source of truth for the rail: the rail itself and this page offset. */
   --projects-rail-width: 96px;
   /* Inset of the content panel inside the page (Linear-style floating surface). */
@@ -1307,12 +1307,6 @@
   white-space: nowrap;
 }
 
-.projects-workspace__toolbar-label {
-  color: var(--color-text-secondary);
-  font: var(--vitrine-type-detail);
-  font-weight: 500;
-}
-
 .projects-workspace__toolbar .apps-filterbar__filter {
   width: fit-content;
   height: 40px;
@@ -1520,6 +1514,30 @@
   color: var(--color-text-primary);
   box-shadow: 0 6px 20px rgb(0 0 0 / 16%);
   backdrop-filter: blur(12px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .project-discovery-card__actions {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition:
+      opacity var(--vitrine-transition-fast),
+      transform var(--vitrine-transition-fast),
+      visibility 0s linear var(--vitrine-transition-fast);
+  }
+
+  .project-discovery-card:hover .project-discovery-card__actions,
+  .project-discovery-card:focus-within .project-discovery-card__actions,
+  .project-discovery-card:has(.projects-workspace__menu[open])
+    .project-discovery-card__actions {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    transition-delay: 0s;
+  }
 }
 
 .project-discovery-card__actions button {
@@ -2397,13 +2415,6 @@
   color: var(--color-text-primary);
 }
 
-.projects-team-switcher__create {
-  margin-top: 5px;
-  padding-top: 5px;
-  border-top: 1px solid var(--color-border);
-  border-radius: 0;
-}
-
 /* Page header: title on the left, sort + primary action on the right. */
 .projects-workspace__page-header-actions {
   display: flex;
@@ -2429,7 +2440,7 @@
  * team drawer, the drawer (already fully built and styled) becomes reachable
  * again with no new markup or state.
  */
-@media (max-width: 900px) {
+@media (max-width: 700px) {
   .projects-workspace {
     display: flex;
     flex-direction: column;
@@ -2562,11 +2573,590 @@
     min-height: 0;
     flex: 1 1 auto;
   }
+
+  .projects-workspace__toolbar {
+    justify-content: space-between;
+  }
 }
 
 @media (max-width: 480px) {
   /* Logo alone still routes home; the wordmark is what does not fit. */
   .projects-workspace__rail-brand strong {
     display: none;
+  }
+}
+
+/* Approved Projects navigation contract. */
+.projects-workspace {
+  --projects-rail-width: 72px;
+}
+
+.projects-workspace__desktop-rail {
+  width: var(--projects-rail-width);
+  padding: 10px 8px;
+  background: var(--projects-rail-surface);
+}
+
+.projects-workspace__rail-brand {
+  width: 48px;
+  justify-content: center;
+  padding: 0;
+  margin: 0 auto 14px;
+}
+
+.projects-workspace__rail-brand img {
+  width: 40px;
+}
+
+.projects-workspace__rail-brand strong,
+.projects-workspace__desktop-row-link > span,
+.projects-workspace__desktop-settings > span,
+.projects-workspace__desktop-workspace-name {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.projects-workspace__desktop-nav,
+.projects-workspace__desktop-row,
+.projects-workspace__desktop-row-line,
+.projects-workspace__desktop-footer {
+  width: 48px !important;
+}
+
+.projects-workspace__desktop-nav {
+  justify-items: center;
+}
+
+.projects-workspace__desktop-nav-heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.projects-workspace__desktop-row-line {
+  justify-content: center;
+}
+
+.projects-workspace__desktop-row-link,
+.projects-workspace .projects-workspace__desktop-settings,
+.projects-workspace__desktop-workspace {
+  position: relative;
+  width: 48px !important;
+  min-height: 48px !important;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr !important;
+  place-items: center;
+  gap: 0;
+  padding: 0 !important;
+  border-radius: 10px;
+  background: transparent !important;
+}
+
+.projects-workspace
+  .projects-workspace__desktop-rail
+  .projects-workspace__desktop-row-link,
+.projects-workspace
+  .projects-workspace__desktop-rail
+  .projects-workspace__desktop-settings,
+.projects-workspace
+  .projects-workspace__desktop-rail
+  .projects-workspace__desktop-workspace:not(
+    .projects-workspace__desktop-workspace--static
+  ) {
+  transform: scale(1);
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  will-change: transform;
+}
+
+.projects-workspace
+  .projects-workspace__desktop-rail
+  .projects-workspace__desktop-row-link:active,
+.projects-workspace
+  .projects-workspace__desktop-rail
+  .projects-workspace__desktop-settings:active,
+.projects-workspace
+  .projects-workspace__desktop-rail
+  .projects-workspace__desktop-workspace:not(
+    .projects-workspace__desktop-workspace--static
+  ):active {
+  transform: scale(0.9);
+  transition-duration: 60ms !important;
+  transition-timing-function: ease-out !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projects-workspace
+    .projects-workspace__desktop-rail
+    .projects-workspace__desktop-row-link,
+  .projects-workspace
+    .projects-workspace__desktop-rail
+    .projects-workspace__desktop-settings,
+  .projects-workspace
+    .projects-workspace__desktop-rail
+    .projects-workspace__desktop-workspace:not(
+      .projects-workspace__desktop-workspace--static
+    ) {
+    transition-duration: 0.01ms !important;
+  }
+
+  .projects-workspace
+    .projects-workspace__desktop-rail
+    .projects-workspace__desktop-row-link:active,
+  .projects-workspace
+    .projects-workspace__desktop-rail
+    .projects-workspace__desktop-settings:active,
+  .projects-workspace
+    .projects-workspace__desktop-rail
+    .projects-workspace__desktop-workspace:not(
+      .projects-workspace__desktop-workspace--static
+    ):active {
+    transform: none;
+  }
+}
+
+.projects-workspace__desktop-row-link::before,
+.projects-workspace__desktop-settings::before {
+  position: absolute;
+  z-index: 0;
+  top: 50% !important;
+  left: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  content: "";
+  transform: translate(-50%, -50%) !important;
+}
+
+.projects-workspace__desktop-row-link > svg,
+.projects-workspace__desktop-settings > svg,
+.projects-workspace__desktop-workspace-icon {
+  position: relative;
+  z-index: 1;
+}
+
+.projects-workspace__desktop-row-link > svg,
+.projects-workspace__desktop-settings > svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.projects-workspace__desktop-workspace-icon,
+.projects-workspace__desktop-workspace-icon svg {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+}
+
+.projects-workspace__desktop-row-link.is-active::before,
+.projects-workspace__desktop-row.has-active-descendant
+  > .projects-workspace__desktop-row-line
+  > .projects-workspace__desktop-row-link::before {
+  border-color: color-mix(
+    in srgb,
+    var(--color-text-primary) 18%,
+    transparent
+  );
+  background: var(--projects-rail-active) !important;
+}
+
+.projects-workspace__desktop-row-link.is-active,
+.projects-workspace__desktop-row.has-active-descendant
+  > .projects-workspace__desktop-row-line
+  > .projects-workspace__desktop-row-link {
+  color: var(--color-text-primary);
+}
+
+.projects-workspace__desktop-row:not(.has-active-descendant)
+  .projects-workspace__desktop-row-link:not(.is-active):hover::before,
+.projects-workspace__desktop-row-link:not(.is-active):focus-visible::before,
+.projects-workspace__desktop-settings:not(.is-active):hover::before,
+.projects-workspace__desktop-settings:not(.is-active):focus-visible::before {
+  background: var(--color-background-muted);
+}
+
+.projects-workspace__desktop-row-link::after,
+.projects-workspace__desktop-settings::after {
+  display: none !important;
+}
+
+.projects-workspace__desktop-footer {
+  gap: 4px;
+}
+
+.projects-team-drawer {
+  width: min(272px, calc(100vw - var(--projects-rail-width) - 24px));
+}
+
+.projects-team-drawer__header {
+  display: grid;
+  gap: 2px;
+  padding: 6px 8px 8px;
+}
+
+.projects-team-drawer__header small {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.projects-team-switcher__check {
+  width: 16px !important;
+  height: 16px !important;
+  margin-left: auto;
+}
+
+.projects-team-switcher__create {
+  min-height: 40px;
+  color: var(--color-text-primary);
+}
+
+@media (min-width: 701px) {
+  .projects-workspace {
+    padding: var(--projects-panel-inset) var(--projects-panel-inset)
+      var(--projects-panel-inset) var(--projects-rail-width);
+  }
+
+  .projects-workspace__shell {
+    min-height: calc(100vh - var(--projects-panel-inset) * 2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-container);
+    box-shadow: var(--shadow-low);
+  }
+
+  .projects-workspace__main {
+    padding: 16px 20px 72px;
+  }
+
+  .projects-workspace__desktop-rail {
+    flex-direction: column;
+  }
+
+  .projects-workspace__desktop-row-link,
+  .projects-workspace .projects-workspace__desktop-settings {
+    width: 48px !important;
+    min-height: 48px !important;
+    grid-template-rows: 1fr !important;
+  }
+
+  .projects-team-drawer {
+    inset: auto auto 62px calc(var(--projects-rail-width) + 8px);
+    max-height: calc(100dvh - 78px);
+    transform: translateY(4px) scale(0.98);
+    transform-origin: bottom left;
+  }
+
+  .projects-workspace__drawer-layer.is-open .projects-team-drawer {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 700px) {
+  .projects-workspace__desktop-rail {
+    width: 100%;
+  }
+
+  .projects-workspace__rail-brand,
+  .projects-workspace__desktop-nav,
+  .projects-workspace__desktop-row,
+  .projects-workspace__desktop-row-line,
+  .projects-workspace__desktop-footer,
+  .projects-workspace__desktop-workspace,
+  .projects-workspace__desktop-nav button,
+  .projects-workspace .projects-workspace__desktop-settings {
+    width: 48px !important;
+    min-width: 48px !important;
+  }
+
+  .projects-workspace__desktop-footer {
+    width: auto !important;
+    min-width: auto !important;
+    flex-direction: row;
+  }
+
+  .projects-workspace__desktop-nav {
+    width: auto !important;
+    min-width: auto !important;
+  }
+
+  .projects-team-drawer {
+    inset: 0 auto 0 0;
+    width: min(280px, calc(100vw - 32px));
+    max-height: 100dvh;
+    padding: 16px 8px;
+    border-block: 0;
+    border-left: 0;
+    border-radius: 0 var(--radius-container) var(--radius-container) 0;
+    box-shadow: none;
+    opacity: 1;
+    transform: translateX(-100%);
+    transform-origin: left center;
+    transition: transform 0.3s;
+  }
+
+  .projects-workspace__drawer-layer.is-open .projects-team-drawer {
+    transform: translateX(0);
+  }
+}
+
+/* Shared Projects header — the reference keeps product identity and global
+   actions in one full-width plane, with workspace navigation beginning below. */
+.projects-workspace {
+  --projects-header-height: 72px;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  padding: calc(var(--projects-header-height) + var(--projects-panel-inset))
+    var(--projects-panel-inset) var(--projects-panel-inset)
+    var(--projects-rail-width);
+  transition: padding-left 180ms ease;
+}
+
+.projects-workspace.is-rail-collapsed {
+  padding-left: var(--projects-panel-inset);
+}
+
+.projects-workspace__context-bar {
+  position: fixed;
+  z-index: 260;
+  inset: 0 0 auto;
+  display: flex;
+  height: var(--projects-header-height);
+  min-height: var(--projects-header-height);
+  gap: 14px;
+  margin: 0;
+  padding: 0 18px 0 14px;
+  border-top: 1px solid var(--projects-rail-surface);
+  border-bottom: 0;
+  background: var(--projects-rail-surface);
+  color: #fff;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 4%);
+}
+
+.projects-workspace__context-bar .projects-workspace__drawer-trigger,
+.projects-workspace__context-bar .projects-workspace__brand,
+.projects-workspace__context-bar .projects-workspace__header-actions button {
+  color: #fff;
+}
+
+.projects-workspace__context-bar .projects-workspace__drawer-trigger:hover,
+.projects-workspace__context-bar .projects-workspace__header-actions button:hover,
+.projects-workspace__context-bar
+  .projects-workspace__header-actions
+  button:focus-visible {
+  background: rgb(255 255 255 / 12%);
+}
+
+.projects-workspace__drawer-trigger {
+  display: none;
+  width: 44px;
+  height: 44px;
+  padding: 9px;
+  border-radius: 50%;
+}
+
+.projects-workspace__drawer-trigger svg {
+  width: 24px;
+  height: 24px;
+}
+
+.projects-workspace__context-bar
+  .projects-workspace__drawer-trigger[aria-expanded="true"] {
+  background: transparent;
+}
+
+.projects-workspace__context-bar .projects-workspace__drawer-trigger:hover {
+  background: var(--color-background-muted);
+}
+
+.projects-workspace__brand {
+  display: inline-flex;
+  width: auto;
+  flex: 0 0 auto;
+  gap: 10px;
+}
+
+.projects-workspace__brand img {
+  width: 36px;
+}
+
+.projects-workspace__brand strong {
+  font-size: 24px;
+  line-height: 30px;
+  letter-spacing: -0.02em;
+}
+
+.projects-workspace__header-actions {
+  gap: 4px;
+}
+
+.projects-workspace__header-actions > button,
+.projects-workspace__header-actions > .account-controls button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.projects-workspace__header-actions svg {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+.projects-workspace__header-actions .account-controls {
+  margin-left: 0 !important;
+}
+
+.projects-workspace__header-actions .account-menu-trigger {
+  border: 1px solid var(--color-border-emphasized) !important;
+  background: var(--color-background-muted) !important;
+  font-weight: 700;
+}
+
+.projects-workspace__desktop-rail {
+  top: var(--projects-header-height);
+  height: calc(100dvh - var(--projects-header-height));
+  padding-top: 14px;
+  transition: transform 180ms ease;
+}
+
+.projects-workspace.is-rail-collapsed .projects-workspace__desktop-rail {
+  pointer-events: none;
+  transform: translateX(-100%);
+}
+
+/* The compact row still inherits the old label-bearing two-column grid at the
+   narrow breakpoint. Collapse it to one track so its icon shares the rail's
+   centerline with the workspace and Settings controls. */
+.projects-workspace
+  .projects-workspace__desktop-rail
+  .projects-workspace__desktop-nav
+  .projects-workspace__desktop-row-link {
+  grid-template-columns: 1fr !important;
+  justify-items: center !important;
+}
+
+.projects-workspace
+  .projects-workspace__desktop-rail
+  .projects-workspace__desktop-row-link
+  > svg {
+  grid-column: 1;
+  justify-self: center;
+}
+
+.projects-workspace__shell {
+  height: calc(
+    100dvh - var(--projects-header-height) - var(--projects-panel-inset) * 2
+  );
+  min-height: calc(
+    100vh - var(--projects-header-height) - var(--projects-panel-inset) * 2
+  );
+}
+
+.projects-workspace__main {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projects-workspace,
+  .projects-workspace__desktop-rail {
+    transition-duration: 0.01ms;
+  }
+}
+
+@media (max-width: 700px) {
+  .projects-workspace,
+  .projects-workspace.is-rail-collapsed {
+    display: block;
+    padding: var(--projects-header-height) 0 0;
+  }
+
+  .projects-workspace__context-bar {
+    gap: 10px;
+    padding: 0 14px;
+  }
+
+  .projects-workspace__drawer-trigger {
+    display: grid;
+  }
+
+  .projects-workspace__brand {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .projects-workspace__brand img {
+    width: 32px;
+  }
+
+  .projects-workspace__brand strong {
+    overflow: hidden;
+    font-size: 20px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .projects-workspace__header-actions {
+    gap: 2px;
+  }
+
+  .projects-workspace__header-actions > button:nth-of-type(2),
+  .projects-workspace__header-actions > button:nth-of-type(3) {
+    display: none;
+  }
+
+  .projects-workspace__header-actions > button,
+  .projects-workspace__header-actions > .account-controls button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .projects-workspace__desktop-rail {
+    position: fixed;
+    z-index: 250;
+    inset: var(--projects-header-height) auto 0 0;
+    display: flex;
+    width: var(--projects-rail-width) !important;
+    height: auto;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 14px 8px 10px;
+    border-right: 1px solid var(--color-border);
+    border-bottom: 0;
+    transform: translateX(-100%);
+  }
+
+  .projects-workspace.is-rail-open .projects-workspace__desktop-rail {
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+
+  .projects-workspace__desktop-nav {
+    display: grid;
+    width: 48px !important;
+    flex: 0 0 auto;
+  }
+
+  .projects-workspace__desktop-footer {
+    width: 48px !important;
+    flex-direction: column;
+    margin-top: auto;
+    margin-left: 0;
+  }
+
+  .projects-workspace__shell {
+    height: calc(100dvh - var(--projects-header-height));
+    min-height: calc(100dvh - var(--projects-header-height));
   }
 }

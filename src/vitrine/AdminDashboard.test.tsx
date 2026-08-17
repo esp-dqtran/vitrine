@@ -46,11 +46,14 @@ test('lazy-loads Users without importing normal application state', async () => 
 
   assert.match(source, /lazy\(\(\) => import\(['"]\.\/components\/UsersPage['"]\)/);
   assert.doesNotMatch(source, /CategoriesPage/);
-  // The section is addressable: /admin and /admin/insights, not local state.
-  assert.match(source, /route\.section === 'insights' \? 'insights' : 'users'/);
+  // Each Admin section is route-addressable rather than being held in local state.
+  assert.match(source, /route\.section === 'insights'/);
+  assert.match(source, /route\.section === 'threads'/);
   assert.match(source, /navigate\(\s*next === 'insights'/);
+  assert.match(source, /next === 'threads'/);
   assert.doesNotMatch(source, /useState<AdminSection>/);
   assert.match(source, /lazy\(\(\) => import\('\.\/components\/InsightsPage'\)/);
+  assert.match(source, /lazy\(\(\) => import\('\.\/components\/ThreadsMarketingPage'\)/);
   assert.match(source, /<Suspense fallback=\{<AdminPageSpinner \/>}/);
   assert.doesNotMatch(
     source,

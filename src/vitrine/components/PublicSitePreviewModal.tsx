@@ -1,7 +1,8 @@
-import { Button, Heading, Icon, IconButton, Text } from '@astryxdesign/core';
+import { Button, Heading, Text } from '@astryxdesign/core';
 import type { SiteSummary } from '../types.ts';
 import { AppIcon } from './AppIcon.tsx';
 import { AstryxModal } from './AstryxModal.tsx';
+import { PreviewModalCloseButton } from './PreviewModalCloseButton.tsx';
 
 export function PublicSitePreviewModal({
   site,
@@ -26,15 +27,7 @@ export function PublicSitePreviewModal({
         data-public-site-preview-modal="true"
         style={{ position: 'relative', maxHeight: '86vh', overflowY: 'auto', padding: 20 }}
       >
-        <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 1 }}>
-          <IconButton
-            label="Close preview"
-            icon={<Icon icon="close" size="sm" />}
-            variant="ghost"
-            className="astryx-modal__icon-action"
-            onClick={onClose}
-          />
-        </div>
+        <PreviewModalCloseButton onClose={onClose} />
 
         <header style={{ display: 'flex', alignItems: 'center', gap: 16, paddingRight: 52 }}>
           <AppIcon name={site.name} iconUrl={site.logoUrl} size={56} fit="contain" />

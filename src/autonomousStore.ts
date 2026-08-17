@@ -2,8 +2,10 @@ import { createHash } from "node:crypto";
 import type pg from "pg";
 import { query, withTransaction } from "./db.ts";
 import {
+  parseAgentTraceEvent,
   parseAppDossier,
   parseMission,
+  type AgentTraceEvent,
   type AppDossier,
   type AutonomousMission,
   type AutonomousState,
@@ -66,6 +68,15 @@ export interface CrawlTransitionRecord {
   confidence: number;
 }
 
+export interface CrawlAgentTraceEventRecord extends AgentTraceEvent {
+  id: string;
+  run_id: string;
+  mission_id: string | null;
+  child_run_id: string | null;
+  evidence_id: string | null;
+  created_at: Date;
+}
+
 export interface RecordTransitionInput {
   runId: string;
   missionId: string;
@@ -78,12 +89,19 @@ export interface RecordTransitionInput {
   confidence: number;
 }
 
+export interface RecordAgentTraceEventInput extends AgentTraceEvent {
+  runId: string;
+  missionId?: string;
+  childRunId?: string;
+}
+
 export interface AutonomousRunDetail {
   run: CrawlRunRecord;
   dossier?: CrawlDossierRecord;
   missions: CrawlMissionRecord[];
   states: CrawlStateRecord[];
   transitions: CrawlTransitionRecord[];
+  traceEvents: CrawlAgentTraceEventRecord[];
 }
 
 export interface CrawlAccountSessionRecord {
@@ -108,6 +126,7 @@ export interface AutonomousStore {
   releaseAccountLease(runId: string, workerId: string, purpose: "mutation" | "authentication"): Promise<void>;
   upsertState(runId: string, state: AutonomousState, evidenceId?: string): Promise<CrawlStateRecord>;
   recordTransition(input: RecordTransitionInput): Promise<CrawlTransitionRecord>;
+  recordTraceEvent(input: RecordAgentTraceEventInput): Promise<CrawlAgentTraceEventRecord>;
   autonomousRunDetail(runId: string): Promise<AutonomousRunDetail | undefined>;
   saveAutonomousFlows(runId: string, flows: DesignFlow[]): Promise<DesignFlow[]>;
   requestPause(runId: string): Promise<void>;
@@ -431,17 +450,57 @@ export function createAutonomousStore(overrides: Partial<StoreDependencies> = {}
     return recorded.rows[0];
   };
 
+  const recordTraceEvent = async (input: RecordAgentTraceEventInput): Promise<CrawlAgentTraceEventRecord> => {
+    const event = parseAgentTraceEvent({
+      stage: input.stage,
+      type: input.type,
+      rationale: input.rationale,
+      ...(input.confidence === undefined ? {} : { confidence: input.confidence }),
+      ...(input.evidenceId === undefined ? {} : { evidenceId: input.evidenceId }),
+      ...(input.credentialCapability === undefined ? {} : { credentialCapability: input.credentialCapability }),
+    });
+    const recorded = await deps.query<CrawlAgentTraceEventRecord>(
+      `INSERT INTO crawl_agent_trace_events
+         (run_id, mission_id, child_run_id, stage, event_type, rationale, confidence, evidence_id, credential_capability)
+       SELECT cr.id, cm.id, $3, $4, $5, $6, $7, $8, $9
+       FROM crawl_runs cr
+       LEFT JOIN crawl_missions cm ON cm.id = $2 AND cm.run_id = cr.id
+       WHERE cr.id = $1 AND ($2::bigint IS NULL OR cm.id IS NOT NULL)
+       RETURNING id, run_id, mission_id, child_run_id, stage, event_type AS type, rationale,
+                 confidence, evidence_id, credential_capability AS "credentialCapability", created_at`,
+      [
+        input.runId,
+        input.missionId ?? null,
+        input.childRunId ?? null,
+        event.stage,
+        event.type,
+        event.rationale,
+        event.confidence ?? null,
+        event.evidenceId ?? null,
+        event.credentialCapability ?? null,
+      ],
+    );
+    if (!recorded.rowCount) throw new Error("Trace event target does not belong to the autonomous run");
+    return recorded.rows[0];
+  };
+
   const autonomousRunDetail = async (runId: string): Promise<AutonomousRunDetail | undefined> => {
     const run = await deps.query<CrawlRunRecord>(
       `${runSelect} WHERE cr.id = $1 AND cr.run_kind = 'autonomous'`,
       [runId],
     );
     if (!run.rowCount) return undefined;
-    const [dossier, missions, states, transitions] = await Promise.all([
+    const [dossier, missions, states, transitions, traceEvents] = await Promise.all([
       latestDossier(runId),
       deps.query<MissionRow>("SELECT * FROM crawl_missions WHERE run_id = $1 ORDER BY priority DESC, id", [runId]),
       deps.query<StateRow>("SELECT * FROM crawl_states WHERE run_id = $1 ORDER BY first_seen_at, id", [runId]),
       deps.query<CrawlTransitionRecord>("SELECT * FROM crawl_transitions WHERE run_id = $1 ORDER BY id", [runId]),
+      deps.query<CrawlAgentTraceEventRecord>(
+        `SELECT id, run_id, mission_id, child_run_id, stage, event_type AS type, rationale,
+                confidence, evidence_id, credential_capability AS "credentialCapability", created_at
+         FROM crawl_agent_trace_events WHERE run_id = $1 ORDER BY created_at, id`,
+        [runId],
+      ),
     ]);
     return {
       run: run.rows[0],
@@ -449,6 +508,7 @@ export function createAutonomousStore(overrides: Partial<StoreDependencies> = {}
       missions: missions.rows.map(mapMission),
       states: states.rows.map(mapState),
       transitions: transitions.rows,
+      traceEvents: traceEvents.rows,
     };
   };
 
@@ -564,6 +624,7 @@ export function createAutonomousStore(overrides: Partial<StoreDependencies> = {}
     releaseAccountLease,
     upsertState,
     recordTransition,
+    recordTraceEvent,
     autonomousRunDetail,
     saveAutonomousFlows,
     requestPause,

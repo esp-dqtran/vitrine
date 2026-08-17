@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import { test } from "node:test";
@@ -6,7 +7,10 @@ import type { AuthUser } from "../../../src/authStore.ts";
 import type { CrawledImage } from "../../../src/db.ts";
 import type { DesignFlow } from "../../../src/designSystem.ts";
 import {
+  getAccessibleApp,
   getAccessibleFlow,
+  getAccessibleScreenshot,
+  searchAccessibleApps,
   searchAccessibleFlows,
   type FlowMcpDependencies,
 } from "./flowMcp.ts";
@@ -14,6 +18,7 @@ import { createApiApp } from "./app.ts";
 
 const proUser: AuthUser = { id: 7, email: "pro@example.com", role: "user" };
 const freeUser: AuthUser = { id: 8, email: "free@example.com", role: "user" };
+const adminUser: AuthUser = { id: 1, email: "admin@example.com", role: "admin" };
 
 const onboarding: DesignFlow = {
   id: "invite-admins",
@@ -97,8 +102,43 @@ function dependencies(): FlowMcpDependencies {
       totalCount: 1,
       facets: [],
     }),
+    publishedCatalogPage: async () => ({
+      apps: [{
+        app_id: 1,
+        app: "linear",
+        display_name: "Linear",
+        description: "Issue tracking for product teams.",
+        categories: [{ id: 1, name: "Project management", slug: "project-management" }],
+        website_url: "https://linear.app",
+        icon_url: null,
+        preview_object_key: null,
+        accent_color: "#5E6AD2",
+        total_screens: 12,
+        analyzed_screens: 10,
+        available_platforms: ["web"],
+        last_captured_at: "2026-08-12T00:00:00.000Z",
+      }],
+      previews: [],
+      nextCursor: null,
+    }),
     getVersionFlows: async () => [onboarding],
     flowEvidenceImages: async () => [capture],
+    appMetadata: async () => ({
+      app: "linear",
+      icon_url: null,
+      categories: [{ id: 1, name: "Project management", slug: "project-management" }],
+      display_name: "Linear",
+      description: "Issue tracking for product teams.",
+      website_url: "https://linear.app",
+      accent_color: "#5E6AD2",
+      preview_version_id: null,
+      total_screens: 12,
+      total_ui_elements: 18,
+      total_flows: 3,
+      analyzed_screens: 10,
+      last_captured_at: "2026-08-12T00:00:00.000Z",
+      available_platforms: ["web"],
+    }),
     readInlineImage: async () => ({ data: "dGVzdC1jYXB0dXJl", mimeType: "image/jpeg" }),
   };
 }
@@ -119,6 +159,26 @@ async function mcpMessage(response: Response): Promise<Record<string, unknown>> 
 }
 
 test("Flow MCP searches the published catalog and filters inaccessible apps", async () => {
+  const apps = await searchAccessibleApps(proUser, dependencies(), {
+    query: "project management",
+    platform: "web",
+    limit: 5,
+  });
+  assert.deepEqual(apps, [{
+    app: "linear",
+    title: "Linear",
+    description: "Issue tracking for product teams.",
+    categories: ["Project management"],
+    platforms: ["web"],
+    totalScreens: 12,
+    url: "https://vitrines.ai/apps/linear",
+  }]);
+  assert.deepEqual(await searchAccessibleApps(freeUser, dependencies(), {
+    query: "project management",
+    platform: "web",
+    limit: 5,
+  }), []);
+
   const result = await searchAccessibleFlows(proUser, dependencies(), {
     query: "onboarding permissions",
     platform: "web",
@@ -206,14 +266,45 @@ test("Flow MCP returns every screenshot in a selected flow", async () => {
   assert.equal(steps.flatMap((step) => step.screenshots).length, 11);
 });
 
+test("Flow MCP exposes accessible published app metadata and one requested screenshot", async () => {
+  assert.deepEqual(await getAccessibleApp(proUser, dependencies(), "linear"), {
+    id: "linear",
+    app: "Linear",
+    categories: [{ id: 1, name: "Project management", slug: "project-management" }],
+    accent: "#5E6AD2",
+    totalScreens: 12,
+    totalUiElements: 18,
+    totalFlows: 3,
+    platforms: ["web"],
+    analyzedScreens: 10,
+    lastCapturedAt: "2026-08-12T00:00:00.000Z",
+    websiteUrl: "https://linear.app",
+    iconUrl: null,
+    description: "Issue tracking for product teams.",
+    previewVideoUrl: null,
+    url: "https://vitrines.ai/apps/linear",
+    flowsUrl: "https://vitrines.ai/apps/linear/flows",
+  });
+  assert.equal(await getAccessibleApp(freeUser, dependencies(), "linear"), undefined);
+  assert.equal((await getAccessibleScreenshot(proUser, dependencies(), {
+    app: "linear", platform: "web", screenshotId: 12,
+  }))?.id, 12);
+  assert.equal(await getAccessibleScreenshot(freeUser, dependencies(), {
+    app: "linear", platform: "web", screenshotId: 12,
+  }), undefined);
+});
+
 test("Flow MCP exposes the standard Streamable HTTP tools behind Vitrines bearer authentication", async (t) => {
   const deps = dependencies();
+  const body = Buffer.from("test-capture");
+  const sha256 = createHash("sha256").update(body).digest("hex");
+  const accessEvents: Array<Record<string, unknown>> = [];
   const { base, server } = await serve(createApiApp({
     verifyMcpAccessToken: async (token: string) => token === "vtr_mcp_test-token" ? proUser : undefined,
     adminImageObject: async () => ({
       key: "thumbnails/12/test.jpg",
-      sha256: "0".repeat(64),
-      byteSize: 12,
+      sha256,
+      byteSize: body.byteLength,
       contentType: "image/jpeg",
       accessClass: "public-preview",
     }),
@@ -221,14 +312,15 @@ test("Flow MCP exposes the standard Streamable HTTP tools behind Vitrines bearer
       get: async () => ({
         metadata: {
           key: "thumbnails/12/test.jpg",
-          sha256: "0".repeat(64),
-          byteSize: 12,
+          sha256,
+          byteSize: body.byteLength,
           contentType: "image/jpeg",
           accessClass: "public-preview",
         },
-        body: Buffer.from("test-capture"),
+        body,
       }),
     },
+    recordAccessEvent: async (event: Record<string, unknown>) => { accessEvents.push(event); },
     ...deps,
   } as never));
   t.after(() => server.close());
@@ -267,14 +359,20 @@ test("Flow MCP exposes the standard Streamable HTTP tools behind Vitrines bearer
     result: { content: Array<{ type: string; text?: string; data?: string; mimeType?: string }> };
   };
   assert.match(result.result.content[0]?.text ?? "", /invite-admins/);
-  assert.deepEqual(result.result.content.slice(1), [
-    { type: "text", text: "Screen capture: linear — Invite workspace administrators" },
-    { type: "image", data: "dGVzdC1jYXB0dXJl", mimeType: "image/jpeg" },
-  ]);
+  assert.deepEqual(result.result.content.slice(1), []);
+  const appSearch = await request({
+    jsonrpc: "2.0",
+    id: 3,
+    method: "tools/call",
+    params: { name: "search_apps", arguments: { query: "project management", platform: "web" } },
+  });
+  assert.equal(appSearch.status, 200);
+  const appSearchResult = await mcpMessage(appSearch) as { result: { content: Array<{ text?: string }> } };
+  assert.match(appSearchResult.result.content[0]?.text ?? "", /Issue tracking for product teams/);
 
   const detail = await request({
     jsonrpc: "2.0",
-    id: 3,
+    id: 4,
     method: "tools/call",
     params: {
       name: "get_flow",
@@ -286,9 +384,115 @@ test("Flow MCP exposes the standard Streamable HTTP tools behind Vitrines bearer
     result: { content: Array<{ type: string; text?: string; data?: string; mimeType?: string }> };
   };
   assert.match(detailResult.result.content[0]?.text ?? "", /Choose administrator permissions/);
-  assert.deepEqual(detailResult.result.content.slice(1), [
+  assert.deepEqual(detailResult.result.content.slice(1), []);
+  const app = await request({
+    jsonrpc: "2.0",
+    id: 5,
+    method: "tools/call",
+    params: { name: "get_app", arguments: { app: "linear" } },
+  });
+  assert.equal(app.status, 200);
+  const appResult = await mcpMessage(app) as { result: { content: Array<{ text?: string }> } };
+  assert.match(appResult.result.content[0]?.text ?? "", /Issue tracking for product teams/);
+  const screenshot = await request({
+    jsonrpc: "2.0",
+    id: 6,
+    method: "tools/call",
+    params: {
+      name: "get_screenshot",
+      arguments: { app: "linear", platform: "web", screenshotId: 12 },
+    },
+  });
+  assert.equal(screenshot.status, 200);
+  const screenshotResult = await mcpMessage(screenshot) as {
+    result: { content: Array<{ type: string; text?: string; data?: string; mimeType?: string }> };
+  };
+  assert.match(screenshotResult.result.content[0]?.text ?? "", /Role selection screen/);
+  assert.deepEqual(screenshotResult.result.content.slice(1), [
     { type: "text", text: "Screen capture: linear — Role selection screen" },
     { type: "image", data: "dGVzdC1jYXB0dXJl", mimeType: "image/jpeg" },
   ]);
+  assert.deepEqual(accessEvents.map(({ action, outcome }) => ({ action, outcome })), [
+    { action: "mcp-search_flows", outcome: "success" },
+    { action: "mcp-search_apps", outcome: "success" },
+    { action: "mcp-get_flow", outcome: "success" },
+    { action: "mcp-get_app", outcome: "success" },
+    { action: "mcp-get_screenshot", outcome: "success" },
+  ]);
   assert.equal((await fetch(`${base}/mcp`, { method: "POST" })).status, 401);
+});
+
+test("Flow MCP rate limits admin access tokens", async (t) => {
+  const { base, server } = await serve(createApiApp({
+    generalRateLimit: 1,
+    verifyMcpAccessToken: async (token: string) => token === "vtr_mcp_admin-token" ? adminUser : undefined,
+    recordAccessEvent: async () => undefined,
+    ...dependencies(),
+  } as never));
+  t.after(() => server.close());
+  const request = (id: number) => fetch(`${base}/mcp`, {
+    method: "POST",
+    headers: {
+      authorization: "Bearer vtr_mcp_admin-token",
+      accept: "application/json, text/event-stream",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id,
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-03-26",
+        capabilities: {},
+        clientInfo: { name: "test-client", version: "1.0.0" },
+      },
+    }),
+  });
+  assert.equal((await request(1)).status, 200);
+  assert.equal((await request(2)).status, 429);
+});
+
+test("Flow MCP omits thumbnails above the inline screenshot limit", async (t) => {
+  const body = Buffer.alloc(1_000_001, 7);
+  const sha256 = createHash("sha256").update(body).digest("hex");
+  const metadata = {
+    key: "thumbnails/12/large.jpg",
+    sha256,
+    byteSize: body.byteLength,
+    contentType: "image/jpeg" as const,
+    accessClass: "public-preview" as const,
+  };
+  const { base, server } = await serve(createApiApp({
+    verifyMcpAccessToken: async (token: string) => token === "vtr_mcp_test-token" ? proUser : undefined,
+    adminImageObject: async () => metadata,
+    objectStore: { get: async () => ({ metadata, body }) },
+    recordAccessEvent: async () => undefined,
+    ...dependencies(),
+  } as never));
+  t.after(() => server.close());
+  const request = (body: unknown) => fetch(`${base}/mcp`, {
+    method: "POST",
+    headers: {
+      authorization: "Bearer vtr_mcp_test-token",
+      accept: "application/json, text/event-stream",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  await request({
+    jsonrpc: "2.0",
+    id: 1,
+    method: "initialize",
+    params: { protocolVersion: "2025-03-26", capabilities: {}, clientInfo: { name: "test-client", version: "1.0.0" } },
+  });
+  const response = await request({
+    jsonrpc: "2.0",
+    id: 2,
+    method: "tools/call",
+    params: { name: "get_screenshot", arguments: { app: "linear", platform: "web", screenshotId: 12 } },
+  });
+  assert.equal(response.status, 200);
+  const result = await mcpMessage(response) as { result: { isError?: boolean; content: Array<{ type: string }> } };
+  assert.equal(result.result.isError, true);
+  assert.deepEqual(result.result.content.map(({ type }) => type), ["text", "text"]);
 });

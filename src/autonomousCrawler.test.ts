@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { parseAppDossier, parseMission } from "./autonomousCrawler.ts";
+import { parseAgentTraceEvent, parseAppDossier, parseMission } from "./autonomousCrawler.ts";
 
 const validDossier = {
   app: "linear",
@@ -120,4 +120,77 @@ test("bounds dossier payloads and rejects unknown fields", () => {
   );
   assert.throws(() => parseAppDossier({ ...validDossier, purpose: "x".repeat(10_001) }), /too long/i);
   assert.throws(() => parseAppDossier({ ...validDossier, roles: Array(501).fill("member") }), /too many/i);
+});
+
+test("parses a sourced designer research profile, flow readiness, and credential capability aliases", () => {
+  const dossier = parseAppDossier({
+    ...validDossier,
+    profile: {
+      name: "Linear",
+      canonicalUrl: "https://linear.app",
+      category: "Project management",
+      description: "A product-development workspace.",
+      sourceUrls: ["https://linear.app/docs"],
+      iconUrl: "https://linear.app/icon.svg",
+    },
+    candidateFlows: [{
+      id: "invite-member",
+      title: "Invite member",
+      goal: "Invite a teammate to a workspace",
+      productArea: "Members",
+      mode: "read",
+      prerequisites: [],
+      sourceUrls: ["https://linear.app/docs"],
+      access: "sign_in_required",
+      readiness: "needs_review",
+      confidence: 0.8,
+      credentialCapability: "linear.demo.admin",
+      candidateSteps: [{
+        title: "Open workspace members",
+        sourceUrls: ["https://linear.app/docs"],
+        evidence: "documented",
+      }],
+    }],
+    credentialCapabilities: [{
+      alias: "linear.demo.admin",
+      purpose: "Validate workspace administration flows",
+      role: "workspace admin",
+      allowedOrigins: ["https://linear.app/settings"],
+      flowIds: ["invite-member"],
+      sourceUrls: ["https://linear.app/docs"],
+    }],
+  });
+  assert.equal(dossier.profile?.category, "Project management");
+  assert.equal(dossier.candidateFlows[0]?.candidateSteps?.[0]?.evidence, "documented");
+  assert.equal(dossier.credentialCapabilities?.[0]?.allowedOrigins[0], "https://linear.app");
+  assert.throws(
+    () => parseAppDossier({
+      ...dossier,
+      credentialCapabilities: [{ ...dossier.credentialCapabilities![0], flowIds: ["missing-flow"] }],
+    }),
+    /unknown flow/i,
+  );
+});
+
+test("accepts bounded, redacted decision-trace events", () => {
+  assert.deepEqual(
+    parseAgentTraceEvent({
+      stage: "execution",
+      type: "action_selected",
+      rationale: "Selected one navigation action from the observed public state.",
+      confidence: 0.8,
+      credentialCapability: "linear.demo.admin",
+    }),
+    {
+      stage: "execution",
+      type: "action_selected",
+      rationale: "Selected one navigation action from the observed public state.",
+      confidence: 0.8,
+      credentialCapability: "linear.demo.admin",
+    },
+  );
+  assert.throws(
+    () => parseAgentTraceEvent({ stage: "execution", type: "action_selected", rationale: "x", password: "not-safe" }),
+    /secret/i,
+  );
 });

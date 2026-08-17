@@ -282,7 +282,35 @@ export function featureDocumentClaimBudget(evidenceCount: number): number {
   return Math.min(50, 26 + evidenceCount * 2);
 }
 
+// The validator and every prompt that states the cap must agree, or the model is told one
+// number and rejected against another.
+export function featureDocumentRequirementBudget(evidenceCount: number): number {
+  return Math.max(1, Math.min(6, Math.floor(evidenceCount / 2)));
+}
+
 type JsonObject = Record<string, unknown>;
+
+// Policy gates are batched: the provider gets three attempts total, so telling it one
+// broken rule at a time wastes the budget on documents that break four. Structural parse
+// errors stay fatal, because nothing after them can be trusted.
+class Violations {
+  private readonly messages: string[] = [];
+
+  check(failed: boolean, message: string): void {
+    if (failed) this.messages.push(message);
+  }
+
+  throwIfAny(): void {
+    if (this.messages.length === 0) return;
+    const shown = this.messages.slice(0, 10);
+    if (this.messages.length > shown.length) {
+      shown.push(`and ${this.messages.length - shown.length} more problems`);
+    }
+    throw new Error(shown.join("; "));
+  }
+}
+
+type ParseContext = FeatureDocumentValidationOptions & { violations: Violations };
 
 function object(value: unknown, label: string): JsonObject {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} must be an object`);
@@ -489,14 +517,15 @@ function criterion(
   allowed: ReadonlySet<string>,
   label: string,
   identities: Set<string>,
-  options: FeatureDocumentValidationOptions,
+  options: ParseContext,
 ): FeatureAcceptanceCriterion {
   const item = object(value, label);
   const id = text(item.id, `${label}.id`, 160);
   if (identities.has(id)) throw new Error(`duplicate feature document id: ${id}`);
-  if (options.evidenceBacked && !/^AC-\d{3}$/.test(id)) {
-    throw new Error(`${label}.id must use the AC-001 format`);
-  }
+  options.violations.check(
+    options.evidenceBacked === true && !/^AC-\d{3}$/.test(id),
+    `${label}.id must use the AC-001 format`,
+  );
   identities.add(id);
   const kind = item.kind;
   if (
@@ -508,24 +537,25 @@ function criterion(
   ) {
     throw new Error(`${label}.kind is invalid`);
   }
-  if (options.evidenceBacked && kind !== "observed" && kind !== "inferred") {
-    throw new Error(`${label}.kind must be observed or inferred`);
-  }
+  options.violations.check(
+    options.evidenceBacked === true && kind !== "observed" && kind !== "inferred",
+    `${label}.kind must be observed or inferred`,
+  );
   const citations = evidenceIds(item.evidenceIds, allowed, label);
-  if (options.evidenceBacked && citations.length === 0) {
-    throw new Error(`${label} requires evidence`);
-  }
+  options.violations.check(
+    options.evidenceBacked === true && citations.length === 0,
+    `${label} requires evidence`,
+  );
   const given = text(item.given, `${label}.given`, 4_000);
   const when = text(item.when, `${label}.when`, 4_000);
   const then = text(item.then, `${label}.then`, 4_000);
-  if (
-    options.evidenceBacked
+  options.violations.check(
+    options.evidenceBacked === true
     && /\b(clear and discoverable|clearly understandable|easy to (?:find|use|understand)|enough context|intuitive|user-friendly|visually understandable)\b/i.test(
       `${given} ${when} ${then}`,
-    )
-  ) {
-    throw new Error(`${label} must use objectively testable language`);
-  }
+    ),
+    `${label} must use objectively testable language`,
+  );
   const visibleFeedbackEvidence = new Set(
     (options.analyses ?? [])
       .filter(({ systemFeedback }) => systemFeedback.length > 0)
@@ -541,24 +571,22 @@ function criterion(
       ...analysis.systemFeedback,
     ].some((entry) => /\b(loading|spinner|progress|skeleton|shimmer)\b/i.test(entry))
   );
-  if (
-    options.evidenceBacked
+  options.violations.check(
+    options.evidenceBacked === true
     && /\b(?:finish(?:es|ed)? loading|loading (?:completes?|finishes?)|has loaded)\b/i.test(
       `${given} ${when} ${then}`,
     )
-    && !hasLoadingEvidence
-  ) {
-    throw new Error(`${label} cannot claim loading completion without visible loading evidence`);
-  }
-  if (
-    options.evidenceBacked
+    && !hasLoadingEvidence,
+    `${label} cannot claim loading completion without visible loading evidence`,
+  );
+  options.violations.check(
+    options.evidenceBacked === true
     && kind === "observed"
     && /\b(tap|select|choose|save|apply|submit|confirm|add|remove|update|clear|filter|sort|toggle|change|enter|type)\b/i.test(when)
     && citations.length < 2
-    && !citations.some((evidenceId) => visibleFeedbackEvidence.has(evidenceId))
-  ) {
-    throw new Error(`${label} needs before/after or visible-feedback evidence for an observed transition`);
-  }
+    && !citations.some((evidenceId) => visibleFeedbackEvidence.has(evidenceId)),
+    `${label} needs before/after or visible-feedback evidence for an observed transition`,
+  );
   return {
     id,
     ...(kind === undefined ? {} : { kind }),
@@ -574,19 +602,22 @@ function requirement(
   allowed: ReadonlySet<string>,
   label: string,
   identities: Set<string>,
-  options: FeatureDocumentValidationOptions,
+  options: ParseContext,
 ): FeatureRequirement {
   const item = object(value, label);
   const base = claim(item, allowed, label, identities);
-  if (options.evidenceBacked && !/^REQ-\d{3}$/.test(base.id)) {
-    throw new Error(`${label}.id must use the REQ-001 format`);
-  }
-  if (options.evidenceBacked && base.kind !== "observed" && base.kind !== "inferred") {
-    throw new Error(`${label}.kind must be observed or inferred`);
-  }
-  if (options.evidenceBacked && base.evidenceIds.length === 0) {
-    throw new Error(`${label} requires evidence`);
-  }
+  options.violations.check(
+    options.evidenceBacked === true && !/^REQ-\d{3}$/.test(base.id),
+    `${label}.id must use the REQ-001 format`,
+  );
+  options.violations.check(
+    options.evidenceBacked === true && base.kind !== "observed" && base.kind !== "inferred",
+    `${label}.kind must be observed or inferred`,
+  );
+  options.violations.check(
+    options.evidenceBacked === true && base.evidenceIds.length === 0,
+    `${label} requires evidence`,
+  );
   const priority = item.priority;
   if (
     priority !== "must"
@@ -597,31 +628,30 @@ function requirement(
   ) {
     throw new Error(`${label}.priority is invalid`);
   }
-  if (options.evidenceBacked && priority !== "unranked") {
-    throw new Error(`${label}.priority must be unranked without product-owner input`);
-  }
-  if (
-    options.evidenceBacked
+  options.violations.check(
+    options.evidenceBacked === true && priority !== "unranked",
+    `${label}.priority must be unranked without product-owner input`,
+  );
+  options.violations.check(
+    options.evidenceBacked === true
     && priority === "unranked"
-    && /\b(must|should|could|required|priority)\b/i.test(base.text)
-  ) {
-    throw new Error(`${label}.text cannot use priority language when priority is unranked`);
-  }
+    && /\b(must|should|could|required|priority)\b/i.test(base.text),
+    `${label}.text cannot use priority language when priority is unranked`,
+  );
   const hasExplicitInteraction = (options.evidenceManifest ?? []).some(
     ({ evidenceId, interaction }) =>
       base.evidenceIds.includes(evidenceId) && Boolean(interaction?.trim()),
   );
-  if (
-    options.evidenceBacked
+  options.violations.check(
+    options.evidenceBacked === true
     && base.kind === "observed"
     && (
       /\b(?:supports?|allows?|enables?)\s+(?:the user to\s+)?(?:submit|submission|save|saving|select|selection|navigate|navigation|edit|editing|apply|application|update|updating|persist|persistence)\b/i.test(base.text)
       || /\b(?:can|will)\s+(?:submit|save|select|navigate|edit|apply|update|persist)\b/i.test(base.text)
     )
-    && !hasExplicitInteraction
-  ) {
-    throw new Error(`${label}.text cannot claim an observed interaction without interaction metadata`);
-  }
+    && !hasExplicitInteraction,
+    `${label}.text cannot claim an observed interaction without interaction metadata`,
+  );
   const acceptanceCriteria = list(item.acceptanceCriteria, `${label}.acceptanceCriteria`, 50)
     .map((entry, index) => criterion(
       entry,
@@ -630,27 +660,27 @@ function requirement(
       identities,
       options,
     ));
-  if ((priority === "must" || options.evidenceBacked) && acceptanceCriteria.length === 0) {
-    throw new Error(`${label} requires acceptance criteria`);
-  }
-  if (
-    options.evidenceBacked
+  options.violations.check(
+    (priority === "must" || options.evidenceBacked === true) && acceptanceCriteria.length === 0,
+    `${label} requires acceptance criteria`,
+  );
+  options.violations.check(
+    options.evidenceBacked === true
     && (options.evidenceManifest?.length ?? allowed.size) >= 2
-    && acceptanceCriteria.length < 2
-  ) {
-    throw new Error(`${label} requires at least two acceptance criteria for multi-state evidence`);
-  }
-  if (options.evidenceBacked && acceptanceCriteria.length > 4) {
-    throw new Error(`${label} has too many acceptance criteria for an evidence-backed draft`);
-  }
-  if (
-    options.evidenceBacked
+    && acceptanceCriteria.length < 2,
+    `${label} requires at least two acceptance criteria for multi-state evidence`,
+  );
+  options.violations.check(
+    options.evidenceBacked === true && acceptanceCriteria.length > 4,
+    `${label} has too many acceptance criteria for an evidence-backed draft`,
+  );
+  options.violations.check(
+    options.evidenceBacked === true
     && acceptanceCriteria.some((entry) =>
       entry.evidenceIds.some((evidenceId) => !base.evidenceIds.includes(evidenceId))
-    )
-  ) {
-    throw new Error(`${label}.evidenceIds must include all acceptance-criterion evidence`);
-  }
+    ),
+    `${label}.evidenceIds must include all acceptance-criterion evidence`,
+  );
   return {
     ...base,
     userStory: text(item.userStory, `${label}.userStory`, 4_000),
@@ -688,6 +718,8 @@ export function parseFeatureDocumentContent(
 ): FeatureDocumentContent {
   const root = object(value, "feature document");
   const identities = new Set<string>();
+  const violations = new Violations();
+  const context: ParseContext = { ...options, violations };
   const officialDocumentationDomains = options.officialDocumentationDomains ?? [];
   let officialDocumentation: FeatureDocumentedContext | undefined;
   if (
@@ -727,19 +759,19 @@ export function parseFeatureDocumentContent(
       allowedEvidenceIds,
       "sourceAssessment",
     );
-    if (options.evidenceBacked && citations.length === 0) {
-      throw new Error("sourceAssessment requires evidence");
-    }
-    if (
-      options.evidenceBacked
+    violations.check(
+      options.evidenceBacked === true && citations.length === 0,
+      "sourceAssessment requires evidence",
+    );
+    violations.check(
+      options.evidenceBacked === true
       && completeness === "complete"
       && (
         citations.length < 2
         || !(options.evidenceManifest ?? []).some(({ interaction }) => Boolean(interaction?.trim()))
-      )
-    ) {
-      throw new Error("sourceAssessment cannot claim completeness without explicit transition evidence");
-    }
+      ),
+      "sourceAssessment cannot claim completeness without explicit transition evidence",
+    );
     sourceAssessment = {
       captureType,
       completeness,
@@ -765,25 +797,28 @@ export function parseFeatureDocumentContent(
         reason: text(item.reason, `unscopedEvidence[${index}].reason`, 2_000),
       };
     });
-  if (options.evidenceBacked && root.unscopedEvidence === undefined) {
-    throw new Error("feature document requires unscopedEvidence");
-  }
-  if (new Set(unscopedEvidence.map(({ evidenceId }) => evidenceId)).size !== unscopedEvidence.length) {
-    throw new Error("unscopedEvidence contains duplicate evidence IDs");
-  }
+  violations.check(
+    options.evidenceBacked === true && root.unscopedEvidence === undefined,
+    "feature document requires unscopedEvidence",
+  );
+  violations.check(
+    new Set(unscopedEvidence.map(({ evidenceId }) => evidenceId)).size !== unscopedEvidence.length,
+    "unscopedEvidence contains duplicate evidence IDs",
+  );
   const requirements = list(root.requirements, "requirements", 100)
     .map((item, index) => requirement(
       item,
       allowedEvidenceIds,
       `requirements[${index}]`,
       identities,
-      options,
+      context,
     ));
-  if (requirements.length === 0) throw new Error("feature document requires at least one requirement");
-  const maximumRequirements = Math.max(1, Math.min(6, Math.floor(allowedEvidenceIds.size / 2)));
-  if (options.evidenceBacked && requirements.length > maximumRequirements) {
-    throw new Error(`feature document has too many requirements for ${allowedEvidenceIds.size} evidence items`);
-  }
+  violations.check(requirements.length === 0, "feature document requires at least one requirement");
+  const maximumRequirements = featureDocumentRequirementBudget(allowedEvidenceIds.size);
+  violations.check(
+    options.evidenceBacked === true && requirements.length > maximumRequirements,
+    `feature document has too many requirements for ${allowedEvidenceIds.size} evidence items`,
+  );
   const result: FeatureDocumentContent = {
     ...(sourceAssessment ? { sourceAssessment } : {}),
     ...(officialDocumentation ? { documentedContext: officialDocumentation } : {}),
@@ -833,15 +868,17 @@ export function parseFeatureDocumentContent(
     );
     const explicitlyUnscoped = new Set(unscopedEvidence.map(({ evidenceId }) => evidenceId));
     const duplicatedScope = [...explicitlyUnscoped].find((evidenceId) => scopedEvidence.has(evidenceId));
-    if (duplicatedScope) {
-      throw new Error(`evidence cannot be both scoped and unscoped: ${duplicatedScope}`);
-    }
+    violations.check(
+      duplicatedScope !== undefined,
+      `evidence cannot be both scoped and unscoped: ${duplicatedScope}`,
+    );
     const uncovered = [...allowedEvidenceIds].find(
       (evidenceId) => !scopedEvidence.has(evidenceId) && !explicitlyUnscoped.has(evidenceId),
     );
-    if (uncovered) {
-      throw new Error(`evidence is not covered by requirements or unscopedEvidence: ${uncovered}`);
-    }
+    violations.check(
+      uncovered !== undefined,
+      `evidence is not covered by requirements or unscopedEvidence: ${uncovered}`,
+    );
     const observedClaims = [
       result.observedFlow.userGoal,
       result.observedFlow.entryPoint,
@@ -850,9 +887,10 @@ export function parseFeatureDocumentContent(
       ...result.observedFlow.actors,
       ...result.observedFlow.visibleStates,
     ];
-    if (observedClaims.some(({ kind }) => kind === "proposed")) {
-      throw new Error("observedFlow cannot contain proposed behavior");
-    }
+    violations.check(
+      observedClaims.some(({ kind }) => kind === "proposed"),
+      "observedFlow cannot contain proposed behavior",
+    );
     const proposedClaims = [
       result.executiveSummary.recommendation,
       ...result.proposedFeature.goals,
@@ -860,12 +898,14 @@ export function parseFeatureDocumentContent(
       ...result.proposedFeature.behavior,
       ...result.proposedFeature.journey,
     ];
-    if (proposedClaims.some(({ kind }) => kind !== "proposed" && kind !== "unknown")) {
-      throw new Error("proposedFeature recommendations must be proposed or unknown");
-    }
-    if (result.openQuestions.some(({ kind }) => kind !== "unknown")) {
-      throw new Error("openQuestions must be classified as unknown");
-    }
+    violations.check(
+      proposedClaims.some(({ kind }) => kind !== "proposed" && kind !== "unknown"),
+      "proposedFeature recommendations must be proposed or unknown",
+    );
+    violations.check(
+      result.openQuestions.some(({ kind }) => kind !== "unknown"),
+      "openQuestions must be classified as unknown",
+    );
     const claims = [
       result.executiveSummary.purpose,
       result.executiveSummary.userValue,
@@ -896,10 +936,12 @@ export function parseFeatureDocumentContent(
       ...result.openQuestions,
     ];
     const claimBudget = featureDocumentClaimBudget(allowedEvidenceIds.size);
-    if (claims.length > claimBudget) {
-      throw new Error(`feature document exceeds the ${claimBudget}-claim budget`);
-    }
+    violations.check(
+      claims.length > claimBudget,
+      `feature document exceeds the ${claimBudget}-claim budget`,
+    );
   }
+  violations.throwIfAny();
   return result;
 }
 

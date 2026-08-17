@@ -56,6 +56,9 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /collaborationRef\.current\?\.publishCursor/);
   assert.match(source, /onPresence\(collaborators\)/);
   assert.match(source, /onCursor\(cursor\)/);
+  assert.match(source, /aria-label="People on this canvas"/);
+  assert.match(source, /onlineCollaborators\.map\(\(collaborator\) =>/);
+  assert.match(source, /collaborator\.id === `user:\$\{userId\}`/);
   assert.match(
     source,
     /editorRef\.current\?\.updateScene\(\{ collaborators \}\)/,
@@ -91,8 +94,12 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /getResearchProject\(projectId\)/);
   assert.match(
     source,
-    /<h1>\{references\?\.title \?\? "Designer project"\}<\/h1>/,
+    /const \[canvasTitle, setCanvasTitle\] = useState\("Canvas"\)/,
   );
+  assert.match(source, /"title" in canvas && canvas\.title\.trim\(\)/);
+  assert.match(source, /<Tooltip content=\{canvasTitle\} placement="below">/);
+  assert.match(source, /aria-label=\{`Open \$\{canvasTitle\} pages`\}/);
+  assert.match(source, /<h1>\{canvasTitle\}<\/h1>/);
   assert.match(
     source,
     /const saveStateIcons: Record<CanvasSaveState, IconName>/,
@@ -880,7 +887,10 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     /project-canvas-header__project-files|Open project files/,
   );
   assert.doesNotMatch(source, /project-canvas-header__collaboration-status/);
-  assert.match(source, /onClick=\{syncCanvasCollaborators\}/);
+  assert.match(
+    source,
+    /onClick=\{\(\) => setCollaboratorsOpen\(\(open\) => !open\)\}/,
+  );
   assert.doesNotMatch(source, /Canvas pages and menu/);
   assert.match(
     source,
@@ -1048,7 +1058,7 @@ test("gives the infinite canvas the full available viewport", () => {
   );
   assert.match(
     css,
-    /\.project-screen-library\s*\{[^}]*position:\s*absolute;[^}]*top:\s*76px;[^}]*bottom:\s*128px;[^}]*left:\s*64px;[^}]*width:\s*min\(640px,/s,
+    /\.project-screen-library\s*\{[^}]*position:\s*absolute;[^}]*top:\s*auto;[^}]*bottom:\s*calc\(var\(--project-canvas-toolbelt-bottom,[^}]*left:\s*50%;[^}]*width:\s*min\(640px,[^}]*transform:\s*translateX\(-50%\);/s,
   );
   assert.match(
     css,
@@ -1194,6 +1204,10 @@ test("matches the compact Miro-style board header proportions", () => {
     css,
     /\.project-canvas-collaborators__avatars > span\s*\{[^}]*border-radius:\s*50%;/s,
   );
+  assert.match(
+    css,
+    /\.project-canvas-collaborators-menu\s*\{[^}]*position:\s*absolute;[^}]*top:\s*calc\(100% \+ 8px\);[^}]*width:\s*min\(320px, calc\(100vw - 24px\)\);/s,
+  );
   assert.match(source, /aria-label="Projects home"/);
   assert.match(
     source,
@@ -1204,10 +1218,7 @@ test("matches the compact Miro-style board header proportions", () => {
     source,
     /project-canvas-header__workspace-button[\s\S]{0,280}<Icon icon="chevronDown"/,
   );
-  assert.match(
-    source,
-    /className="project-canvas-header__file-kind"[^>]*>\s*Canvas\s*<\/span>/,
-  );
+  assert.doesNotMatch(source, /project-canvas-header__file-kind/);
   assert.match(
     css,
     /\.project-canvas-header__group--left\s*\{[^}]*height:\s*48px;[^}]*background:\s*rgb\(255 255 255 \/ 98%\);[^}]*border-radius:\s*14px;/s,
@@ -1235,10 +1246,6 @@ test("matches the compact Miro-style board header proportions", () => {
   assert.match(
     css,
     /\.project-canvas-header__identity\s*\{[^}]*height:\s*48px;[^}]*width:\s*auto;[^}]*max-width:\s*200px;[^}]*flex:\s*0 1 auto;[^}]*display:\s*flex;[^}]*align-items:\s*center;/s,
-  );
-  assert.match(
-    css,
-    /\.project-canvas-header__identity > span:first-child\s*\{[^}]*display:\s*none;/s,
   );
   assert.match(
     css,

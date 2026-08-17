@@ -402,6 +402,19 @@ test('renders the shared full-width discovery navigation for Apps', () => {
   assert.doesNotMatch(html, /Import App/);
 });
 
+test('links the shared Colors navigation identity to the plural canonical route', () => {
+  const html = renderToStaticMarkup(
+    <ApplicationHeader
+      active="color"
+      className="apps-top-nav"
+      search={<button>Search Colors…</button>}
+    />,
+  );
+
+  assert.match(html, /href="\/colors"/);
+  assert.match(html, /aria-label="Vitrines Colors"/);
+});
+
 test('keeps the Apps search compact on desktop and in the mobile header', async () => {
   const css = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
   const discoveryCss = await readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');

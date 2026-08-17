@@ -82,6 +82,11 @@ function parseDecision(reply: string, mode: "read" | "mutate"): AgentDecision | 
   return Array.isArray(parsed) ? decisions : decisions[0];
 }
 
+function decisionSummary(decision: AgentDecision | AgentDecision[]): string {
+  const actions = Array.isArray(decision) ? decision : [decision];
+  return `Selected ${actions.length} ordered ${actions.length === 1 ? "action" : "actions"} for validation; secret values and raw inputs are excluded from the trace.`;
+}
+
 export function createProductionAutonomousOrchestrator(options: ProductionAutonomousOrchestratorOptions) {
   const store = createAutonomousStore();
   const pools = new Map<"research" | "discovery", ChatSession[]>();
@@ -133,12 +138,34 @@ export function createProductionAutonomousOrchestrator(options: ProductionAutono
       const parent = claimed as WorkerParent;
       const existing = await store.latestDossier(parent.id);
       if (existing) return existing.dossier;
+      await store.recordTraceEvent({
+        runId: parent.id,
+        stage: "research",
+        type: "research_started",
+        rationale: "Started cited public-source research from the configured entry URL before flow execution.",
+      });
       const dossier = await researchDossier({ app: parent.app, homepageUrl: parent.homepageUrl }, {
         sessions: pools.get("research") ?? [],
         collectResearchPages,
         fetchAndVerifySources: fetchAndVerifyResearchSources,
       });
-      return (await store.saveDossier(parent.id, dossier)).dossier;
+      const saved = await store.saveDossier(parent.id, dossier);
+      await store.recordTraceEvent({
+        runId: parent.id,
+        stage: "research",
+        type: "research_completed",
+        rationale: `Saved a cited research brief with ${saved.dossier.sources.length} sources and ${saved.dossier.candidateFlows.length} candidate flows.`,
+        confidence: saved.dossier.candidateFlows.length ? 0.8 : 0.5,
+      });
+      await Promise.all(saved.dossier.candidateFlows.map((flow) => store.recordTraceEvent({
+        runId: parent.id,
+        stage: "research",
+        type: "flow_proposed",
+        rationale: `Proposed “${flow.title}” from cited public research; readiness is ${flow.readiness ?? "needs_review"}.`,
+        confidence: flow.confidence,
+        credentialCapability: flow.credentialCapability,
+      })));
+      return saved.dossier;
     },
     ensureInitialMissions: async (claimed, dossier) => {
       const parent = claimed as WorkerParent;
@@ -158,6 +185,16 @@ export function createProductionAutonomousOrchestrator(options: ProductionAutono
       const mission = claimed as CrawlMissionRecord;
       const parent = parentById.get(mission.run_id);
       if (!parent) throw new Error("Autonomous parent context is unavailable");
+      const dossier = (await store.latestDossier(parent.id))?.dossier;
+      const credentialCapability = dossier?.candidateFlows.find(({ id }) => id === mission.missionKey)?.credentialCapability;
+      await store.recordTraceEvent({
+        runId: parent.id,
+        missionId: mission.id,
+        stage: "execution",
+        type: "mission_started",
+        rationale: `Started the ${mission.mode} mission “${mission.goal}” from the approved entry URL.`,
+        credentialCapability,
+      });
       const accountSession = await store.accountSession(parent.app);
       const storageState = accountSession && options.sessionEncryptionKey
         ? decryptStorageState(accountSession.encrypted_storage_state, options.sessionEncryptionKey)
@@ -173,12 +210,21 @@ export function createProductionAutonomousOrchestrator(options: ProductionAutono
       } finally {
         await browser.close();
       }
+      await store.recordTraceEvent({
+        runId: parent.id,
+        missionId: mission.id,
+        stage: "execution",
+        type: "state_observed",
+        rationale: `Observed entry state “${observation.title || "untitled page"}” before selecting an action.`,
+        credentialCapability,
+      });
       const sessions = pools.get("discovery") ?? [];
       if (!sessions.length) throw new Error("Discovery chat pool is unavailable");
       const session = sessions[discoverySession++ % sessions.length];
       const authenticationRequired = isAuthenticationObservation(observation);
       if (authenticationRequired) {
         if (!options.sessionEncryptionKey) {
+          await store.recordTraceEvent({ runId: parent.id, missionId: mission.id, stage: "execution", type: "mission_blocked", rationale: "Authentication is required but encrypted shared-session support is unavailable.", credentialCapability });
           return { status: "blocked", checkpoint: { reason: "session_encryption_unavailable" } };
         }
         const authWorkerId = `${options.workerId}:${workerId}`;
@@ -219,6 +265,7 @@ export function createProductionAutonomousOrchestrator(options: ProductionAutono
             requestAuthenticationLease: async () => {},
           });
           if (episode.status !== "succeeded") {
+            await store.recordTraceEvent({ runId: parent.id, missionId: mission.id, childRunId: episode.runId, stage: "execution", type: "mission_blocked", rationale: "Authentication episode did not complete successfully.", credentialCapability });
             return { status: "blocked", checkpoint: { reason: "authentication_failed", childRunId: episode.runId } };
           }
           const refreshed = await store.accountSession(parent.app);
@@ -231,6 +278,14 @@ export function createProductionAutonomousOrchestrator(options: ProductionAutono
         }
       }
       const decision = parseDecision(await session.ask(decisionPrompt(mission, observation)), mission.mode);
+      await store.recordTraceEvent({
+        runId: parent.id,
+        missionId: mission.id,
+        stage: "execution",
+        type: "action_selected",
+        rationale: decisionSummary(decision),
+        credentialCapability,
+      });
       let authenticationLeaseHeld = false;
       const episode = await executeAgentEpisode({
         app: parent.app,
@@ -248,7 +303,7 @@ export function createProductionAutonomousOrchestrator(options: ProductionAutono
         observation,
         decision,
         allowAll: parent.allowAll,
-        sourceUrls: (await store.latestDossier(parent.id))?.dossier.sources.map(({ url }) => url) ?? [],
+        sourceUrls: dossier?.sources.map(({ url }) => url) ?? [],
       }, {
         saveAutonomousPlan: async (plan, parentRunId, missionId) => saveAutonomousEpisodePlan(plan, parentRunId, missionId),
         createChildRun: createAutonomousChildRun,
@@ -267,6 +322,7 @@ export function createProductionAutonomousOrchestrator(options: ProductionAutono
       });
       if (episode.status === "authentication_required") {
         if (authenticationLeaseHeld) await store.releaseAccountLease(parent.id, `${options.workerId}:${workerId}`, "authentication");
+        await store.recordTraceEvent({ runId: parent.id, missionId: mission.id, childRunId: episode.runId, stage: "execution", type: "mission_blocked", rationale: "The observed flow requires authentication before execution can continue.", credentialCapability });
         return { status: "blocked", checkpoint: { reason: "authentication_required", sessionVersion: accountSession?.state_version ?? null } };
       }
       if (episode.status !== "succeeded") return { status: episode.status === "blocked" ? "blocked" : "failed", checkpoint: { childRunId: episode.runId } };
@@ -300,6 +356,17 @@ export function createProductionAutonomousOrchestrator(options: ProductionAutono
         mode: mission.mode,
         outcome: "completed",
         confidence: 0.9,
+      });
+      await store.recordTraceEvent({
+        runId: parent.id,
+        missionId: mission.id,
+        childRunId: episode.runId,
+        stage: "execution",
+        type: "evidence_captured",
+        rationale: `Captured and persisted the observed destination state “${item.state_label}”.`,
+        confidence: 0.9,
+        evidenceId: item.id,
+        credentialCapability,
       });
       return { status: "succeeded", checkpoint: { childRunId: episode.runId, sourceStateId: source.id, destinationStateId: destination.id } };
     },

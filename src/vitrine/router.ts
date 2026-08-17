@@ -21,7 +21,13 @@ export type SiteVersionRoute =
     };
 
 /* Admin sections are addressable so a dashboard view can be linked and reloaded. */
-export type AdminRouteSection = "insights";
+export type AdminRouteSection = "insights" | "threads";
+
+export type ProjectWorkspaceScope =
+  | { kind: "personal" }
+  | { kind: "team"; teamId: number };
+
+export type ProjectWorkspaceSection = "people" | "settings";
 
 export type Route =
   | { name: "landing" }
@@ -35,6 +41,23 @@ export type Route =
   | { name: "reset-password"; token?: string }
   | { name: "search" }
   | { name: "apps" }
+  /* The rebuilt browse surface. Runs beside /apps rather than replacing it. */
+  | { name: "browse" }
+  | { name: "browse-app"; appId: string }
+  | { name: "browse-flows" }
+  | { name: "browse-sites" }
+  | { name: "browse-site"; siteSlug: string }
+  | { name: "browse-search" }
+  | { name: "browse-pricing" }
+  | { name: "browse-build-in-public" }
+  | { name: "browse-billing-success" }
+  | { name: "browse-forgot-password" }
+  | { name: "browse-reset-password"; token?: string }
+  | { name: "browse-not-found"; pathname: string }
+  | { name: "browse-collections" }
+  | { name: "browse-projects" }
+  | { name: "browse-settings" }
+  | { name: "browse-admin" }
   | { name: "flows" }
   | {
       name: "app";
@@ -48,10 +71,19 @@ export type Route =
       flowView?: FlowRepresentation;
     }
   | { name: "sites" }
+  | { name: "color" }
+  | { name: "color-create"; paletteId?: string }
   | { name: "sites-motion" }
   | SiteVersionRoute
   | { name: "collections"; collectionId?: number }
+  /* `/projects` is intentionally retained as the entry route. App replaces it
+     with the Personal workspace without adding an extra history entry. */
   | { name: "projects" }
+  | {
+      name: "projects-workspace";
+      workspace: ProjectWorkspaceScope;
+      section?: ProjectWorkspaceSection;
+    }
   | { name: "project"; projectId: string }
   | { name: "project-documents"; projectId: string }
   | { name: "project-settings"; projectId: string }
@@ -114,8 +146,31 @@ export function parseRoutePath(pathname: string): Route {
   if (path === "/reset-password") return { name: "reset-password" };
   if (path === "/search") return { name: "search" };
   if (path === "/apps") return { name: "apps" };
+  if (path === "/browse") return { name: "browse" };
+  if (path === "/browse/flows") return { name: "browse-flows" };
+  if (path === "/browse/sites") return { name: "browse-sites" };
+  if (path.startsWith("/browse/sites/")) {
+    const siteSlug = decodeURIComponent(path.slice("/browse/sites/".length));
+    if (siteSlug && !siteSlug.includes("/")) return { name: "browse-site", siteSlug };
+  }
+  if (path === "/browse/search") return { name: "browse-search" };
+  if (path === "/browse/pricing") return { name: "browse-pricing" };
+  if (path === "/browse/build-in-public") return { name: "browse-build-in-public" };
+  if (path === "/browse/billing-success") return { name: "browse-billing-success" };
+  if (path === "/browse/forgot-password") return { name: "browse-forgot-password" };
+  if (path === "/browse/reset-password") return { name: "browse-reset-password" };
+  if (path === "/browse/collections") return { name: "browse-collections" };
+  if (path === "/browse/projects") return { name: "browse-projects" };
+  if (path === "/browse/settings") return { name: "browse-settings" };
+  if (path === "/browse/admin") return { name: "browse-admin" };
+  if (path.startsWith("/browse/")) {
+    const appId = decodeURIComponent(path.slice("/browse/".length));
+    if (appId) return { name: "browse-app", appId };
+  }
   if (path === "/flows") return { name: "flows" };
   if (path === "/sites") return { name: "sites" };
+  if (path === "/colors" || path === "/color") return { name: "color" };
+  if (path === "/colors/create" || path === "/color/create") return { name: "color-create" };
   if (path === "/sites/motion") return { name: "sites-motion" };
   const siteMatch = path.match(
     /^\/sites\/([1-9]\d*)\/versions\/([1-9]\d*)(?:\/([^/]+)(?:\/([1-9]\d*))?)?$/,
@@ -161,6 +216,23 @@ export function parseRoutePath(pathname: string): Route {
       : { name: "not-found", pathname: path };
   }
   if (path === "/projects") return { name: "projects" };
+  if (path === "/projects/personal") {
+    return { name: "projects-workspace", workspace: { kind: "personal" } };
+  }
+  const teamWorkspaceMatch = path.match(
+    /^\/projects\/team\/([1-9]\d*)(?:\/(people|settings))?$/,
+  );
+  if (teamWorkspaceMatch) {
+    const teamId = Number(teamWorkspaceMatch[1]);
+    const section = teamWorkspaceMatch[2] as ProjectWorkspaceSection | undefined;
+    return Number.isSafeInteger(teamId)
+      ? {
+          name: "projects-workspace",
+          workspace: { kind: "team", teamId },
+          ...(section ? { section } : {}),
+        }
+      : { name: "not-found", pathname: path };
+  }
   const collectionMatch = path.match(/^\/collections(?:\/([1-9]\d*))?$/);
   if (collectionMatch) {
     const collectionId = collectionMatch[1]
@@ -238,6 +310,7 @@ export function parseRoutePath(pathname: string): Route {
   }
   if (path === "/admin") return { name: "admin" };
   if (path === "/admin/insights") return { name: "admin", section: "insights" };
+  if (path === "/admin/threads") return { name: "admin", section: "threads" };
   const appMatch = path.match(/^\/apps\/([^/]+)(?:\/([^/]+))?$/);
   if (appMatch) {
     const appId = decodeSegment(appMatch[1]);
@@ -275,6 +348,14 @@ function bounded(
 
 export function parseRouteLocation(pathname: string, search = ""): Route {
   const route = parseRoutePath(pathname);
+  if (route.name === "color-create") {
+    const paletteId = bounded(
+      new URLSearchParams(search).get("palette"),
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      120,
+    );
+    return paletteId ? { ...route, paletteId } : route;
+  }
   if (route.name === "reset-password") {
     const token = bounded(new URLSearchParams(search).get("token"), /^[A-Za-z0-9_-]{43}$/, 43);
     return token ? { ...route, token } : route;
@@ -351,10 +432,46 @@ export function routeToPath(route: Route): string {
       return "/search";
     case "apps":
       return "/apps";
+    case "browse":
+      return "/browse";
+    case "browse-app":
+      return `/browse/${encodeURIComponent(route.appId)}`;
+    case "browse-flows":
+      return "/browse/flows";
+    case "browse-sites":
+      return "/browse/sites";
+    case "browse-site":
+      return `/browse/sites/${encodeURIComponent(route.siteSlug)}`;
+    case "browse-search":
+      return "/browse/search";
+    case "browse-pricing":
+      return "/browse/pricing";
+    case "browse-build-in-public":
+      return "/browse/build-in-public";
+    case "browse-billing-success":
+      return "/browse/billing-success";
+    case "browse-forgot-password":
+      return "/browse/forgot-password";
+    case "browse-reset-password":
+      return "/browse/reset-password";
+    case "browse-not-found":
+      return route.pathname;
+    case "browse-collections":
+      return "/browse/collections";
+    case "browse-projects":
+      return "/browse/projects";
+    case "browse-settings":
+      return "/browse/settings";
+    case "browse-admin":
+      return "/browse/admin";
     case "flows":
       return "/flows";
     case "sites":
       return "/sites";
+    case "color":
+      return "/colors";
+    case "color-create":
+      return `/colors/create${route.paletteId ? `?palette=${encodeURIComponent(route.paletteId)}` : ""}`;
     case "sites-motion":
       return "/sites/motion";
     case "site-version": {
@@ -379,6 +496,11 @@ export function routeToPath(route: Route): string {
         : "/collections";
     case "projects":
       return "/projects";
+    case "projects-workspace": {
+      if (route.workspace.kind === "personal") return "/projects/personal";
+      const section = route.section ? `/${route.section}` : "";
+      return `/projects/team/${route.workspace.teamId}${section}`;
+    }
     case "project":
       return `/projects/${route.projectId}`;
     case "project-documents":
@@ -396,7 +518,8 @@ export function routeToPath(route: Route): string {
     case "feature-document-share":
       return `/feature-document-shares/${encodeURIComponent(route.token)}`;
     case "admin":
-      return route.section === "insights" ? "/admin/insights" : "/admin";
+      return route.section === "insights" ? "/admin/insights"
+        : route.section === "threads" ? "/admin/threads" : "/admin";
     case "app": {
       const path = `/apps/${encodeURIComponent(route.appId)}${route.section ? `/${encodeURIComponent(route.section)}` : ""}`;
       const params = new URLSearchParams();
@@ -427,9 +550,15 @@ export function useRoute(): Route {
     rawRoute.name === "app" && rawRoute.section === "overview"
       ? routeToPath(route)
       : null;
+  const normalizedPathname = pathname.replace(/\/+$/, "") || "/";
+  const legacyColorPath =
+    normalizedPathname === "/color" || normalizedPathname === "/color/create"
+      ? `${normalizedPathname.replace(/^\/color/, "/colors")}${search}`
+      : null;
+  const canonicalPath = legacyOverviewPath ?? legacyColorPath;
   useEffect(() => {
-    if (legacyOverviewPath)
-      updateLocation(legacyOverviewPath, { replace: true });
-  }, [legacyOverviewPath]);
+    if (canonicalPath)
+      updateLocation(canonicalPath, { replace: true });
+  }, [canonicalPath]);
   return route;
 }

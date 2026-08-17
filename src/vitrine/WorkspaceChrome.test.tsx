@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { WorkspaceHeader, WorkspaceRail } from './components/WorkspaceChrome.tsx';
+import { WorkspaceHeader, WorkspaceRail, WorkspaceShell } from './components/WorkspaceChrome.tsx';
 import { projectRailNav } from './components/projectRailNav.tsx';
 
 test('renders the shared workspace rail as one group of buttons', () => {
@@ -14,6 +14,7 @@ test('renders the shared workspace rail as one group of buttons', () => {
       primaryCollapsible
       primaryActions={[{ label: 'Projects', icon: <span>P</span>, active: true }]}
       settings={{ label: 'Account settings', icon: <span>S</span> }}
+      onBrandSelect={() => undefined}
     />,
   );
 
@@ -23,6 +24,11 @@ test('renders the shared workspace rail as one group of buttons', () => {
   assert.match(html, /aria-expanded="true"/);
   assert.match(html, /aria-current="page"/);
   assert.match(html, /class="projects-workspace__desktop-footer"/);
+  assert.match(
+    html,
+    /projects-workspace__rail-brand[\s\S]*projects-workspace__desktop-nav[\s\S]*projects-workspace__desktop-footer[\s\S]*projects-workspace__desktop-workspace/,
+  );
+  assert.match(html, /aria-label="Projects"[^>]*title="Projects"/);
   assert.doesNotMatch(html, /projects-workspace__desktop-workspace-caret/);
   // Every row navigates through onSelect — no <a href> rows to style separately.
   assert.doesNotMatch(html, /<a [^>]*class="projects-workspace__desktop/);
@@ -109,6 +115,27 @@ test('renders project and Settings headers through the same component', () => {
   assert.match(settings, /aria-label="Vitrines Projects"/);
 });
 
+test('renders the shared Projects header above the rail on every workspace route', () => {
+  const html = renderToStaticMarkup(
+    <WorkspaceShell
+      nav={{ primaryLabel: 'Workspace', primaryActions: [] }}
+      onBrandSelect={() => undefined}
+      headerActions={<button aria-label="Search">Search</button>}
+    >
+      <p>Project content</p>
+    </WorkspaceShell>,
+  );
+
+  assert.match(
+    html,
+    /projects-workspace__context-bar[\s\S]*aria-label="Workspace navigation"[\s\S]*projects-workspace__shell/,
+  );
+  assert.match(html, /aria-label="Vitrines Projects"/);
+  assert.match(html, /aria-label="Hide workspace navigation"/);
+  assert.match(html, /aria-label="Search"/);
+  assert.doesNotMatch(html, /projects-workspace__rail-brand/);
+});
+
 test('marks a disclosing row as one and leaves leaves alone', () => {
   const html = renderToStaticMarkup(
     <WorkspaceRail
@@ -189,6 +216,32 @@ test('publishes a flat app rail instead of a project directory', () => {
   ]);
 });
 
+test('mounts the shared rail on every persistent project route', () => {
+  const appSource = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8');
+  const routes = /const workspaceChromeRoutes = new Set\(\[([\s\S]*?)\]\);/.exec(appSource);
+
+  assert.ok(routes, 'workspace chrome route allowlist not found');
+  for (const route of [
+    'projects',
+    'projects-workspace',
+    'project',
+    'project-documents',
+    'project-settings',
+  ]) {
+    assert.match(routes[1], new RegExp(`"${route}"`));
+  }
+
+  // These are full-screen editors with their own navigation and tool chrome.
+  for (const route of [
+    'project-canvas',
+    'project-playground',
+    'project-document-file',
+    'project-document',
+  ]) {
+    assert.doesNotMatch(routes[1], new RegExp(`"${route}"`));
+  }
+});
+
 test('uses a compact visual rail for global navigation', () => {
   const html = renderToStaticMarkup(
     <WorkspaceRail
@@ -207,34 +260,77 @@ test('uses a compact visual rail for global navigation', () => {
   assert.doesNotMatch(html, /projects-workspace__desktop-subnav/);
 
   const css = readFileSync(new URL('./projectsWorkspace.css', import.meta.url), 'utf8');
-  assert.match(css, /--projects-rail-width:\s*96px;/);
+  const source = readFileSync(new URL('./components/WorkspaceChrome.tsx', import.meta.url), 'utf8');
+  assert.match(source, /matchMedia\('\(max-width: 700px\)'\)/);
+  assert.doesNotMatch(source, /matchMedia\('\(max-width: 900px\)'\)/);
+  assert.match(css, /--projects-rail-width:\s*72px;/);
   assert.match(css, /--projects-rail-surface:\s*light-dark\(#f8fafb,\s*#151516\);/);
-  assert.match(css, /--projects-rail-active:\s*light-dark\(#e6f4fa,\s*#27282c\);/);
+  assert.match(css, /--projects-rail-active:\s*light-dark\(#e9eef2,\s*#34363c\);/);
   assert.match(
     css,
-    /@media \(min-width:\s*901px\)[\s\S]*?\.projects-workspace__desktop-nav > \.projects-workspace__desktop-row > \.projects-workspace__desktop-row-line > \.projects-workspace__desktop-row-link\s*\{[^}]*grid-template-rows:\s*36px 16px;/s,
+    /\.projects-workspace__context-bar\s*\{[^}]*border-bottom:\s*0;[^}]*background:\s*var\(--projects-rail-surface\);[^}]*color:\s*#fff;/s,
   );
   assert.match(
     css,
-    /\.projects-workspace__desktop-nav > \.projects-workspace__desktop-row > \.projects-workspace__desktop-row-line > \.projects-workspace__desktop-row-link::before\s*\{[^}]*width:\s*52px;[^}]*height:\s*52px;/s,
+    /\.projects-workspace__drawer-trigger\s*\{[^}]*display:\s*none;[\s\S]*?@media \(max-width:\s*700px\)[\s\S]*?\.projects-workspace__drawer-trigger\s*\{[^}]*display:\s*grid;/s,
   );
   assert.match(
     css,
-    /@media \(min-width:\s*901px\)[\s\S]*?\.projects-workspace \.projects-workspace__desktop-settings\s*\{[^}]*width:\s*68px;[^}]*grid-template-rows:\s*36px 16px;/s,
+    /\.projects-workspace__main\s*\{[^}]*height:\s*100%;[^}]*overflow-y:\s*auto;[^}]*overscroll-behavior-y:\s*contain;/s,
   );
   assert.match(
     css,
-    /\.projects-workspace__desktop-settings::before\s*\{[^}]*width:\s*52px;[^}]*height:\s*52px;/s,
+    /@media \(min-width:\s*701px\)[\s\S]*?\.projects-workspace__desktop-row-link,[\s\S]*?\.projects-workspace \.projects-workspace__desktop-settings\s*\{[^}]*width:\s*48px(?:\s*!important)?;[^}]*min-height:\s*48px(?:\s*!important)?;[^}]*grid-template-rows:\s*1fr(?:\s*!important)?;/s,
   );
   assert.match(
     css,
-    /\.projects-workspace__desktop-nav > \.projects-workspace__desktop-row > \.projects-workspace__desktop-row-line > \.projects-workspace__desktop-row-link\.is-active::after,[\s\S]*?\.projects-workspace__desktop-nav--primary > \.projects-workspace__desktop-row\.is-depth-0\.has-active-descendant > \.projects-workspace__desktop-row-line > \.projects-workspace__desktop-row-link::after\s*\{[^}]*width:\s*2px;[^}]*height:\s*28px;[^}]*background:\s*var\(--color-text-primary\);/s,
+    /\.projects-workspace__desktop-row-link::before,[\s\S]*?\.projects-workspace__desktop-settings::before\s*\{[^}]*width:\s*40px(?:\s*!important)?;[^}]*height:\s*40px(?:\s*!important)?;/s,
   );
   assert.match(
     css,
-    /\.projects-workspace__desktop-nav > \.projects-workspace__desktop-row:not\(\.has-active-descendant\) > \.projects-workspace__desktop-row-line > \.projects-workspace__desktop-row-link:not\(\.is-active\):hover::before/,
+    /@media \(min-width:\s*701px\)[\s\S]*?\.projects-workspace \.projects-workspace__desktop-settings\s*\{[^}]*width:\s*48px(?:\s*!important)?;[^}]*min-height:\s*48px(?:\s*!important)?;[^}]*grid-template-rows:\s*1fr(?:\s*!important)?;/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__desktop-row-link::before,[\s\S]*?\.projects-workspace__desktop-settings::before\s*\{[^}]*width:\s*40px(?:\s*!important)?;[^}]*height:\s*40px(?:\s*!important)?;/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__desktop-row-link\.is-active::before,[\s\S]*?\.projects-workspace__desktop-row-link::before\s*\{[^}]*background:\s*var\(--projects-rail-active\) !important;/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__desktop-row:not\(\.has-active-descendant\)[\s\S]*?\.projects-workspace__desktop-row-link:not\(\.is-active\):hover::before/,
   );
   assert.doesNotMatch(css, /\.projects-workspace__desktop-subnav-content > \.projects-workspace__desktop-row::before/);
   assert.doesNotMatch(css, /\.projects-workspace__desktop-subnav-content::before/);
   assert.doesNotMatch(css, /box-shadow:\s*inset 2px 0 0 var\(--color-accent\);/);
+  assert.match(
+    css,
+    /\.projects-workspace__desktop-row-link::after,[\s\S]*?\.projects-workspace__desktop-settings::after\s*\{[^}]*display:\s*none !important;/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__desktop-rail[\s\S]*?\.projects-workspace__desktop-row-link,[\s\S]*?transition:\s*transform 180ms cubic-bezier\(0\.34, 1\.56, 0\.64, 1\) !important;/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__desktop-rail[\s\S]*?\.projects-workspace__desktop-row-link:active,[\s\S]*?transform:\s*scale\(0\.9\);/s,
+  );
+  assert.match(
+    css,
+    /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?\.projects-workspace__desktop-rail[\s\S]*?\.projects-workspace__desktop-row-link:active,[\s\S]*?transform:\s*none;/s,
+  );
+  assert.match(
+    css,
+    /@media \(min-width:\s*701px\)[\s\S]*?\.projects-team-drawer\s*\{[^}]*inset:\s*auto auto 62px calc\(var\(--projects-rail-width\) \+ 8px\);/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace\s+\.projects-workspace__desktop-rail\s+\.projects-workspace__desktop-nav\s+\.projects-workspace__desktop-row-link\s*\{[^}]*grid-template-columns:\s*1fr !important;[^}]*justify-items:\s*center !important;/s,
+  );
+  assert.match(
+    css,
+    /@media \(max-width:\s*700px\)[\s\S]*?\.projects-team-drawer\s*\{[^}]*inset:\s*0 auto 0 0;[^}]*transform:\s*translateX\(-100%\);/s,
+  );
 });

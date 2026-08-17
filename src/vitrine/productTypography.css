@@ -31,6 +31,8 @@
   :where(h2, h3):not(
     .reference-discovery__taxonomy *,
     .reference-detail__heading *,
+    .color-gallery__palette-title,
+    .color-pack-stack *,
     .project-files__hero-heading *,
     .project-document__editor *,
     .project-canvas-document-editor *,

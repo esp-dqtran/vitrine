@@ -54,6 +54,18 @@ test('composes discovery content in the stable header, taxonomy, toolbar, meta, 
   assert.equal((html.match(/1 site/g) ?? []).length, 1);
 });
 
+test('omits the taxonomy region when a discovery page has no taxonomy content', () => {
+  const html = renderLayout({
+    kind: 'colors',
+    taxonomy: null,
+    taxonomyLabel: undefined,
+  });
+
+  assert.doesNotMatch(html, /reference-discovery__taxonomy/);
+  assert.match(html, /data-layout-part="toolbar"/);
+  assert.match(html, /data-discovery-page-layout="colors"/);
+});
+
 test('right-aligns the shared result count for Apps, Sites, and Flows', async () => {
   const css = await readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
 
@@ -77,7 +89,7 @@ test('renders a compact progress treatment while loading another page', async ()
 });
 
 test('keeps kind-specific shell classes and data attributes for every discovery kind', () => {
-  for (const kind of ['apps', 'sites', 'flows'] as const) {
+  for (const kind of ['apps', 'sites', 'flows', 'colors'] as const) {
     const html = renderLayout({ kind });
 
     assert.match(html, new RegExp(`data-reference-gallery-shell="${kind}"`));

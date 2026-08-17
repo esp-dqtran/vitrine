@@ -6,16 +6,21 @@ const story = readFileSync('src/stories/Components/OverlaysAndDialogs.stories.ts
 const css = readFileSync('src/stories/Components/OverlaysAndDialogs.css', 'utf8');
 const dropdownCss = readFileSync('src/vitrine/components/AstryxDropdown.css', 'utf8');
 const modalCss = readFileSync('src/vitrine/components/AstryxModal.css', 'utf8');
+const productSpacingCss = readFileSync('src/vitrine/productSpacing.css', 'utf8');
 const previewCss = readFileSync('src/vitrine/flowPreviewDialog.css', 'utf8');
 const previewDialog = readFileSync('src/vitrine/components/ScreenPreviewDialog.tsx', 'utf8');
 const flowDialog = readFileSync('src/vitrine/components/FlowPreviewDialog.tsx', 'utf8');
 const projectsCss = readFileSync('src/vitrine/projectsWorkspace.css', 'utf8');
+const previewModalCloseButton = readFileSync('src/vitrine/components/PreviewModalCloseButton.tsx', 'utf8');
+const previewModalConsumers = [
+  'src/vitrine/components/PublicAppPreviewPage.tsx',
+  'src/vitrine/components/PublicSitePreviewModal.tsx',
+].map((path) => readFileSync(path, 'utf8'));
 const overlayIconActions = [
   'src/vitrine/components/AdvancedSearchFilterDrawer.tsx',
   'src/vitrine/components/AdvancedSearchPreview.tsx',
   'src/vitrine/components/CommandPalette.tsx',
   'src/vitrine/components/Lightbox.tsx',
-  'src/vitrine/components/PublicAppPreviewPage.tsx',
   'src/vitrine/components/SiteSectionInspector.tsx',
 ].map((path) => readFileSync(path, 'utf8'));
 
@@ -72,6 +77,10 @@ test('applies the approved preview actions and modal geometry across production 
   assert.doesNotMatch(flowDialog, /More prototype actions/);
   assert.doesNotMatch(flowDialog, /flow-preview-dialog__menu/);
   assert.match(modalCss, /\.astryx-modal__icon-action \{[\s\S]*border-radius: 50% !important;[\s\S]*background: var\(--vitrine-color-on-action-primary\) !important;[\s\S]*color: var\(--vitrine-color-action-primary\) !important;/);
+  assert.match(productSpacingCss, /:not\([\s\S]*\.astryx-modal__icon-action,[\s\S]*\) \{[\s\S]*height: var\(--vitrine-control-height\) !important;/);
+  assert.match(previewModalCloseButton, /style=\{\{ position: 'absolute', top: 16, right: 16, zIndex: 5 \}\}/);
+  assert.match(previewModalCloseButton, /<IconButton/);
+  previewModalConsumers.forEach((source) => assert.match(source, /<PreviewModalCloseButton onClose=\{onClose\} \/>/));
   overlayIconActions.forEach((source) => assert.match(source, /<IconButton/));
   assert.doesNotMatch(projectsCss, /--astryx-modal-surface:/);
   assert.doesNotMatch(projectsCss, /border-radius: 16px !important/);

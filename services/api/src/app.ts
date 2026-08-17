@@ -231,6 +231,16 @@ import {
   validateReferralToken,
   type ReferralCampaign,
 } from "../../../src/referralStore.ts";
+import { createThreadsMarketingStore } from "../../../src/threadsMarketingStore.ts";
+import { createColorPaletteStore } from "../../../src/colorPaletteStore.ts";
+import {
+  createThreadsClient,
+  createThreadsMarketingService,
+  mountThreadsMarketingPublicRoutes,
+  mountThreadsMarketingRoutes,
+  threadsMarketingConfigFromEnv,
+} from "./threadsMarketing.ts";
+import { mountColorPaletteRoutes } from "./colorPalettes.ts";
 
 const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app", "import-site", "crawl-public-page"] as const;
 // The product's Site import UI was deliberately removed, but the site crawler
@@ -255,6 +265,7 @@ const apiCrawlRunService = createCrawlRunService({ workerId: "api" });
 const apiAutonomousStore = createAutonomousStore();
 const apiSitesStore = createSitesStore();
 const apiPublicPageStore = createPublicPageStore();
+const apiThreadsMarketingStore = createThreadsMarketingStore(query);
 const disabledReferralCampaign: ReferralCampaign = {
   id: "disabled",
   startsAt: new Date(0),
@@ -540,6 +551,7 @@ const defaults = {
   typesenseFlowCatalog: undefined as TypesenseFlowCatalogClient | undefined,
   typesenseSiteCatalog: undefined as TypesenseSiteCatalogClient | undefined,
   syncTypesenseAppCatalog: undefined as ((app: string, platform: Platform) => Promise<void>) | undefined,
+  colorPaletteStore: createColorPaletteStore(query),
   acquireAppKnowledgeNotificationClient: async () =>
     pool.connect() as unknown as AppKnowledgeNotificationClient,
 };
@@ -925,6 +937,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   };
   app.use(compression());
   const generalLimiter = createFixedWindowLimiter({ limit: deps.generalRateLimit, windowMs: 5 * 60_000 });
+  // MCP calls can fan out to catalog and object storage. Keep a stricter budget than ordinary
+  // browser API traffic, including for admin-owned personal access tokens.
+  const mcpLimiter = createFixedWindowLimiter({ limit: Math.min(deps.generalRateLimit, 60), windowMs: 5 * 60_000 });
   // Protect both the delivery source and a recipient inbox. The address key is
   // normalized only in process memory and is never returned to the caller.
   const passwordResetIpLimiter = createFixedWindowLimiter({ limit: 10, windowMs: 60 * 60_000 });
@@ -1747,6 +1762,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     res.sendFile(resolve(path));
   });
+  // Threads fetches the post image itself, without Vitrines credentials. This
+  // route must remain ahead of the authenticated API middleware, like /media.
+  mountThreadsMarketingPublicRoutes(app, apiThreadsMarketingStore);
 
   app.use(async (req, res, next) => {
     // Public discovery is deliberately limited to published search results.
@@ -1780,12 +1798,13 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       next();
       return;
     }
-    if (res.locals.user.role === "admin") {
+    if (res.locals.user.role === "admin" && req.path !== "/mcp") {
       next();
       return;
     }
-    const byUser = generalLimiter.check(`user:${res.locals.user.id}`);
-    const byIp = generalLimiter.check(`ip:${req.ip}`);
+    const limiter = req.path === "/mcp" ? mcpLimiter : generalLimiter;
+    const byUser = limiter.check(`user:${res.locals.user.id}`);
+    const byIp = limiter.check(`ip:${req.ip}`);
     const blocked = byUser.allowed ? byIp : byUser;
     if (!blocked.allowed) {
       res.setHeader("Retry-After", String(blocked.retryAfterSeconds));
@@ -1813,14 +1832,36 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     next();
   };
 
+  mountColorPaletteRoutes(app, deps.colorPaletteStore);
+
+  const threadsMarketingConfig = threadsMarketingConfigFromEnv(process.env);
+  const threadsMarketingService = createThreadsMarketingService({
+    store: apiThreadsMarketingStore,
+    ...(threadsMarketingConfig
+      ? { config: threadsMarketingConfig, client: createThreadsClient(threadsMarketingConfig) }
+      : {}),
+  });
+  mountThreadsMarketingRoutes(app, requireAdmin, threadsMarketingService);
+
   mountFlowMcpRoute(app, {
     appUrl: deps.appUrl,
     flowCatalogSecret: deps.mediaSigningSecret,
     canAccessApp: deps.canAccessApp,
+    publishedCatalogPage: deps.publishedCatalogPage,
     publishedFlowCatalogPage: deps.publishedFlowCatalogPage,
     getVersionFlows: deps.getVersionFlows,
     flowEvidenceImages: deps.flowEvidenceImages,
-    readInlineImage: async (image) => {
+    appMetadata: deps.appMetadata,
+    recordToolCall: async ({ userId, tool, app, outcome, resultCount }) => {
+      await deps.recordAccessEvent({
+        userId,
+        ...(app ? { appSlug: app } : {}),
+        action: `mcp-${tool}`,
+        outcome,
+        ...(resultCount === undefined ? {} : { metadata: { resultCount } }),
+      });
+    },
+    readInlineImage: async (image, maxBytes) => {
       const hash = bulkImageHash(image.image_url);
       if (!hash || !deps.objectStore) return undefined;
       const metadata = await deps.adminImageObject({ app: image.app, hash, variant: "thumb" });
@@ -1832,7 +1873,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           && metadata.contentType !== "image/gif")
       ) return undefined;
       const stored = await deps.objectStore.get(metadata.key);
-      return { data: stored.body.toString("base64"), mimeType: metadata.contentType };
+      const body = verifiedObjectBody(metadata, stored);
+      if (body.byteLength > maxBytes) return undefined;
+      return { data: body.toString("base64"), mimeType: metadata.contentType };
     },
   });
 

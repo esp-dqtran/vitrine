@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
 
-type ReferenceDiscoveryKind = 'apps' | 'sites' | 'flows';
+type ReferenceDiscoveryKind = 'apps' | 'sites' | 'flows' | 'colors';
 
 export interface ReferenceDiscoveryPageShellProps {
   kind: ReferenceDiscoveryKind;
   header: ReactNode;
-  taxonomyLabel: string;
-  taxonomy: ReactNode;
+  taxonomyLabel?: string;
+  taxonomy?: ReactNode;
   preview?: ReactNode;
   toolbar: ReactNode;
   children: ReactNode;
@@ -26,17 +26,20 @@ export function ReferenceDiscoveryPageShell({
       data-apps-discovery={kind === 'apps' ? 'true' : undefined}
       data-sites-discovery={kind === 'sites' ? 'true' : undefined}
       data-flows-discovery={kind === 'flows' ? 'true' : undefined}
+      data-colors-discovery={kind === 'colors' ? 'true' : undefined}
       data-reference-gallery-shell={kind}
       className={`reference-discovery reference-discovery--${kind} ${kind}-discovery`}
     >
       {header}
       <div className={`reference-discovery__content ${kind}-discovery__content`}>
-        <div
-          className={`reference-discovery__taxonomy reference-discovery__taxonomy--${kind} ${kind}-discovery__taxonomy`}
-          aria-label={taxonomyLabel}
-        >
-          {taxonomy}
-        </div>
+        {taxonomy ? (
+          <div
+            className={`reference-discovery__taxonomy reference-discovery__taxonomy--${kind} ${kind}-discovery__taxonomy`}
+            aria-label={taxonomyLabel}
+          >
+            {taxonomy}
+          </div>
+        ) : null}
         {preview}
         {toolbar}
         {children}

@@ -27,7 +27,7 @@ export function ProjectWorkspaceNav({
     <nav className="project-area-nav" role="tablist" aria-label="Project files">
       <ToggleButton
         ref={registerItem("canvas")}
-        label="Canvas"
+        label="Project home"
         isPressed={active === "canvas"}
         onPressedChange={() => openArea("canvas")}
         role="tab"

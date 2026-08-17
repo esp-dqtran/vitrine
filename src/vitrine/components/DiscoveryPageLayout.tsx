@@ -5,10 +5,10 @@ import { ReferenceDiscoveryPageShell } from './ReferenceDiscoveryPageShell.tsx';
 import { Spinner } from './Spinner.tsx';
 
 export interface DiscoveryPageLayoutProps {
-  kind: 'apps' | 'sites' | 'flows';
+  kind: 'apps' | 'sites' | 'flows' | 'colors';
   header: ReactNode;
-  taxonomyLabel: string;
-  taxonomy: ReactNode;
+  taxonomyLabel?: string;
+  taxonomy?: ReactNode;
   preview?: ReactNode;
   toolbar: ReactNode;
   resultLabel: string;
@@ -155,9 +155,14 @@ function DiscoveryResultsSkeleton({
   resultLabel,
 }: Pick<DiscoveryPageLayoutProps, 'kind' | 'resultLabel'>) {
   if (kind !== 'flows') {
+    const gridClassName = kind === 'apps'
+      ? 'apps-discovery__grid'
+      : kind === 'colors'
+        ? 'colors-discovery__grid'
+        : 'sites-discovery__grid';
     return (
       <div
-        className={`reference-discovery__grid ${kind === 'apps' ? 'apps-discovery__grid' : 'sites-discovery__grid'} discovery-page-layout__skeleton-grid`}
+        className={`reference-discovery__grid ${gridClassName} discovery-page-layout__skeleton-grid`}
         role="status"
         aria-label={`Loading ${resultLabel}`}
       >

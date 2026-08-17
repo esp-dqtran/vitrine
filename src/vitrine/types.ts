@@ -458,6 +458,18 @@ export interface AutonomousRunDetailView {
   missions: Array<{ id: string; status: string; goal: string; productArea: string; worker_id: string | null }>;
   states: unknown[];
   transitions: unknown[];
+  traceEvents: Array<{
+    id: string;
+    mission_id: string | null;
+    child_run_id: string | null;
+    stage: 'research' | 'execution';
+    type: string;
+    rationale: string;
+    confidence?: number | null;
+    evidence_id: string | null;
+    credentialCapability?: string | null;
+    created_at: string;
+  }>;
 }
 
 export interface CrawlSessionView {

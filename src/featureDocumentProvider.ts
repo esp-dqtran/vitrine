@@ -1,16 +1,8 @@
 import type {
   FeatureEvidenceManifestItem,
   FeatureFlowPrompt,
-  FeatureStepPrompt,
-  FeatureSynthesisPrompt,
 } from "./featureDocument.ts";
-import {
-  createMultimodalJsonProvider,
-  type MultimodalJsonProvider,
-  type ProviderEnvironment,
-  type RasterImage,
-} from "./evidenceAnalysisProvider.ts";
-import { EvidenceAnalysisError } from "./evidenceAnalysisRuntime.ts";
+import type { ProviderEnvironment, RasterImage } from "./evidenceAnalysisProvider.ts";
 
 export type { ProviderEnvironment };
 
@@ -18,28 +10,12 @@ export interface FeatureDocumentProvider {
   readonly model: string;
   readonly officialDocumentationEnabled?: boolean;
   readonly officialDocumentationDomains?: readonly string[];
-  analyzeFlow?(
+  analyzeFlow(
     prompt: FeatureFlowPrompt,
     images: Array<{ evidence: FeatureEvidenceManifestItem; image: RasterImage }>,
     signal: AbortSignal,
   ): Promise<unknown>;
-  analyzeImage(
-    prompt: FeatureStepPrompt,
-    image: RasterImage,
-    signal: AbortSignal,
-  ): Promise<unknown>;
-  synthesize(prompt: FeatureSynthesisPrompt, signal: AbortSignal): Promise<unknown>;
 }
-
-export const FEATURE_STEP_SYSTEM_PROMPT = [
-  "Return JSON only.",
-  "Analyze only what is visible in the supplied image and the supplied Flow context.",
-  "Keep visible observations separate from likely intent and uncertainty.",
-  "A visible control proves only that the control exists; it does not prove its destination, state change, persistence, or failure behavior.",
-  "List system feedback only when feedback is visibly rendered in this screenshot.",
-  "Describe friction without proposing a redesign.",
-  "Use exactly the supplied evidenceId.",
-].join(" ");
 
 export const FEATURE_SYNTHESIS_SYSTEM_PROMPT = [
   "Return JSON only using this exact top-level structure: sourceAssessment, unscopedEvidence, executiveSummary, observedFlow, flowAnalysis, proposedFeature, requirements, edgeCases, successMetrics, guardrailMetrics, analyticsEvents, dependencies, openQuestions.",
@@ -73,46 +49,3 @@ export const FEATURE_SYNTHESIS_SYSTEM_PROMPT = [
   "Never invent an evidence ID.",
 ].join(" ");
 
-async function legacyErrors<T>(operation: () => Promise<T>): Promise<T> {
-  try {
-    return await operation();
-  } catch (error) {
-    if (!(error instanceof EvidenceAnalysisError)) throw error;
-    const message = error.message.replace(/^Analysis provider/, "Feature analysis provider");
-    throw new Error(message);
-  }
-}
-
-export function featureDocumentProviderFromMultimodalJsonProvider(
-  provider: MultimodalJsonProvider,
-): FeatureDocumentProvider {
-  return {
-    model: provider.model,
-    analyzeImage(prompt, image, signal) {
-      if (image.bytes.byteLength < 1) {
-        throw new Error("Feature analysis image is empty");
-      }
-      return legacyErrors(() => provider.completeJson({
-        system: FEATURE_STEP_SYSTEM_PROMPT,
-        text: prompt,
-        image,
-        signal,
-      }));
-    },
-    synthesize(prompt, signal) {
-      return legacyErrors(() => provider.completeJson({
-        system: FEATURE_SYNTHESIS_SYSTEM_PROMPT,
-        text: prompt,
-        signal,
-      }));
-    },
-  };
-}
-
-export function createFeatureDocumentProvider(
-  environment: ProviderEnvironment = process.env,
-  request: typeof fetch = fetch,
-): FeatureDocumentProvider | undefined {
-  const provider = createMultimodalJsonProvider(environment, request);
-  return provider ? featureDocumentProviderFromMultimodalJsonProvider(provider) : undefined;
-}

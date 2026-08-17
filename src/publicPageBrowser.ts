@@ -357,7 +357,10 @@ async function captureMobileEvidence(
   }
 }
 
-async function captureStablePagePng(
+// Shared by the Sites collector and scripted product-flow capture. Keeping the
+// rasterization path here means every designer-facing PNG gets the same motion
+// freeze, CDP capture, and sticky-chrome-safe stitching behaviour.
+export async function captureStablePagePng(
   page: Page,
   clip: { x: number; y: number; width: number; height: number },
 ): Promise<Buffer> {

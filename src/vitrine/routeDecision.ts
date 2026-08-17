@@ -12,6 +12,12 @@ export type RootRouteDecision =
   | {
       kind: "public";
       page:
+        | "browse-pricing"
+        | "browse-build-in-public"
+        | "browse-billing-success"
+        | "browse-forgot-password"
+        | "browse-reset-password"
+        | "browse-not-found"
         | "landing"
         | "not-found"
         | "build-in-public"
@@ -33,6 +39,12 @@ export function decideRootRoute(
   context: RootRouteContext,
 ): RootRouteDecision {
   if (
+    route.name === "browse-pricing" ||
+    route.name === "browse-build-in-public" ||
+    route.name === "browse-billing-success" ||
+    route.name === "browse-forgot-password" ||
+    route.name === "browse-reset-password" ||
+    route.name === "browse-not-found" ||
     route.name === "pricing" ||
     route.name === "build-in-public" ||
     route.name === "feature-document-share" ||
@@ -58,7 +70,15 @@ export function decideRootRoute(
         ? { kind: "public", page: route.name }
         : { kind: "redirect", route: { name: "apps" } };
     case "apps":
+    case "browse":
+    case "browse-app":
+    case "browse-flows":
+    case "browse-sites":
+    case "browse-site":
+    case "browse-search":
     case "sites":
+    case "color":
+    case "color-create":
     case "sites-motion":
     case "flows":
     case "app":
@@ -72,6 +92,18 @@ export function decideRootRoute(
       return context.advancedSearchEnabled
         ? { kind: "application" }
         : { kind: "unavailable", title: "Search is unavailable" };
+    case "browse-collections":
+      return context.auth === "guest"
+        ? { kind: "signin" }
+        : context.collectionsEnabled
+          ? { kind: "application" }
+          : { kind: "redirect", route: { name: "browse-projects" } };
+    case "browse-projects":
+      return context.auth === "guest"
+        ? { kind: "signin" }
+        : context.researchProjectsEnabled
+          ? { kind: "application" }
+          : { kind: "unavailable", title: "Research projects are unavailable" };
     case "collections":
       return context.auth === "guest"
         ? { kind: "signin" }
@@ -79,6 +111,7 @@ export function decideRootRoute(
           ? { kind: "application" }
           : { kind: "redirect", route: { name: "projects" } };
     case "projects":
+    case "projects-workspace":
     case "project":
     case "project-documents":
     case "project-settings":
@@ -90,11 +123,22 @@ export function decideRootRoute(
       return context.researchProjectsEnabled
         ? { kind: "application" }
         : { kind: "unavailable", title: "Research projects are unavailable" };
+    case "browse-admin":
+      if (context.auth === "guest") {
+        return { kind: "signin" };
+      }
+      return context.auth === "admin"
+        ? { kind: "application" }
+        : { kind: "denied", title: "Admin access required" };
     case "admin":
       if (context.auth === "guest") return { kind: "signin" };
       return context.auth === "admin"
         ? { kind: "admin-dashboard" }
         : { kind: "denied", title: "Admin access required" };
+    case "browse-settings":
+      return context.auth === "guest"
+        ? { kind: "signin" }
+        : { kind: "application" };
     case "settings-billing":
     case "site-version":
       return context.auth === "guest"

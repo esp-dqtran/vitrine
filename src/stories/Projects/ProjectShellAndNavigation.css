@@ -148,7 +148,7 @@
 
 .project-shell-review__workspace-grid {
   display: grid;
-  grid-template-columns: 128px 380px;
+  grid-template-columns: 104px minmax(0, 300px);
   gap: var(--spacing-4);
   align-items: start;
   justify-content: start;
@@ -187,7 +187,7 @@
   top: auto;
   bottom: auto;
   left: auto;
-  width: min(360px, 100%);
+  width: min(272px, 100%);
   min-height: 0;
   transform: none;
   visibility: visible;
@@ -197,11 +197,6 @@
   box-shadow:
     inset 0 0 2px rgb(255 255 255 / 64%),
     0 3px 3px rgb(0 0 0 / 10%);
-}
-
-.project-shell-review__team-menu .projects-team-drawer__divider,
-.project-shell-review__team-menu .projects-team-drawer__nav {
-  display: none;
 }
 
 .project-shell-review__control-board.projects-workspace {
@@ -285,12 +280,21 @@
 }
 
 @media (max-width: 980px) {
-  .project-shell-review__workspace-grid {
-    grid-template-columns: 128px minmax(280px, 360px);
-  }
-
   .project-shell-review__control-board {
     grid-template-columns: minmax(0, 1fr) repeat(2, max-content);
+  }
+}
+
+@media (max-width: 700px) {
+  .project-shell-review__workspace-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .project-shell-review__rail-frame .projects-workspace__desktop-rail {
+    width: 100%;
+    height: auto;
+    min-height: 64px;
+    flex-direction: row;
   }
 }
 
@@ -321,5 +325,20 @@
   .project-shell-review__header-frame .projects-workspace__brand {
     width: 140px;
     flex-basis: 140px;
+  }
+
+  .project-shell-review__header-frame .projects-workspace__drawer-trigger,
+  .project-shell-review__header-frame .projects-workspace__search-toggle {
+    display: grid !important;
+  }
+
+  .project-shell-review__header-frame .projects-workspace__header-search {
+    display: none;
+  }
+
+  .project-shell-review__header-frame
+    .projects-workspace__context-bar.is-searching
+    .projects-workspace__header-search {
+    display: flex;
   }
 }

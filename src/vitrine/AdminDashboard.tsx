@@ -4,13 +4,16 @@ import { navigate, useRoute } from './router.ts';
 import { useWorkspaceChrome } from './components/WorkspaceChromeContext.tsx';
 import { workspaceNav } from './components/workspaceNav.tsx';
 
-export type AdminSection = 'users' | 'insights';
+export type AdminSection = 'users' | 'insights' | 'threads';
 
 const UsersPage = lazy(() => import('./components/UsersPage').then((module) => ({
   default: module.UsersPage,
 })));
 const InsightsPage = lazy(() => import('./components/InsightsPage').then((module) => ({
   default: module.InsightsPage,
+})));
+const ThreadsMarketingPage = lazy(() => import('./components/ThreadsMarketingPage').then((module) => ({
+  default: module.ThreadsMarketingPage,
 })));
 
 interface AdminDashboardShellProps {
@@ -42,6 +45,7 @@ export function AdminDashboardShell({
         admin: true,
         onUsers: () => onSectionChange('users'),
         onInsights: () => onSectionChange('insights'),
+        onThreads: () => onSectionChange('threads'),
         onSettings: null,
       }),
       onBrandSelect: onBack,
@@ -58,18 +62,20 @@ export function AdminDashboardShell({
 
 export function AdminDashboard() {
   const route = useRoute();
-  const section: AdminSection =
-    route.name === 'admin' && route.section === 'insights' ? 'insights' : 'users';
+  const section: AdminSection = route.name === 'admin' && route.section === 'insights'
+    ? 'insights'
+    : route.name === 'admin' && route.section === 'threads' ? 'threads' : 'users';
   return (
     <AdminDashboardShell
       section={section}
       onSectionChange={(next) =>
-        navigate(next === 'insights' ? { name: 'admin', section: 'insights' } : { name: 'admin' })
+        navigate(next === 'insights' ? { name: 'admin', section: 'insights' }
+          : next === 'threads' ? { name: 'admin', section: 'threads' } : { name: 'admin' })
       }
       onBack={() => navigate({ name: 'apps' })}
       page={(
         <Suspense fallback={<AdminPageSpinner />}>
-          {section === 'insights' ? <InsightsPage /> : <UsersPage />}
+          {section === 'insights' ? <InsightsPage /> : section === 'threads' ? <ThreadsMarketingPage /> : <UsersPage />}
         </Suspense>
       )}
     />

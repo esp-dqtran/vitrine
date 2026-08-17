@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { navigate } from '../router.ts';
+import { navigate, routeToPath } from '../router.ts';
 import { ReferenceTypeTabs, type ReferenceType } from './ReferenceTypeTabs.tsx';
 
 interface ApplicationHeaderProps {
@@ -32,6 +32,8 @@ export function ApplicationHeader({
     ? { name: 'apps' } as const
     : active === 'sites'
       ? { name: 'sites' } as const
+      : active === 'color'
+        ? { name: 'color' } as const
       : active === 'flows'
         ? { name: 'flows' } as const
         : { name: 'projects' } as const;
@@ -39,6 +41,8 @@ export function ApplicationHeader({
     ? 'Apps'
     : active === 'sites'
       ? 'Sites'
+      : active === 'color'
+        ? 'Colors'
       : active === 'flows' ? 'Flows' : 'Projects';
   return (
     <header
@@ -47,7 +51,7 @@ export function ApplicationHeader({
     >
       <div className={`reference-discovery-nav__left ${className}__left`}>
         <a
-          href={`/${active}`}
+          href={routeToPath(activeRoute)}
           aria-label={`Vitrines ${activeLabel}`}
           className={`reference-discovery-nav__brand ${className}__brand`}
           data-reference-gallery-identity="true"

@@ -12,6 +12,7 @@ interface AstryxInputTextProps {
 const promptsForSearch = (label: string) => {
   if (label.includes('Apps')) return [label, 'Find an AI tool…', 'Browse UI patterns…'];
   if (label.includes('Sites')) return [label, 'Find a pricing page…', 'Browse visual styles…'];
+  if (label.includes('Colors')) return [label, 'Find a cinematic palette…', 'Browse warm neutrals…'];
   if (label.includes('Flows')) return [label, 'Find onboarding…', 'Browse checkout flows…'];
   return [label, 'Find real product evidence…', 'Browse patterns and flows…'];
 };

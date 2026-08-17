@@ -1,0 +1,119 @@
+.color-pack-stack {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(100%, 1088px);
+  font-family: var(--font-family-body, "Figtree", sans-serif);
+}
+
+.color-pack-stack__cards {
+  position: relative;
+  overflow: visible;
+  cursor: pointer;
+}
+
+.color-pack-stack__card {
+  position: absolute;
+  inset: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  min-height: var(--color-pack-card-height);
+  box-sizing: border-box;
+  padding: clamp(24px, 5cqw, 38px) clamp(24px, 6cqw, 44px);
+  border: 3px solid transparent;
+  border-radius: clamp(26px, 5cqw, 38px);
+  background: var(--color-pack-card);
+  color: var(--color-pack-foreground);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 10%);
+  transform-origin: center top;
+}
+
+.color-pack-stack__card[data-outlined="true"] {
+  border-color: var(--color-pack-foreground);
+}
+
+.color-pack-stack__card-copy {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 2px;
+  min-width: 0;
+}
+
+.color-pack-stack__hex-value {
+  font-size: clamp(12px, 3cqw, 16px);
+  font-weight: 750;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+.color-pack-stack__card h3 {
+  margin: 8px 0 0;
+  max-width: 100%;
+  color: inherit;
+  font-size: clamp(26px, 7.5cqw, 52px);
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.065em;
+  overflow-wrap: anywhere;
+}
+
+.color-pack-stack__icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: clamp(28px, 7cqw, 42px);
+  height: clamp(28px, 7cqw, 42px);
+  margin-bottom: 1px;
+}
+
+.color-pack-stack__icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+.color-pack-stack__hit-area {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.color-pack-stack__hit-area:focus-visible {
+  outline: 3px solid var(--color-action-primary, #12100f);
+  outline-offset: 5px;
+  border-radius: 38px;
+}
+
+.color-pack-stack__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 560px) {
+  .color-pack-stack__card {
+    border-width: 2px;
+  }
+
+  .color-pack-stack__hit-area:focus-visible {
+    border-radius: 30px;
+  }
+
+  .color-pack-stack__card h3 {
+    margin-top: 8px;
+  }
+}

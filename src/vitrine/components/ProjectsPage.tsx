@@ -1,4 +1,4 @@
-import { Spinner } from './Spinner.tsx';
+import { Spinner } from "./Spinner.tsx";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
@@ -21,10 +21,8 @@ import {
   MenuIcon,
   PlusIcon,
   QuestionIcon,
-  SearchIcon,
   SparkleIcon,
   UserIcon,
-  UsersIcon,
 } from "@storybook/icons";
 import { AstryxModal } from "./AstryxModal.tsx";
 import type {
@@ -44,16 +42,18 @@ import { listCollections } from "../researchApi.ts";
 import { DiscoveryCard } from "./DiscoveryCard.tsx";
 import {
   addTeamMember,
-  createTeam,
   listTeamMembers,
-  listTeams,
   removeTeamMember,
   type TeamMember,
   type TeamSummary,
 } from "../organizationsApi.ts";
 import { ProjectAccessDialog } from "./ProjectAccessDialog.tsx";
 import { projectRailNav } from "./projectRailNav.tsx";
-import { useWorkspaceChrome } from "./WorkspaceChromeContext.tsx";
+import {
+  ProjectsWorkspaceProvider,
+  useProjectsWorkspace,
+  useWorkspaceChrome,
+} from "./WorkspaceChromeContext.tsx";
 
 export type ProjectSort = "updated" | "name";
 export type TeamSection = "projects" | "people" | "settings";
@@ -75,22 +75,63 @@ export function FirstProjectGuide({
   onBrowse: () => void;
 }) {
   return (
-    <section className="first-project-guide" aria-labelledby="first-project-guide-title">
+    <section
+      className="first-project-guide"
+      aria-labelledby="first-project-guide-title"
+    >
       <div className="first-project-guide__intro">
-        <span><SparkleIcon aria-hidden="true" /> First project</span>
-        <Heading level={2} id="first-project-guide-title">Turn product evidence into a decision</Heading>
+        <span>
+          <SparkleIcon aria-hidden="true" /> First project
+        </span>
+        <Heading level={2} id="first-project-guide-title">
+          Turn product evidence into a decision
+        </Heading>
         <Text color="secondary">
-          Start with a question, collect real product evidence, then shape it into a visual decision or reviewable requirement.
+          Start with a question, collect real product evidence, then shape it
+          into a visual decision or reviewable requirement.
         </Text>
       </div>
       <ol className="first-project-guide__steps">
-        <li><span>1</span><div><strong>Create a project</strong><small>Name the product question or decision you are exploring.</small></div></li>
-        <li><span>2</span><div><strong>Save evidence</strong><small>Browse Apps, Sites, and Flows and add useful references.</small></div></li>
-        <li><span>3</span><div><strong>Decide and hand off</strong><small>Compare on Canvas or write a requirement, request review, and approve the outcome.</small></div></li>
+        <li>
+          <span>1</span>
+          <div>
+            <strong>Create a project</strong>
+            <small>
+              Name the product question or decision you are exploring.
+            </small>
+          </div>
+        </li>
+        <li>
+          <span>2</span>
+          <div>
+            <strong>Save evidence</strong>
+            <small>
+              Browse Apps, Sites, and Flows and add useful references.
+            </small>
+          </div>
+        </li>
+        <li>
+          <span>3</span>
+          <div>
+            <strong>Decide and hand off</strong>
+            <small>
+              Compare on Canvas or write a requirement, request review, and
+              approve the outcome.
+            </small>
+          </div>
+        </li>
       </ol>
       <div className="first-project-guide__actions">
-        <Button variant="primary" label="Create first project" clickAction={onCreate} />
-        <Button variant="secondary" label="Browse Apps first" clickAction={onBrowse} />
+        <Button
+          variant="primary"
+          label="Create first project"
+          clickAction={onCreate}
+        />
+        <Button
+          variant="secondary"
+          label="Browse Apps first"
+          clickAction={onBrowse}
+        />
       </div>
     </section>
   );
@@ -524,31 +565,37 @@ function ProjectGrid({
   );
 }
 
-export function ResearchProjectsView({
-  projects,
-  collections = [],
-  teams = [],
-  loading,
-  error,
-  actions,
-}: {
+interface ResearchProjectsViewProps {
   projects: ResearchProjectSummary[];
   collections?: ResearchCollection[];
   teams?: TeamSummary[];
   loading: boolean;
   error: string;
   actions: ProjectActions;
-}) {
-  const [teamOptions, setTeamOptions] = useState(teams);
-  const [selectedTeamId, setSelectedTeamId] = useState<number>();
+}
+
+function ResearchProjectsViewContent({
+  projects,
+  collections = [],
+  teams = [],
+  loading,
+  error,
+  actions,
+}: ResearchProjectsViewProps) {
+  const projectsWorkspace = useProjectsWorkspace();
+  if (!projectsWorkspace) {
+    throw new Error("ResearchProjectsView requires ProjectsWorkspaceProvider");
+  }
+  const {
+    teams: teamOptions,
+    selectedTeamId,
+    setTeams: setTeamOptions,
+  } = projectsWorkspace;
   const [section, setSection] = useState<TeamSection>("projects");
   const [createOpen, setCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newProjectScope, setNewProjectScope] = useState("personal");
   const [creating, setCreating] = useState(false);
-  const [createTeamOpen, setCreateTeamOpen] = useState(false);
-  const [newTeamName, setNewTeamName] = useState("");
-  const [creatingTeam, setCreatingTeam] = useState(false);
   const [teamError, setTeamError] = useState("");
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -556,7 +603,6 @@ export function ResearchProjectsView({
   const [memberEmail, setMemberEmail] = useState("");
   const [memberRole, setMemberRole] = useState<"admin" | "member">("member");
   const [memberBusy, setMemberBusy] = useState(false);
-  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [renameProject, setRenameProject] =
     useState<ResearchProjectSummary | null>(null);
@@ -567,49 +613,30 @@ export function ResearchProjectsView({
   const [shareProject, setShareProject] =
     useState<ResearchProjectSummary | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const desktopWorkspaceTriggerRef = useRef<HTMLButtonElement>(null);
-  const workspaceMenuTriggerRef = useRef<HTMLButtonElement>(null);
-  const workspaceMenuRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (teams.length) setTeamOptions(teams);
+  }, [setTeamOptions, teams]);
 
   useEffect(() => {
-    setTeamOptions(teams);
-  }, [teams]);
-
-  useEffect(() => {
-    if (!workspaceMenuOpen) return undefined;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      setWorkspaceMenuOpen(false);
-      const desktopTrigger = desktopWorkspaceTriggerRef.current;
-      const visibleTrigger =
-        desktopTrigger &&
-        window.getComputedStyle(desktopTrigger).display !== "none"
-          ? desktopTrigger
-          : workspaceMenuTriggerRef.current;
-      visibleTrigger?.focus();
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    requestAnimationFrame(() =>
-      workspaceMenuRef.current?.querySelector("button")?.focus(),
-    );
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [workspaceMenuOpen]);
+    setSection("projects");
+    setNewProjectScope(selectedTeamId ? String(selectedTeamId) : "personal");
+  }, [selectedTeamId]);
 
   const selectedTeam = teamOptions.find(({ id }) => id === selectedTeamId);
-  const switchableTeams = teamOptions.filter(({ id }) => id !== selectedTeamId);
   const canManageTeam =
     selectedTeam?.role === "owner" || selectedTeam?.role === "admin";
-  const visibleProjects = useMemo(
+  const scopedProjects = useMemo(
     () =>
-      sortProjects(
-        projects.filter((project) =>
-          selectedTeamId
-            ? project.organization?.id === selectedTeamId
-            : !project.organization,
-        ),
-        "updated",
+      projects.filter((project) =>
+        selectedTeamId
+          ? project.organization?.id === selectedTeamId
+          : !project.organization,
       ),
     [projects, selectedTeamId],
+  );
+  const visibleProjects = useMemo(
+    () => sortProjects(scopedProjects, "updated"),
+    [scopedProjects],
   );
   const pinnedProjects = visibleProjects.filter(({ pinned }) => pinned);
   const otherProjects = visibleProjects.filter(({ pinned }) => !pinned);
@@ -640,43 +667,14 @@ export function ResearchProjectsView({
     };
   }, [selectedTeamId, section]);
 
-  const selectPersonal = () => {
-    setSelectedTeamId(undefined);
-    setSection("projects");
-    setNewProjectScope("personal");
-    setWorkspaceMenuOpen(false);
-  };
-  const selectTeam = (teamId: number) => {
-    setSelectedTeamId(teamId);
-    setSection("projects");
-    setNewProjectScope(String(teamId));
-    setWorkspaceMenuOpen(false);
-  };
   const selectSection = (nextSection: TeamSection) => {
     setSection(nextSection);
-    setWorkspaceMenuOpen(false);
-  };
-  const workspacePrimaryActionLabel = selectedTeam
-    ? canManageTeam
-      ? "Invite members"
-      : "View Team members"
-    : "Create Team";
-  const runWorkspacePrimaryAction = () => {
-    if (!selectedTeam) {
-      setCreateTeamOpen(true);
-      setWorkspaceMenuOpen(false);
-      return;
-    }
-    setSection("people");
-    if (canManageTeam) setInviteOpen(true);
-    setWorkspaceMenuOpen(false);
   };
   const openWorkspaceSettings = () => {
     if (selectedTeam) {
       selectSection("settings");
       return;
     }
-    setWorkspaceMenuOpen(false);
     navigate({ name: "settings-billing" });
   };
   const openCreate = () => {
@@ -702,25 +700,6 @@ export function ResearchProjectsView({
       setNewTitle("");
     } finally {
       setCreating(false);
-    }
-  };
-  const submitTeam = async () => {
-    if (!newTeamName.trim() || creatingTeam) return;
-    setCreatingTeam(true);
-    setTeamError("");
-    try {
-      const created = await createTeam(newTeamName.trim());
-      setTeamOptions((current) => [
-        ...current.filter(({ id }) => id !== created.id),
-        created,
-      ]);
-      setNewTeamName("");
-      setCreateTeamOpen(false);
-      selectTeam(created.id);
-    } catch (cause) {
-      setTeamError((cause as Error).message);
-    } finally {
-      setCreatingTeam(false);
     }
   };
   const submitMember = async () => {
@@ -821,22 +800,9 @@ export function ResearchProjectsView({
 
   useWorkspaceChrome(
     () => ({
-      workspace: {
-        label: "Switch Team",
-        name: selectedTeam?.name ?? "Personal",
-        initial: (selectedTeam?.name ?? "Personal").charAt(0).toUpperCase(),
-        expanded: workspaceMenuOpen,
-        buttonRef: desktopWorkspaceTriggerRef,
-        onSelect: () => setWorkspaceMenuOpen((open) => !open),
-      },
       nav: {
         primaryLabel: "Workspace",
         primaryHeading: "Workspace",
-        globalActions: [{
-          label: "Apps",
-          icon: <GridIcon aria-hidden="true" />,
-          onSelect: () => navigate({ name: "apps" }),
-        }],
         primaryActions: projectRailNav({
           projectsActive: section === "projects",
           onOpenProjects: () => selectSection("projects"),
@@ -849,413 +815,256 @@ export function ResearchProjectsView({
         },
       },
       onBrandSelect: () => navigate({ name: "apps" }),
-      drawer: (
-      <div
-        className={`projects-workspace__drawer-layer${workspaceMenuOpen ? " is-open" : ""}`}
-        aria-hidden={!workspaceMenuOpen}
-      >
-        <button
-          type="button"
-          className="projects-workspace__drawer-backdrop"
-          aria-label="Close Team menu"
-          tabIndex={workspaceMenuOpen ? 0 : -1}
-          onClick={() => setWorkspaceMenuOpen(false)}
-        />
-        <aside
-          ref={workspaceMenuRef}
-          className="projects-team-drawer"
-          role="menu"
-          aria-label="Switch workspace"
-        >
-          <section
-            className="projects-team-switcher__spaces"
-            aria-label="Switch workspace"
-          >
-            <button
-              type="button"
-              className={!selectedTeamId ? "is-active" : ""}
-              aria-current={!selectedTeamId ? "true" : undefined}
-              role="menuitemradio"
-              aria-checked={!selectedTeamId}
-              onClick={selectPersonal}
-            >
-              <UserIcon aria-hidden="true" />
-              <span>Personal</span>
-            </button>
-            {switchableTeams.map((team) => (
-              <button
-                key={team.id}
-                type="button"
-                className={selectedTeamId === team.id ? "is-active" : ""}
-                aria-current={selectedTeamId === team.id ? "true" : undefined}
-                role="menuitemradio"
-                aria-checked={selectedTeamId === team.id}
-                onClick={() => selectTeam(team.id)}
-              >
-                <UsersIcon aria-hidden="true" />
-                <span>{team.name}</span>
-              </button>
-            ))}
-          </section>
-
-          <div className="projects-team-drawer__divider" />
-          <button
-            type="button"
-            className="projects-team-switcher__create"
-            role="menuitem"
-            onClick={runWorkspacePrimaryAction}
-          >
-            <PlusIcon aria-hidden="true" />
-            <span>{workspacePrimaryActionLabel}</span>
-          </button>
-          <nav
-            className="projects-team-drawer__nav"
-            aria-label={`${selectedTeam?.name ?? "Personal"} sections`}
-          >
-            <button
-              type="button"
-              className={section === "projects" ? "is-active" : ""}
-              onClick={() => selectSection("projects")}
-            >
-              <FolderIcon aria-hidden="true" /> Projects
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate({ name: "collections" })}
-            >
-              <BookmarkHollowIcon aria-hidden="true" /> Collections
-            </button>
-            {selectedTeam ? (
-              <>
-                <button
-                  type="button"
-                  className={section === "people" ? "is-active" : ""}
-                  onClick={() => selectSection("people")}
-                >
-                  <UsersIcon aria-hidden="true" /> People
-                </button>
-                <button
-                  type="button"
-                  className={section === "settings" ? "is-active" : ""}
-                  onClick={() => selectSection("settings")}
-                >
-                  <CogIcon aria-hidden="true" /> Team settings
-                </button>
-              </>
-            ) : null}
-          </nav>
-        </aside>
-        </div>
-      ),
     }),
-    [selectedTeam?.name, selectedTeamId, section, visibleProjects, workspaceMenuOpen, switchableTeams.length],
+    [selectedTeam?.name, section],
   );
 
   return (
     <>
-
-          <header className="projects-workspace__page-header">
-            <div>
-              <Heading level={1}>{pageTitle}</Heading>
-              <Text color="secondary">{pageDescription}</Text>
-            </div>
-            <div className="projects-workspace__page-header-actions">
-              {selectedTeam && canManageTeam ? (
-                <Button
-                  className="projects-workspace__invite-action"
-                  label="Invite members"
-                  variant="ghost"
-                  icon={<UserIcon aria-hidden="true" />}
-                  onClick={() => setInviteOpen(true)}
-                />
-              ) : null}
-              {section === "projects" ? (
-                <Button
-                  variant="primary"
-                  label="New project"
-                  clickAction={openCreate}
-                />
-              ) : null}
-            </div>
-          </header>
-
-          {error && (
-            <p role="alert" className="projects-workspace__error">
-              {error}
-            </p>
-          )}
-          {teamError && (
-            <p role="alert" className="projects-workspace__error">
-              {teamError}
-            </p>
-          )}
-
-          {section === "projects" && (
-            <>
-              {loading ? (
-                <div className="projects-workspace__loading">
-                  <Spinner size="lg" />
-                </div>
-              ) : visibleProjects.length === 0 ? (
-                <div className="projects-workspace__empty">
-                  {selectedTeam ? (
-                    <>
-                      <EmptyState
-                        title={`No projects in ${selectedTeam.name} yet`}
-                        description="Create a shared project so the whole Team can contribute to its flows, Canvas, and Notes."
-                      />
-                      <Button
-                        variant="primary"
-                        label="New project"
-                        clickAction={openCreate}
-                      />
-                    </>
-                  ) : (
-                    <FirstProjectGuide
-                      onCreate={openCreate}
-                      onBrowse={() => navigate({ name: "apps" })}
-                    />
-                  )}
-                </div>
-              ) : (
-                <div className="projects-workspace__content">
-                  <ProjectGrid
-                    title="Pinned"
-                    projects={pinnedProjects}
-                    actions={actions}
-                    onRename={openRename}
-                    onDelete={setDeleteProject}
-                    onShare={setShareProject}
-                  />
-                  <ProjectGrid
-                    title={
-                      pinnedProjects.length ? "All projects" : "Recent projects"
-                    }
-                    projects={otherProjects}
-                    actions={actions}
-                    onRename={openRename}
-                    onDelete={setDeleteProject}
-                    onShare={setShareProject}
-                  />
-                </div>
-              )}
-            </>
-          )}
-
-          {section === "people" && selectedTeam && (
-            <div className="team-people">
-              <div className="team-people__stats">
-                <article>
-                  <span>Members</span>
-                  <strong>{membersLoading ? "—" : members.length}</strong>
-                </article>
-                <article>
-                  <span>Admins</span>
-                  <strong>{membersLoading ? "—" : adminCount}</strong>
-                </article>
-                <article>
-                  <span>Pending invites</span>
-                  <strong>0</strong>
-                </article>
-                <article>
-                  <span>Your role</span>
-                  <strong className="team-people__role">
-                    {selectedTeam.role}
-                  </strong>
-                </article>
-              </div>
-
-              <div className="team-people__toolbar">
-                <Heading level={2}>Members</Heading>
-                <TextInput
-                  label="Search members"
-                  isLabelHidden
-                  placeholder="Search by email"
-                  value={memberSearch}
-                  onChange={setMemberSearch}
-                  width="100%"
-                />
-                {canManageTeam ? (
-                  <Button
-                    label="Invite members"
-                    variant="primary"
-                    clickAction={() => setInviteOpen(true)}
-                  />
-                ) : null}
-              </div>
-
-              <section
-                className="team-people__list product-data-table"
-                aria-label={`${selectedTeam.name} members`}
-                role="table"
-              >
-                <div className="team-people__list-heading" role="row">
-                  <strong role="columnheader">Member</strong>
-                  <span role="columnheader">Role</span>
-                  <span role="columnheader">Joined</span>
-                  <span aria-hidden="true" />
-                </div>
-                {membersLoading ? (
-                  <div className="team-people__loading">
-                    <Spinner size="md" />
-                  </div>
-                ) : (
-                  visibleMembers.map((member) => (
-                    <div
-                      className="team-people__member"
-                      key={member.userId}
-                      role="row"
-                    >
-                      <span className="team-people__member-profile" role="cell">
-                        <span
-                          className="team-people__member-avatar"
-                          aria-hidden="true"
-                        >
-                          {member.email.charAt(0).toUpperCase()}
-                        </span>
-                        <span>{member.email}</span>
-                      </span>
-                      <span className="team-people__role" role="cell">
-                        {member.role}
-                      </span>
-                      <span role="cell">
-                        {formatMemberDate(member.createdAt)}
-                      </span>
-                      <span role="cell">
-                        {canManageTeam && member.role !== "owner" ? (
-                          <Button
-                            label="Remove"
-                            variant="ghost"
-                            size="sm"
-                            isDisabled={memberBusy}
-                            clickAction={() => void removeMember(member)}
-                          />
-                        ) : null}
-                      </span>
-                    </div>
-                  ))
-                )}
-                {!membersLoading && visibleMembers.length === 0 && (
-                  <Text color="secondary">
-                    No Team members match this search.
-                  </Text>
-                )}
-              </section>
-              <footer className="team-people__pagination">
-                <span>
-                  Show <strong>10</strong>
-                </span>
-                <button type="button" disabled aria-label="Previous page">
-                  ‹
-                </button>
-                <button type="button" className="is-active" aria-current="page">
-                  1
-                </button>
-                <button type="button" disabled aria-label="Next page">
-                  ›
-                </button>
-                <span>
-                  Showing {visibleMembers.length ? 1 : 0} to{" "}
-                  {visibleMembers.length} of {visibleMembers.length}{" "}
-                  {visibleMembers.length === 1 ? "entry" : "entries"}
-                </span>
-              </footer>
-            </div>
-          )}
-
-          {section === "settings" && selectedTeam && (
-            <div className="team-settings-view">
-              <Heading level={2}>Team profile</Heading>
-              <section className="team-settings-view__card team-settings-view__card--profile">
-                <div className="team-settings-view__identity">
-                  <span
-                    className="projects-team-rail__avatar"
-                    aria-hidden="true"
-                  >
-                    {selectedTeam.name.charAt(0).toUpperCase()}
-                  </span>
-                  <div>
-                    <Heading level={3}>{selectedTeam.name}</Heading>
-                    <Text color="secondary">
-                      Shared Team profile for projects, flows, and documents.
-                    </Text>
-                  </div>
-                </div>
-                <dl>
-                  <div>
-                    <dt>Members</dt>
-                    <dd>{selectedTeam.memberCount}</dd>
-                  </div>
-                  <div>
-                    <dt>Your role</dt>
-                    <dd className="team-people__role">{selectedTeam.role}</dd>
-                  </div>
-                  <div>
-                    <dt>Created</dt>
-                    <dd>{formatMemberDate(selectedTeam.createdAt)}</dd>
-                  </div>
-                </dl>
-              </section>
-              <Heading level={2}>Project defaults</Heading>
-              <section className="team-settings-view__card">
-                <Heading level={3}>Project ownership</Heading>
-                <Text color="secondary">
-                  Projects created inside this Team are available to every Team
-                  member. Owners and admins can manage membership and project
-                  access.
-                </Text>
-              </section>
-            </div>
-          )}
-
-      <AstryxModal
-        className="projects-workspace__modal"
-        isOpen={createTeamOpen}
-        onOpenChange={(open) => {
-          if (!open && !creatingTeam) setCreateTeamOpen(false);
-        }}
-        purpose="form"
-        width={440}
-      >
-        <form
-          className="projects-workspace__dialog"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void submitTeam();
-          }}
-        >
-          <div>
-            <Heading level={3}>Create Team</Heading>
-            <Text color="secondary">
-              Bring people and shared Projects into one Team.
-            </Text>
-          </div>
-          <TextInput
-            label="Team name"
-            placeholder="e.g. Product design"
-            value={newTeamName}
-            onChange={setNewTeamName}
-            autoFocus
-            width="100%"
-            isDisabled={creatingTeam}
-          />
-          <div className="projects-workspace__dialog-actions">
+      <header className="projects-workspace__page-header">
+        <div>
+          <Heading level={1}>{pageTitle}</Heading>
+          <Text color="secondary">{pageDescription}</Text>
+        </div>
+        <div className="projects-workspace__page-header-actions">
+          {selectedTeam && canManageTeam ? (
             <Button
-              label="Cancel"
+              className="projects-workspace__invite-action"
+              label="Invite members"
               variant="ghost"
-              isDisabled={creatingTeam}
-              clickAction={() => setCreateTeamOpen(false)}
+              icon={<UserIcon aria-hidden="true" />}
+              onClick={() => setInviteOpen(true)}
             />
+          ) : null}
+          {section === "projects" ? (
             <Button
-              label="Create Team"
               variant="primary"
-              isDisabled={!newTeamName.trim()}
-              isLoading={creatingTeam}
-              clickAction={submitTeam}
+              label="New project"
+              clickAction={openCreate}
             />
+          ) : null}
+        </div>
+      </header>
+
+      {error && (
+        <p role="alert" className="projects-workspace__error">
+          {error}
+        </p>
+      )}
+      {teamError && (
+        <p role="alert" className="projects-workspace__error">
+          {teamError}
+        </p>
+      )}
+
+      {section === "projects" && (
+        <>
+          {loading ? (
+            <div className="projects-workspace__loading">
+              <Spinner size="lg" />
+            </div>
+          ) : visibleProjects.length === 0 ? (
+            <div className="projects-workspace__empty">
+              {selectedTeam ? (
+                <>
+                  <EmptyState
+                    title={`No projects in ${selectedTeam.name} yet`}
+                    description="Create a shared project so the whole Team can contribute to its flows, Canvas, and Notes."
+                  />
+                  <Button
+                    variant="primary"
+                    label="New project"
+                    clickAction={openCreate}
+                  />
+                </>
+              ) : (
+                <FirstProjectGuide
+                  onCreate={openCreate}
+                  onBrowse={() => navigate({ name: "apps" })}
+                />
+              )}
+            </div>
+          ) : (
+            <div className="projects-workspace__content">
+              <ProjectGrid
+                title="Pinned"
+                projects={pinnedProjects}
+                actions={actions}
+                onRename={openRename}
+                onDelete={setDeleteProject}
+                onShare={setShareProject}
+              />
+              <ProjectGrid
+                title={
+                  pinnedProjects.length ? "All projects" : "Recent projects"
+                }
+                projects={otherProjects}
+                actions={actions}
+                onRename={openRename}
+                onDelete={setDeleteProject}
+                onShare={setShareProject}
+              />
+            </div>
+          )}
+        </>
+      )}
+
+      {section === "people" && selectedTeam && (
+        <div className="team-people">
+          <div className="team-people__stats">
+            <article>
+              <span>Members</span>
+              <strong>{membersLoading ? "—" : members.length}</strong>
+            </article>
+            <article>
+              <span>Admins</span>
+              <strong>{membersLoading ? "—" : adminCount}</strong>
+            </article>
+            <article>
+              <span>Pending invites</span>
+              <strong>0</strong>
+            </article>
+            <article>
+              <span>Your role</span>
+              <strong className="team-people__role">{selectedTeam.role}</strong>
+            </article>
           </div>
-        </form>
-      </AstryxModal>
+
+          <div className="team-people__toolbar">
+            <Heading level={2}>Members</Heading>
+            <TextInput
+              label="Search members"
+              isLabelHidden
+              placeholder="Search by email"
+              value={memberSearch}
+              onChange={setMemberSearch}
+              width="100%"
+            />
+            {canManageTeam ? (
+              <Button
+                label="Invite members"
+                variant="primary"
+                clickAction={() => setInviteOpen(true)}
+              />
+            ) : null}
+          </div>
+
+          <section
+            className="team-people__list product-data-table"
+            aria-label={`${selectedTeam.name} members`}
+            role="table"
+          >
+            <div className="team-people__list-heading" role="row">
+              <strong role="columnheader">Member</strong>
+              <span role="columnheader">Role</span>
+              <span role="columnheader">Joined</span>
+              <span aria-hidden="true" />
+            </div>
+            {membersLoading ? (
+              <div className="team-people__loading">
+                <Spinner size="md" />
+              </div>
+            ) : (
+              visibleMembers.map((member) => (
+                <div
+                  className="team-people__member"
+                  key={member.userId}
+                  role="row"
+                >
+                  <span className="team-people__member-profile" role="cell">
+                    <span
+                      className="team-people__member-avatar"
+                      aria-hidden="true"
+                    >
+                      {member.email.charAt(0).toUpperCase()}
+                    </span>
+                    <span>{member.email}</span>
+                  </span>
+                  <span className="team-people__role" role="cell">
+                    {member.role}
+                  </span>
+                  <span role="cell">{formatMemberDate(member.createdAt)}</span>
+                  <span role="cell">
+                    {canManageTeam && member.role !== "owner" ? (
+                      <Button
+                        label="Remove"
+                        variant="ghost"
+                        size="sm"
+                        isDisabled={memberBusy}
+                        clickAction={() => void removeMember(member)}
+                      />
+                    ) : null}
+                  </span>
+                </div>
+              ))
+            )}
+            {!membersLoading && visibleMembers.length === 0 && (
+              <Text color="secondary">No Team members match this search.</Text>
+            )}
+          </section>
+          <footer className="team-people__pagination">
+            <span>
+              Show <strong>10</strong>
+            </span>
+            <button type="button" disabled aria-label="Previous page">
+              ‹
+            </button>
+            <button type="button" className="is-active" aria-current="page">
+              1
+            </button>
+            <button type="button" disabled aria-label="Next page">
+              ›
+            </button>
+            <span>
+              Showing {visibleMembers.length ? 1 : 0} to {visibleMembers.length}{" "}
+              of {visibleMembers.length}{" "}
+              {visibleMembers.length === 1 ? "entry" : "entries"}
+            </span>
+          </footer>
+        </div>
+      )}
+
+      {section === "settings" && selectedTeam && (
+        <div className="team-settings-view">
+          <Heading level={2}>Team profile</Heading>
+          <section className="team-settings-view__card team-settings-view__card--profile">
+            <div className="team-settings-view__identity">
+              <span className="projects-team-rail__avatar" aria-hidden="true">
+                {selectedTeam.name.charAt(0).toUpperCase()}
+              </span>
+              <div>
+                <Heading level={3}>{selectedTeam.name}</Heading>
+                <Text color="secondary">
+                  Shared Team profile for projects, flows, and documents.
+                </Text>
+              </div>
+            </div>
+            <dl>
+              <div>
+                <dt>Members</dt>
+                <dd>{selectedTeam.memberCount}</dd>
+              </div>
+              <div>
+                <dt>Your role</dt>
+                <dd className="team-people__role">{selectedTeam.role}</dd>
+              </div>
+              <div>
+                <dt>Created</dt>
+                <dd>{formatMemberDate(selectedTeam.createdAt)}</dd>
+              </div>
+            </dl>
+          </section>
+          <Heading level={2}>Project defaults</Heading>
+          <section className="team-settings-view__card">
+            <Heading level={3}>Project ownership</Heading>
+            <Text color="secondary">
+              Projects created inside this Team are available to every Team
+              member. Owners and admins can manage membership and project
+              access.
+            </Text>
+          </section>
+        </div>
+      )}
 
       <AstryxModal
         className="projects-workspace__modal projects-workspace__modal--invite"
@@ -1362,21 +1171,29 @@ export function ResearchProjectsView({
   );
 }
 
+export function ResearchProjectsView(props: ResearchProjectsViewProps) {
+  const projectsWorkspace = useProjectsWorkspace();
+  if (projectsWorkspace) return <ResearchProjectsViewContent {...props} />;
+
+  return (
+    <ProjectsWorkspaceProvider initialTeams={props.teams}>
+      <ResearchProjectsViewContent {...props} />
+    </ProjectsWorkspaceProvider>
+  );
+}
+
 export function ProjectsPage() {
   const [projects, setProjects] = useState<ResearchProjectSummary[]>([]);
   const [collections, setCollections] = useState<ResearchCollection[]>([]);
-  const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const refresh = useCallback(async () => {
     try {
-      const [nextProjects, nextTeams, nextCollections] = await Promise.all([
+      const [nextProjects, nextCollections] = await Promise.all([
         listResearchProjects(),
-        listTeams().catch(() => []),
         listCollections().catch(() => []),
       ]);
       setProjects(nextProjects);
-      setTeams(nextTeams);
       setCollections(nextCollections);
       setError("");
     } catch (cause) {
@@ -1403,7 +1220,6 @@ export function ProjectsPage() {
     <ResearchProjectsView
       projects={projects}
       collections={collections}
-      teams={teams}
       loading={loading}
       error={error}
       actions={{

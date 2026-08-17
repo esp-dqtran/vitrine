@@ -17,7 +17,6 @@ import {
   dedupeKey,
   installSettleTracker,
   interpretStep,
-  MAX_CAPTURE_HEIGHT_PX,
   pngSize,
   runFlow,
   sha16,
@@ -31,6 +30,7 @@ import {
 } from "./smartCrawler.ts";
 import type { DesignFlow } from "./designSystem.ts";
 import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
+import { captureHeightForDocument } from "./publicPageBrowser.ts";
 
 // ---------- pure parts ----------
 
@@ -1667,13 +1667,15 @@ test("captureIfNew dedupes identical states and captures new ones", async () => 
   assert.ok(size.width > 0 && size.height > 0);
 });
 
-test("captures of very tall pages are clamped to the height cap", async () => {
+test("uses the Sites bounded evidence window for very tall pages", async () => {
   await page.goto(`${baseUrl}/tall`);
   const { records, sink } = collectingSink();
   assert.equal(await captureIfNew(page, new Set(), "f/tall", sink), true);
   const size = pngSize(records[0].png);
-  assert.equal(size.height, MAX_CAPTURE_HEIGHT_PX);
-  assert.ok(size.width >= 1); // still a real image
+  const documentHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+  assert.equal(size.height, captureHeightForDocument(documentHeight));
+  assert.deepEqual([...records[0].png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  assert.ok(size.width >= 1);
 });
 
 test("runFlow walks steps, captures along the way, and reports a stuck step", async () => {

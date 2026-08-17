@@ -1,11 +1,12 @@
 import { useState, type ReactNode } from 'react';
-import { Button, Heading, Icon, IconButton, Text } from '@astryxdesign/core';
+import { Button, Heading, Text } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
 import { screenAspectRatio } from '../screenAspect.ts';
 import type { PublicAppPreview } from '../publicAppPreviewApi.ts';
 import { AppIcon } from './AppIcon.tsx';
 import { AstryxModal } from './AstryxModal.tsx';
 import { FlowCard } from './FlowCard.tsx';
+import { PreviewModalCloseButton } from './PreviewModalCloseButton.tsx';
 import { ReferenceDetailNavigation } from './ReferenceDetailPage.tsx';
 import { ReferenceGalleryGrid } from './ReferenceGallerySection.tsx';
 import { ScreenGridCard } from './ScreenGridCard.tsx';
@@ -323,16 +324,7 @@ export function PublicAppPreviewModal({
         data-public-app-preview-modal="true"
         style={{ position: 'relative', maxHeight: '86vh', overflowY: 'auto', padding: 4 }}
       >
-        <div data-public-preview-close="true" style={{ position: 'relative', zIndex: 5, height: 0 }}>
-          <IconButton
-            label="Close preview"
-            icon={<Icon icon="close" size="sm" />}
-            variant="ghost"
-            className="astryx-modal__icon-action"
-            onClick={onClose}
-            style={{ position: 'absolute', top: 8, right: 8 }}
-          />
-        </div>
+        <PreviewModalCloseButton onClose={onClose} />
         {loading ? (
           <PublicAppPreviewLoading />
         ) : error ? (

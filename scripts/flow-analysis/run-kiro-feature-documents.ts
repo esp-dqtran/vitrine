@@ -59,7 +59,7 @@ type Progress = {
   version: number;
   model: string;
   effort: string;
-  analysisMode: "whole-flow" | "per-image";
+  analysisMode: "whole-flow";
   officialDocumentation: boolean;
   officialDomains: string[];
   workers: number;
@@ -382,7 +382,7 @@ async function main(): Promise<void> {
     version: versionNumber,
     model: provider.model,
     effort,
-    analysisMode: provider.analyzeFlow ? "whole-flow" : "per-image",
+    analysisMode: "whole-flow",
     officialDocumentation: Boolean(provider.officialDocumentationEnabled),
     officialDomains: [...(provider.officialDocumentationDomains ?? [])],
     workers,

@@ -5,7 +5,6 @@ import {
   type FeatureDocumentContent,
   type FeatureEvidenceManifestItem,
   type FeatureStepAnalysis,
-  type FeatureStepPrompt,
 } from "./featureDocument.ts";
 import type { FeatureDocumentProvider } from "./featureDocumentProvider.ts";
 import type { FeatureDocumentStore, FeatureDocumentWorkerJob } from "./featureDocumentStore.ts";
@@ -24,7 +23,6 @@ type FailureCode =
   | "provider_unavailable"
   | "provider_timeout"
   | "provider_refused"
-  | "step_invalid"
   | "document_invalid";
 
 const RASTER_TYPES = new Set<ObjectMetadata["contentType"]>(["image/png", "image/jpeg", "image/webp"]);
@@ -37,7 +35,6 @@ const SAFE_MESSAGES: Record<FailureCode, string> = {
   provider_unavailable: "Feature analysis is temporarily unavailable",
   provider_timeout: "Feature analysis timed out",
   provider_refused: "Feature analysis could not process this evidence",
-  step_invalid: "Feature analysis returned an invalid step result",
   document_invalid: "Feature analysis returned an invalid document",
 };
 
@@ -83,11 +80,11 @@ function checkedImage(
   };
 }
 
-function providerFailure(error: unknown, invalidCode: "step_invalid" | "document_invalid"): FeatureGenerationError {
+function providerFailure(error: unknown): FeatureGenerationError {
   if (error instanceof EvidenceAnalysisError) {
     if (error.code === "provider_timeout") return new FeatureGenerationError("provider_timeout");
     if (error.code === "provider_refused") return new FeatureGenerationError("provider_refused");
-    if (error.code === "output_invalid") return new FeatureGenerationError(invalidCode);
+    if (error.code === "output_invalid") return new FeatureGenerationError("document_invalid");
   }
   return new FeatureGenerationError("provider_unavailable");
 }
@@ -108,69 +105,6 @@ async function cancellationRequested(store: FeatureDocumentStore, jobId: number)
   return current.status !== "running" && current.status !== "queued";
 }
 
-async function analyzeStep(input: {
-  provider: FeatureDocumentProvider;
-  prompt: FeatureStepPrompt;
-  image: { bytes: Buffer; contentType: "image/png" | "image/jpeg" | "image/webp" };
-  timeoutMs: number;
-  retryDelayMs: number;
-}): Promise<{ result: FeatureStepAnalysis; attemptCount: number }> {
-  try {
-    const analyzed = await runValidatedProviderCall({
-      call: (validationError, signal) => input.provider.analyzeImage(
-        { ...input.prompt, ...(validationError ? { validationError } : {}) },
-        input.image,
-        signal,
-      ),
-      parse: (raw) => parseFeatureStepAnalysis(raw, input.prompt.evidenceId),
-      timeoutMs: input.timeoutMs,
-      retryDelayMs: input.retryDelayMs,
-    });
-    return { result: analyzed.value, attemptCount: analyzed.attemptCount };
-  } catch (error) {
-    throw providerFailure(error, "step_invalid");
-  }
-}
-
-async function synthesizeDocument(input: {
-  job: FeatureDocumentWorkerJob;
-  analyses: FeatureStepAnalysis[];
-  provider: FeatureDocumentProvider;
-  timeoutMs: number;
-  retryDelayMs: number;
-  onValidation(): Promise<void>;
-}): Promise<FeatureDocumentContent> {
-  const allowedEvidenceIds = input.job.evidenceManifest.map(({ evidenceId }) => evidenceId);
-  try {
-    const synthesized = await runValidatedProviderCall({
-      call: async (validationError, signal) => {
-        const raw = await input.provider.synthesize({
-          source: input.job.source,
-          focusInstruction: input.job.focusInstruction,
-          evidenceManifest: input.job.evidenceManifest,
-          analyses: input.analyses,
-          allowedEvidenceIds,
-          ...(validationError ? { validationError } : {}),
-        }, signal);
-        await input.onValidation();
-        return raw;
-      },
-      parse: (raw) => parseFeatureDocumentContent(raw, new Set(allowedEvidenceIds), {
-        evidenceBacked: true,
-        evidenceManifest: input.job.evidenceManifest,
-        analyses: input.analyses,
-        officialDocumentationRequired: input.provider.officialDocumentationEnabled,
-        officialDocumentationDomains: input.provider.officialDocumentationDomains,
-      }),
-      timeoutMs: input.timeoutMs,
-      retryDelayMs: input.retryDelayMs,
-    });
-    return synthesized.value;
-  } catch (error) {
-    throw providerFailure(error, "document_invalid");
-  }
-}
-
 async function analyzeWholeFlow(input: {
   job: FeatureDocumentWorkerJob;
   images: Array<{ evidence: FeatureEvidenceManifestItem; image: RasterImage }>;
@@ -180,7 +114,6 @@ async function analyzeWholeFlow(input: {
   onValidation(): Promise<void>;
 }): Promise<{ analyses: FeatureStepAnalysis[]; content: FeatureDocumentContent; attemptCount: number }> {
   const analyzeFlow = input.provider.analyzeFlow;
-  if (!analyzeFlow) throw new FeatureGenerationError("provider_unavailable");
   const allowedEvidenceIds = input.job.evidenceManifest.map(({ evidenceId }) => evidenceId);
   try {
     const analyzed = await runValidatedProviderCall({
@@ -224,7 +157,7 @@ async function analyzeWholeFlow(input: {
     });
     return { ...analyzed.value, attemptCount: analyzed.attemptCount };
   } catch (error) {
-    throw providerFailure(error, "document_invalid");
+    throw providerFailure(error);
   }
 }
 
@@ -245,26 +178,6 @@ async function loadEvidenceImage(input: {
     throw new FeatureGenerationError("image_missing");
   }
   return checkedImage(metadata, object, input.maximumBytes);
-}
-
-async function verifyObservedEvidence(input: {
-  evidence: FeatureEvidenceManifestItem;
-  objectStore: ObjectStore;
-  imageObjectById(imageId: number): Promise<ObjectMetadata | undefined>;
-  maximumBytes: number;
-}): Promise<void> {
-  const metadata = await input.imageObjectById(input.evidence.imageId);
-  if (!metadata) throw new FeatureGenerationError("image_missing");
-  if (!RASTER_TYPES.has(metadata.contentType)) throw new FeatureGenerationError("image_type_unsupported");
-  if (metadata.byteSize > input.maximumBytes) throw new FeatureGenerationError("image_size_excessive");
-  let stored: ObjectMetadata | undefined;
-  try {
-    stored = await input.objectStore.head(metadata.key);
-  } catch {
-    throw new FeatureGenerationError("image_missing");
-  }
-  if (!stored) throw new FeatureGenerationError("image_missing");
-  if (!sameMetadata(metadata, stored)) throw new FeatureGenerationError("image_metadata_mismatch");
 }
 
 export function createFeatureDocumentService(deps: {
@@ -297,149 +210,64 @@ export function createFeatureDocumentService(deps: {
 
       let activeEvidence: typeof job.evidenceManifest[number] | undefined;
       let attemptCount = 1;
+      // Checked before the provider runs as well as after it: a Flow edited before the
+      // worker picked the job up would otherwise burn a full analysis to produce a result
+      // that is discarded as stale.
+      const sourceChanged = async (): Promise<boolean> =>
+        (await deps.currentSourceManifest(job.source)).sha256 !== job.evidenceManifestSha256;
       try {
         await deps.store.updateProgress(jobId, "preparing", 0);
+        if (await sourceChanged()) {
+          await deps.store.markStale(jobId);
+          return "stale";
+        }
         const manifest = orderedManifest(job);
-        let content: FeatureDocumentContent;
-        if (deps.provider.analyzeFlow && !manifest.some(({ observation }) => observation)) {
-          const flowImages: Array<{ evidence: FeatureEvidenceManifestItem; image: RasterImage }> = [];
-          await deps.store.updateProgress(jobId, "analyzing", 0);
-          for (let index = 0; index < manifest.length; index += 1) {
-            const evidence = manifest[index];
-            activeEvidence = evidence;
-            if (await cancellationRequested(deps.store, jobId)) {
-              return (await deps.store.workerJob(jobId))?.status;
-            }
-            const image = await loadEvidenceImage({
-              evidence,
-              objectStore: deps.objectStore,
-              imageObjectById: deps.imageObjectById,
-              maximumBytes: maxImageBytes,
-            });
-            flowImages.push({ evidence, image });
-            await deps.store.updateProgress(jobId, "analyzing", index + 1);
-          }
-          activeEvidence = undefined;
+        const flowImages: Array<{ evidence: FeatureEvidenceManifestItem; image: RasterImage }> = [];
+        await deps.store.updateProgress(jobId, "analyzing", 0);
+        for (let index = 0; index < manifest.length; index += 1) {
+          const evidence = manifest[index];
+          activeEvidence = evidence;
           if (await cancellationRequested(deps.store, jobId)) {
             return (await deps.store.workerJob(jobId))?.status;
           }
-          await deps.store.updateProgress(jobId, "synthesizing", manifest.length);
-          const wholeFlow = await analyzeWholeFlow({
-            job,
-            images: flowImages,
-            provider: deps.provider,
-            timeoutMs,
-            retryDelayMs,
-            onValidation: () => deps.store.updateProgress(jobId, "validating", manifest.length),
+          const image = await loadEvidenceImage({
+            evidence,
+            objectStore: deps.objectStore,
+            imageObjectById: deps.imageObjectById,
+            maximumBytes: maxImageBytes,
           });
-          attemptCount = wholeFlow.attemptCount;
-          for (let index = 0; index < manifest.length; index += 1) {
-            const evidence = manifest[index];
-            await deps.store.recordStepAnalysis(jobId, {
-              stepIndex: evidence.stepIndex,
-              imageIndex: evidence.imageIndex,
-              imageId: evidence.imageId,
-              evidenceId: evidence.evidenceId,
-              result: wholeFlow.analyses[index],
-              attemptCount: wholeFlow.attemptCount,
-            });
-          }
-          content = wholeFlow.content;
-        } else {
-          const completed = await deps.store.completedStepAnalyses(jobId);
-          const persisted = new Map(completed.map((record) => [record.evidenceId, record]));
-          const analyses: FeatureStepAnalysis[] = [];
-          await deps.store.updateProgress(jobId, "analyzing", 0);
-          for (let index = 0; index < manifest.length; index += 1) {
-            const evidence = manifest[index];
-            activeEvidence = evidence;
-            if (await cancellationRequested(deps.store, jobId)) {
-              return (await deps.store.workerJob(jobId))?.status;
-            }
-            const existing = persisted.get(evidence.evidenceId);
-            if (
-              existing
-              && existing.jobId === jobId
-              && existing.stepIndex === evidence.stepIndex
-              && existing.imageIndex === evidence.imageIndex
-              && existing.imageId === evidence.imageId
-            ) {
-              analyses.push(existing.result);
-              await deps.store.updateProgress(jobId, "analyzing", index + 1);
-              continue;
-            }
-            if (evidence.observation) {
-              await verifyObservedEvidence({
-                evidence,
-                objectStore: deps.objectStore,
-                imageObjectById: deps.imageObjectById,
-                maximumBytes: maxImageBytes,
-              });
-              const observed = parseFeatureStepAnalysis(evidence.observation, evidence.evidenceId);
-              await deps.store.recordStepAnalysis(jobId, {
-                stepIndex: evidence.stepIndex,
-                imageIndex: evidence.imageIndex,
-                imageId: evidence.imageId,
-                evidenceId: evidence.evidenceId,
-                result: observed,
-                attemptCount: 1,
-              });
-              analyses.push(observed);
-              await deps.store.updateProgress(jobId, "analyzing", index + 1);
-              continue;
-            }
-            const image = await loadEvidenceImage({
-              evidence,
-              objectStore: deps.objectStore,
-              imageObjectById: deps.imageObjectById,
-              maximumBytes: maxImageBytes,
-            });
-            const analyzed = await analyzeStep({
-              provider: deps.provider,
-              prompt: {
-                source: job.source,
-                stepIndex: evidence.stepIndex,
-                imageIndex: evidence.imageIndex,
-                evidenceId: evidence.evidenceId,
-                stepLabel: evidence.stepLabel,
-                ...(evidence.interaction ? { interaction: evidence.interaction } : {}),
-                focusInstruction: job.focusInstruction,
-                ...(analyses.length ? { previousStepContext: analyses[analyses.length - 1] } : {}),
-              },
-              image,
-              timeoutMs,
-              retryDelayMs,
-            });
-            attemptCount = analyzed.attemptCount;
-            await deps.store.recordStepAnalysis(jobId, {
-              stepIndex: evidence.stepIndex,
-              imageIndex: evidence.imageIndex,
-              imageId: evidence.imageId,
-              evidenceId: evidence.evidenceId,
-              result: analyzed.result,
-              attemptCount: analyzed.attemptCount,
-            });
-            analyses.push(analyzed.result);
-            await deps.store.updateProgress(jobId, "analyzing", index + 1);
-          }
-          activeEvidence = undefined;
-          if (await cancellationRequested(deps.store, jobId)) {
-            return (await deps.store.workerJob(jobId))?.status;
-          }
-          await deps.store.updateProgress(jobId, "synthesizing", manifest.length);
-          content = await synthesizeDocument({
-            job,
-            analyses,
-            provider: deps.provider,
-            timeoutMs,
-            retryDelayMs,
-            onValidation: () => deps.store.updateProgress(jobId, "validating", manifest.length),
+          flowImages.push({ evidence, image });
+          await deps.store.updateProgress(jobId, "analyzing", index + 1);
+        }
+        activeEvidence = undefined;
+        if (await cancellationRequested(deps.store, jobId)) {
+          return (await deps.store.workerJob(jobId))?.status;
+        }
+        await deps.store.updateProgress(jobId, "synthesizing", manifest.length);
+        const wholeFlow = await analyzeWholeFlow({
+          job,
+          images: flowImages,
+          provider: deps.provider,
+          timeoutMs,
+          retryDelayMs,
+          onValidation: () => deps.store.updateProgress(jobId, "validating", manifest.length),
+        });
+        attemptCount = wholeFlow.attemptCount;
+        for (let index = 0; index < manifest.length; index += 1) {
+          const evidence = manifest[index];
+          await deps.store.recordStepAnalysis(jobId, {
+            stepIndex: evidence.stepIndex,
+            imageIndex: evidence.imageIndex,
+            imageId: evidence.imageId,
+            evidenceId: evidence.evidenceId,
+            result: wholeFlow.analyses[index],
+            attemptCount: wholeFlow.attemptCount,
           });
         }
+        const content = wholeFlow.content;
 
         if (await cancellationRequested(deps.store, jobId)) return (await deps.store.workerJob(jobId))?.status;
-        const current = await deps.currentSourceManifest(job.source);
-        if (current.sha256 !== job.evidenceManifestSha256) {
+        if (await sourceChanged()) {
           await deps.store.markStale(jobId);
           return "stale";
         }

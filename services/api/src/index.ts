@@ -3,7 +3,7 @@ import { adminSeedFromEnv, billingConfigFromEnv, referralCampaignFromEnv } from 
 import { startApi } from "./start.ts";
 import { seedAdmin } from "../../../src/authStore.ts";
 import {
-  pool,
+  pool, query,
 } from "../../../src/db.ts";
 import { assertMigrationsCurrent } from "../../../src/migrations.ts";
 import Stripe from "stripe";
@@ -39,6 +39,12 @@ import {
   publishedAppCatalogDocument,
 } from "../../../src/typesenseAppCatalogSource.ts";
 import type { Platform } from "../../../src/platformFromUrl.ts";
+import {
+  createThreadsClient,
+  createThreadsMarketingService,
+  threadsMarketingConfigFromEnv,
+} from "./threadsMarketing.ts";
+import { createThreadsMarketingStore } from "../../../src/threadsMarketingStore.ts";
 
 const PORT = Number(process.env.PORT ?? DEFAULT_API_PORT);
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
@@ -122,5 +128,26 @@ await startApi({
     app.listen(PORT, () => {
       console.log(`[api] listening on :${PORT}`);
     });
+    const threadsMarketingConfig = threadsMarketingConfigFromEnv(process.env);
+    if (threadsMarketingConfig) {
+      const service = createThreadsMarketingService({
+        store: createThreadsMarketingStore(query),
+        config: threadsMarketingConfig,
+        client: createThreadsClient(threadsMarketingConfig),
+      });
+      let lastAttemptAt = 0;
+      const runDueDailyPost = async () => {
+        const now = new Date();
+        const localClock = new Intl.DateTimeFormat("en-GB", {
+          timeZone: threadsMarketingConfig.timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+        }).format(now);
+        if (localClock < threadsMarketingConfig.dailyTime || now.valueOf() - lastAttemptAt < 15 * 60_000) return;
+        lastAttemptAt = now.valueOf();
+        const post = await service.publishDaily();
+        console.log(`[threads-marketing] ${post.status} ${post.id}`);
+      };
+      void runDueDailyPost().catch((error) => console.error("[threads-marketing] daily run failed", error));
+      setInterval(() => void runDueDailyPost().catch((error) => console.error("[threads-marketing] daily run failed", error)), 60_000).unref();
+    }
   },
 });

@@ -53,6 +53,14 @@
   font-weight: 500 !important;
 }
 
+.astryx-dropdown__item--with-icon {
+  justify-content: flex-start !important;
+}
+
+.astryx-dropdown__item--with-icon .astryx-dropdown__check {
+  margin-left: auto;
+}
+
 .astryx-dropdown__item:hover,
 .astryx-dropdown__item:focus-visible {
   background: var(--color-overlay-hover) !important;

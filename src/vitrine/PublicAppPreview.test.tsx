@@ -160,8 +160,7 @@ test('public app preview can render as a modal without page navigation', () => {
   );
 
   assert.match(html, /data-public-app-preview-modal="true"/);
-  assert.match(html, /data-public-preview-close="true" style="position:relative/);
-  assert.doesNotMatch(html, /data-public-preview-close="true" style="position:sticky/);
+  assert.match(html, /data-public-preview-close="true" style="position:absolute;top:16px;right:16px;z-index:5"/);
   assert.match(html, /aria-label="Close preview"/);
   assert.doesNotMatch(html, />Close preview</);
   assert.match(html, /Screens/);

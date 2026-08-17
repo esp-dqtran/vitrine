@@ -70,9 +70,9 @@ test("renders a personal projects workspace without project status", () => {
   assert.match(populated, /Pinned/);
   assert.match(populated, /Rename/);
   assert.match(populated, /data-app-discovery-card="true"/);
-  // The sort control is gone; projects stay ordered by last updated.
+  assert.doesNotMatch(populated, /placeholder="Search projects"/);
   assert.doesNotMatch(populated, />Sort by</);
-  assert.doesNotMatch(populated, /aria-label="Sort: Last updated"/);
+  assert.doesNotMatch(populated, /aria-label="More project actions"/);
   assert.match(populated, /data-variant="primary"[\s\S]*New project/);
   assert.doesNotMatch(populated, /Filter projects/);
   assert.doesNotMatch(populated, /Synthesis stale|Draft|Active|Paused/);
@@ -84,7 +84,10 @@ test("keeps the first-project guide actionable and bounded to the activation loo
   );
   assert.match(html, /First project/);
   assert.match(html, /collect real product evidence/);
-  assert.match(html, /write a requirement, request review, and approve the outcome/);
+  assert.match(
+    html,
+    /write a requirement, request review, and approve the outcome/,
+  );
   assert.equal((html.match(/<li>/g) ?? []).length, 3);
 });
 
@@ -106,16 +109,22 @@ test("keeps project tiles as elevated, keyboard-accessible cards", () => {
     css,
     /\.project-discovery-card \.app-discovery-card__media\s*\{[\s\S]*width:\s*calc\(100% - 24px\)[\s\S]*aspect-ratio:\s*16 \/ 9/,
   );
+  assert.match(
+    css,
+    /@media \(hover:\s*hover\) and \(pointer:\s*fine\)[\s\S]*?\.project-discovery-card__actions\s*\{[^}]*visibility:\s*hidden;[^}]*opacity:\s*0;[^}]*pointer-events:\s*none;/s,
+  );
+  assert.match(
+    css,
+    /\.project-discovery-card:hover \.project-discovery-card__actions,[\s\S]*?\.project-discovery-card:focus-within \.project-discovery-card__actions,[\s\S]*?\.project-discovery-card:has\(\.projects-workspace__menu\[open\]\)[\s\S]*?\.project-discovery-card__actions\s*\{[^}]*visibility:\s*visible;[^}]*opacity:\s*1;[^}]*pointer-events:\s*auto;/s,
+  );
 });
 
-test("publishes a compact Apps action from the Projects workspace rail", () => {
+test("keeps the Projects workspace rail focused on project destinations", () => {
   const source = readFileSync(
     new URL("./components/ProjectsPage.tsx", import.meta.url),
     "utf8",
   );
-
-  assert.match(source, /globalActions: \[\{[\s\S]*?label: "Apps"/);
-  assert.match(source, /onSelect: \(\) => navigate\(\{ name: "apps" \}\)/);
+  assert.doesNotMatch(source, /globalActions:/);
   assert.match(source, /primaryHeading: "Workspace"/);
   assert.doesNotMatch(source, /primaryCollapsible: true/);
   assert.match(source, /onBrandSelect: \(\) => navigate\(\{ name: "apps" \}\)/);
@@ -175,6 +184,10 @@ test("defines Lumin-style Team dropdowns, modals, and member management layout",
     new URL("./components/ProjectsPage.tsx", import.meta.url),
     "utf8",
   );
+  const workspaceSource = readFileSync(
+    new URL("./components/WorkspaceChromeContext.tsx", import.meta.url),
+    "utf8",
+  );
 
   assert.match(
     css,
@@ -196,7 +209,11 @@ test("defines Lumin-style Team dropdowns, modals, and member management layout",
     source,
     /projects-workspace__modal projects-workspace__modal--invite[\s\S]*?width=\{640\}/,
   );
-  assert.match(source, /role="menu"\s*aria-label="Switch workspace"/);
+  assert.match(
+    workspaceSource,
+    /role="menu"\s*aria-label="Switch workspace"/,
+  );
+  assert.doesNotMatch(source, /projects-workspace__drawer-layer/);
   assert.match(
     source,
     /role="menu"\s*aria-label=\{`Actions for \$\{project\.title\}`\}/,
@@ -514,14 +531,14 @@ test("labels AI output and preserves designer decisions", () => {
   assert.match(html, /Use progressive SSO setup/);
 });
 
-test("opens every Designer Project on its Canvas file index", () => {
+test("opens every Designer Project on its combined Project home", () => {
   const appSource = readFileSync(new URL("./App.tsx", import.meta.url), "utf8");
   const filesSource = readFileSync(
     new URL("./components/ProjectFilesPage.tsx", import.meta.url),
     "utf8",
   );
-  const navigationSource = readFileSync(
-    new URL("./components/ProjectWorkspaceNav.tsx", import.meta.url),
+  const filesCss = readFileSync(
+    new URL("./projectFiles.css", import.meta.url),
     "utf8",
   );
   const canvasSource = readFileSync(
@@ -539,26 +556,66 @@ test("opens every Designer Project on its Canvas file index", () => {
   );
   // Chrome is published to the hoisted shell; pages render content only.
   assert.match(filesSource, /useWorkspaceChrome\(/);
-  assert.doesNotMatch(filesSource, /<WorkspaceShell|<WorkspaceRail|<WorkspaceHeader/);
-  assert.match(filesSource, /function CanvasScreenCard/);
-  assert.match(filesSource, /<MediaGridCard/);
-  assert.match(filesSource, /data-canvas-preview="placeholder"/);
+  assert.doesNotMatch(
+    filesSource,
+    /<WorkspaceShell|<WorkspaceRail|<WorkspaceHeader/,
+  );
+  assert.match(filesSource, /function ProjectFileCard/);
+  assert.match(filesSource, /function ProjectFileListRow/);
+  assert.match(filesSource, /project-template-shelf/);
+  assert.match(filesSource, />\s*Templates\s*</);
+  assert.match(filesSource, /aria-label="Create a blank canvas"/);
+  assert.doesNotMatch(filesSource, /Start blank/);
+  assert.match(
+    filesCss,
+    /\.project-template-card--blank:hover \.project-template-card__preview/,
+  );
+  assert.match(
+    filesCss,
+    /\.project-template-card--blank:hover \.project-template-card__blank-icon/,
+  );
+  assert.match(filesSource, /<AstryxModal/);
+  assert.match(filesSource, /purpose="form"/);
+  assert.match(filesSource, /Create a blank canvas/);
+  assert.match(filesSource, /projectCanvasTemplates/);
+  assert.match(filesSource, /convertToExcalidrawElements/);
+  assert.doesNotMatch(filesSource, /ProjectAccessButton/);
+  assert.doesNotMatch(filesSource, /label="Create new"/);
+  assert.match(filesSource, /Filter project files/);
+  assert.match(filesSource, /Sort project files/);
+  assert.match(filesSource, /AstryxSingleSelectDropdown/);
+  assert.match(filesSource, /value: "canvas", label: "Canvas"/);
+  assert.match(filesSource, /value: "document", label: "Document"/);
+  assert.doesNotMatch(filesSource, /label: "Canvases"|label: "Documents"/);
+  assert.match(filesSource, /label: "Canvas"[\s\S]*?label: "Document"/);
+  assert.match(filesSource, /className="project-library__sections"/);
+  assert.match(
+    filesSource,
+    /className=\{`project-library-section is-\$\{section\.kind\}`\}/,
+  );
+  assert.doesNotMatch(filesSource, /project-library__heading/);
+  assert.doesNotMatch(filesSource, /Files in this project/);
+  assert.match(filesSource, /<AnimatePresence initial=\{false\} mode="wait">/);
+  assert.match(filesSource, /<motion\.div/);
+  assert.match(filesSource, /useReducedMotion\(\)/);
+  assert.doesNotMatch(filesSource, /url="\/favicon\.svg"/);
   assert.doesNotMatch(filesSource, /exportToBlob|getDesignerCanvasFile/);
-  assert.doesNotMatch(filesSource, /project-file-index__toolbar/);
-  assert.match(filesSource, /project-file-index__grid--documents/);
-  // The app rail stays flat. Project-only areas are available in the project
-  // header, where they do not turn the global navigation into a tiny tree.
-  assert.match(filesSource, /<ProjectWorkspaceNav projectId=\{projectId\} active=\{area\}/);
+  assert.match(filesSource, /project-file-index__grid--\$\{canvasView\}/);
+  // The app rail stays flat and the combined library does not add a second
+  // Project home / Documents / Settings navigation row to the page header.
+  assert.doesNotMatch(filesSource, /<ProjectWorkspaceNav/);
   assert.doesNotMatch(filesSource, /project-files__hero/);
-  assert.match(filesSource, /className="projects-workspace__page-header"/);
+  assert.match(
+    filesSource,
+    /className="projects-workspace__page-header project-library__header"/,
+  );
+  assert.doesNotMatch(
+    filesSource,
+    /files · canvases and documents in one project/,
+  );
   assert.match(filesSource, /area === "settings"/);
   assert.match(filesSource, /label="Save changes"/);
-  assert.match(navigationSource, /<ToggleButton/);
-  assert.match(navigationSource, /label="Settings"/);
   assert.match(appSource, /case "project-settings"/);
-  assert.match(navigationSource, /useSlidingIndicator\(active\)/);
-  assert.match(navigationSource, /className="project-area-nav__indicator"/);
-  assert.doesNotMatch(navigationSource, /<Icon/);
   assert.match(canvasSource, /className="project-canvas-header"/);
   assert.match(canvasSource, /<Excalidraw/);
   assert.doesNotMatch(
@@ -568,32 +625,43 @@ test("opens every Designer Project on its Canvas file index", () => {
   assert.doesNotMatch(appSource, /components\/ResearchProjectPage/);
 });
 
-test("renders the Canvas file index as either a grid or a list", () => {
+test("renders separate Canvas and Document sections as either a grid or a list", () => {
   const source = readFileSync(
     new URL("./components/ProjectFilesPage.tsx", import.meta.url),
     "utf8",
   );
-  const css = readFileSync(new URL("./projectFiles.css", import.meta.url), "utf8");
-
-  // Both modes exist and the toggle only shows where it applies: Canvas, and
-  // only once there is something to lay out.
-  assert.match(source, /useState<CanvasView>\("grid"\)/);
-  assert.match(source, /area === "canvas" && canvases\.length \?/);
-  assert.match(source, /<SegmentedControlItem value="grid" label="Grid" \/>/);
-  assert.match(source, /<SegmentedControlItem value="list" label="List" \/>/);
-
-  // List reuses the single-column track the document index already uses, so a
-  // canvas row and a document row line up.
-  assert.match(
-    source,
-    /area === "canvas" && canvasView === "grid"[\s\S]*?grid--canvas[\s\S]*?grid--documents/,
+  const css = readFileSync(
+    new URL("./projectFiles.css", import.meta.url),
+    "utf8",
   );
-  assert.match(source, /function CanvasListRow/);
-  assert.match(source, /className="project-file-row"[\s\S]*?Canvas · Updated/);
-  assert.match(css, /\.project-file-index__grid--documents\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/);
+
+  // Both sections use the same grid/list mode and shared sorting controls.
+  assert.match(source, /useState<CanvasView>\("grid"\)/);
+  assert.match(source, /aria-label="Grid view"/);
+  assert.match(source, /aria-label="List view"/);
+  assert.match(source, /role="radiogroup"[\s\S]*?aria-label="File layout"/);
+
+  assert.match(source, /function ProjectFileListRow/);
+  assert.match(source, /function ProjectFileCard/);
+  assert.match(source, /project-library-card is-\$\{file\.kind\}/);
+  assert.match(source, /const libraryFiles = useMemo<ProjectLibraryFile\[]>/);
+  assert.match(source, /const fileSections = useMemo/);
+  assert.match(source, /section\.files\.map/);
+  assert.match(source, /\.\.\.canvases\.map/);
+  assert.match(source, /\.\.\.documents\.map/);
+  assert.match(
+    css,
+    /\.project-file-index__grid--grid\s*\{[^}]*grid-template-columns:/,
+  );
+  assert.match(
+    css,
+    /\.project-file-index__grid--list\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/,
+  );
+  assert.doesNotMatch(css, /\.project-library-card\.is-document\s*\{/);
+  assert.doesNotMatch(source, /project-library-card__kind/);
 });
 
-test("keeps the global rail flat and project areas in the project header", () => {
+test("keeps the global rail flat without a second project tab row", () => {
   const navSource = readFileSync(
     new URL("./components/projectRailNav.tsx", import.meta.url),
     "utf8",
@@ -606,24 +674,43 @@ test("keeps the global rail flat and project areas in the project header", () =>
     new URL("./components/ProjectsPage.tsx", import.meta.url),
     "utf8",
   );
+  const collectionsSource = readFileSync(
+    new URL("./components/CollectionsWorkspacePage.tsx", import.meta.url),
+    "utf8",
+  );
+  const workspaceSource = readFileSync(
+    new URL("./components/WorkspaceChromeContext.tsx", import.meta.url),
+    "utf8",
+  );
+  const appSource = readFileSync(new URL("./App.tsx", import.meta.url), "utf8");
   // The global rail only changes workspace-level destinations. It must not
   // turn into a second project file browser on detail routes.
-  assert.match(navSource, /label: 'Projects'[\s\S]*?onSelect: onOpenProjects/);
-  assert.match(navSource, /label: 'Collections'[\s\S]*?onSelect: \(\) => navigate\(\{ name: 'collections' \}\)/);
+  assert.match(navSource, /label: "Projects"[\s\S]*?onSelect: onOpenProjects/);
+  assert.match(navSource, /label: "Projects"[\s\S]*?<CategoryIcon/);
+  assert.match(
+    navSource,
+    /label: "Collections"[\s\S]*?onSelect: \(\) => navigate\(\{ name: "collections" \}\)/,
+  );
   assert.doesNotMatch(navSource, /children:/);
   assert.doesNotMatch(navSource, /label: 'Canvas'/);
   assert.doesNotMatch(navSource, /label: 'Documents'/);
   assert.doesNotMatch(navSource, /All collections/);
 
-  // The same small global rail is used everywhere, while local project areas
-  // remain readable in the detail-page header.
+  // The same small global rail is used everywhere; the combined Project page
+  // does not add a second navigation row in its detail header.
   assert.match(filesSource, /projectRailNav\(\{/);
-  assert.match(filesSource, /<ProjectWorkspaceNav projectId=\{projectId\} active=\{area\}/);
+  assert.doesNotMatch(filesSource, /<ProjectWorkspaceNav/);
   assert.match(
-    filesSource,
-    /workspace:\s*\{[\s\S]*?label:\s*"Switch workspace"[\s\S]*?name:\s*project\?\.organization\?\.name \?\? "Personal"[\s\S]*?expanded:\s*workspaceMenuOpen/,
+    workspaceSource,
+    /label:\s*'Switch Team'[\s\S]*?expanded:\s*menuOpen[\s\S]*?onSelect:\s*\(\) => setMenuOpen/,
   );
-  assert.match(filesSource, /aria-label="Switch workspace"/);
+  assert.match(appSource, /<ProjectsWorkspaceProvider/);
+  assert.doesNotMatch(filesSource, /workspace:\s*\{/);
+  assert.doesNotMatch(filesSource, /projects-workspace__drawer-layer/);
+  assert.doesNotMatch(collectionsSource, /workspace:\s*\{/);
+  assert.doesNotMatch(collectionsSource, /projects-workspace__drawer-layer/);
+  assert.doesNotMatch(indexSource, /workspace:\s*\{/);
+  assert.doesNotMatch(indexSource, /projects-workspace__drawer-layer/);
   assert.match(indexSource, /primaryActions:\s*projectRailNav\(\{/);
 });
 
@@ -644,7 +731,10 @@ test("does not load directory data just to populate the global rail", () => {
 
 test("lets the project panel fill the page", () => {
   const styles = readFileSync(new URL("./styles.css", import.meta.url), "utf8");
-  const files = readFileSync(new URL("./projectFiles.css", import.meta.url), "utf8");
+  const files = readFileSync(
+    new URL("./projectFiles.css", import.meta.url),
+    "utf8",
+  );
 
   /*
    * .project-files-page rides on the same <main> as .projects-workspace. A

@@ -1,0 +1,1587 @@
+/*
+ * Catalog sidebar — the persistent left column for Apps/Flows/Sites.
+ *
+ * Chrome stays achromatic on purpose: with hundreds of products side by side,
+ * every colour on the page should come from the catalog's own artwork. The
+ * sidebar's only job is to be legible and get out of the way.
+ */
+
+.catalog-sidebar {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+  align-self: start;
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  /* No horizontal padding: rows run the full width so an active row's fill and
+     its left bar reach the edge, the way the reference does it. */
+  padding-block: 0 16px;
+  scrollbar-width: thin;
+}
+
+.catalog-sidebar__search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 36px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.catalog-sidebar__search:hover,
+.catalog-sidebar__search:focus-visible {
+  border-color: var(--color-border-emphasized);
+  color: var(--color-text-primary);
+}
+
+.catalog-sidebar__search-label {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.catalog-sidebar__search kbd {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11px;
+}
+
+.catalog-sidebar__group {
+  display: grid;
+  gap: 1px;
+  margin-bottom: 12px;
+}
+
+/* A plain muted line, not a tiny uppercase label — the reference keeps group
+   headings the same size as the rows beneath them. */
+.catalog-sidebar__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 12px 0 2px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
+}
+
+.catalog-sidebar__heading--toggle {
+  cursor: pointer;
+}
+
+.catalog-sidebar__heading--toggle:hover {
+  color: var(--color-text-primary);
+}
+
+/* Rows: square, full-bleed, 36px. The active one takes a 3px left bar and a
+   neutral fill rather than a rounded pill. */
+.catalog-sidebar__nav,
+.catalog-sidebar__category {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 0;
+  border-left: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* The active row changes ground, text and its left bar at once; without a
+   transition all three snap and the switch reads as a flicker. Uses the
+   product's own motion tokens rather than invented timings. */
+.catalog-sidebar__nav,
+.catalog-sidebar__category {
+  transition:
+    background-color var(--vitrine-motion-fast) var(--vitrine-motion-ease),
+    color var(--vitrine-motion-fast) var(--vitrine-motion-ease),
+    border-left-color var(--vitrine-motion-medium) var(--vitrine-motion-ease);
+}
+
+.catalog-sidebar__nav-icon {
+  transition: opacity var(--vitrine-motion-fast) var(--vitrine-motion-ease);
+}
+
+/* Someone who asked for less motion still needs the state change, just not
+   the animation. */
+@media (prefers-reduced-motion: reduce) {
+  .catalog-sidebar__nav,
+  .catalog-sidebar__category,
+  .catalog-sidebar__nav-icon {
+    transition: none;
+    animation: none;
+  }
+}
+
+.catalog-sidebar__nav:hover,
+.catalog-sidebar__category:hover {
+  background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+  color: var(--color-text-primary);
+}
+
+.catalog-sidebar__nav.is-active,
+.catalog-sidebar__category.is-selected {
+  background: color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+  color: var(--color-text-primary);
+}
+
+/* Categories filter in place and never move the section line, so they keep
+   drawing their own bar. */
+.catalog-sidebar__category.is-selected {
+  border-left-color: var(--color-text-primary);
+}
+
+/* The section line. One element for the whole sidebar: it slides between rows
+   instead of one bar switching off while another switches on. `sticky` on the
+   sidebar already makes it the containing block, and living inside the scroll
+   area means it travels with the rows. */
+.catalog-sidebar__indicator {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: 3px;
+  background: var(--color-text-primary);
+  pointer-events: none;
+  transition:
+    transform var(--vitrine-motion-medium) var(--vitrine-motion-ease),
+    height var(--vitrine-motion-medium) var(--vitrine-motion-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalog-sidebar__indicator {
+    transition: none;
+  }
+}
+
+/* Selecting a section navigates, and each catalog page mounts its own
+   sidebar — so the active row is a brand new node that arrives already
+   active. A transition has no previous value to animate from and never
+   fires; an entry animation does. Categories filter in place, so those
+   keep using the transition above. */
+@keyframes catalog-sidebar-activate {
+  from {
+    background-color: transparent;
+    color: var(--color-text-secondary);
+  }
+}
+
+.catalog-sidebar__nav.is-active {
+  animation: catalog-sidebar-activate var(--vitrine-motion-medium)
+    var(--vitrine-motion-ease);
+}
+
+.catalog-sidebar__nav.is-active .catalog-sidebar__nav-icon {
+  animation: catalog-sidebar-activate-icon var(--vitrine-motion-medium)
+    var(--vitrine-motion-ease);
+}
+
+@keyframes catalog-sidebar-activate-icon {
+  from { opacity: 0.6; }
+}
+
+/* The row being left, animating back out over the same beat so the two read
+   as one movement rather than a cut plus a fade. */
+@keyframes catalog-sidebar-deactivate {
+  from {
+    background-color: color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+    color: var(--color-text-primary);
+  }
+}
+
+.catalog-sidebar__nav.is-leaving {
+  animation: catalog-sidebar-deactivate var(--vitrine-motion-medium)
+    var(--vitrine-motion-ease);
+}
+
+.catalog-sidebar__nav.is-leaving .catalog-sidebar__nav-icon {
+  animation: catalog-sidebar-deactivate-icon var(--vitrine-motion-medium)
+    var(--vitrine-motion-ease);
+}
+
+@keyframes catalog-sidebar-deactivate-icon {
+  from { opacity: 1; }
+}
+
+.catalog-sidebar__nav-icon {
+  display: grid;
+  flex: 0 0 16px;
+  place-items: center;
+  opacity: 0.75;
+}
+
+.catalog-sidebar__nav-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.catalog-sidebar__nav.is-active .catalog-sidebar__nav-icon,
+.catalog-sidebar__category.is-selected .catalog-sidebar__nav-icon {
+  opacity: 1;
+}
+
+.catalog-sidebar__nav-label,
+.catalog-sidebar__category-label {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Counts stay quiet: for comparing sizes at a glance, never read first. */
+.catalog-sidebar__category-count {
+  flex: 0 0 auto;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+.catalog-sidebar__more {
+  justify-self: start;
+  margin-top: 2px;
+  padding: 6px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.catalog-sidebar__more:hover {
+  color: var(--color-text-primary);
+}
+
+.catalog-sidebar__footer {
+  margin-top: auto;
+  padding: 14px 12px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.catalog-sidebar__unlocks {
+  margin: 0 0 8px;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.catalog-sidebar__pips {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.catalog-sidebar__pips span {
+  height: 3px;
+  flex: 1 1 0;
+  border-radius: 2px;
+  background: var(--color-border-emphasized);
+}
+
+.catalog-sidebar__pips span.is-used {
+  background: var(--color-text-primary);
+}
+
+.catalog-sidebar__upgrade {
+  width: 100%;
+  min-height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--color-text-primary);
+  color: var(--color-background-body);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .catalog-sidebar {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+/* ---------- Catalog shell ---------- */
+
+/*
+ * The sidebar is a full-height column starting at the very top; the header
+ * sits only above the content. That is the reference's shape, and it is why
+ * the brand lives in the sidebar rather than in the header.
+ */
+.catalog-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+  background: var(--color-background-body);
+}
+
+@media (min-width: 1024px) {
+  .catalog-shell {
+    grid-template-columns: 258px minmax(0, 1fr);
+  }
+
+  .catalog-shell > .catalog-sidebar {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    border-right: 1px solid var(--color-border);
+  }
+
+  .catalog-shell__header,
+  .catalog-shell__main {
+    grid-column: 2;
+  }
+}
+
+/* Below the reference's own breakpoint the sidebar stops being a column. */
+@media (max-width: 1023px) {
+  .catalog-shell > .catalog-sidebar {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    border-bottom: 1px solid var(--color-border);
+  }
+}
+
+.catalog-shell__header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding-inline: 24px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-background-body);
+}
+
+.catalog-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 56px;
+  padding: 0 12px;
+  margin-bottom: 6px;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.catalog-sidebar__brand img {
+  width: 22px;
+  height: 22px;
+}
+
+.catalog-sidebar__brand strong {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.catalog-shell__signin {
+  min-height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.catalog-shell__signin:hover {
+  background: var(--color-background-muted);
+}
+
+.catalog-shell__main {
+  min-width: 0;
+  padding: 20px 24px 64px;
+}
+
+/* ---------- Catalog browse page (the rebuilt /browse surface) ---------- */
+
+.catalog-browse__bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 18px;
+}
+
+.catalog-browse__title {
+  margin: 0;
+  /* Weight 300 is the reference's signature — it reads editorial rather than
+     admin panel, which is the whole point of the rebuild. */
+  font-size: 30px;
+  font-weight: 300;
+  letter-spacing: -0.025em;
+}
+
+.catalog-browse__platforms {
+  display: flex;
+  gap: 6px;
+}
+
+.catalog-browse__platform {
+  min-height: 30px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.catalog-browse__platform:hover {
+  border-color: var(--color-border-emphasized);
+  color: var(--color-text-primary);
+}
+
+.catalog-browse__platform.is-active {
+  border-color: var(--color-text-primary);
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.catalog-browse__count {
+  margin: 0 0 0 auto;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.catalog-browse__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.catalog-browse__state {
+  padding: 48px 0;
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Catalog app detail (/browse/:appId) ---------- */
+
+.catalog-app__state {
+  padding: 64px 0;
+  color: var(--color-text-secondary);
+}
+
+.catalog-app__visit {
+  flex: 0 0 auto;
+  padding: 9px 16px;
+  border-radius: 8px;
+  background: var(--color-text-primary);
+  color: var(--color-background-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* The tab bar itself is the product's `reference-detail__tabs`; this only
+   supplies the rule it sits on. */
+.catalog-app__tabbar {
+  margin-top: 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Media before prose: the captured screens are the product. The cards
+   themselves are the product's ScreenGridCard / FlowCard. */
+.catalog-app__panel {
+  padding: 20px 0 4px;
+}
+
+.catalog-app__panel-summary {
+  margin: 0 0 14px;
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.catalog-app__flowlist {
+  display: grid;
+  gap: 18px;
+}
+
+.catalog-app__elements {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.catalog-app__elements li {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-background-raised);
+}
+
+.catalog-app__elements img {
+  width: 100%;
+  height: 92px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--color-background-muted);
+}
+
+.catalog-app__elements strong {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.catalog-app__elements span {
+  color: var(--color-text-secondary);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The rebuilt detail page reuses the product's hero, but at a smaller measure:
+   the catalog page sits beside a 232px sidebar, so the full presentation
+   display size crowds it. Scoped to `.catalog-app` — the existing detail page
+   keeps its own scale untouched. */
+.catalog-app .reference-detail__heading h1 {
+  /* `!important` only because productTypography.css pins the shared rule the
+     same way; this is the narrower selector, not a new escalation. Sizes are
+     explicit rather than a `font:` shorthand so the family still inherits. */
+  font-size: 28px !important;
+  font-weight: 600 !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.03em !important;
+}
+
+.catalog-app .reference-detail__heading p {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+  letter-spacing: -0.006em !important;
+}
+
+/* ---------- Catalog sites (/browse/sites) ---------- */
+
+/* Still used by the site detail page for its captured-page tiles; the
+   sites listing itself renders the shared SiteCard. */
+.catalog-sites__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.catalog-site {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-background-raised);
+  overflow: hidden;
+}
+
+/* Site captures are wide; 16:10 keeps a row of them on one baseline whether
+   the record carries a scroll video or a poster still. */
+.catalog-site__shot {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-background-muted);
+  cursor: pointer;
+}
+
+.catalog-site__shot img,
+.catalog-site__shot video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.catalog-site__empty {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.catalog-site__meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px;
+}
+
+.catalog-site__logo {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  object-fit: contain;
+  background: var(--color-background-muted);
+}
+
+.catalog-site__text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.catalog-site__text h2 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.catalog-site__text p {
+  margin: 2px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.catalog-site__sections {
+  flex: 0 0 auto;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Catalog pricing (/browse/pricing) ---------- */
+
+/* Pricing has no taxonomy to show, but the shell's two-column grid still
+   expects a left cell — an empty rail keeps the measure of every other page. */
+.catalog-pricing__rail {
+  display: none;
+}
+
+@media (min-width: 901px) {
+  .catalog-pricing__rail {
+    display: block;
+  }
+}
+
+.catalog-pricing {
+  max-width: 62rem;
+}
+
+.catalog-pricing__head h1 {
+  margin: 0;
+  max-width: 20ch;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.catalog-pricing__head p {
+  margin: 14px 0 0;
+  max-width: 54ch;
+  color: var(--color-text-secondary);
+  font-size: 15px;
+}
+
+.catalog-pricing__toggle {
+  display: inline-flex;
+  gap: 4px;
+  margin-top: 22px;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.catalog-pricing__toggle button {
+  min-height: 28px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.catalog-pricing__toggle button.is-active {
+  background: var(--color-text-primary);
+  color: var(--color-background-body);
+  font-weight: 600;
+}
+
+.catalog-pricing__plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.catalog-pricing__plan {
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-background-raised);
+}
+
+.catalog-pricing__plan--pro {
+  border-color: var(--color-border-emphasized);
+}
+
+.catalog-pricing__plan h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.catalog-pricing__plan h2 span {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--color-background-muted);
+  color: var(--color-text-secondary);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.catalog-pricing__price {
+  margin: 14px 0 0;
+  font-size: 36px;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.catalog-pricing__price small {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.catalog-pricing__plan ul {
+  margin: 18px 0 22px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 9px;
+  color: var(--color-text-secondary);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.catalog-pricing__cta {
+  margin-top: auto;
+  min-height: 38px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--color-text-primary);
+  color: var(--color-background-body);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.catalog-pricing__cta:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.catalog-pricing__cta--ghost {
+  border: 1px solid var(--color-border-emphasized);
+  background: transparent;
+  color: var(--color-text-primary);
+}
+
+.catalog-pricing__section {
+  margin-top: 44px;
+}
+
+.catalog-pricing__section h2 {
+  margin: 0 0 14px;
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+.catalog-pricing__tablewrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.catalog-pricing__table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.catalog-pricing__table th,
+.catalog-pricing__table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.catalog-pricing__table thead th {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.catalog-pricing__table tbody th {
+  font-weight: 500;
+}
+
+.catalog-pricing__table td {
+  color: var(--color-text-secondary);
+}
+
+.catalog-pricing__table tr:last-child th,
+.catalog-pricing__table tr:last-child td {
+  border-bottom: 0;
+}
+
+.catalog-pricing__faq {
+  margin: 0;
+  display: grid;
+  gap: 18px;
+}
+
+.catalog-pricing__faq dt {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.catalog-pricing__faq dd {
+  margin: 5px 0 0;
+  max-width: 68ch;
+  color: var(--color-text-secondary);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+/* ---------- Catalog library: collections + projects ---------- */
+
+.catalog-library__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  max-width: 46rem;
+}
+
+.catalog-library__row {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  background: var(--color-background-raised);
+  color: var(--color-text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.catalog-library__row:hover {
+  border-color: var(--color-border-emphasized);
+}
+
+.catalog-library__title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Stale synthesis is the one state that changes what you do next, so it gets
+   a marker rather than being buried in the row's metadata. */
+.catalog-library__flag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-background-muted);
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.catalog-library__detail {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.catalog-library__meta {
+  color: var(--color-text-secondary);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Catalog settings (/browse/settings) ---------- */
+
+.catalog-settings__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  max-width: 56rem;
+}
+
+.catalog-settings__card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-background-raised);
+}
+
+.catalog-settings__value {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.catalog-settings__value small {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.catalog-settings__note {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
+}
+
+.catalog-settings__link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.catalog-settings__unlocks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.catalog-settings__unlocks li {
+  padding: 3px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  font-size: 11.5px;
+}
+
+/* ---------- Catalog admin (/browse/admin) ---------- */
+
+.catalog-admin__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  max-width: 60rem;
+}
+
+.catalog-admin__stat {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-background-raised);
+}
+
+.catalog-admin__chart {
+  display: grid;
+  gap: 12px;
+  margin-top: 26px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-background-raised);
+  max-width: 60rem;
+}
+
+.catalog-admin__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 120px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.catalog-admin__bars li {
+  flex: 1 1 0;
+  min-width: 3px;
+  /* A zero-signup day still gets a hairline, so gaps read as data rather than
+     as a rendering failure. */
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--color-text-primary);
+  opacity: 0.75;
+}
+
+.catalog-admin__bars li:hover {
+  opacity: 1;
+}
+
+/* ---------- Catalog search (/browse/search) ---------- */
+
+.catalog-search__form {
+  display: flex;
+  gap: 10px;
+  max-width: 640px;
+  margin-bottom: 18px;
+}
+
+.catalog-search__form input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--color-border-emphasized);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 15px;
+}
+
+.catalog-search__form input:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 1px;
+}
+
+.catalog-search__form button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--color-text-primary);
+  color: var(--color-background-body);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- Catalog static pages (not-found, billing, build in public) ---------- */
+
+.catalog-static {
+  max-width: 46rem;
+}
+
+.catalog-static--wide {
+  max-width: 60rem;
+}
+
+.catalog-static__eyebrow {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.catalog-static h1 {
+  margin: 0;
+  max-width: 22ch;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.catalog-static > p {
+  margin: 14px 0 0;
+  max-width: 58ch;
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.catalog-static__path {
+  margin-top: 10px !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px !important;
+  word-break: break-all;
+}
+
+.catalog-static__note {
+  font-size: 13px !important;
+}
+
+.catalog-static__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.catalog-static__cta {
+  min-height: 38px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--color-text-primary);
+  color: var(--color-background-body);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.catalog-static__cta--ghost {
+  border: 1px solid var(--color-border-emphasized);
+  background: transparent;
+  color: var(--color-text-primary);
+}
+
+.catalog-static__section {
+  margin-top: 44px;
+}
+
+.catalog-static__section h2 {
+  margin: 0 0 18px;
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+.catalog-static__engines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 14px;
+}
+
+.catalog-static__engines li {
+  display: flex;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-background-raised);
+}
+
+.catalog-static__step {
+  flex: 0 0 auto;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.catalog-static__engines h3,
+.catalog-static__ahead h3 {
+  margin: 0 0 5px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.catalog-static__engines p,
+.catalog-static__ahead p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.catalog-static__now {
+  margin-top: 8px !important;
+  font-size: 12.5px !important;
+  opacity: 0.85;
+}
+
+.catalog-static__ahead {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.catalog-static__ahead article {
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-background-raised);
+}
+
+.catalog-static__label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--color-text-secondary);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.catalog-auth__form {
+  display: grid;
+  gap: 14px;
+  max-width: 360px;
+  margin-top: 20px;
+}
+
+/* ---------- Header views ---------- */
+
+.catalog-shell__tabs {
+  display: flex;
+  gap: 4px;
+  margin-left: 28px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.catalog-shell__tabs::-webkit-scrollbar { display: none; }
+
+.catalog-shell__tab {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.catalog-shell__tab:hover {
+  color: var(--color-text-primary);
+}
+
+.catalog-shell__tab.is-active {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.catalog-shell__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.catalog-shell__signup {
+  min-height: 32px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-text-primary);
+  color: var(--color-background-body);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- Banner ---------- */
+
+/*
+ * A tall hero band, not a bordered card: the reference gives this the full
+ * width of the content column and overlays the copy on artwork. With no
+ * advertiser art, the ground is drawn from the product's own tokens.
+ */
+.catalog-banner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  min-height: 220px;
+  margin-bottom: 30px;
+  padding: 36px 40px;
+  border-radius: 14px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 140% at 85% 20%,
+      color-mix(in srgb, var(--color-text-primary) 14%, transparent) 0%,
+      transparent 60%),
+    var(--color-background-raised);
+}
+
+/* A faint rule grid, so the band reads as artwork rather than a flat block. */
+.catalog-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(90deg, transparent 0 39px,
+      color-mix(in srgb, var(--color-text-primary) 5%, transparent) 39px 40px);
+  mask-image: linear-gradient(90deg, transparent 20%, #000 100%);
+}
+
+.catalog-banner__copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  max-width: 40rem;
+}
+
+.catalog-banner__eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.catalog-banner h2 {
+  margin: 0;
+  /* Wide enough that the headline breaks where the sentence does, not
+     mid-clause, at the column widths this band actually gets. */
+  max-width: 26ch;
+  text-wrap: balance;
+  font-size: clamp(26px, 3.4vw, 38px);
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+}
+
+.catalog-banner p {
+  margin: 12px 0 0;
+  max-width: 48ch;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.catalog-banner__action {
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+  min-height: 40px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-text-primary);
+  color: var(--color-background-body);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- Sections ---------- */
+
+.catalog-section {
+  margin-bottom: 34px;
+}
+
+.catalog-section__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.catalog-section__icon {
+  display: grid;
+  place-items: center;
+  color: var(--color-text-secondary);
+}
+
+.catalog-section__head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.catalog-section__note {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.catalog-section__controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.catalog-section__controls button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.catalog-section__controls button:hover {
+  border-color: var(--color-border-emphasized);
+  color: var(--color-text-primary);
+}
+
+.catalog-section__viewall {
+  width: auto !important;
+  padding: 0 12px;
+  font-size: 12.5px !important;
+}
+
+/* The rail crops at the edge — the crop is what says the row continues. */
+.catalog-section__rail {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+
+.catalog-section__rail::-webkit-scrollbar { display: none; }
+
+.catalog-section__item {
+  /* Exactly three across, so a rail row matches the grid below it; the
+     arrows page by three rather than cropping a fourth card. */
+  flex: 0 0 calc((100% - 32px) / 3);
+  scroll-snap-align: start;
+}
+
+@media (max-width: 900px) {
+  .catalog-section__item {
+    flex-basis: calc((100% - 16px) / 2);
+  }
+}
+
+@media (max-width: 600px) {
+  .catalog-section__item {
+    flex-basis: 100%;
+  }
+}
+
+.catalog-section__grid {
+  display: grid;
+  /* Three up, matching the existing discovery grids rather than packing to
+     whatever fits — the card is designed at that measure. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px 16px;
+}
+
+@media (max-width: 900px) {
+  .catalog-section__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .catalog-section__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+

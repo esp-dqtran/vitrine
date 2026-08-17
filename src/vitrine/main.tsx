@@ -19,12 +19,18 @@ import '@fontsource/figtree/400.css';
 import '@fontsource/figtree/500.css';
 import '@fontsource/figtree/600.css';
 import '@fontsource/figtree/700.css';
+import '@fontsource-variable/bricolage-grotesque';
+import '@fontsource/instrument-serif/400.css';
+import '@fontsource/instrument-serif/400-italic.css';
+import '@fontsource-variable/unbounded';
+import '@fontsource-variable/fraunces';
 import './styles.css';
 import './referenceDiscovery.css';
 import './flowPreviewDialog.css';
 import './motionPrompts.css';
 import './projectsWorkspace.css';
 import './collectionsWorkspace.css';
+import './catalogSidebar.css';
 import './settingsWorkspace.css';
 import './components/AstryxDropdown.css';
 import './components/AstryxModal.css';
@@ -37,6 +43,10 @@ import './productResponsive.css';
 import './productDataDisplay.css';
 import './productTables.css';
 import './productForms.css';
+import './threadsMarketing.css';
+import './components/ColorPackStack.css';
+import './colorGallery.css';
+import './colorPostStudio.css';
 
 // No token overrides — @astryxdesign/core/astryx.css already ships Vitrines' palette at :root.
 // This theme object exists only so <Theme> can drive data-theme (and thus color-scheme) from `mode`.
@@ -47,6 +57,18 @@ const AdminDashboard = lazy(() => import('./AdminDashboard').then((module) => ({
 const Home = lazy(() => import('./Home').then((module) => ({ default: module.Home })));
 const BuildInPublicPage = lazy(() => import('./BuildInPublic').then((module) => ({ default: module.BuildInPublicPage })));
 const Pricing = lazy(() => import('./Pricing').then((module) => ({ default: module.Pricing })));
+const CatalogPricingPage = lazy(() => import('./components/CatalogPricingPage.tsx')
+  .then((module) => ({ default: module.CatalogPricingPage })));
+const CatalogBuildInPublicPage = lazy(() => import('./components/CatalogStaticPages.tsx')
+  .then((module) => ({ default: module.CatalogBuildInPublicPage })));
+const CatalogBillingSuccessPage = lazy(() => import('./components/CatalogStaticPages.tsx')
+  .then((module) => ({ default: module.CatalogBillingSuccessPage })));
+const CatalogNotFoundPage = lazy(() => import('./components/CatalogStaticPages.tsx')
+  .then((module) => ({ default: module.CatalogNotFoundPage })));
+const CatalogForgotPasswordPage = lazy(() => import('./components/CatalogPasswordPages.tsx')
+  .then((module) => ({ default: module.CatalogForgotPasswordPage })));
+const CatalogResetPasswordPage = lazy(() => import('./components/CatalogPasswordPages.tsx')
+  .then((module) => ({ default: module.CatalogResetPasswordPage })));
 const BillingSuccess = lazy(() => import('./components/BillingSuccess').then((module) => ({ default: module.BillingSuccess })));
 const SignIn = lazy(() => import('./SignIn').then((module) => ({ default: module.SignIn })));
 const PasswordRecovery = lazy(() => import('./PasswordRecovery').then((module) => ({ default: module.ForgotPassword })));
@@ -98,6 +120,37 @@ function Root() {
       return <RouteStatusPage title={decision.title} onBack={goApps} />;
     case 'public':
       switch (decision.page) {
+        case 'browse-forgot-password':
+          return <CatalogForgotPasswordPage onBack={goSignIn} />;
+        case 'browse-reset-password':
+          return (
+            <CatalogResetPasswordPage
+              token={route.name === 'browse-reset-password' ? route.token : undefined}
+              onBack={goSignIn}
+            />
+          );
+        case 'browse-build-in-public':
+          return <CatalogBuildInPublicPage onSignIn={goSignIn} />;
+        case 'browse-billing-success':
+          return <CatalogBillingSuccessPage onSignIn={goSignIn} />;
+        case 'browse-not-found':
+          return (
+            <CatalogNotFoundPage
+              pathname={route.name === 'browse-not-found' ? route.pathname : undefined}
+              onSignIn={goSignIn}
+            />
+          );
+        case 'browse-pricing':
+          return (
+            <CatalogPricingPage
+              plan={user ? 'free' : null}
+              onSignIn={goSignIn}
+              onBrowse={() => navigate({ name: 'browse' })}
+              /* Checkout lives in App's billing flow; until this route is the
+                 real one, Pro sends a signed-in reader to the existing page. */
+              onCheckout={() => navigate({ name: 'pricing' })}
+            />
+          );
         case 'pricing':
           return <Pricing user={user} onBrowse={goApps} onSignIn={goSignIn} />;
         case 'feature-document-share':

@@ -18,7 +18,7 @@ export interface FlowPreparationWorkspace {
   flows: PreparedFlowDirectory[];
 }
 
-function directorySegment(value: string, label: string): string {
+export function flowPreparationDirectorySegment(value: string, label: string): string {
   const segment = value
     .normalize("NFKD")
     .replace(/\p{Diacritic}/gu, "")
@@ -33,7 +33,7 @@ function directorySegment(value: string, label: string): string {
 function flowDirectories(flows: CrawlFlow[]): Array<{ flow: CrawlFlow; directory: string }> {
   const used = new Set<string>();
   return flows.map((flow, index) => {
-    const base = directorySegment(flow.id, `Flow ${index + 1} id`);
+    const base = flowPreparationDirectorySegment(flow.id, `Flow ${index + 1} id`);
     let directory = base;
     for (let suffix = 2; used.has(directory); suffix++) directory = `${base}-${suffix}`;
     used.add(directory);
@@ -46,7 +46,16 @@ function writeJson(path: string, value: unknown): void {
 }
 
 export function flowPreparationRoot(app: string, dataDir = "data"): string {
-  return join(dataDir, "flow-preparation", directorySegment(app, "App id"));
+  return join(dataDir, "flow-preparation", flowPreparationDirectorySegment(app, "App id"));
+}
+
+export function flowResearchMarkdownPath(app: string, flowId: string, dataDir = "data"): string {
+  return join(
+    flowPreparationRoot(app, dataDir),
+    "flows",
+    flowPreparationDirectorySegment(flowId, "Flow id"),
+    "RESEARCH.md",
+  );
 }
 
 export function prepareFlowWorkspace(

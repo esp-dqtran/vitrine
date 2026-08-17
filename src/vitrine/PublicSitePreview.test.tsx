@@ -33,6 +33,8 @@ test('renders a Site media preview and blurred Design System teaser without a de
   );
 
   assert.match(html, /data-public-site-preview-modal="true"/);
+  assert.match(html, /data-public-preview-close="true" style="position:absolute;top:16px;right:16px;z-index:5"/);
+  assert.match(html, /aria-label="Close preview"/);
   assert.match(html, /aria-label="Site preview"/);
   assert.match(html, /<video[^>]+src="\/v7-preview\.webm"/);
   assert.match(html, /poster="\/v7-poster\.webp"/);

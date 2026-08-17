@@ -1,10 +1,24 @@
 export type MissionMode = "read" | "mutate";
 export type MissionStatus = "queued" | "running" | "succeeded" | "blocked" | "failed" | "interrupted" | "cancelled";
+export type ResearchSourceKind = "website" | "documentation" | "help_center" | "product_tour" | "changelog" | "search";
+export type FlowAccess = "public" | "sign_in_required" | "test_account_required" | "unknown";
+export type FlowReadiness = "ready" | "needs_review" | "blocked";
+export type AgentTraceStage = "research" | "execution";
+export type AgentTraceEventType =
+  | "research_started"
+  | "research_completed"
+  | "flow_proposed"
+  | "mission_started"
+  | "state_observed"
+  | "action_selected"
+  | "evidence_captured"
+  | "mission_blocked";
 
 export interface DossierSource {
   url: string;
   title: string;
   retrievedAt: string;
+  kind?: ResearchSourceKind;
 }
 
 export interface DossierClaim {
@@ -21,6 +35,38 @@ export interface CandidateFlow {
   mode: MissionMode;
   prerequisites: string[];
   sourceUrls: string[];
+  access?: FlowAccess;
+  readiness?: FlowReadiness;
+  confidence?: number;
+  credentialCapability?: string;
+  candidateSteps?: Array<{ title: string; sourceUrls: string[]; evidence: "documented" | "inferred" }>;
+}
+
+export interface AppResearchProfile {
+  name: string;
+  canonicalUrl: string;
+  category: string;
+  description: string;
+  sourceUrls: string[];
+  iconUrl?: string;
+}
+
+export interface CredentialCapability {
+  alias: string;
+  purpose: string;
+  role: string;
+  allowedOrigins: string[];
+  flowIds: string[];
+  sourceUrls: string[];
+}
+
+export interface AgentTraceEvent {
+  stage: AgentTraceStage;
+  type: AgentTraceEventType;
+  rationale: string;
+  confidence?: number;
+  evidenceId?: string;
+  credentialCapability?: string;
 }
 
 export interface AppDossier {
@@ -32,6 +78,8 @@ export interface AppDossier {
   capabilities: string[];
   candidateFlows: CandidateFlow[];
   openQuestions: string[];
+  profile?: AppResearchProfile;
+  credentialCapabilities?: CredentialCapability[];
 }
 
 export interface MissionBudget {
@@ -146,17 +194,70 @@ function textArray(value: unknown, label: string): string[] {
   return boundedArray(value, label).map((item, index) => text(item, `${label}[${index}]`));
 }
 
+function optionalText(value: unknown, label: string): string | undefined {
+  if (value === undefined) return undefined;
+  return text(value, label);
+}
+
+function confidence(value: unknown, label: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 1) {
+    throw new Error(`${label} must be between 0 and 1`);
+  }
+  return value;
+}
+
+function citedUrls(value: unknown, label: string, sources: ReadonlySet<string>): string[] {
+  const citations = textArray(value, label);
+  if (citations.length === 0 || citations.some((url) => !sources.has(url))) {
+    throw new Error(`${label} must reference dossier sources`);
+  }
+  return citations;
+}
+
+function origin(value: unknown, label: string): string {
+  const parsed = new URL(publicHttpUrl(value, label));
+  return parsed.origin;
+}
+
+export function parseAgentTraceEvent(value: unknown): AgentTraceEvent {
+  if (containsSecretLike(value)) throw new Error("Agent trace event must not contain secret-like keys or values");
+  const raw = object(value, "Agent trace event");
+  exactKeys(raw, ["stage", "type", "rationale", "confidence", "evidenceId", "credentialCapability"], "Agent trace event");
+  const stage = text(raw.stage, "Agent trace event stage");
+  if (stage !== "research" && stage !== "execution") throw new Error("Agent trace event stage is invalid");
+  const type = text(raw.type, "Agent trace event type");
+  if (![
+    "research_started", "research_completed", "flow_proposed", "mission_started",
+    "state_observed", "action_selected", "evidence_captured", "mission_blocked",
+  ].includes(type)) throw new Error("Agent trace event type is invalid");
+  const rationale = text(raw.rationale, "Agent trace event rationale");
+  if (rationale.length > 2_000) throw new Error("Agent trace event rationale is too long");
+  return {
+    stage: stage as AgentTraceStage,
+    type: type as AgentTraceEventType,
+    rationale,
+    ...(raw.confidence === undefined ? {} : { confidence: confidence(raw.confidence, "Agent trace event confidence") }),
+    ...(raw.evidenceId === undefined ? {} : { evidenceId: text(raw.evidenceId, "Agent trace event evidence ID") }),
+    ...(raw.credentialCapability === undefined ? {} : { credentialCapability: text(raw.credentialCapability, "Agent trace event credential capability") }),
+  };
+}
+
 export function parseAppDossier(value: unknown): AppDossier {
   if (containsSecretLike(value)) throw new Error("Dossier must not contain secret-like keys or values");
   const raw = object(value, "Dossier");
-  exactKeys(raw, ["app", "purpose", "sources", "claims", "roles", "capabilities", "candidateFlows", "openQuestions"], "Dossier");
+  exactKeys(raw, ["app", "purpose", "sources", "claims", "roles", "capabilities", "candidateFlows", "openQuestions", "profile", "credentialCapabilities"], "Dossier");
   const sources = boundedArray(raw.sources, "Dossier sources").map((value, index) => {
     const source = object(value, `Dossier source ${index + 1}`);
-    exactKeys(source, ["url", "title", "retrievedAt"], `Dossier source ${index + 1}`);
+    exactKeys(source, ["url", "title", "retrievedAt", "kind"], `Dossier source ${index + 1}`);
+    const kind = source.kind === undefined ? undefined : text(source.kind, `Dossier source ${index + 1} kind`);
+    if (kind !== undefined && !["website", "documentation", "help_center", "product_tour", "changelog", "search"].includes(kind)) {
+      throw new Error(`Dossier source ${index + 1} kind is invalid`);
+    }
     return {
       url: publicHttpUrl(source.url, `Dossier source ${index + 1} URL`),
       title: text(source.title, `Dossier source ${index + 1} title`),
       retrievedAt: text(source.retrievedAt, `Dossier source ${index + 1} retrieval time`),
+      ...(kind ? { kind: kind as ResearchSourceKind } : {}),
     };
   });
   const sourceUrls = new Set(sources.map(({ url }) => url));
@@ -164,25 +265,40 @@ export function parseAppDossier(value: unknown): AppDossier {
   const claims = boundedArray(raw.claims, "Dossier claims").map((value, index) => {
     const claim = object(value, `Dossier claim ${index + 1}`);
     exactKeys(claim, ["text", "sourceUrls", "confidence"], `Dossier claim ${index + 1}`);
-    const citations = textArray(claim.sourceUrls, `Dossier claim ${index + 1} sources`);
-    if (citations.some((url) => !sourceUrls.has(url))) throw new Error("Dossier claim source is not in the source list");
-    if (typeof claim.confidence !== "number" || !Number.isFinite(claim.confidence) || claim.confidence < 0 || claim.confidence > 1) {
-      throw new Error("Dossier claim confidence must be between 0 and 1");
-    }
+    const citations = citedUrls(claim.sourceUrls, `Dossier claim ${index + 1} sources`, sourceUrls);
     return {
       text: text(claim.text, `Dossier claim ${index + 1} text`),
       sourceUrls: citations,
-      confidence: claim.confidence,
+      confidence: confidence(claim.confidence, `Dossier claim ${index + 1} confidence`),
     };
   });
   const candidateFlows = boundedArray(raw.candidateFlows, "Dossier candidate flows").map((value, index) => {
     const flow = object(value, `Dossier candidate flow ${index + 1}`);
-    exactKeys(flow, ["id", "title", "goal", "productArea", "mode", "prerequisites", "sourceUrls"], `Dossier candidate flow ${index + 1}`);
+    exactKeys(flow, ["id", "title", "goal", "productArea", "mode", "prerequisites", "sourceUrls", "access", "readiness", "confidence", "credentialCapability", "candidateSteps"], `Dossier candidate flow ${index + 1}`);
     const modeValue = text(flow.mode, `Dossier candidate flow ${index + 1} mode`);
     if (modeValue !== "read" && modeValue !== "mutate") throw new Error("Dossier candidate flow mode must be read or mutate");
     const mode: MissionMode = modeValue;
-    const citations = textArray(flow.sourceUrls, `Dossier candidate flow ${index + 1} sources`);
-    if (citations.some((url) => !sourceUrls.has(url))) throw new Error("Dossier candidate flow source is not in the source list");
+    const citations = citedUrls(flow.sourceUrls, `Dossier candidate flow ${index + 1} sources`, sourceUrls);
+    const access = flow.access === undefined ? undefined : text(flow.access, `Dossier candidate flow ${index + 1} access`);
+    if (access !== undefined && !["public", "sign_in_required", "test_account_required", "unknown"].includes(access)) {
+      throw new Error(`Dossier candidate flow ${index + 1} access is invalid`);
+    }
+    const readiness = flow.readiness === undefined ? undefined : text(flow.readiness, `Dossier candidate flow ${index + 1} readiness`);
+    if (readiness !== undefined && !["ready", "needs_review", "blocked"].includes(readiness)) {
+      throw new Error(`Dossier candidate flow ${index + 1} readiness is invalid`);
+    }
+    const candidateSteps = flow.candidateSteps === undefined ? undefined : boundedArray(flow.candidateSteps, `Dossier candidate flow ${index + 1} steps`).map((value, stepIndex) => {
+      const step = object(value, `Dossier candidate flow ${index + 1} step ${stepIndex + 1}`);
+      exactKeys(step, ["title", "sourceUrls", "evidence"], `Dossier candidate flow ${index + 1} step ${stepIndex + 1}`);
+      const evidence = text(step.evidence, `Dossier candidate flow ${index + 1} step ${stepIndex + 1} evidence`);
+      if (evidence !== "documented" && evidence !== "inferred") throw new Error(`Dossier candidate flow ${index + 1} step ${stepIndex + 1} evidence is invalid`);
+      return {
+        title: text(step.title, `Dossier candidate flow ${index + 1} step ${stepIndex + 1} title`),
+        sourceUrls: citedUrls(step.sourceUrls, `Dossier candidate flow ${index + 1} step ${stepIndex + 1} sources`, sourceUrls),
+        evidence: evidence as "documented" | "inferred",
+      };
+    });
+    const credentialCapability = optionalText(flow.credentialCapability, `Dossier candidate flow ${index + 1} credential capability`);
     return {
       id: text(flow.id, `Dossier candidate flow ${index + 1} ID`),
       title: text(flow.title, `Dossier candidate flow ${index + 1} title`),
@@ -191,8 +307,49 @@ export function parseAppDossier(value: unknown): AppDossier {
       mode,
       prerequisites: textArray(flow.prerequisites, `Dossier candidate flow ${index + 1} prerequisites`),
       sourceUrls: citations,
+      ...(access ? { access: access as FlowAccess } : {}),
+      ...(readiness ? { readiness: readiness as FlowReadiness } : {}),
+      ...(flow.confidence === undefined ? {} : { confidence: confidence(flow.confidence, `Dossier candidate flow ${index + 1} confidence`) }),
+      ...(credentialCapability ? { credentialCapability } : {}),
+      ...(candidateSteps ? { candidateSteps } : {}),
     };
   });
+  const flowIds = new Set(candidateFlows.map(({ id }) => id));
+  if (flowIds.size !== candidateFlows.length) throw new Error("Dossier candidate flow IDs must be unique");
+  const profile = raw.profile === undefined ? undefined : (() => {
+    const value = object(raw.profile, "Dossier profile");
+    exactKeys(value, ["name", "canonicalUrl", "category", "description", "sourceUrls", "iconUrl"], "Dossier profile");
+    return {
+      name: text(value.name, "Dossier profile name"),
+      canonicalUrl: publicHttpUrl(value.canonicalUrl, "Dossier profile canonical URL"),
+      category: text(value.category, "Dossier profile category"),
+      description: text(value.description, "Dossier profile description"),
+      sourceUrls: citedUrls(value.sourceUrls, "Dossier profile sources", sourceUrls),
+      ...(value.iconUrl === undefined ? {} : { iconUrl: publicHttpUrl(value.iconUrl, "Dossier profile icon URL") }),
+    };
+  })();
+  const credentialCapabilities = raw.credentialCapabilities === undefined ? undefined : boundedArray(raw.credentialCapabilities, "Dossier credential capabilities").map((value, index) => {
+    const capability = object(value, `Dossier credential capability ${index + 1}`);
+    exactKeys(capability, ["alias", "purpose", "role", "allowedOrigins", "flowIds", "sourceUrls"], `Dossier credential capability ${index + 1}`);
+    const flowIdsForCapability = textArray(capability.flowIds, `Dossier credential capability ${index + 1} flow IDs`);
+    if (flowIdsForCapability.some((id) => !flowIds.has(id))) throw new Error(`Dossier credential capability ${index + 1} references an unknown flow`);
+    return {
+      alias: text(capability.alias, `Dossier credential capability ${index + 1} alias`),
+      purpose: text(capability.purpose, `Dossier credential capability ${index + 1} purpose`),
+      role: text(capability.role, `Dossier credential capability ${index + 1} role`),
+      allowedOrigins: textArray(capability.allowedOrigins, `Dossier credential capability ${index + 1} allowed origins`).map((value, originIndex) => origin(value, `Dossier credential capability ${index + 1} allowed origin ${originIndex + 1}`)),
+      flowIds: flowIdsForCapability,
+      sourceUrls: citedUrls(capability.sourceUrls, `Dossier credential capability ${index + 1} sources`, sourceUrls),
+    };
+  });
+  if (credentialCapabilities && new Set(credentialCapabilities.map(({ alias }) => alias)).size !== credentialCapabilities.length) {
+    throw new Error("Dossier credential capability aliases must be unique");
+  }
+  for (const flow of candidateFlows) {
+    if (flow.credentialCapability && !credentialCapabilities?.some(({ alias }) => alias === flow.credentialCapability)) {
+      throw new Error(`Dossier candidate flow ${flow.id} references an unknown credential capability`);
+    }
+  }
   return {
     app: text(raw.app, "Dossier app"),
     purpose: text(raw.purpose, "Dossier purpose"),
@@ -202,6 +359,8 @@ export function parseAppDossier(value: unknown): AppDossier {
     capabilities: textArray(raw.capabilities, "Dossier capabilities"),
     candidateFlows,
     openQuestions: textArray(raw.openQuestions, "Dossier open questions"),
+    ...(profile ? { profile } : {}),
+    ...(credentialCapabilities ? { credentialCapabilities } : {}),
   };
 }
 

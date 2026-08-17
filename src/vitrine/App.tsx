@@ -3,13 +3,19 @@ import {
   lazy,
   Suspense,
   useEffect,
+  useCallback,
   useState,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { apiFetch } from './apiFetch.ts';
 import { AnimatePresence } from "framer-motion";
-import { Button, EmptyState } from "@astryxdesign/core";
+import { Button, EmptyState, IconButton } from "@astryxdesign/core";
+import {
+  BellIcon,
+  QuestionIcon,
+  SearchIcon,
+} from "@storybook/icons";
 import { useAuth } from "./AuthProvider";
 import { CommandPalette } from "./components/CommandPalette";
 import { SettingsPanel } from "./components/SettingsPanel";
@@ -25,18 +31,32 @@ import {
   PublicAppPreviewPage,
 } from "./components/PublicAppPreviewPage.tsx";
 import { ApplicationSurface } from "./components/ApplicationSurface.tsx";
-import { WorkspaceChromeProvider } from "./components/WorkspaceChromeContext.tsx";
+import {
+  ProjectsWorkspaceProvider,
+  WorkspaceChromeProvider,
+} from "./components/WorkspaceChromeContext.tsx";
 import {
   AstryxDropdown,
   AstryxDropdownDivider,
   AstryxDropdownItem,
 } from "./components/AstryxDropdown.tsx";
 import { AppsDiscoveryPage } from "./components/AppsDiscoveryPage.tsx";
+import { CatalogBrowsePage } from "./components/CatalogBrowsePage.tsx";
+import { CatalogAppPage } from "./components/CatalogAppPage.tsx";
+import { CatalogFlowsPage } from "./components/CatalogFlowsPage.tsx";
+import { CatalogSitesPage } from "./components/CatalogSitesPage.tsx";
+import { CatalogSearchPage } from "./components/CatalogSearchPage.tsx";
+import { CatalogSitePage } from "./components/CatalogSitePage.tsx";
+import { CatalogLibraryPage } from "./components/CatalogLibraryPage.tsx";
+import { CatalogSettingsPage } from "./components/CatalogSettingsPage.tsx";
+import { CatalogAdminPage } from "./components/CatalogAdminPage.tsx";
 import { FlowsPage } from "./components/FlowsPage.tsx";
 import { ApplicationHeader } from "./components/ApplicationHeader.tsx";
 import { SearchTrigger } from "./components/SearchTrigger.tsx";
 import { ScreenDetail } from "./components/ScreenDetail";
 import { SitesPage } from "./components/SitesPage.tsx";
+import { ColorGalleryPage } from "./components/ColorGalleryPage.tsx";
+import { ColorPostStudioPage } from "./components/ColorPostStudioPage.tsx";
 import { MotionPromptsPage } from "./components/MotionPromptsPage.tsx";
 import { PublicSitePreviewModal } from "./components/PublicSitePreviewModal.tsx";
 import { SiteVersionPage } from "./components/SiteVersionPage";
@@ -113,6 +133,14 @@ export function canShowPublicSitePreview(
   return isGuest || plan === "free";
 }
 
+function ProjectsEntryRedirect() {
+  useEffect(() => {
+    updateLocation("/projects/personal", { replace: true });
+  }, []);
+
+  return <ApplicationPageSpinner />;
+}
+
 export function App() {
   const { user, authenticate, register, completeLogin, logout } = useAuth();
   const isGuest = user === null;
@@ -120,6 +148,8 @@ export function App() {
   const stickyChromeEnabled =
     route.name === "apps"
     || route.name === "sites"
+    || route.name === "color"
+    || route.name === "color-create"
     || route.name === "sites-motion"
     || route.name === "flows";
   const [stickyChromeMerged, setStickyChromeMerged] = useState(false);
@@ -136,6 +166,9 @@ export function App() {
   const [appFacet, setAppFacet] = useState<AppsFacet | null>(null);
   const [appPlatform, setAppPlatform] = useState<AppsPlatform>("web");
   const [siteQuery, setSiteQuery] = useState("");
+  const [colorQuery, setColorQuery] = useState("");
+  const [colorSearchActive, setColorSearchActive] = useState(false);
+  const openColorSearch = useCallback(() => setColorSearchActive(true), []);
   // Seed the search from a query handed off by the marketing landing (Home) across sign-in.
   const [q, setQ] = useState(() => {
     const seed =
@@ -476,6 +509,8 @@ export function App() {
     navigate({ name: "app", appId });
   };
 
+  /* v2's shell renders its own Log in / Sign up pair for guests, so those
+     call sites pass the account menu only when there is an account. */
   const accountControls = user ? (
     <div
       className="account-controls"
@@ -571,6 +606,33 @@ export function App() {
     if (isGuest) setLoginOpen(true);
     else setCatalogLimitOpen(true);
   };
+
+  const workspaceHeaderActions = (
+    <>
+      <IconButton
+        label="Search"
+        tooltip="Search"
+        variant="ghost"
+        icon={<SearchIcon aria-hidden="true" />}
+        onClick={() => {
+          void openPalette("apps");
+        }}
+      />
+      <IconButton
+        label="Help"
+        tooltip="Help"
+        variant="ghost"
+        icon={<QuestionIcon aria-hidden="true" />}
+      />
+      <IconButton
+        label="Notifications"
+        tooltip="Notifications"
+        variant="ghost"
+        icon={<BellIcon aria-hidden="true" />}
+      />
+      {accountControls}
+    </>
+  );
 
   const discoveryOverlays = (
     <AnimatePresence>
@@ -691,6 +753,7 @@ export function App() {
           onComparisonChange={setComparison}
         />
       ) : null}
+
     </AnimatePresence>
   );
 
@@ -705,11 +768,15 @@ export function App() {
       ? "projects"
       : route.name === "sites-motion"
         ? "sites"
-        : route.name === "apps" ||
+      : route.name === "color-create"
+        ? "color"
+      : route.name === "apps" ||
           route.name === "sites" ||
-          route.name === "flows" ||
-          route.name === "projects"
+          route.name === "color" ||
+          route.name === "flows"
         ? route.name
+        : route.name === "projects" || route.name === "projects-workspace"
+          ? "projects"
         : null;
   const discoveryLocationSearch =
     typeof window === "undefined" ? "" : window.location.search;
@@ -801,6 +868,19 @@ export function App() {
         />
       );
       break;
+    case "color":
+      page = (
+        <ColorGalleryPage
+          query={colorQuery}
+          searchActive={colorSearchActive}
+          onQueryChange={setColorQuery}
+          onSearchClose={() => setColorSearchActive(false)}
+        />
+      );
+      break;
+    case "color-create":
+      page = <ColorPostStudioPage initialPaletteId={route.paletteId} />;
+      break;
     case "sites-motion":
       page = <MotionPromptsPage />;
       break;
@@ -857,7 +937,14 @@ export function App() {
       break;
     case "projects":
       page = researchProjectsEnabled ? (
-        <ProjectsPage />
+        <ProjectsEntryRedirect />
+      ) : (
+        <ApplicationStatusPage title="Research projects are unavailable" />
+      );
+      break;
+    case "projects-workspace":
+      page = researchProjectsEnabled ? (
+        <ProjectsPage workspace={route.workspace} section={route.section} />
       ) : (
         <ApplicationStatusPage title="Research projects are unavailable" />
       );
@@ -1065,6 +1152,209 @@ export function App() {
         );
       }
       break;
+    case "browse-admin":
+      page = (
+        <CatalogAdminPage
+          accountControls={user ? accountControls : undefined}
+          onSignIn={() => navigate({ name: "signin" })}
+        />
+      );
+      break;
+    case "browse-settings":
+      page = (
+        <CatalogSettingsPage
+          accountControls={user ? accountControls : undefined}
+          email={user?.email ?? null}
+          onSignIn={() => navigate({ name: "signin" })}
+          onUpgrade={() => navigate({ name: "browse-pricing" })}
+          onBrowse={() => navigate({ name: "browse" })}
+        />
+      );
+      break;
+    case "browse-collections":
+    case "browse-projects":
+      page = (
+        <CatalogLibraryPage
+          kind={route.name === "browse-collections" ? "collections" : "projects"}
+          isAdmin={isAdmin}
+          accountControls={user ? accountControls : undefined}
+          onSignIn={() => navigate({ name: "signin" })}
+          onOpenCollection={(collectionId) =>
+            navigate({ name: "collections", collectionId })}
+          onOpenProject={(projectId) => navigate({ name: "project", projectId })}
+          entitlement={
+            entitlements && entitlements.plan === "free"
+              ? {
+                  plan: "free",
+                  used: entitlements.freeUnlocks.length,
+                  total:
+                    entitlements.freeUnlocks.length
+                    + entitlements.freeUnlocksRemaining,
+                }
+              : entitlements
+                ? { plan: entitlements.plan, used: 0, total: 0 }
+                : null
+          }
+          onUpgrade={() => navigate({ name: "browse-pricing" })}
+        />
+      );
+      break;
+    case "browse-search":
+      page = (
+        <CatalogSearchPage
+          isAdmin={isAdmin}
+          isGuest={isCatalogLimited}
+          accountControls={user ? accountControls : undefined}
+          onSignIn={() => navigate({ name: "signin" })}
+          onOpenApp={(appId) => navigate({ name: "browse-app", appId })}
+          entitlement={
+            entitlements && entitlements.plan === "free"
+              ? {
+                  plan: "free",
+                  used: entitlements.freeUnlocks.length,
+                  total:
+                    entitlements.freeUnlocks.length
+                    + entitlements.freeUnlocksRemaining,
+                }
+              : entitlements
+                ? { plan: entitlements.plan, used: 0, total: 0 }
+                : null
+          }
+          onUpgrade={() => navigate({ name: "browse-pricing" })}
+        />
+      );
+      break;
+    case "browse-site":
+      page = (
+        <CatalogSitePage
+          siteSlug={route.siteSlug}
+          isAdmin={isAdmin}
+          accountControls={user ? accountControls : undefined}
+          onSignIn={() => navigate({ name: "signin" })}
+          entitlement={
+            entitlements && entitlements.plan === "free"
+              ? {
+                  plan: "free",
+                  used: entitlements.freeUnlocks.length,
+                  total:
+                    entitlements.freeUnlocks.length
+                    + entitlements.freeUnlocksRemaining,
+                }
+              : entitlements
+                ? { plan: entitlements.plan, used: 0, total: 0 }
+                : null
+          }
+          onUpgrade={() => navigate({ name: "browse-pricing" })}
+        />
+      );
+      break;
+    case "browse-sites":
+      page = (
+        <CatalogSitesPage
+          isAdmin={isAdmin}
+          isGuest={isCatalogLimited}
+          accountControls={user ? accountControls : undefined}
+          onSignIn={() => navigate({ name: "signin" })}
+          /* Stays inside the rebuild rather than handing off to the v1
+             site-version page. */
+          onOpenSite={(site) =>
+            navigate({ name: "browse-site", siteSlug: site.routeSlug })}
+          entitlement={
+            entitlements && entitlements.plan === "free"
+              ? {
+                  plan: "free",
+                  used: entitlements.freeUnlocks.length,
+                  total:
+                    entitlements.freeUnlocks.length
+                    + entitlements.freeUnlocksRemaining,
+                }
+              : entitlements
+                ? { plan: entitlements.plan, used: 0, total: 0 }
+                : null
+          }
+          onUpgrade={() => navigate({ name: "browse-pricing" })}
+        />
+      );
+      break;
+    case "browse-flows":
+      page = (
+        <CatalogFlowsPage
+          isAdmin={isAdmin}
+          isGuest={isCatalogLimited}
+          accountControls={user ? accountControls : undefined}
+          onSignIn={() => navigate({ name: "signin" })}
+          onOpenApp={(appId) => navigate({ name: "browse-app", appId })}
+          entitlement={
+            entitlements && entitlements.plan === "free"
+              ? {
+                  plan: "free",
+                  used: entitlements.freeUnlocks.length,
+                  total:
+                    entitlements.freeUnlocks.length
+                    + entitlements.freeUnlocksRemaining,
+                }
+              : entitlements
+                ? { plan: entitlements.plan, used: 0, total: 0 }
+                : null
+          }
+          onUpgrade={() => navigate({ name: "browse-pricing" })}
+        />
+      );
+      break;
+    case "browse-app":
+      page = (
+        <CatalogAppPage
+          appId={route.appId}
+          isAdmin={isAdmin}
+          accountControls={user ? accountControls : undefined}
+          onSignIn={() => navigate({ name: "signin" })}
+          entitlement={
+            entitlements && entitlements.plan === "free"
+              ? {
+                  plan: "free",
+                  used: entitlements.freeUnlocks.length,
+                  total:
+                    entitlements.freeUnlocks.length
+                    + entitlements.freeUnlocksRemaining,
+                }
+              : entitlements
+                ? { plan: entitlements.plan, used: 0, total: 0 }
+                : null
+          }
+          onUpgrade={() => navigate({ name: "browse-pricing" })}
+          /* Unlocking is a confirmed action the app already owns; the rebuilt
+             page hands off to the same flow rather than performing it. */
+          onLocked={() => void openApp(route.appId)}
+        />
+      );
+      break;
+    case "browse":
+      page = (
+        <CatalogBrowsePage
+          isAdmin={isAdmin}
+          accountControls={user ? accountControls : undefined}
+          onSignIn={() => navigate({ name: "signin" })}
+          isGuest={isCatalogLimited}
+          /* Stays inside the rebuilt surface rather than jumping to the
+             existing detail page. */
+          onOpenApp={(appId) => navigate({ name: "browse-app", appId })}
+          entitlement={
+            entitlements && entitlements.plan === "free"
+              ? {
+                  plan: "free",
+                  used: entitlements.freeUnlocks.length,
+                  total:
+                    entitlements.freeUnlocks.length
+                    + entitlements.freeUnlocksRemaining,
+                }
+              : entitlements
+                ? { plan: entitlements.plan, used: 0, total: 0 }
+                : null
+          }
+          onUpgrade={() => navigate({ name: "browse-pricing" })}
+        />
+      );
+      break;
     case "apps":
       page = (
         <AppsDiscoveryPage
@@ -1182,6 +1472,7 @@ export function App() {
    */
   const workspaceChromeRoutes = new Set([
     "projects",
+    "projects-workspace",
     "project",
     "project-documents",
     "project-settings",
@@ -1193,6 +1484,7 @@ export function App() {
   const hasPersistentDiscoveryHeader =
     discoveryRoute !== null &&
     route.name !== "projects" &&
+    route.name !== "projects-workspace" &&
     route.name !== "project" &&
     route.name !== "project-documents" &&
     route.name !== "project-document-file" &&
@@ -1219,7 +1511,9 @@ export function App() {
         search={(
           <SearchTrigger
             label={
-              discoveryRoute === "apps"
+              discoveryRoute === "color"
+                ? "Search Colors…"
+                : discoveryRoute === "apps"
                 ? "Search Apps…"
                 : discoveryRoute === "sites"
                   ? route.name === "sites-motion"
@@ -1234,15 +1528,25 @@ export function App() {
             activeCategory={
               discoveryRoute === "flows"
                 ? flowDiscoveryState?.query || null
+                : discoveryRoute === "color"
+                  ? colorQuery.trim() || null
                 : null
             }
             onOpen={() => {
+              if (discoveryRoute === "color") {
+                openColorSearch();
+                return;
+              }
               void openPalette(
                 discoveryRoute === "sites" ? "sites" : "apps",
                 discoverySearchSeed,
               );
             }}
             onClearCategory={() => {
+              if (discoveryRoute === "color") {
+                setColorQuery("");
+                return;
+              }
               if (discoveryRoute !== "flows" || !flowDiscoveryState) return;
               updateLocation(
                 `/flows?${flowsDiscoveryAdapter.serialize({
@@ -1274,11 +1578,16 @@ export function App() {
   return (
     <ApplicationSurface
       page={
-        <WorkspaceChromeProvider enabled={workspaceChromeEnabled}>
-          <Suspense fallback={<ApplicationPageSpinner />}>
-            {pageWithPersistentDiscoveryHeader}
-          </Suspense>
-        </WorkspaceChromeProvider>
+        <ProjectsWorkspaceProvider enabled={workspaceChromeEnabled}>
+          <WorkspaceChromeProvider
+            enabled={workspaceChromeEnabled}
+            headerActions={workspaceHeaderActions}
+          >
+            <Suspense fallback={<ApplicationPageSpinner />}>
+              {pageWithPersistentDiscoveryHeader}
+            </Suspense>
+          </WorkspaceChromeProvider>
+        </ProjectsWorkspaceProvider>
       }
       overlays={discoveryOverlays}
       dialogs={dialogs}

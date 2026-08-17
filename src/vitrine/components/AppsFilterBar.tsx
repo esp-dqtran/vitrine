@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Button, CheckboxInput, Icon, IconButton, TextInput } from '@astryxdesign/core';
 import type { Platform } from '../../platformFromUrl.ts';
 import { PLATFORM_LABEL } from '../../platformFromUrl.ts';
@@ -105,6 +105,17 @@ export function DiscoveryFilterOptionCheckbox({
         onFocus={onPreview}
         onChange={onToggle}
       />
+      {option.swatches?.length ? (
+        <span className="apps-filterbar__option-swatches" aria-hidden="true">
+          {option.swatches.map((swatch) => (
+            <span
+              key={swatch}
+              className="apps-filterbar__option-swatch"
+              style={{ backgroundColor: swatch }}
+            />
+          ))}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -228,6 +239,7 @@ export interface DiscoveryFilterOption {
   previewUrl?: string | null;
   previewLabel?: string;
   description?: string;
+  swatches?: string[];
   aliases?: string[];
   sectionPosition?: number;
   position?: number;
@@ -238,6 +250,8 @@ export interface DiscoveryFilterGroup {
   label: string;
   selected: string[];
   options: DiscoveryFilterOption[];
+  selectionMode?: 'multiple' | 'single';
+  allowClear?: boolean;
   loadOptions?: (
     query: string,
     signal: AbortSignal,
@@ -256,11 +270,13 @@ interface DiscoveryFilterMenuProps {
   preview: DiscoveryFilterOption | null;
   containerRef?: RefObject<HTMLDivElement | null>;
   onToggleOpen: () => void;
+  onClose?: () => void;
   onQueryChange: (query: string) => void;
   onPreview: (option: DiscoveryFilterOption) => void;
   onToggleOption: (option: DiscoveryFilterOption) => void;
   onClear: () => void;
   filterClassName?: string;
+  primary?: boolean;
 }
 
 export const DISCOVERY_FILTER_OPTION_RENDER_LIMIT = 200;
@@ -275,8 +291,8 @@ export function discoveryFilterVisibleOptions(
   const needle = query.trim().toLowerCase();
   if (needle) {
     return options
-      .filter(({ value, section, description, aliases }) =>
-        [section, value, description, ...(aliases ?? [])]
+      .filter(({ value, section, description, aliases, swatches }) =>
+        [section, value, description, ...(swatches ?? []), ...(aliases ?? [])]
           .filter(Boolean)
           .join(' ')
           .toLowerCase()
@@ -296,11 +312,13 @@ export function DiscoveryFilterMenu({
   preview,
   containerRef,
   onToggleOpen,
+  onClose = onToggleOpen,
   onQueryChange,
   onPreview,
   onToggleOption,
   onClear,
   filterClassName,
+  primary = false,
 }: DiscoveryFilterMenuProps) {
   const selectedCount = group.selected.length;
   const selectedKey = group.selected.join('\0');
@@ -360,10 +378,59 @@ export function DiscoveryFilterMenu({
     }
     return [...groups.entries()];
   }, [visibleOptions]);
+  const controlClassName = `discovery-filter-control apps-filterbar__filter ${primary ? 'apps-filterbar__filter--primary' : ''} ${selectedCount ? 'apps-filterbar__filter--selected' : ''} ${filterClassName ?? ''}`;
+
+  if (group.selectionMode === 'single') {
+    const selectedValue = group.selected[0];
+    return (
+      <div
+        className={controlClassName}
+        data-filter-group={group.id}
+        ref={containerRef}
+      >
+        <AstryxDropdown
+          label={selectedValue ?? group.label}
+          ariaLabel={`${group.label}: ${selectedValue ?? 'Choose option'}`}
+          open={open}
+          triggerClassName="apps-filterbar__filter-button"
+          triggerVariant={primary ? 'primary' : 'secondary'}
+          onOpenChange={(nextOpen) => {
+            if (nextOpen) {
+              if (!open) onToggleOpen();
+              return;
+            }
+            if (open) onClose();
+          }}
+        >
+          {group.options.map((option) => (
+            <AstryxDropdownItem
+              key={option.value}
+              label={option.value}
+              selected={selectedValue === option.value}
+              onSelect={() => {
+                onToggleOption(option);
+                onClose();
+              }}
+            />
+          ))}
+        </AstryxDropdown>
+        {selectedCount && group.allowClear !== false ? (
+          <IconButton
+            label={`Clear ${group.label} filter`}
+            icon={<Icon icon="close" size="sm" />}
+            variant="ghost"
+            size="sm"
+            className="apps-filterbar__clear"
+            onClick={onClear}
+          />
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div
-      className={`apps-filterbar__filter ${selectedCount ? 'apps-filterbar__filter--selected' : ''} ${filterClassName ?? ''}`}
+      className={controlClassName}
       data-filter-group={group.id}
       ref={containerRef}
     >
@@ -377,6 +444,7 @@ export function DiscoveryFilterMenu({
         panelPortal
         open={open}
         triggerClassName="apps-filterbar__filter-button"
+        triggerVariant={primary ? 'primary' : 'secondary'}
         triggerEndContent={selectedCount > 1
           ? <span className="apps-filterbar__selection-count">{selectedCount}</span>
           : undefined}
@@ -426,7 +494,7 @@ export function DiscoveryFilterMenu({
           </p>
         </aside>
       </AstryxDropdown>
-      {selectedCount ? (
+      {selectedCount && group.allowClear !== false ? (
         <IconButton
           label={`Clear ${group.label} ${selectedCount === 1 ? 'filter' : 'filters'}`}
           icon={<Icon icon="close" size="sm" />}
@@ -448,7 +516,7 @@ export function DiscoveryActiveFilter({
   onClear(): void;
 }) {
   return (
-    <div className="apps-filterbar__filter apps-filterbar__filter--selected advanced-search-filter-pill">
+    <div className="discovery-filter-control apps-filterbar__filter apps-filterbar__filter--selected advanced-search-filter-pill">
       <span className="apps-filterbar__filter-label">{label}</span>
       <IconButton
         label={`Remove ${label} filter`}
@@ -463,7 +531,7 @@ export function DiscoveryActiveFilter({
 }
 
 export interface DiscoveryFilterBarProps {
-  kind: 'apps' | 'sites' | 'flows';
+  kind: 'apps' | 'sites' | 'flows' | 'colors';
   ariaLabel: string;
   platform: {
     value: Platform;
@@ -477,6 +545,8 @@ export interface DiscoveryFilterBarProps {
   showPlatform?: boolean;
   showResultCount?: boolean;
   showSort?: boolean;
+  primaryFilterId?: string;
+  actions?: ReactNode;
   sort: string;
   sortOptions: readonly DiscoveryFilterSortOption[];
   onSortChange: (sort: string) => void;
@@ -494,6 +564,8 @@ export function DiscoveryFilterBar({
   showPlatform = true,
   showResultCount = false,
   showSort = true,
+  primaryFilterId,
+  actions,
   sort,
   sortOptions,
   onSortChange,
@@ -553,6 +625,7 @@ export function DiscoveryFilterBar({
         'data-apps-filterbar': kind === 'apps' ? 'true' : undefined,
         'data-sites-filterbar': kind === 'sites' ? 'true' : undefined,
         'data-flows-filterbar': kind === 'flows' ? 'true' : undefined,
+        'data-colors-filterbar': kind === 'colors' ? 'true' : undefined,
       }}
     >
       <div className="apps-filterbar__controls">
@@ -624,10 +697,12 @@ export function DiscoveryFilterBar({
             preview={preview}
             containerRef={isMenuOpen({ type: 'filter', id: group.id }) ? openMenuContainerRef : undefined}
             onToggleOpen={() => toggleMenu({ type: 'filter', id: group.id })}
+            onClose={() => setOpenMenu(null)}
             onQueryChange={setQuery}
             onPreview={setPreview}
             onToggleOption={(option) => onToggleFilter(group.id, option.value)}
             onClear={() => onClearFilter(group.id)}
+            primary={group.id === primaryFilterId}
           />
         ))}
       </div>
@@ -651,6 +726,7 @@ export function DiscoveryFilterBar({
             onChange={onSortChange}
           />
         ) : null}
+        {actions}
       </div>
     </ControlRail>
   );

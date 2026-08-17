@@ -46,6 +46,7 @@ interface CopyButtonProps {
   label: string;
   successMessage: string;
   copyingLabel?: string;
+  showCopyingState?: boolean;
   variant?: 'primary' | 'secondary' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
@@ -57,6 +58,7 @@ export function CopyButton({
   label,
   successMessage,
   copyingLabel = 'Copying…',
+  showCopyingState = true,
   variant = 'secondary',
   size = 'sm',
   className,
@@ -73,13 +75,13 @@ export function CopyButton({
   return (
     <>
       <Button
-        label={state === 'copying' ? copyingLabel : label}
+        label={showCopyingState && state === 'copying' ? copyingLabel : label}
         icon={<Icon icon="copy" size="sm" />}
         variant={variant}
         size={size}
         className={className}
-        isDisabled={isDisabled || state === 'copying'}
-        isLoading={state === 'copying'}
+        isDisabled={isDisabled || (showCopyingState && state === 'copying')}
+        isLoading={showCopyingState && state === 'copying'}
         onClick={() => void copy()}
       />
     </>

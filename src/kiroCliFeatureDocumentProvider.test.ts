@@ -5,10 +5,10 @@ import { test } from "node:test";
 import sharp from "sharp";
 import {
   featureDocumentClaimBudget,
-  type FeatureStepPrompt,
   type FeatureSynthesisPrompt,
 } from "./featureDocument.ts";
 import {
+  EXPANSION_FIXED_CLAIMS,
   createKiroCliFeatureDocumentProvider,
   extractKiroCliJson,
   kiroCliFeatureDocumentConfigFromEnvironment,
@@ -33,10 +33,7 @@ const source = {
   tags: ["cart"],
 };
 
-const step: FeatureStepPrompt = {
-  source,
-  stepIndex: 0,
-  imageIndex: 0,
+const step = {
   evidenceId: "FLOW-STEP-01-IMAGE-42",
   stepLabel: "Open cart",
   focusInstruction: "Document only visible behavior",
@@ -93,24 +90,23 @@ test("enables official-document discovery without a domain allowlist", async () 
     KIRO_CLI_FEATURE_DOCUMENT_OFFICIAL_DOCUMENTATION: "true",
   }, async (input) => {
     invocation = input;
-    return JSON.stringify({
-      documentedContext: {
-        status: "not-found",
-        sources: [],
-        claims: [],
-      },
-      executiveSummary: {},
-      observedFlow: {},
-      requirements: [],
-    });
+    throw new Error("stop after prompt capture");
   })!;
 
-  await provider.synthesize(synthesis, new AbortController().signal);
+  await assert.rejects(() => provider.analyzeFlow({
+    source,
+    focusInstruction: step.focusInstruction,
+    evidenceManifest: synthesis.evidenceManifest,
+    allowedEvidenceIds: [step.evidenceId],
+  }, [{
+    evidence: synthesis.evidenceManifest[0],
+    image: { bytes: Buffer.from("cart"), contentType: "image/png" },
+  }], new AbortController().signal), /stop after prompt capture/);
 
   assert.equal(provider.model, "kiro-cli:gpt-5.6-terra+official-docs");
   assert.equal(provider.officialDocumentationEnabled, true);
   assert.deepEqual(provider.officialDocumentationDomains, []);
-  assert.equal(invocation?.args[6], "--trust-tools=web_search");
+  assert.equal(invocation?.args[6], "--trust-tools=fs_read,web_search");
   const prompt = invocation?.args.at(-1) ?? "";
   assert.match(prompt, /discover relevant first-party official documentation/);
   assert.match(prompt, /without assuming its domain in advance/);
@@ -126,19 +122,18 @@ test("enables official-document search only for an explicit domain allowlist", a
       "shopee.co.id, help.shopee.co.id,shopee.co.id",
   }, async (input) => {
     invocation = input;
-    return JSON.stringify({
-      documentedContext: {
-        status: "not-found",
-        sources: [],
-        claims: [],
-      },
-      executiveSummary: {},
-      observedFlow: {},
-      requirements: [],
-    });
+    throw new Error("stop after prompt capture");
   })!;
 
-  await provider.synthesize(synthesis, new AbortController().signal);
+  await assert.rejects(() => provider.analyzeFlow({
+    source,
+    focusInstruction: step.focusInstruction,
+    evidenceManifest: synthesis.evidenceManifest,
+    allowedEvidenceIds: [step.evidenceId],
+  }, [{
+    evidence: synthesis.evidenceManifest[0],
+    image: { bytes: Buffer.from("cart"), contentType: "image/png" },
+  }], new AbortController().signal), /stop after prompt capture/);
 
   assert.equal(provider.model, "kiro-cli:gpt-5.6-terra+official-docs");
   assert.equal(provider.officialDocumentationEnabled, true);
@@ -146,7 +141,7 @@ test("enables official-document search only for an explicit domain allowlist", a
     "shopee.co.id",
     "help.shopee.co.id",
   ]);
-  assert.equal(invocation?.args[6], "--trust-tools=web_search");
+  assert.equal(invocation?.args[6], "--trust-tools=fs_read,web_search");
   const prompt = invocation?.args.at(-1) ?? "";
   assert.match(prompt, /Use web search only for official documentation/);
   assert.match(prompt, /shopee\.co\.id/);
@@ -172,46 +167,6 @@ test("extracts the final matching JSON object from Kiro terminal output", () => 
     extractKiroCliJson(output, (candidate) => candidate.evidenceId === "S01"),
     { evidenceId: "S01", visibleUi: [], visibleText: [] },
   );
-});
-
-test("analyzes one temporary screenshot with fs_read and removes it afterward", async () => {
-  let invocation: KiroCliInvocation | undefined;
-  let imagePath = "";
-  const provider = createKiroCliFeatureDocumentProvider(environment, async (input) => {
-    invocation = input;
-    const prompt = input.args.at(-1)!;
-    imagePath = prompt.match(/absolute path with the read tool: ([^\n]+)/)?.[1] ?? "";
-    await access(imagePath);
-    return JSON.stringify({
-      evidenceId: step.evidenceId,
-      visibleUi: ["Cart"],
-      visibleText: ["Proceed to checkout"],
-      likelyIntent: "Review cart",
-      availableActions: ["Proceed to checkout"],
-      systemFeedback: [],
-      friction: [],
-      missingOrUncertainStates: [],
-      accessibility: [],
-      confidence: 0.9,
-    });
-  })!;
-  const result = await provider.analyzeImage(
-    step,
-    { bytes: Buffer.from("png"), contentType: "image/png" },
-    new AbortController().signal,
-  );
-
-  assert.equal(result && (result as { evidenceId: string }).evidenceId, step.evidenceId);
-  assert.deepEqual(invocation?.args.slice(0, 7), [
-    "chat",
-    "--model",
-    "gpt-5.6-terra",
-    "--effort",
-    "high",
-    "--no-interactive",
-    "--trust-tools=fs_read",
-  ]);
-  await assert.rejects(() => access(imagePath));
 });
 
 test("analyzes all ordered Flow screenshots in one Kiro invocation", async () => {
@@ -397,33 +352,6 @@ test("normalizes oversized Flow screenshots below Kiro's image limit", async () 
   await assert.rejects(() => access(imagePath));
 });
 
-test("synthesizes the canonical Feature Document shape without image paths", async () => {
-  let prompt = "";
-  const provider = createKiroCliFeatureDocumentProvider(environment, async (input) => {
-    prompt = input.args.at(-1)!;
-    return JSON.stringify({
-      executiveSummary: {},
-      observedFlow: {},
-      requirements: [],
-    });
-  })!;
-  const result = await provider.synthesize(synthesis, new AbortController().signal);
-
-  assert.deepEqual(result, { executiveSummary: {}, observedFlow: {}, requirements: [] });
-  assert.match(prompt, /capability-level replica behavior/);
-  assert.match(prompt, /Every top-level key below is required/);
-  assert.match(prompt, /sourceAssessment/);
-  assert.match(prompt, /unscopedEvidence/);
-  assert.match(prompt, /observedFlow.*userGoal.*entryPoint.*completionPoint/);
-  assert.match(prompt, /globally unique id values/);
-  assert.match(prompt, /at most 1 replication requirements/);
-  assert.match(prompt, /at most 24 total Claims/);
-  assert.match(prompt, /\"priority\":\"unranked\"/);
-  assert.match(prompt, /\"kind\":\"observed\"\|\"inferred\"/);
-  assert.match(prompt, /FLOW-STEP-01-IMAGE-42/);
-  assert.doesNotMatch(prompt, /astryx-kiro-feature-/);
-});
-
 test("trims over-budget evidence claims so any provider stays within the claim budget", async () => {
   const overflow = (count: number, prefix: string) =>
     Array.from({ length: count }, (_, index) => ({
@@ -564,4 +492,105 @@ test("states the previous validation error at the top of a retry prompt", async 
 
   assert.match(prompt, /^The previous attempt was rejected for this exact reason: feature document exceeds the 38-claim budget/);
   assert.match(prompt, /Correct that specific problem in this attempt/);
+});
+
+test("expansion emits exactly EXPANSION_FIXED_CLAIMS claims beyond the requirements", async () => {
+  const provider = createKiroCliFeatureDocumentProvider(environment, async () =>
+    JSON.stringify({
+      screens: [{
+        evidenceId: step.evidenceId,
+        visibleState: "Cart",
+        visibleText: ["Proceed"],
+        availableActions: ["Proceed"],
+        visibleFeedback: [],
+        uncertainty: [],
+        confidence: 0.9,
+      }],
+      flow: {
+        assessment: { captureType: "static-screen", completeness: "partial", rationale: "One capture." },
+        summary: {
+          purpose: { kind: "inferred", text: "Review the cart", evidenceIds: [step.evidenceId] },
+          userValue: { kind: "inferred", text: "Confirm items", evidenceIds: [step.evidenceId] },
+          recommendation: { kind: "proposed", text: "Replicate the cart", evidenceIds: [] },
+        },
+        goal: { kind: "inferred", text: "Review the cart", evidenceIds: [step.evidenceId] },
+        entryPoint: { kind: "observed", text: "Cart is visible", evidenceIds: [step.evidenceId] },
+        completionPoint: { kind: "unknown", text: "Completion is not shown", evidenceIds: [] },
+        // Every model-supplied list is empty, so the expansion's fixed claims are all that remain.
+        states: [], transitions: [], friction: [], missingStates: [], openQuestions: [],
+        replicationProblem: "Replicate the captured cart state.",
+        implementation: {
+          targetUser: "A buyer reviewing a purchase.",
+          goal: "Present the captured cart state.",
+          nonGoal: "Do not define checkout behavior absent from the capture.",
+          behavior: "Render the cart contents visible in the capture.",
+          journey: "The buyer opens the cart and reviews its contents.",
+          edgeCases: "The cart is empty.",
+          dependency: "A cart contents service.",
+          risk: "The persistence model behind the cart is unknown.",
+          analyticsEvent: { name: "cart_viewed", trigger: "the cart screen is shown", properties: ["item_count"] },
+          successMetric: { name: "Cart review rate", definition: "Carts reviewed divided by carts created." },
+          guardrailMetric: { name: "Cart load failure rate", definition: "Failed cart loads divided by cart opens." },
+        },
+        requirements: [{
+          kind: "observed",
+          text: "Present the captured cart state",
+          evidenceIds: [step.evidenceId],
+          userStory: "As a buyer, I want to see my cart so that I can review it.",
+          criteria: [{
+            kind: "observed",
+            given: "the cart capture is available",
+            when: "the cart is presented",
+            then: "the cart contents are visible",
+            evidenceIds: [step.evidenceId],
+          }],
+        }],
+      },
+    }))!;
+
+  const result = await provider.analyzeFlow({
+    source,
+    focusInstruction: step.focusInstruction,
+    evidenceManifest: [synthesis.evidenceManifest[0]],
+    allowedEvidenceIds: [step.evidenceId],
+  }, [{
+    evidence: synthesis.evidenceManifest[0],
+    image: { bytes: Buffer.from("first"), contentType: "image/png" },
+  }], new AbortController().signal);
+
+  const document = (result as { document: Record<string, any> }).document;
+  const claims = [
+    document.executiveSummary.purpose,
+    document.executiveSummary.userValue,
+    document.executiveSummary.recommendation,
+    document.observedFlow.userGoal,
+    document.observedFlow.entryPoint,
+    document.observedFlow.completionPoint,
+    ...document.observedFlow.journey,
+    ...document.observedFlow.actors,
+    ...document.observedFlow.visibleStates,
+    ...document.flowAnalysis.effectivePatterns,
+    ...document.flowAnalysis.friction,
+    ...document.flowAnalysis.missingStates,
+    ...document.flowAnalysis.inconsistencies,
+    ...document.flowAnalysis.risksAndAssumptions,
+    document.proposedFeature.problem,
+    ...document.proposedFeature.targetUsers,
+    ...document.proposedFeature.goals,
+    ...document.proposedFeature.nonGoals,
+    ...document.proposedFeature.behavior,
+    ...document.proposedFeature.journey,
+    ...document.edgeCases,
+    ...document.successMetrics,
+    ...document.guardrailMetrics,
+    ...document.analyticsEvents,
+    ...document.dependencies,
+    ...document.openQuestions,
+  ];
+
+  assert.equal(
+    claims.length,
+    EXPANSION_FIXED_CLAIMS,
+    "update EXPANSION_FIXED_CLAIMS: the claim budget and the trim both subtract it",
+  );
 });
