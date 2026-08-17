@@ -1,5 +1,10 @@
 import { createApiApp, DEFAULT_API_PORT } from "./app.ts";
-import { adminSeedFromEnv, billingConfigFromEnv, referralCampaignFromEnv } from "./config.ts";
+import {
+  adminSeedFromEnv,
+  apiRuntimeConfigFromEnv,
+  optionalBillingConfigFromEnv,
+  referralCampaignFromEnv,
+} from "./config.ts";
 import { startApi } from "./start.ts";
 import { seedAdmin } from "../../../src/authStore.ts";
 import {
@@ -53,7 +58,8 @@ await startApi({
   assertMigrations: () => assertMigrationsCurrent(pool),
   start: async () => {
     const seed = adminSeedFromEnv(process.env);
-    const config = billingConfigFromEnv(process.env);
+    const config = apiRuntimeConfigFromEnv(process.env);
+    const billingConfig = optionalBillingConfigFromEnv(process.env);
     const passwordResetEmailConfig = passwordResetEmailConfigFromEnv(process.env);
     const auth = createJwtAuth(jwtAuthConfigFromEnv(process.env));
     const typesenseConfig = typesenseCatalogConfigFromEnv(process.env);
@@ -76,19 +82,21 @@ await startApi({
     };
     const referralCampaign = referralCampaignFromEnv(process.env);
     await seedAdmin(seed.email, seed.password);
-    const billing = createBillingService({
-      paddle: createPaddleClient(config.paddleApiKey, config.paddleEnvironment),
-      config,
-      store: {
-        getSubscription,
-        getOrganizationSubscription,
-        getTeamBillingOrganization,
-        upsertPaddleSubscription,
-        upsertPaddleOrganizationSubscription,
-        hasProcessedPaddleEvent,
-        markPaddleEventProcessed,
-      },
-    });
+    const billing = billingConfig
+      ? createBillingService({
+        paddle: createPaddleClient(billingConfig.paddleApiKey, billingConfig.paddleEnvironment),
+        config: billingConfig,
+        store: {
+          getSubscription,
+          getOrganizationSubscription,
+          getTeamBillingOrganization,
+          upsertPaddleSubscription,
+          upsertPaddleOrganizationSubscription,
+          hasProcessedPaddleEvent,
+          markPaddleEventProcessed,
+        },
+      })
+      : undefined;
     void (async () => {
       let failedFlowWarmups = 0;
       for (const platform of ["web", "ios", "android"] as const) {
@@ -109,7 +117,7 @@ await startApi({
       }
     })();
     const app = createApiApp({
-      billing,
+      ...(billing ? { billing } : {}),
       objectStore,
       issueAuthToken: auth.issueAuthToken,
       verifyAuthToken: auth.verifyAuthToken,

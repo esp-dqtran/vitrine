@@ -11,19 +11,22 @@ export function adminSeedFromEnv(env: Record<string, string | undefined>) {
   return { email, password };
 }
 
-export interface BillingConfig {
-  paddleApiKey: string;
-  paddleWebhookSecret: string;
-  paddleEnvironment: "sandbox" | "production";
-  monthlyPriceId: string;
-  yearlyPriceId: string;
-  teamYearlyPriceId: string | undefined;
+export interface ApiRuntimeConfig {
   appUrl: string;
   mediaSigningSecret: string;
   crawlSessionEncryptionKey: string;
   generalRateLimit: number;
   mediaRateLimit: number;
   appTraversalLimit: number;
+}
+
+export interface BillingConfig extends ApiRuntimeConfig {
+  paddleApiKey: string;
+  paddleWebhookSecret: string;
+  paddleEnvironment: "sandbox" | "production";
+  monthlyPriceId: string;
+  yearlyPriceId: string;
+  teamYearlyPriceId: string | undefined;
 }
 
 export interface ReferralCampaignConfig {
@@ -45,6 +48,34 @@ function positiveInt(value: string | undefined, fallback: number, name: string):
   return parsed;
 }
 
+export function apiRuntimeConfigFromEnv(env: Record<string, string | undefined>): ApiRuntimeConfig {
+  const appUrl = required(env, "APP_URL");
+  const mediaSigningSecret = required(env, "MEDIA_SIGNING_SECRET");
+  const crawlSessionEncryptionKey = required(env, "CRAWL_SESSION_ENCRYPTION_KEY");
+  if (!/^https?:\/\//.test(appUrl)) throw new Error("APP_URL must be an absolute HTTP URL");
+  if (mediaSigningSecret.length < 32) {
+    throw new Error("MEDIA_SIGNING_SECRET must contain at least 32 characters");
+  }
+  decodeSessionKey(crawlSessionEncryptionKey);
+  return {
+    appUrl: appUrl.replace(/\/$/, ""),
+    mediaSigningSecret,
+    crawlSessionEncryptionKey,
+    generalRateLimit: positiveInt(env.GENERAL_RATE_LIMIT, 300, "GENERAL_RATE_LIMIT"),
+    mediaRateLimit: positiveInt(env.MEDIA_RATE_LIMIT, 500, "MEDIA_RATE_LIMIT"),
+    appTraversalLimit: positiveInt(env.APP_TRAVERSAL_LIMIT, 20, "APP_TRAVERSAL_LIMIT"),
+  };
+}
+
+const paddleConfigurationVariables = [
+  "PADDLE_API_KEY",
+  "PADDLE_WEBHOOK_SECRET",
+  "PADDLE_ENVIRONMENT",
+  "PADDLE_PRO_MONTHLY_PRICE_ID",
+  "PADDLE_PRO_YEARLY_PRICE_ID",
+  "PADDLE_TEAM_YEARLY_PRICE_ID",
+] as const;
+
 export function billingConfigFromEnv(env: Record<string, string | undefined>): BillingConfig {
   const paddleApiKey = required(env, "PADDLE_API_KEY");
   const paddleWebhookSecret = required(env, "PADDLE_WEBHOOK_SECRET");
@@ -55,28 +86,20 @@ export function billingConfigFromEnv(env: Record<string, string | undefined>): B
   const monthlyPriceId = required(env, "PADDLE_PRO_MONTHLY_PRICE_ID");
   const yearlyPriceId = required(env, "PADDLE_PRO_YEARLY_PRICE_ID");
   const teamYearlyPriceId = env.PADDLE_TEAM_YEARLY_PRICE_ID?.trim() || undefined;
-  const appUrl = required(env, "APP_URL");
-  const mediaSigningSecret = required(env, "MEDIA_SIGNING_SECRET");
-  const crawlSessionEncryptionKey = required(env, "CRAWL_SESSION_ENCRYPTION_KEY");
-  if (!/^https?:\/\//.test(appUrl)) throw new Error("APP_URL must be an absolute HTTP URL");
-  if (mediaSigningSecret.length < 32) {
-    throw new Error("MEDIA_SIGNING_SECRET must contain at least 32 characters");
-  }
-  decodeSessionKey(crawlSessionEncryptionKey);
   return {
+    ...apiRuntimeConfigFromEnv(env),
     paddleApiKey,
     paddleWebhookSecret,
     paddleEnvironment,
     monthlyPriceId,
     yearlyPriceId,
     teamYearlyPriceId,
-    appUrl: appUrl.replace(/\/$/, ""),
-    mediaSigningSecret,
-    crawlSessionEncryptionKey,
-    generalRateLimit: positiveInt(env.GENERAL_RATE_LIMIT, 300, "GENERAL_RATE_LIMIT"),
-    mediaRateLimit: positiveInt(env.MEDIA_RATE_LIMIT, 500, "MEDIA_RATE_LIMIT"),
-    appTraversalLimit: positiveInt(env.APP_TRAVERSAL_LIMIT, 20, "APP_TRAVERSAL_LIMIT"),
   };
+}
+
+export function optionalBillingConfigFromEnv(env: Record<string, string | undefined>): BillingConfig | undefined {
+  const hasPaddleConfiguration = paddleConfigurationVariables.some((name) => Boolean(env[name]?.trim()));
+  return hasPaddleConfiguration ? billingConfigFromEnv(env) : undefined;
 }
 
 export function referralCampaignFromEnv(

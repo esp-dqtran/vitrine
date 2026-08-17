@@ -1,7 +1,21 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
-import { adminSeedFromEnv, billingConfigFromEnv, referralCampaignFromEnv } from "./config.ts";
+import {
+  adminSeedFromEnv,
+  apiRuntimeConfigFromEnv,
+  billingConfigFromEnv,
+  optionalBillingConfigFromEnv,
+  referralCampaignFromEnv,
+} from "./config.ts";
+
+function runtimeEnvironment() {
+  return {
+    APP_URL: "https://astryx.example/",
+    MEDIA_SIGNING_SECRET: "0123456789abcdef0123456789abcdef",
+    CRAWL_SESSION_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+  };
+}
 
 test("requires valid admin seed variables", () => {
   assert.throws(() => adminSeedFromEnv({}), /ADMIN_EMAIL/);
@@ -39,6 +53,23 @@ test("requires all billing and media-security variables", () => {
   assert.throws(
     () => billingConfigFromEnv({ PADDLE_API_KEY: "pdl_test_x" }),
     /PADDLE_WEBHOOK_SECRET/,
+  );
+});
+
+test("keeps billing disabled until Paddle configuration is supplied", () => {
+  const runtime = runtimeEnvironment();
+  assert.equal(optionalBillingConfigFromEnv(runtime), undefined);
+  assert.deepEqual(apiRuntimeConfigFromEnv(runtime), {
+    appUrl: "https://astryx.example",
+    mediaSigningSecret: runtime.MEDIA_SIGNING_SECRET,
+    crawlSessionEncryptionKey: runtime.CRAWL_SESSION_ENCRYPTION_KEY,
+    generalRateLimit: 300,
+    mediaRateLimit: 500,
+    appTraversalLimit: 20,
+  });
+  assert.throws(
+    () => optionalBillingConfigFromEnv({ ...runtime, PADDLE_ENVIRONMENT: "production" }),
+    /PADDLE_API_KEY/,
   );
 });
 
