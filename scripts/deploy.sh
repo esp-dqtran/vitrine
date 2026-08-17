@@ -177,6 +177,12 @@ deploy_api() {
     docker build -f services/designer-canvas-collab/Dockerfile -t '$CANVAS_COLLAB_IMAGE:$sha' .
   "
 
+  say "Apply database migrations"
+  ssh -o BatchMode=yes "$DROPLET" "
+    docker run --rm --env-file '$ENV_FILE' '$IMAGE:$sha' \
+      node --experimental-strip-types scripts/migrate.ts
+  "
+
   stamp="$(date -u +%Y%m%dT%H%M%SZ)"
   say "Swap container (previous kept as $CONTAINER-rollback-$stamp)"
   ssh -o BatchMode=yes "$DROPLET" "

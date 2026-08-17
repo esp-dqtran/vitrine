@@ -1,10 +1,6 @@
 ALTER TABLE color_collections
   ADD COLUMN featured_colors JSONB NOT NULL DEFAULT '[]'::jsonb;
 
-ALTER TABLE color_collections
-  ADD CONSTRAINT color_collections_featured_colors_array_check
-  CHECK (jsonb_typeof(featured_colors) = 'array' AND jsonb_array_length(featured_colors) > 0);
-
 INSERT INTO color_palettes (id, name, mood, position) VALUES
   ('cloud-canvas', 'Cloud Canvas', 'Airy restraint grounded by a graphite edge', 29),
   ('quiet-spectrum', 'Quiet Spectrum', 'Soft violet nuance framed by contemplative white', 30),
@@ -155,3 +151,7 @@ INSERT INTO color_collection_palettes (collection_id, palette_id, position) VALU
   ('color-of-the-year-2019', 'coral-night', 1),
   ('color-of-the-year-2019', 'coral-navy', 2),
   ('color-of-the-year-2019', 'coral-garden', 3);
+
+ALTER TABLE color_collections
+  ADD CONSTRAINT color_collections_featured_colors_array_check
+  CHECK (jsonb_typeof(featured_colors) = 'array' AND jsonb_array_length(featured_colors) > 0);

@@ -423,6 +423,17 @@ test("normal publication snapshots Flow children before the immutable transition
   assert.ok(transition > snapshot);
 });
 
+test("Pantone archive backfills featured colors before enforcing the non-empty constraint", async () => {
+  const sql = await readFile(
+    new URL("../migrations/0097_pantone_color_year_archive.sql", import.meta.url),
+    "utf8",
+  );
+  const backfill = sql.indexOf("ON CONFLICT (id) DO UPDATE SET");
+  const constraint = sql.indexOf("ADD CONSTRAINT color_collections_featured_colors_array_check");
+  assert.ok(backfill >= 0);
+  assert.ok(constraint > backfill);
+});
+
 async function temporaryDirectory(t: {
   after(fn: () => Promise<void>): void;
 }): Promise<string> {

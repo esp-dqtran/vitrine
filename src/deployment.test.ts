@@ -59,6 +59,14 @@ test("production deploy commands use the guarded release script", async () => {
   assert.match(deployScript, /wrangler deploy --keep-vars/);
   assert.match(deployScript, /wrangler deploy --dry-run --keep-vars/);
   assert.match(deployScript, /preflight_migrations/);
+  assert.match(
+    deployScript,
+    /docker run --rm --env-file '\$ENV_FILE' '\$IMAGE:\$sha'[\s\\]*node --experimental-strip-types scripts\/migrate\.ts/,
+  );
+  assert.ok(
+    deployScript.indexOf('say "Apply database migrations"')
+      < deployScript.indexOf('say "Swap container'),
+  );
   assert.match(deployScript, /vitrines-designer-canvas-collab/);
   assert.match(deployScript, /CANVAS_COLLAB_HEALTH_URL/);
   assert.match(deployScript, /--env-file '\$ENV_FILE' -e PORT=3012 -p '\$CANVAS_COLLAB_PORT_BIND'/);
