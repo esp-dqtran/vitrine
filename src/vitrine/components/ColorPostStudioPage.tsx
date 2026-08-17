@@ -31,6 +31,8 @@ import {
   AstryxSingleSelectDropdown,
 } from './AstryxDropdown.tsx';
 import { useCopyAction } from './CopyButton.tsx';
+import { trackAnalyticsEvent } from '../analytics.ts';
+import { analyticsEvent, paletteAnalyticsProperties } from '../analyticsEvents.ts';
 
 const POST_WIDTH = 1080;
 const POST_HEIGHT = 1350;
@@ -941,9 +943,14 @@ export function ColorPostStudioPage({
       if (!exportCanvasRef.current) throw new Error('The post image is not ready');
       await renderColorPostCanvas(exportCanvasRef.current, palette, document);
       await copyCanvasImage(exportCanvasRef.current);
+      trackAnalyticsEvent(analyticsEvent.colorPostImageCopied, paletteAnalyticsProperties(palette));
     },
     successMessage: 'Image copied. Paste it into your social post.',
   });
+
+  useEffect(() => {
+    trackAnalyticsEvent(analyticsEvent.colorPostEditorOpened, paletteAnalyticsProperties(initialPalette));
+  }, [initialPalette]);
 
   const commit = (transform: (current: ColorPostDocument) => ColorPostDocument) => {
     setHistory((current) => ({
@@ -1094,6 +1101,10 @@ export function ColorPostStudioPage({
       : [...current, eventTheme.palette]);
     setPaletteId(eventTheme.palette.id);
     commit((current) => applyEventThemeToDocument(current, eventTheme));
+    trackAnalyticsEvent(analyticsEvent.colorPostThemeApplied, {
+      ...paletteAnalyticsProperties(eventTheme.palette),
+      theme_id: eventTheme.id,
+    });
   };
 
   const changeCalendarRange = (days: number) => {

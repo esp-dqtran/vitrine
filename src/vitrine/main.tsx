@@ -9,9 +9,10 @@ import {
 import { lazy, Suspense, useEffect } from 'react';
 import { AuthProvider, useAuth } from './AuthProvider';
 import { collectionsEnabled } from './featureFlags.ts';
-import { navigate, useRoute } from './router';
+import { navigate, useLocationKey, useRoute } from './router';
 import { ThemeModeProvider, useThemeMode } from './theme';
 import { ApplicationToastProvider } from './components/ApplicationToast.tsx';
+import { initializeAnalytics, trackPageView } from './analytics.ts';
 import { decideRootRoute } from './routeDecision.ts';
 import { WorkspaceChromeProvider } from './components/WorkspaceChromeContext.tsx';
 import type { Route } from './router.ts';
@@ -206,6 +207,17 @@ function RouteStatusPage({ title, onBack }: { title: string; onBack: () => void 
 
 function ThemedRoot() {
   const { mode } = useThemeMode();
+  const locationKey = useLocationKey();
+  const pathname = locationKey.split('?', 1)[0];
+
+  useEffect(() => {
+    initializeAnalytics();
+  }, []);
+
+  useEffect(() => {
+    trackPageView();
+  }, [pathname]);
+
   return (
     <Theme theme={appTheme} mode={mode}>
       <ApplicationToastProvider>

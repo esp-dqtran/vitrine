@@ -45,6 +45,7 @@ export interface ColorPackStackProps {
   cards: readonly ColorPackCard[];
   label?: string;
   initiallyExpanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
   className?: string;
 }
 
@@ -91,6 +92,7 @@ export function ColorPackStack({
   cards,
   label = 'Color pack',
   initiallyExpanded = true,
+  onExpandedChange,
   className,
 }: ColorPackStackProps) {
   const [expanded, setExpanded] = useState(initiallyExpanded);
@@ -184,7 +186,11 @@ export function ColorPackStack({
           aria-label={`${expanded ? 'Collapse' : 'Expand'} ${label}`}
           aria-expanded={expanded}
           aria-controls={contentId}
-          onClick={() => setExpanded((current) => !current)}
+          onClick={() => setExpanded((current) => {
+            const next = !current;
+            onExpandedChange?.(next);
+            return next;
+          })}
         />
       </motion.div>
     </section>

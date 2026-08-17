@@ -19,6 +19,8 @@ import { ColorPackStack } from './ColorPackStack.tsx';
 import { CopyButton } from './CopyButton.tsx';
 import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
 import { navigate } from '../router.ts';
+import { trackAnalyticsEvent } from '../analytics.ts';
+import { analyticsEvent, paletteAnalyticsProperties } from '../analyticsEvents.ts';
 
 export const colorPalettes = defaultColorPalettes;
 export const colorCollections = defaultColorCollections;
@@ -216,7 +218,10 @@ function PaletteHeader({
         <span className="color-gallery__palette-mood">{palette.mood}</span>
       </div>
       <CopyButton
-        action={() => navigator.clipboard.writeText(copyText)}
+        action={async () => {
+          await navigator.clipboard.writeText(copyText);
+          trackAnalyticsEvent(analyticsEvent.colorPaletteCopied, paletteAnalyticsProperties(palette));
+        }}
         label="Copy"
         successMessage={successMessage}
         showCopyingState={false}
@@ -487,14 +492,27 @@ export function ColorGalleryPage({
             if (groupId === 'color-types') {
               const kind: ColorPaletteKind = value === 'Gradient' ? 'gradient' : 'solid';
               setSelectedKinds([kind]);
+              trackAnalyticsEvent(analyticsEvent.colorFilterChanged, { filter: 'type', value: kind });
               return;
             }
             const collection = collections.find((candidate) => candidate.name === value);
-            if (collection) toggleCollection(collection.id);
+            if (collection) {
+              toggleCollection(collection.id);
+              trackAnalyticsEvent(analyticsEvent.colorFilterChanged, {
+                filter: 'collection',
+                value: String(collection.year),
+              });
+            }
           }}
           onClearFilter={(groupId) => {
-            if (groupId === 'color-types') setSelectedKinds(['solid']);
-            if (groupId === 'color-collections') setSelectedCollectionIds([]);
+            if (groupId === 'color-types') {
+              setSelectedKinds(['solid']);
+              trackAnalyticsEvent(analyticsEvent.colorFilterChanged, { filter: 'type', value: 'solid' });
+            }
+            if (groupId === 'color-collections') {
+              setSelectedCollectionIds([]);
+              trackAnalyticsEvent(analyticsEvent.colorFilterChanged, { filter: 'collection', value: 'all' });
+            }
           }}
           actions={(
             <Button
@@ -577,6 +595,14 @@ export function ColorGalleryPage({
                   cards={palette.cards}
                   label={`${palette.name} color palette`}
                   initiallyExpanded={false}
+                  onExpandedChange={(expanded) => {
+                    if (expanded) {
+                      trackAnalyticsEvent(
+                        analyticsEvent.colorPaletteExpanded,
+                        paletteAnalyticsProperties(palette),
+                      );
+                    }
+                  }}
                 />
               </article>
             )}
