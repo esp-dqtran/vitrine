@@ -70,11 +70,11 @@ test('keeps selected discovery filters inside one 40px composite control', async
   assert.match(styles, /\.apps-filterbar__filter\s*\{[\s\S]*?height:\s*var\(--vitrine-control-height\)\s*!important/);
   assert.match(
     styles,
-    /:is\(\.apps-filterbar, \.reference-detail__tab-controls, \.quick-search__quick-filters, \.advanced-search-active-filters, \.admin-users-filter-control\) \.apps-filterbar__filter :is\(\.apps-filterbar__filter-button\.apps-filterbar__filter-button, \.apps-filterbar__filter-label\)\s*\{[\s\S]*?height:\s*calc\(var\(--vitrine-control-height\) - var\(--spacing-1\)\)\s*!important[\s\S]*?min-height:\s*calc\(var\(--vitrine-control-height\) - var\(--spacing-1\)\)\s*!important/,
+    /\.discovery-filter-control\.discovery-filter-control :is\(\.apps-filterbar__filter-button\.apps-filterbar__filter-button, \.apps-filterbar__filter-label\)\s*\{[\s\S]*?height:\s*calc\(var\(--vitrine-control-height\) - var\(--spacing-1\)\)\s*!important[\s\S]*?min-height:\s*calc\(var\(--vitrine-control-height\) - var\(--spacing-1\)\)\s*!important/,
   );
   assert.match(
     styles,
-    /:is\(\.apps-filterbar, \.reference-detail__tab-controls, \.quick-search__quick-filters, \.advanced-search-active-filters, \.admin-users-filter-control\) \.apps-filterbar__filter \.apps-filterbar__clear\.apps-filterbar__clear\s*\{[\s\S]*?width:\s*calc\(var\(--vitrine-control-height\) - var\(--spacing-2\)\)\s*!important[\s\S]*?height:\s*calc\(var\(--vitrine-control-height\) - var\(--spacing-2\)\)\s*!important/,
+    /\.discovery-filter-control\.discovery-filter-control \.apps-filterbar__clear\.apps-filterbar__clear\s*\{[\s\S]*?width:\s*calc\(var\(--vitrine-control-height\) - var\(--spacing-2\)\)\s*!important[\s\S]*?height:\s*calc\(var\(--vitrine-control-height\) - var\(--spacing-2\)\)\s*!important/,
   );
 });
 

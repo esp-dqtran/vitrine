@@ -143,11 +143,11 @@ test('renders Vitrines primary actions as white buttons with black content', asy
   assert.match(primaryActionRule, /color:\s*var\(--vitrine-color-on-action-primary\)\s*!important/);
   assert.match(
     styles,
-    /button\[data-variant=["']primary["']\]:hover:not\(:disabled\)\s*\{[^}]*background:\s*color-mix\(in srgb,\s*var\(--vitrine-color-action-primary\) 94%,\s*var\(--vitrine-color-on-action-primary\)\)\s*!important/,
+    /button\[data-variant=["']primary["']\]:hover:not\(:disabled\)\s*\{[^}]*background:\s*color-mix\(\s*in srgb,\s*var\(--vitrine-color-action-primary\) 94%,\s*var\(--vitrine-color-on-action-primary\)\s*\)\s*!important/,
   );
   assert.match(
     styles,
-    /button\[data-variant=["']primary["']\]:active:not\(:disabled\)\s*\{[^}]*background:\s*color-mix\(in srgb,\s*var\(--vitrine-color-action-primary\) 90%,\s*var\(--vitrine-color-on-action-primary\)\)\s*!important/,
+    /button\[data-variant=["']primary["']\]:active:not\(:disabled\)\s*\{[^}]*background:\s*color-mix\(\s*in srgb,\s*var\(--vitrine-color-action-primary\) 90%,\s*var\(--vitrine-color-on-action-primary\)\s*\)\s*!important/,
   );
   assert.doesNotMatch(
     styles,
@@ -212,7 +212,7 @@ test('shares the compact Apps detail presentation with Sites', async () => {
   assert.match(navigationRule, /min-height:\s*var\(--reference-nav-height\)/);
   assert.match(
     navigationRule,
-    /padding-block:\s*calc\(\(var\(--reference-nav-height\) - var\(--vitrine-control-height\)\) \/ 2\)/,
+    /padding-block:\s*calc\(\s*\(var\(--reference-nav-height\) - var\(--vitrine-control-height\)\) \/ 2\s*\)/,
   );
   assert.doesNotMatch(navigationRule, /border-top:/);
   assert.match(tabsRule, /gap:\s*24px/);

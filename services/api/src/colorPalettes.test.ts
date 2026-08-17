@@ -34,6 +34,6 @@ test('returns the authenticated palette library with collection metadata', async
   assert.equal(response.status, 200);
   assert.match(response.headers.get('cache-control') ?? '', /max-age=300/);
   const body = await response.json() as { items: unknown[]; collections: unknown[] };
-  assert.equal(body.items.length, 58);
-  assert.equal(body.collections.length, 8);
+  assert.equal(body.items.length, defaultColorPalettes.length);
+  assert.equal(body.collections.length, defaultColorCollections.length);
 });

@@ -107,7 +107,7 @@ test('interactive workspaces inherit the Vitrines roles without local color syst
     /--(?:color-background-body|reference-chrome-bg|project-document-surface):\s*light-dark\(/,
   );
   assert.match(documentPage, /theme=\{resolvedTheme\}/);
-  assert.match(playground, /theme=\{resolvedTheme\}/);
+  assert.match(playground, /theme=\{canvasTheme\}/);
   assert.doesNotMatch(playground, /theme="light"/);
   assert.match(modalCss, /--astryx-modal-surface:\s*var\(--color-background-popover\)/);
 });

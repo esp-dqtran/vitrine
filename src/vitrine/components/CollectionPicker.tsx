@@ -351,6 +351,16 @@ export function CollectionPicker({
 
   const selectedCanvasDestinations = canvasDestinations.filter(({ project, canvas }) =>
     selectedCanvasKeys.has(`${project.id}:${canvas.id}`));
+  const triggerStyle = dark && buttonVariant !== 'primary'
+    ? {
+        border: '1px solid var(--color-border-emphasized)',
+        background: fullySaved
+          ? 'var(--color-background-muted)'
+          : 'var(--color-background-surface)',
+        color: 'var(--color-text-primary)',
+        borderRadius: 999,
+      }
+    : { borderRadius: 999 };
 
   return (
     <div
@@ -377,16 +387,7 @@ export function CollectionPicker({
           setSelectedDocumentProjectId("");
           setOpen(true);
         }}
-        style={dark && buttonVariant !== 'primary'
-          ? {
-              border: '1px solid var(--color-border-emphasized)',
-              background: fullySaved
-                ? 'var(--color-background-muted)'
-                : 'var(--color-background-surface)',
-              color: 'var(--color-text-primary)',
-              borderRadius: 999,
-            }
-          : { borderRadius: 999 }}
+        style={triggerStyle}
       />
 
       <AstryxModal

@@ -4,7 +4,7 @@ import { Badge, Button, ClickableCard, Icon, IconButton, TextInput } from '@astr
 import type { AdminUser, UserFilter } from '../types.ts';
 import { formatJoinedDate, USER_FILTER_LABELS, userInitial, userPlanLabel } from '../usersPageModel.ts';
 import { AstryxAlertModal } from './AstryxModal.tsx';
-import { AstryxDropdown, AstryxDropdownItem, AstryxMenu } from './AstryxDropdown.tsx';
+import { AstryxMenu, AstryxSingleSelectDropdown } from './AstryxDropdown.tsx';
 
 interface UserDirectoryProps {
   users: AdminUser[];
@@ -117,9 +117,11 @@ function MemberRow({ user, onSetActive, onSetProGrant, onSelectUser }: Pick<User
 
 export function UserDirectory(props: UserDirectoryProps) {
   const sentinel = useRef<HTMLDivElement>(null);
-  const [filterOpen, setFilterOpen] = useState(false);
   const hasFilters = Boolean(props.query.trim()) || props.filter !== 'all';
-  const selectedFilterLabel = USER_FILTER_LABELS[props.filter];
+  const filterOptions = Object.entries(USER_FILTER_LABELS).map(([value, label]) => ({
+    value,
+    label: value === 'all' ? 'Members' : label,
+  }));
 
   useEffect(() => {
     const element = sentinel.current;
@@ -144,26 +146,13 @@ export function UserDirectory(props: UserDirectoryProps) {
         </div>
         <div className="admin-users-filter-control">
           <div className={`apps-filterbar__filter ${props.filter !== 'all' ? 'apps-filterbar__filter--selected' : ''}`}>
-            <AstryxDropdown
-              label={props.filter === 'all' ? 'Members' : selectedFilterLabel}
-              ariaLabel={props.filter === 'all' ? 'Filter members' : `Filter members: ${selectedFilterLabel}`}
-              open={filterOpen}
+            <AstryxSingleSelectDropdown
+              ariaLabel="Filter members"
+              value={props.filter}
+              options={filterOptions}
               triggerClassName="apps-filterbar__filter-button"
-              hasChevron={props.filter === 'all'}
-              onOpenChange={setFilterOpen}
-            >
-              {Object.entries(USER_FILTER_LABELS).map(([value, label]) => (
-                <AstryxDropdownItem
-                  key={value}
-                  label={label}
-                  selected={props.filter === value}
-                  onSelect={() => {
-                    props.onFilterChange(value as UserFilter);
-                    setFilterOpen(false);
-                  }}
-                />
-              ))}
-            </AstryxDropdown>
+              onChange={(value) => props.onFilterChange(value as UserFilter)}
+            />
             {props.filter !== 'all' ? (
               <IconButton
                 label="Clear member filter"

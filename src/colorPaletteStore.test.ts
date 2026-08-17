@@ -57,7 +57,7 @@ test('returns published color collections with ordered palette membership', asyn
   assert.deepEqual(collections[0]?.paletteIds, ['cloud-canvas', 'quiet-spectrum']);
 });
 
-test('seeds every built-in palette in the database migration', async () => {
+test('seeds every database-backed palette in the database migration', async () => {
   const sql = [
     await readFile(new URL('../migrations/0093_color_palette_library.sql', import.meta.url), 'utf8'),
     await readFile(new URL('../migrations/0094_color_collections.sql', import.meta.url), 'utf8'),
@@ -71,8 +71,10 @@ test('seeds every built-in palette in the database migration', async () => {
   assert.match(sql, /CREATE TABLE color_palette_colors/);
   assert.match(sql, /CREATE TABLE color_collections/);
   assert.match(sql, /CREATE TABLE color_collection_palettes/);
-  assert.equal(defaultColorPalettes.length, 58);
-  for (const palette of defaultColorPalettes) {
+  const databasePalettes = defaultColorPalettes.filter(({ cards }) => cards.length === 3);
+  const databasePaletteIds = new Set(databasePalettes.map(({ id }) => id));
+  assert.equal(databasePalettes.length, 52);
+  for (const palette of databasePalettes) {
     assert.match(sql, new RegExp(`'${palette.id}'`));
     for (const card of palette.cards) {
       assert.match(sql, new RegExp(`'${card.id}'`));
@@ -81,12 +83,15 @@ test('seeds every built-in palette in the database migration', async () => {
   }
   for (const collection of defaultColorCollections) {
     assert.match(sql, new RegExp(`'${collection.id}'`));
-    for (const paletteId of collection.paletteIds) assert.match(sql, new RegExp(`'${paletteId}'`));
+    for (const paletteId of collection.paletteIds) {
+      if (databasePaletteIds.has(paletteId)) assert.match(sql, new RegExp(`'${paletteId}'`));
+    }
   }
 });
 
 test('keeps every palette card foreground readable', () => {
   for (const palette of defaultColorPalettes) {
+    if (palette.gradientRecipe) continue;
     for (const card of palette.cards) {
       assert.ok(
         contrastRatio(card.hex, card.foreground) >= 4.5

@@ -64,16 +64,15 @@ test('lazy-loads Users without importing normal application state', async () => 
 test('keeps /admin navigable below the rail breakpoint', async () => {
   const css = await readFile(new URL('./projectsWorkspace.css', import.meta.url), 'utf8');
 
-  // The projects-variant shell renders no header, so hiding the rail below 980px
-  // left Admin with no way to reach Insights or get back out. It reflows instead.
-  assert.doesNotMatch(css, /@media \(max-width: 980px\)[\s\S]*?\.projects-workspace__desktop-rail\s*\{[^}]*display:\s*none;/);
+  // The compact shell keeps the rail available as an off-canvas drawer rather
+  // than removing Admin navigation at the mobile breakpoint.
+  assert.doesNotMatch(css, /@media \(max-width: 700px\)[\s\S]*?\.projects-workspace__desktop-rail\s*\{[^}]*display:\s*none;/);
   assert.match(
     css,
-    /@media \(max-width: 980px\)[\s\S]*?\.projects-workspace__desktop-rail\s*\{[^}]*flex-direction:\s*row;/s,
+    /@media \(max-width: 700px\)[\s\S]*?\.projects-workspace__desktop-rail\s*\{[^}]*position:\s*fixed;[^}]*flex-direction:\s*column;[^}]*transform:\s*translateX\(-100%\);/s,
   );
-  // The identity-only row opens nothing, so it does not spend width in the bar.
   assert.match(
     css,
-    /@media \(max-width: 980px\)[\s\S]*?\.projects-workspace__desktop-workspace--static\s*\{[^}]*display:\s*none;/s,
+    /@media \(max-width: 700px\)[\s\S]*?\.projects-workspace\.is-rail-open \.projects-workspace__desktop-rail\s*\{[^}]*transform:\s*translateX\(0\);/s,
   );
 });

@@ -213,7 +213,7 @@ test('caps the visible Flow result total for public visitors', () => {
     />,
   );
 
-  assert.match(html, /Showing<\/small> <strong>6 flows/);
+  assert.match(html, /Showing<\/small> <strong>12 flows/);
   assert.doesNotMatch(html, /40 flows/);
 });
 

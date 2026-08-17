@@ -23,7 +23,7 @@ test('screen evidence consumers request the best available source', () => {
   assert.match(screenCard, /preserveNaturalAspectRatio=\{screen\.platform !== 'web'\}/);
   assert.match(appsDiscovery, /src=\{screen\.url\}/);
   assert.match(projectLibrary, /src=\{screen\.thumbnailUrl \?\? screen\.url\}/);
-  assert.match(publicPreview, /src=\{screen\.url\}/);
+  assert.match(publicPreview, /<ScreenGridCard[\s\S]*?screen=\{screen\}/);
 });
 
 test('flow evidence remains uncropped across platforms', () => {

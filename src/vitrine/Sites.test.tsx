@@ -198,6 +198,10 @@ const detail: SiteVersionDetail = {
 
 test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', () => {
   const html = renderToStaticMarkup(<SitesPageView controller={siteController()} isAdmin />);
+  const taxonomyHtml = html.slice(
+    html.indexOf('reference-discovery__taxonomy'),
+    html.indexOf('apps-discovery__hover-preview'),
+  );
   assert.match(html, /data-sites-discovery="true"/);
   assert.match(html, /class="[^"]*reference-discovery[^"]*reference-discovery--sites[^"]*"/);
   assert.doesNotMatch(html, /reference-discovery-nav/);
@@ -207,10 +211,10 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.doesNotMatch(html, /sites-discovery__taxonomy-toggle/);
   assert.match(html, /class="[^"]*reference-discovery__facet[^"]*"/);
   assert.match(html, /Categories/);
-  assert.doesNotMatch(html, /Open Sections filters/);
+  assert.doesNotMatch(taxonomyHtml, /Open Sections filters/);
   assert.match(html, /Styles/);
   assert.match(html, /Business/);
-  assert.doesNotMatch(html, /Pricing/);
+  assert.doesNotMatch(taxonomyHtml, /Pricing/);
   assert.match(html, /Minimal/);
   assert.match(html, /data-sites-filterbar="true"/);
   assert.match(html, /aria-label="Site discovery controls"/);
@@ -786,7 +790,7 @@ test('renders images and native videos through the shared media primitives', () 
 
 test('delegates image media-card keyboard activation to ClickableCard', () => {
   const source = readFileSync(new URL('./components/MediaGridCard.tsx', import.meta.url), 'utf8');
-  assert.match(source, /<ClickableCard[\s\S]*label=\{label\}[\s\S]*onClick=\{onOpen\}/);
+  assert.match(source, /<ClickableCard[\s\S]*label=\{label\}[\s\S]*onClick=\{href \? undefined : onOpen\}/);
   assert.doesNotMatch(source, /<button/);
   assert.doesNotMatch(source, /handleMediaCardKeyDown/);
 });

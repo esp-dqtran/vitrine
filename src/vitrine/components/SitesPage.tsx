@@ -27,6 +27,7 @@ export type SiteFacetPreviewPools = Map<string, FacetPreview[]>;
 
 const siteFacetImageCache = new Map<string, Promise<void>>();
 const siteFacetImageReady = new Set<string>();
+const SITE_SECTION_PREVIEW_VALUES = ['Pricing', 'How It Works', 'About', 'FAQ', 'Hero'];
 
 const DISCOVERY_FACETS: Array<{
   group: SiteFacet['group'];
@@ -50,7 +51,7 @@ const DISCOVERY_FACETS: Array<{
   {
     group: 'sections',
     label: 'Sections',
-    defaults: ['Pricing', 'How It Works', 'About', 'FAQ', 'Hero'],
+    defaults: ['How It Works', 'About', 'FAQ', 'Hero'],
     allValues: [
       '404', 'About', 'About Section', 'About Us', 'Blog', 'Brand', 'CTA Section',
       'Call to Action Section', 'Careers', 'Company', 'Comparison', 'Contact',
@@ -82,7 +83,7 @@ const siteFacetPreviewUrl = (preview: FacetPreview) => (
 
 export function buildSiteFacetPreviewPools(sites: SiteSummary[]): SiteFacetPreviewPools {
   const pools: SiteFacetPreviewPools = new Map();
-  const sectionValues = DISCOVERY_FACETS.find(({ group }) => group === 'sections')?.defaults ?? [];
+  const sectionValues = SITE_SECTION_PREVIEW_VALUES;
   const add = (facet: SiteFacet, preview: FacetPreview) => {
     const key = siteFacetKey(facet);
     const pool = pools.get(key) ?? [];
@@ -152,7 +153,8 @@ export function siteFacetPreview(
 export function visibleSiteFacetPreviews(pools: SiteFacetPreviewPools): FacetPreview[] {
   return DISCOVERY_FACETS.flatMap(({ group, defaults }) => {
     if (group === 'styles') return [];
-    return defaults.flatMap((value) => {
+    const values = group === 'sections' ? SITE_SECTION_PREVIEW_VALUES : defaults;
+    return values.flatMap((value) => {
       const preview = pools.get(siteFacetKey({ group, value }))?.[0];
       return preview ? [preview] : [];
     });
