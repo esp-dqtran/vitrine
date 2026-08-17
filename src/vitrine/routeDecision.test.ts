@@ -28,6 +28,7 @@ const admin: RootRouteContext = {
 test('keeps public pages available while authentication is loading', () => {
   const loading = { ...guest, auth: 'loading' as const };
   assert.deepEqual(decideRootRoute({ name: 'pricing' }, loading), { kind: 'public', page: 'pricing' });
+  assert.deepEqual(decideRootRoute({ name: 'terms' }, loading), { kind: 'public', page: 'terms' });
   assert.deepEqual(decideRootRoute({ name: 'build-in-public' }, loading), { kind: 'public', page: 'build-in-public' });
   assert.deepEqual(
     decideRootRoute({ name: 'feature-document-share', token: 'share' }, loading),
@@ -158,6 +159,9 @@ test('produces an explicit decision for every current route name', () => {
     { name: 'not-found', pathname: '/missing' },
     { name: 'build-in-public' },
     { name: 'pricing' },
+    { name: 'terms' },
+    { name: 'privacy' },
+    { name: 'refunds' },
     { name: 'billing-success' },
     { name: 'settings-billing' },
     { name: 'signin' },

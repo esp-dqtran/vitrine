@@ -109,6 +109,13 @@ test("round-trips the public build-in-public route", () => {
   assert.equal(routeToPath({ name: "build-in-public" }), "/build-in-public");
 });
 
+test("round-trips the public legal routes", () => {
+  for (const [path, name] of [["/terms", "terms"], ["/privacy", "privacy"], ["/refunds", "refunds"]] as const) {
+    assert.deepEqual(parseRoutePath(path), { name });
+    assert.equal(routeToPath({ name }), path);
+  }
+});
+
 test("keeps the standalone Feature Document editor removed while preserving public share routes", () => {
   assert.deepEqual(parseRoutePath("/feature-documents/12"), {
     name: "not-found",

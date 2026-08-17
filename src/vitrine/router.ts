@@ -34,6 +34,9 @@ export type Route =
   | { name: "not-found"; pathname: string }
   | { name: "build-in-public" }
   | { name: "pricing" }
+  | { name: "terms" }
+  | { name: "privacy" }
+  | { name: "refunds" }
   | { name: "billing-success" }
   | { name: "settings-billing" }
   | { name: "signin" }
@@ -139,6 +142,9 @@ export function parseRoutePath(pathname: string): Route {
   if (path === "/" || path === "/landing") return { name: "landing" };
   if (path === "/build-in-public") return { name: "build-in-public" };
   if (path === "/pricing") return { name: "pricing" };
+  if (path === "/terms") return { name: "terms" };
+  if (path === "/privacy") return { name: "privacy" };
+  if (path === "/refunds") return { name: "refunds" };
   if (path === "/billing/success") return { name: "billing-success" };
   if (path === "/settings/billing") return { name: "settings-billing" };
   if (path === "/signin") return { name: "signin" };
@@ -418,6 +424,12 @@ export function routeToPath(route: Route): string {
       return "/build-in-public";
     case "pricing":
       return "/pricing";
+    case "terms":
+      return "/terms";
+    case "privacy":
+      return "/privacy";
+    case "refunds":
+      return "/refunds";
     case "billing-success":
       return "/billing/success";
     case "settings-billing":

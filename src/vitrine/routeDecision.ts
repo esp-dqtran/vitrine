@@ -22,6 +22,9 @@ export type RootRouteDecision =
         | "not-found"
         | "build-in-public"
         | "pricing"
+        | "terms"
+        | "privacy"
+        | "refunds"
         | "billing-success"
         | "forgot-password"
         | "reset-password"
@@ -46,6 +49,9 @@ export function decideRootRoute(
     route.name === "browse-reset-password" ||
     route.name === "browse-not-found" ||
     route.name === "pricing" ||
+    route.name === "terms" ||
+    route.name === "privacy" ||
+    route.name === "refunds" ||
     route.name === "build-in-public" ||
     route.name === "feature-document-share" ||
     route.name === "not-found"

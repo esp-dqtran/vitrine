@@ -48,6 +48,7 @@ import './threadsMarketing.css';
 import './components/ColorPackStack.css';
 import './colorGallery.css';
 import './colorPostStudio.css';
+import './legalPages.css';
 
 // No token overrides — @astryxdesign/core/astryx.css already ships Vitrines' palette at :root.
 // This theme object exists only so <Theme> can drive data-theme (and thus color-scheme) from `mode`.
@@ -58,6 +59,7 @@ const AdminDashboard = lazy(() => import('./AdminDashboard').then((module) => ({
 const Home = lazy(() => import('./Home').then((module) => ({ default: module.Home })));
 const BuildInPublicPage = lazy(() => import('./BuildInPublic').then((module) => ({ default: module.BuildInPublicPage })));
 const Pricing = lazy(() => import('./Pricing').then((module) => ({ default: module.Pricing })));
+const LegalPage = lazy(() => import('./LegalPages.tsx').then((module) => ({ default: module.LegalPage })));
 const CatalogPricingPage = lazy(() => import('./components/CatalogPricingPage.tsx')
   .then((module) => ({ default: module.CatalogPricingPage })));
 const CatalogBuildInPublicPage = lazy(() => import('./components/CatalogStaticPages.tsx')
@@ -154,6 +156,10 @@ function Root() {
           );
         case 'pricing':
           return <Pricing user={user} onBrowse={goApps} onSignIn={goSignIn} />;
+        case 'terms':
+        case 'privacy':
+        case 'refunds':
+          return <LegalPage page={decision.page} onBrowse={goApps} onSignIn={goSignIn} />;
         case 'feature-document-share':
           return route.name === 'feature-document-share'
             ? <FeatureDocumentSharePage token={route.token} />
@@ -205,6 +211,20 @@ function RouteStatusPage({ title, onBack }: { title: string; onBack: () => void 
   );
 }
 
+function PublicLegalFooter() {
+  const route = useRoute();
+  if (route.name === 'terms' || route.name === 'privacy' || route.name === 'refunds') return null;
+  return (
+    <footer className="site-legal-footer">
+      <nav aria-label="Legal information">
+        <a href="/terms">Terms</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/refunds">Refunds</a>
+      </nav>
+    </footer>
+  );
+}
+
 function ThemedRoot() {
   const { mode } = useThemeMode();
   const locationKey = useLocationKey();
@@ -224,6 +244,7 @@ function ThemedRoot() {
         <AuthProvider>
           <Suspense fallback={<FullPageSpinner />}>
             <Root />
+            <PublicLegalFooter />
           </Suspense>
         </AuthProvider>
       </ApplicationToastProvider>
