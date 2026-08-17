@@ -55,8 +55,10 @@ export function initializeAnalytics() {
 
 export function trackAnalyticsEvent(name: string, properties?: AnalyticsProperties) {
   if (!initialized) return;
+  const url = globalThis.location.href;
   posthog.capture(name, {
-    path: analyticsPathname(globalThis.location.href),
+    path: analyticsPathname(url),
+    $current_url: analyticsPageUrl(url),
     ...properties,
   });
 }
