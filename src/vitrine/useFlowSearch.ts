@@ -6,8 +6,6 @@ interface FlowSearchInput {
   enabled: boolean;
   query: string;
   platform: Platform;
-  appCategory?: string;
-  flowTag?: string;
 }
 
 /**
@@ -19,8 +17,6 @@ export function useFlowSearch({
   enabled,
   query,
   platform,
-  appCategory,
-  flowTag,
 }: FlowSearchInput) {
   const [result, setResult] = useState<FlowCatalogPage | null>(null);
   const [loading, setLoading] = useState(false);
@@ -39,7 +35,6 @@ export function useFlowSearch({
       void loadFlowCatalogPage({
         platform,
         query,
-        ...(flowTag ? { flowGroups: [flowTag] } : {}),
       }, controller.signal)
         .then((next) => {
           if (!controller.signal.aborted) setResult(next);
@@ -55,7 +50,7 @@ export function useFlowSearch({
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [appCategory, enabled, flowTag, platform, query]);
+  }, [enabled, platform, query]);
 
   return { result, loading, error };
 }

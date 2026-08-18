@@ -98,7 +98,7 @@ export function DiscoveryFilterOptionCheckbox({
       }}
     >
       <CheckboxInput
-        label={option.value}
+        label={option.label ?? option.value}
         value={selected}
         size="sm"
         width="100%"
@@ -234,6 +234,7 @@ export function DiscoveryPlatformFilterOptions({
 
 export interface DiscoveryFilterOption {
   value: string;
+  label?: string;
   section: string;
   count?: number;
   previewUrl?: string | null;

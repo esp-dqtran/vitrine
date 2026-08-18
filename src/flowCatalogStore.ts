@@ -16,6 +16,7 @@ export { FlowCatalogCursorError } from "./flowCatalogCursor.ts";
 
 export interface FlowCatalogItem {
   category: string;
+  type?: string;
   title: string;
   preview: {
     appId: string;
@@ -278,9 +279,16 @@ export function minimumFlowCatalogTermMatches(termCount: number): number {
   return Math.max(1, Math.ceil(termCount * 0.65));
 }
 
-function normalizedGroups(values: readonly string[] | undefined): string[] {
+function normalizedCategories(values: readonly string[] | undefined): string[] {
   return [...new Set((values ?? [])
     .map(normalizeStoredFlowTaxonomyKey)
+    .filter(Boolean))]
+    .sort();
+}
+
+function normalizedTypes(values: readonly string[] | undefined): string[] {
+  return [...new Set((values ?? [])
+    .map((value) => value.trim().toLocaleLowerCase("en-US"))
     .filter(Boolean))]
     .sort();
 }
@@ -288,6 +296,11 @@ function normalizedGroups(values: readonly string[] | undefined): string[] {
 function commonCtes(): string {
   const parentName = "COALESCE(parent.name, 'Other Flows')";
   const parentKey = "COALESCE(parent.normalized_name, 'other flows')";
+  const categoryName = "COALESCE(classified_category.name, " + parentName + ")";
+  const categoryKey = "COALESCE(classified_category.slug, " + parentKey + ")";
+  const categoryId = "COALESCE(classified_category.id, parent.id, 0)::bigint";
+  const typeName = "COALESCE(classified_type.name, 'Other content detail')";
+  const typeKey = "COALESCE(classified_category.slug || '/' || classified_type.slug, 'content-detail/other-content-detail')";
   const titleKey = "canonical.normalized_name";
   const titleTermMatch = `(CASE
     WHEN left(search_term.term, 1) = ' ' THEN ${titleKey} ~
@@ -310,17 +323,19 @@ function commonCtes(): string {
         AND av.published_at <= $2::timestamptz
       ORDER BY av.app_id, av.published_at DESC, av.version_number DESC, av.id DESC
     ), page_limit AS MATERIALIZED (
-      -- $6 (the page LIMIT) is only referenced by pageSql, not by metadataSql's own
+      -- $8 (the page LIMIT) is only referenced by pageSql, not by metadataSql's own
       -- text. Postgres can't infer a type for a parameter absent from the whole
       -- query, so metadataSql (which shares these CTEs) fails to parse without this
-      -- no-op typed reference keeping $6 resolvable in both queries.
-      SELECT $6::int AS value
+      -- no-op typed reference keeping $8 resolvable in both queries.
+      SELECT $8::int AS value
     ), relevant_taxonomy AS (
       SELECT
         canonical.id AS flow_id,
-        COALESCE(parent.id, 0)::bigint AS category_id,
-        ${parentName} AS category,
-        ${parentKey} AS category_key,
+        ${categoryId} AS category_id,
+        ${categoryName} AS category,
+        ${categoryKey} AS category_key,
+        ${typeName} AS flow_type,
+        ${typeKey} AS flow_type_key,
         canonical.name AS title,
         ${titleKey} AS title_key,
         relevance.exact_match,
@@ -328,6 +343,13 @@ function commonCtes(): string {
         relevance.term_matches
       FROM flows canonical
       LEFT JOIN flows parent ON parent.id = canonical.parent_id
+      LEFT JOIN flow_classifications classification
+        ON classification.flow_id = canonical.id
+       AND classification.status = 'approved'
+      LEFT JOIN flow_types classified_type
+        ON classified_type.id = classification.flow_type_id
+      LEFT JOIN flow_categories classified_category
+        ON classified_category.id = classified_type.category_id
       CROSS JOIN LATERAL (
         SELECT
           CASE WHEN $3 <> '' AND (
@@ -344,14 +366,14 @@ function commonCtes(): string {
           COUNT(*) FILTER (
             WHERE ${titleTermMatch} OR ${parentTermMatch}
           )::int AS term_matches
-        FROM unnest($7::text[]) AS search_term(term)
+        FROM unnest($9::text[]) AS search_term(term)
       ) relevance
       WHERE canonical.created_at <= $2::timestamptz
         AND (parent.id IS NULL OR parent.created_at <= $2::timestamptz)
         AND (
           $3 = ''
           OR relevance.exact_match = 1
-          OR relevance.term_matches >= $8::int
+          OR relevance.term_matches >= $10::int
         )
     ), instances AS (
       SELECT
@@ -371,6 +393,8 @@ function commonCtes(): string {
         taxonomy.category_id,
         taxonomy.category,
         taxonomy.category_key,
+        taxonomy.flow_type,
+        taxonomy.flow_type_key,
         taxonomy.title,
         taxonomy.title_key,
         taxonomy.exact_match,
@@ -381,7 +405,8 @@ function commonCtes(): string {
     ), filtered_items AS (
       SELECT *
       FROM grouped_all
-      WHERE NOT $5::boolean OR category_key = ANY($4::text[])
+      WHERE (NOT $6::boolean OR category_key = ANY($4::text[]))
+        AND (NOT $7::boolean OR flow_type_key = ANY($5::text[]))
     )`;
 }
 
@@ -399,8 +424,8 @@ function keyset(cursor: FlowCatalogCursor | undefined): { sql: string; values: u
         ranked.category_id,
         ranked.flow_id
       ) > ROW(
-        -$9::int, -$10::int, -$11::int, $12::int, $13::text, $14::text,
-        $15::bigint, $16::bigint
+        -$11::int, -$12::int, -$13::int, $14::int, $15::text, $16::text,
+        $17::bigint, $18::bigint
       )`,
     values: [
       key.exactMatch,
@@ -438,7 +463,7 @@ function pageSql(after: string): string {
       FROM ranked
       ${after}
       ORDER BY ${order}
-      LIMIT $6
+      LIMIT $8
     ), representatives AS (
       SELECT DISTINCT ON (instances.flow_id)
         instances.flow_id,
@@ -475,6 +500,8 @@ function pageSql(after: string): string {
       paged.category_id,
       paged.category,
       paged.category_key,
+      paged.flow_type,
+      paged.flow_type_key,
       paged.category_sort,
       paged.title,
       paged.title_key,
@@ -500,26 +527,40 @@ function pageSql(after: string): string {
 }
 
 const metadataSql = `WITH ${commonCtes()},
-  facet_items AS (
+  category_facet_items AS (
     SELECT category, category_key, COUNT(*)::int AS count
     FROM grouped_all
     GROUP BY category, category_key
+  ), type_facet_items AS (
+    SELECT flow_type, flow_type_key, COUNT(*)::int AS count
+    FROM grouped_all
+    GROUP BY flow_type, flow_type_key
   )
   SELECT
     (SELECT COUNT(*)::int FROM filtered_items) AS total_count,
     COALESCE((
       SELECT jsonb_agg(
         jsonb_build_object(
-          'group', 'flowGroups',
-          'value', category,
+          'group', 'flowCategories',
+          'value', category_key,
           'count', count
         )
         ORDER BY
-          CASE WHEN category = 'Other Flows' THEN 1 ELSE 0 END,
+          CASE WHEN category = 'Other content detail' THEN 1 ELSE 0 END,
           count DESC,
           category_key
       )
-      FROM facet_items
+      FROM category_facet_items
+    ), '[]'::jsonb) || COALESCE((
+      SELECT jsonb_agg(
+        jsonb_build_object(
+          'group', 'flowTypes',
+          'value', flow_type_key,
+          'count', count
+        )
+        ORDER BY count DESC, flow_type_key
+      )
+      FROM type_facet_items
     ), '[]'::jsonb) AS facets`;
 
 function itemFromRow(row: Record<string, unknown>, platform: Platform): FlowCatalogItem {
@@ -561,6 +602,7 @@ function itemFromRow(row: Record<string, unknown>, platform: Platform): FlowCata
   });
   return {
     category: String(row.category),
+    type: String(row.flow_type),
     title: String(row.title),
     preview: {
       appId,
@@ -610,7 +652,8 @@ interface PublishedFlowCatalogPageInput {
   cursor?: string;
   limit?: number;
   sort?: FlowCatalogSort;
-  flowGroups?: readonly string[];
+  flowCategories?: readonly string[];
+  flowTypes?: readonly string[];
   cursorSecret: string;
   facetCache?: FlowCatalogFacetCache;
   includeFacets?: boolean;
@@ -620,8 +663,9 @@ interface PublishedFlowCatalogPageInput {
 
 function pageCacheKey(input: PublishedFlowCatalogPageInput): string {
   const search = normalizeFlowCatalogText(input.query ?? "").slice(0, 120);
-  const flowGroups = normalizedGroups(input.flowGroups);
-  const identity = flowCatalogQueryIdentity({ query: search, flowGroups });
+  const flowCategories = normalizedCategories(input.flowCategories);
+  const flowTypes = normalizedTypes(input.flowTypes);
+  const identity = flowCatalogQueryIdentity({ query: search, flowCategories, flowTypes });
   return [
     flowCatalogQueryIdentity({ query: input.cursorSecret }),
     input.platform,
@@ -641,8 +685,9 @@ async function loadPublishedFlowCatalogPage(
   const search = normalizeFlowCatalogText(input.query ?? "").slice(0, 120);
   const searchTerms = flowCatalogSearchTerms(search);
   const minimumTermMatches = minimumFlowCatalogTermMatches(searchTerms.length);
-  const flowGroups = normalizedGroups(input.flowGroups);
-  const identity = flowCatalogQueryIdentity({ query: search, flowGroups });
+  const flowCategories = normalizedCategories(input.flowCategories);
+  const flowTypes = normalizedTypes(input.flowTypes);
+  const identity = flowCatalogQueryIdentity({ query: search, flowCategories, flowTypes });
   const cursor = input.cursor
     ? decodeFlowCatalogCursor(input.cursor, {
         sort,
@@ -657,8 +702,10 @@ async function loadPublishedFlowCatalogPage(
     input.platform,
     snapshotAt,
     search,
-    flowGroups,
-    flowGroups.length > 0,
+    flowCategories,
+    flowTypes,
+    flowCategories.length > 0,
+    flowTypes.length > 0,
     limit + 1,
     searchTerms,
     minimumTermMatches,
@@ -671,7 +718,7 @@ async function loadPublishedFlowCatalogPage(
   const pageResultPromise = runQuery(pageSql(after.sql), values);
   const metadataResultPromise = input.includeFacets === false || metadata
     ? null
-    : runQuery(metadataSql, values.slice(0, 8));
+    : runQuery(metadataSql, values.slice(0, 10));
   const [result, metadataResult] = await Promise.all([
     pageResultPromise,
     metadataResultPromise,

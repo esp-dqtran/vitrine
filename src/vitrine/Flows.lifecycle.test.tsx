@@ -154,6 +154,7 @@ const flowItem = (
   sourceFlowId = '7230',
 ): Record<string, unknown> => ({
   category: 'Account Management',
+  type: 'Sign out',
   title,
   preview: {
     appId: 'whatsapp',
@@ -190,8 +191,8 @@ const response = (
   nextCursor,
   totalCount: 2,
   facets: [
-    { group: 'flowGroups', value: 'Account Management', count: 1 },
-    { group: 'flowGroups', value: 'New User Experience', count: 1 },
+    { group: 'flowCategories', value: 'account-settings', count: 1 },
+    { group: 'flowTypes', value: 'onboarding/create-account', count: 1 },
   ],
 }));
 
@@ -200,7 +201,7 @@ const settle = () => new Promise<void>((resolve) => setImmediate(resolve));
 test('mounts one StrictMode Flows controller with URL hydration, infinite scroll, history, and popstate', async () => {
   const dom = installDom(
     '/flows?platform=ios&sort=grouped&query=settings'
-      + '&filter=flowGroups.Account%20Management',
+      + '&filter=flowCategories.account-settings',
   );
   const timers = installFakeTimers();
   const originalFetch = globalThis.fetch;
@@ -255,7 +256,7 @@ test('mounts one StrictMode Flows controller with URL hydration, infinite scroll
     });
     assert.deepEqual(requests.map(({ url }) => url), [
       '/api/flows/search?platform=ios&limit=12&facets=summary&query=settings&sort=grouped'
-        + '&filter=flowGroups.Account+Management',
+        + '&filter=flowCategories.account-settings',
     ]);
 
     await act(async () => {
@@ -265,7 +266,7 @@ test('mounts one StrictMode Flows controller with URL hydration, infinite scroll
     assert.equal(
       requests[1]?.url,
       '/api/flows/search?platform=ios&limit=12&facets=summary&query=settings&sort=grouped'
-        + '&filter=flowGroups.Account+Management&cursor=page-2',
+        + '&filter=flowCategories.account-settings&cursor=page-2',
     );
     assert.deepEqual(
       (controller as DiscoveryController<
@@ -288,26 +289,26 @@ test('mounts one StrictMode Flows controller with URL hydration, infinite scroll
     assert.equal(
       requests[2]?.url,
       '/api/flows/search?platform=ios&limit=12&facets=summary&query=onboarding&sort=grouped'
-        + '&filter=flowGroups.Account+Management',
+        + '&filter=flowCategories.account-settings',
     );
     assert.equal(dom.historyCalls[0]?.mode, 'replace');
 
     await act(async () => {
       controller?.toggleFilter({
-        group: 'flowGroups',
-        value: 'New User Experience',
+        group: 'flowTypes',
+        value: 'onboarding/create-account',
       });
       await settle();
     });
     assert.equal(requests.length, 4);
-    assert.match(requests[3]?.url ?? '', /filter=flowGroups.Account\+Management/);
-    assert.match(requests[3]?.url ?? '', /filter=flowGroups.New\+User\+Experience/);
+    assert.match(requests[3]?.url ?? '', /filter=flowCategories.account-settings/);
+    assert.match(requests[3]?.url ?? '', /filter=flowTypes.onboarding%2Fcreate-account/);
     assert.equal(dom.historyCalls[1]?.mode, 'push');
 
     await act(async () => {
       dom.pop(
         '/flows?platform=android&sort=popular&query=back'
-          + '&filter=flowGroups.New%20User%20Experience',
+          + '&filter=flowTypes.onboarding%2Fcreate-account',
       );
       await settle();
     });
@@ -315,7 +316,7 @@ test('mounts one StrictMode Flows controller with URL hydration, infinite scroll
     assert.equal(
       requests[4]?.url,
       '/api/flows/search?platform=android&limit=12&facets=summary&query=back&sort=grouped'
-        + '&filter=flowGroups.New+User+Experience',
+        + '&filter=flowTypes.onboarding%2Fcreate-account',
     );
 
     await act(async () => {
@@ -330,7 +331,7 @@ test('mounts one StrictMode Flows controller with URL hydration, infinite scroll
     assert.equal(
       requests[5]?.url,
       '/api/flows?platform=android&limit=12&facets=summary&sort=grouped'
-        + '&filter=flowGroups.New+User+Experience',
+        + '&filter=flowTypes.onboarding%2Fcreate-account',
     );
     assert.equal(dom.historyCalls.at(-1)?.mode, 'replace');
     assert.doesNotMatch(dom.historyCalls.at(-1)?.path ?? '', /query=/);

@@ -755,6 +755,7 @@ test("completeImport writes object metadata and graph before the final ready tra
   const objects: ObjectMetadata[] = [
     metadata("sites/source.json", "application/json"),
     metadata("sites/preview.png", "image/png"),
+    metadata("sites/preview-poster.webp", "image/webp"),
     metadata("sites/page.png", "image/png"),
     metadata("sites/section.png", "image/png"),
   ];
@@ -765,6 +766,7 @@ test("completeImport writes object metadata and graph before the final ready tra
     objectKeys: {
       source: "sites/source.json",
       preview: "sites/preview.png",
+      poster: "sites/preview-poster.webp",
       pages: { "page-1": "sites/page.png" },
       sections: { "section-1": { media: "sites/section.png" } },
     },

@@ -195,12 +195,14 @@ export async function retryTransientFlowIngestion<T>(
 // severely (sub-second early on, 40+ seconds per click by ~100 selections). Plain
 // Playwright automation (this file) doesn't carry that instrumentation overhead.
 //
-// Works for both the Screens and UI Elements tabs — same grid markup, same hidden
-// aria-pressed checkbox per card, and element cards still link to /screens/. Cards are
-// matched by the app-owned label (normally the image alt-text, with the anchor's accessible
-// label as a fallback). A few Mobbin screens use generic image alts such as "Animation
-// keyframe" while their anchor still says "<App> screen"; relying on the image alone drops
-// those cards from an otherwise complete export.
+// Works for both the Screens and UI Elements tabs — each card has a hidden aria-pressed
+// checkbox alongside its /screens/ link. Mobbin's current UI Elements page no longer wraps
+// these cards in a `div.grid`, so selection deliberately discovers cards from their links
+// rather than imposing a layout-class requirement. Cards are matched by the app-owned label
+// (normally the image alt-text, with the anchor's accessible label as a fallback). A few
+// Mobbin screens use generic image alts such as "Animation keyframe" while their anchor still
+// says "<App> screen"; relying on the image alone drops those cards from an otherwise complete
+// export.
 export function shouldSelectCard(tab: BulkTab, cardAlt: string, appAltPrefix: string, cardLabel = ""): boolean {
   if (tab === "ui-elements") return true;
   const prefix = appAltPrefix.toLowerCase();
@@ -244,28 +246,23 @@ async function selectAllOwnCards(
   const selectionDelay = tab === "ui-elements" ? 450 : SCROLL_DELAY_MS;
   const bottomStability = tab === "ui-elements" ? 12 : STABLE_AT_BOTTOM_STREAK;
   const selectVisibleCards = () => page.evaluate(({ prefix, includeEveryCard, targetHrefs }) => {
-    // Only grids that actually hold screen links — excludes the unrelated "similar apps"
-    // icon carousel, which uses the same "content-start" class but no /screens/ hrefs.
-    const grids = Array.from(document.querySelectorAll("div.grid")).filter(
-      (g) => g.className.includes("content-start") && g.querySelectorAll('a[href*="/screens/"]').length > 0
-    );
     let clicked = 0;
     let skipped = 0;
-    for (const g of grids) {
-      for (const a of Array.from(g.querySelectorAll('a[href*="/screens/"]'))) {
-        if (targetHrefs.length > 0 && !targetHrefs.includes(a.getAttribute("href") || "")) continue;
-        const cardAlt = a.querySelector("img")?.getAttribute("alt") || "";
-        const cardLabel = a.getAttribute("aria-label") || "";
-        const checkbox = a.parentElement?.querySelector('button[aria-pressed="false"]') as HTMLButtonElement | null;
-        if (!checkbox) continue;
-        const ownedByApp = cardAlt.toLowerCase().startsWith(prefix) || cardLabel.toLowerCase().startsWith(prefix);
-        if (!includeEveryCard && !ownedByApp) {
-          skipped++;
-          continue;
-        }
-        checkbox.click();
-        clicked++;
+    // Card links are retained across Mobbin's responsive layouts, unlike the grid wrapper.
+    // For Screens, the app-label check still excludes any unrelated recommendations below.
+    for (const a of Array.from(document.querySelectorAll('a[href*="/screens/"]'))) {
+      if (targetHrefs.length > 0 && !targetHrefs.includes(a.getAttribute("href") || "")) continue;
+      const cardAlt = a.querySelector("img")?.getAttribute("alt") || "";
+      const cardLabel = a.getAttribute("aria-label") || "";
+      const checkbox = a.parentElement?.querySelector('button[aria-pressed="false"]') as HTMLButtonElement | null;
+      if (!checkbox) continue;
+      const ownedByApp = cardAlt.toLowerCase().startsWith(prefix) || cardLabel.toLowerCase().startsWith(prefix);
+      if (!includeEveryCard && !ownedByApp) {
+        skipped++;
+        continue;
       }
+      checkbox.click();
+      clicked++;
     }
     return { clicked, skipped };
   }, { prefix: appAltPrefix, includeEveryCard: tab === "ui-elements", targetHrefs });

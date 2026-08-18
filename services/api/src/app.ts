@@ -114,6 +114,12 @@ import {
   FlowCatalogCursorError,
   publishedFlowCatalogPage,
 } from "../../../src/flowCatalogStore.ts";
+import {
+  createFlowTaxonomyStore,
+  FlowTaxonomyNotFoundError,
+  FlowTaxonomyValidationError,
+  parseFlowClassificationInput,
+} from "../../../src/flowTaxonomyStore.ts";
 import { mountFlowMcpRoute } from "./flowMcp.ts";
 import { createCategoryStore } from "../../../src/categoryStore.ts";
 import {
@@ -384,6 +390,9 @@ const categoryStore = createCategoryStore(
   (work) => withTransaction((client) =>
     work((sql, values) => client.query(sql, values ? [...values] : undefined))),
 );
+const flowTaxonomyStore = createFlowTaxonomyStore(
+  (sql, values) => query(sql, values ? [...values] : undefined),
+);
 
 const defaults = {
   query,
@@ -423,6 +432,7 @@ const defaults = {
   publishedFacetPreviews,
   publishedFlowCatalogPage,
   categoryStore,
+  flowTaxonomyStore,
   catalogStats,
   listPublishedDesignSystems,
   listPublishedFlowSets,
@@ -658,17 +668,38 @@ function catalogFilters(value: unknown): DiscoveryFilter[] | null {
   return filters;
 }
 
-function flowCatalogFilters(value: unknown): string[] | null {
+interface FlowCatalogFilters {
+  flowCategories: string[];
+  flowTypes: string[];
+}
+
+function flowCatalogFilters(value: unknown): FlowCatalogFilters | null {
   const tokens = Array.isArray(value) ? value : value === undefined ? [] : [value];
   if (tokens.length > 40) return null;
-  const values: string[] = [];
+  const flowCategories: string[] = [];
+  const flowTypes: string[] = [];
   for (const raw of tokens) {
-    if (typeof raw !== "string" || !raw.startsWith("flowGroups.")) return null;
-    const filterValue = raw.slice("flowGroups.".length).trim();
+    if (typeof raw !== "string") return null;
+    const separator = raw.indexOf(".");
+    const group = raw.slice(0, separator);
+    const filterValue = raw.slice(separator + 1).trim();
     if (!filterValue || filterValue.length > 120) return null;
-    values.push(filterValue);
+    if (group === "flowCategories" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(filterValue)) {
+      flowCategories.push(filterValue);
+      continue;
+    }
+    if (group === "flowTypes"
+      && /^[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(filterValue)) {
+      flowTypes.push(filterValue);
+      continue;
+    }
+    return null;
   }
-  return values;
+  return { flowCategories, flowTypes };
+}
+
+function flowFacetGroup(value: unknown): "flowCategories" | "flowTypes" | undefined {
+  return value === "flowCategories" || value === "flowTypes" ? value : undefined;
 }
 
 function facetSearchValues(value: unknown, maximumItems = 40): string[] | null {
@@ -1291,6 +1322,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.json({ categories: await deps.categoryStore.listPublished() });
   });
 
+  app.get("/flow-taxonomy", async (_req, res) => {
+    res.setHeader("Cache-Control", "public, max-age=300");
+    res.json({ categories: await deps.flowTaxonomyStore.listPublished() });
+  });
+
   const listFlows = async (req: express.Request, res: express.Response) => {
     const isCatalogLimited = await isCatalogLimitedRequest(req);
     const isSearchRequest = req.path === "/flows/search";
@@ -1312,7 +1348,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         : null;
     const requestedSort = req.query.sort;
     const legacyView = req.query.view;
-    const flowGroups = flowCatalogFilters(req.query.filter);
+    const flowFilters = flowCatalogFilters(req.query.filter);
     const sort = "grouped";
     const includeFacets = req.query.facets !== "summary";
     if (!platform
@@ -1323,7 +1359,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       || (limit !== undefined && limit > 100)
       || search === null
       || (search !== undefined && search.length > 120)
-      || flowGroups === null
+      || flowFilters === null
       || (req.query.facets !== undefined && req.query.facets !== "summary")
       || (requestedSort !== undefined
         && requestedSort !== "popular"
@@ -1360,7 +1396,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         const result = await deps.typesenseFlowCatalog.search({
           query: search!,
           platform,
-          flowGroups,
+          ...flowFilters,
           page: typesensePage,
           ...(pageLimit ? { limit: pageLimit } : {}),
         });
@@ -1372,7 +1408,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           outcome: "success",
           durationMs,
           platform,
-          filterCount: flowGroups.length,
+          filterCount: flowFilters.flowCategories.length + flowFilters.flowTypes.length,
         }));
         const page = {
           items: result.items,
@@ -1392,7 +1428,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           outcome: "fallback",
           durationMs,
           platform,
-          filterCount: flowGroups.length,
+          filterCount: flowFilters.flowCategories.length + flowFilters.flowTypes.length,
         }));
       }
     }
@@ -1404,7 +1440,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         ...(includeFacets ? {} : { includeFacets: false }),
         ...(search ? { query: search } : {}),
         sort,
-        flowGroups,
+        ...flowFilters,
         cursorSecret: deps.mediaSigningSecret,
       });
       res.setHeader("Cache-Control", "public, max-age=300");
@@ -1431,12 +1467,14 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const platform = platformQuery(req.query.platform);
     const search = facetSearchText(req.query.query);
     const facetQuery = facetSearchText(req.query.facet_query);
-    const flowGroups = flowCatalogFilters(req.query.filter);
+    const flowFilters = flowCatalogFilters(req.query.filter);
+    const group = flowFacetGroup(req.query.group);
     const selected = facetSearchValues(req.query.selected);
     if (!platform
       || search === null
       || facetQuery === null
-      || flowGroups === null
+      || flowFilters === null
+      || !group
       || selected === null) {
       res.status(400).json({ error: "invalid Flow facet query" });
       return;
@@ -1445,14 +1483,14 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       platform,
       limit: 1,
       ...(search ? { query: search } : {}),
-      flowGroups,
+      ...flowFilters,
       includeFacets: true,
       cursorSecret: deps.mediaSigningSecret,
     });
     res.setHeader("Cache-Control", "public, max-age=300");
     res.json({
       facets: searchDiscoveryFacets(page.facets, {
-        group: "flowGroups",
+        group,
         ...(facetQuery ? { query: facetQuery } : {}),
         selected,
       }),
@@ -1844,6 +1882,57 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       : {}),
   });
   mountThreadsMarketingRoutes(app, requireAdmin, threadsMarketingService);
+
+  app.get("/admin/flow-classifications", requireAdmin, async (req, res) => {
+    if (Object.keys(req.query).some((key) => key !== "limit")) {
+      res.status(400).json({ error: "invalid Flow classification review query" });
+      return;
+    }
+    const rawLimit = req.query.limit;
+    if (rawLimit !== undefined && (typeof rawLimit !== "string" || !/^[1-9]\d*$/.test(rawLimit))) {
+      res.status(400).json({ error: "invalid Flow classification review query" });
+      return;
+    }
+    try {
+      res.json({ items: await deps.flowTaxonomyStore.listReviewQueue(
+        rawLimit === undefined ? undefined : Number(rawLimit),
+      ) });
+    } catch (error) {
+      if (error instanceof FlowTaxonomyValidationError) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+      throw error;
+    }
+  });
+
+  app.put("/admin/flow-classifications/:flowId", requireAdmin, async (req, res) => {
+    const flowId = Number(req.params.flowId);
+    if (!Number.isSafeInteger(flowId) || flowId < 1) {
+      res.status(400).json({ error: "invalid Flow id" });
+      return;
+    }
+    try {
+      const input = parseFlowClassificationInput(req.body);
+      const classification = await deps.flowTaxonomyStore.saveClassification({
+        flowId,
+        ...input,
+        source: "manual",
+        reviewedByUserId: res.locals.user.id,
+      });
+      res.json({ classification });
+    } catch (error) {
+      if (error instanceof FlowTaxonomyValidationError) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+      if (error instanceof FlowTaxonomyNotFoundError) {
+        res.status(404).json({ error: error.message });
+        return;
+      }
+      throw error;
+    }
+  });
 
   mountFlowMcpRoute(app, {
     appUrl: deps.appUrl,

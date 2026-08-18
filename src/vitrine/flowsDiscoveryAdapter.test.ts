@@ -8,6 +8,7 @@ import {
 
 const apiItem = {
   category: 'Account Management',
+  type: 'Sign out',
   title: 'Logging out',
   preview: {
     appId: 'whatsapp',
@@ -45,16 +46,16 @@ const envelope = (
   nextCursor,
   totalCount,
   facets: [
-    { group: 'flowGroups', value: 'Account Management', count: 17 },
-    { group: 'flowGroups', value: 'New User Experience', count: 8 },
+    { group: 'flowCategories', value: 'account-settings', count: 17 },
+    { group: 'flowTypes', value: 'authentication/sign-out', count: 8 },
   ],
 });
 
-test('parses and serializes URL-owned Flows state with repeated Flow groups', () => {
+test('parses and serializes URL-owned controlled Flow taxonomy filters', () => {
   const adapter = createFlowsDiscoveryAdapter();
   const state = adapter.parse(
-    '?filter=flowGroups.New%20User%20Experience&query=%20settings%20'
-      + '&platform=ios&sort=grouped&filter=flowGroups.Account%20Management',
+    '?filter=flowTypes.authentication%2Fsign-out&query=%20settings%20'
+      + '&platform=ios&sort=grouped&filter=flowCategories.account-settings',
   );
 
   assert.deepEqual(state, {
@@ -62,15 +63,15 @@ test('parses and serializes URL-owned Flows state with repeated Flow groups', ()
     sort: 'grouped',
     query: 'settings',
     filters: [
-      { group: 'flowGroups', value: 'Account Management' },
-      { group: 'flowGroups', value: 'New User Experience' },
+      { group: 'flowCategories', value: 'account-settings' },
+      { group: 'flowTypes', value: 'authentication/sign-out' },
     ],
   });
   assert.equal(
     adapter.serialize(state),
     'platform=ios&sort=grouped&query=settings'
-      + '&filter=flowGroups.Account+Management'
-      + '&filter=flowGroups.New+User+Experience',
+      + '&filter=flowCategories.account-settings'
+      + '&filter=flowTypes.authentication%2Fsign-out',
   );
 });
 
@@ -87,7 +88,7 @@ test('falls back invalid Flows state to web and category/title order', () => {
   });
 });
 
-test('requests one canonical Flow cursor page with OR Flow-group filters', async () => {
+test('requests one canonical Flow cursor page with category and Flow-type filters', async () => {
   const originalFetch = globalThis.fetch;
   const calls: Array<{ input: string; signal: AbortSignal | null }> = [];
   globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
@@ -105,8 +106,8 @@ test('requests one canonical Flow cursor page with OR Flow-group filters', async
       sort: 'grouped',
       query: 'logging settings',
       filters: [
-        { group: 'flowGroups', value: 'Account Management' },
-        { group: 'flowGroups', value: 'New User Experience' },
+        { group: 'flowCategories', value: 'account-settings' },
+        { group: 'flowTypes', value: 'authentication/sign-out' },
       ],
     };
     const page = await adapter.request(state, 'cursor /2', abort.signal);
@@ -114,16 +115,16 @@ test('requests one canonical Flow cursor page with OR Flow-group filters', async
     assert.deepEqual(calls, [{
       input: '/api/flows/search?platform=android&limit=12&facets=summary'
         + '&query=logging+settings&sort=grouped'
-        + '&filter=flowGroups.Account+Management'
-        + '&filter=flowGroups.New+User+Experience'
+        + '&filter=flowCategories.account-settings'
+        + '&filter=flowTypes.authentication%2Fsign-out'
         + '&cursor=cursor+%2F2',
       signal: abort.signal,
     }]);
     assert.equal(page.totalCount, 42);
     assert.equal(page.nextCursor, 'next cursor');
     assert.deepEqual(page.facets[0], {
-      group: 'flowGroups',
-      value: 'Account Management',
+      group: 'flowCategories',
+      value: 'account-settings',
       count: 17,
     });
   } finally {
@@ -161,17 +162,17 @@ test('uses preview identity and title as the Flow item key', () => {
   );
 });
 
-test('applies a selected Flow, platform, and exact Flow group while preserving sort', () => {
+test('applies a selected Flow category, platform, and exact taxonomy filter while preserving sort', () => {
   assert.equal(
     selectedFlowDiscoverySearch(
       '?platform=web&sort=grouped&query=old'
-        + '&filter=flowGroups.Account%20Management'
-        + '&filter=flowGroups.New%20User%20Experience',
+        + '&filter=flowCategories.account-settings'
+        + '&filter=flowTypes.authentication%2Fsign-out',
       'Logging out',
       'android',
-      'Account Management',
+      'account-settings',
     ),
     'platform=android&sort=grouped&query=Logging+out'
-      + '&filter=flowGroups.Account+Management',
+      + '&filter=flowCategories.account-settings',
   );
 });

@@ -1217,6 +1217,7 @@ function assertObjectKeyCoverage(
   metadataByKey: Map<string, ObjectMetadata>,
 ): void {
   const required = new Set([input.objectKeys.source, input.objectKeys.preview]);
+  if (input.objectKeys.poster) required.add(input.objectKeys.poster);
   if (Object.keys(input.objectKeys.pages).length !== graph.pages.length) {
     throw new Error("Site page object mapping mismatch");
   }

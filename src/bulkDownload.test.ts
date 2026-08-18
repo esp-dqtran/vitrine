@@ -192,6 +192,12 @@ test("UI element selection keeps every Mobbin card regardless of alt text", asyn
   assert.equal(shouldSelect("screens", "Animation keyframe", "qonto", "Qonto screen"), true);
 });
 
+test("bulk selection is not coupled to Mobbin's retired grid container classes", async () => {
+  const bulkSource = await import("node:fs/promises").then(({ readFile }) => readFile(new URL("./bulkDownload.ts", import.meta.url), "utf8"));
+  assert.match(bulkSource, /document\.querySelectorAll\('a\[href\*="\/screens\/"\]'\)/);
+  assert.doesNotMatch(bulkSource, /document\.querySelectorAll\("div\.grid"\)/);
+});
+
 test("UI selection tolerates transient no-progress sweeps while lazy cards settle", async () => {
   const bulk = await import("./bulkDownload.ts") as Record<string, unknown>;
   assert.equal(typeof bulk.nextSelectionSweep, "function");

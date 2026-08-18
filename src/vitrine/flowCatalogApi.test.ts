@@ -9,6 +9,7 @@ import { clearAuthToken, setAuthToken } from './apiFetch.ts';
 
 const item = {
   category: 'Account Management',
+  type: 'Profile settings',
   title: 'Creating Account',
   preview: {
     appId: 'linear',
@@ -40,7 +41,7 @@ const envelope = {
   items: [item],
   nextCursor: null,
   totalCount: 12,
-  facets: [{ group: 'flowGroups', value: 'Account Management', count: 4 }],
+  facets: [{ group: 'flowCategories', value: 'account-settings', count: 4 }],
 };
 
 test('loads one canonical cacheable Flow request with stable filters', async () => {
@@ -50,7 +51,8 @@ test('loads one canonical cacheable Flow request with stable filters', async () 
       platform: 'web',
       cursor: 'next page',
       limit: 40,
-      flowGroups: ['Account Management', 'Security'],
+      flowCategories: ['account-settings'],
+      flowTypes: ['authentication/sign-out'],
     },
     undefined,
     async (input, init) => {
@@ -64,7 +66,7 @@ test('loads one canonical cacheable Flow request with stable filters', async () 
   assert.equal(
     calls[0]?.input,
     '/api/flows?platform=web&limit=40&facets=summary&sort=grouped'
-      + '&filter=flowGroups.Account+Management&filter=flowGroups.Security&cursor=next+page',
+      + '&filter=flowCategories.account-settings&filter=flowTypes.authentication%2Fsign-out&cursor=next+page',
   );
   assert.equal(calls[0]?.init?.cache, undefined);
 });

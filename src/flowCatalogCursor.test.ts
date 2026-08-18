@@ -13,7 +13,7 @@ const secret = "flow-cursor-secret-0123456789abcdef";
 const wrong = "wrong-flow-secret-0123456789abcdef";
 const identity = flowCatalogQueryIdentity({
   query: "log in",
-  flowGroups: ["account management"],
+  flowCategories: ["account-settings"],
 });
 const grouped: FlowCatalogCursor = {
   v: 3,

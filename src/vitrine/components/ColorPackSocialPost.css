@@ -1,0 +1,88 @@
+.color-pack-social-post {
+  --color-pack-social-background: #eed3ba;
+  --color-pack-social-foreground: #151311;
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 1080px;
+  height: 1350px;
+  overflow: hidden;
+  padding: 58px 55px 42px;
+  background: var(--color-pack-social-background);
+  color: var(--color-pack-social-foreground);
+  font-family: var(--font-family-body, "Figtree", sans-serif);
+}
+
+.color-pack-social-post__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-height: 82px;
+}
+
+.color-pack-social-post__header p,
+.color-pack-social-post__header h1 {
+  margin: 0;
+  color: inherit;
+}
+
+.color-pack-social-post__header p {
+  font-size: 23px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.21em;
+  text-transform: uppercase;
+}
+
+.color-pack-social-post__header h1 {
+  margin-top: 14px;
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.065em;
+}
+
+.color-pack-social-post__header > span {
+  padding-top: 18px;
+  font-size: 21px;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.color-pack-social-post__stack {
+  width: 970px;
+  margin-top: 36px;
+}
+
+.color-pack-social-post__footer {
+  position: absolute;
+  right: 55px;
+  bottom: 44px;
+  left: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 18px;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.color-pack-social-post__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  font-size: 21px;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.color-pack-social-post__brand i {
+  box-sizing: border-box;
+  width: 21px;
+  height: 21px;
+  border: 6px solid currentColor;
+  border-radius: 7px;
+  transform: rotate(45deg);
+}

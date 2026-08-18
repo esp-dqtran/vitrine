@@ -1,5 +1,7 @@
 import {
+  useEffect,
   useMemo,
+  useState,
   type ReactNode,
 } from 'react';
 import { Button } from '@astryxdesign/core';
@@ -26,65 +28,23 @@ import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
 import { FlowGallery } from './FlowGallery.tsx';
 import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
 import type { FlowTreeGroup } from '../flowTree.ts';
+import {
+  loadFlowTaxonomy,
+  type FlowTaxonomyCategory,
+} from '../flowTaxonomyApi.ts';
 
-function catalogFlowTitle(item: FlowCatalogItem): string {
-  if (
-    item.category === 'Other Flows'
-    || item.category.trim().toLowerCase() === item.title.trim().toLowerCase()
-  ) {
-    return item.title;
-  }
-  return `${item.title} from ${item.category}`;
-}
+function catalogFlowTitle(item: FlowCatalogItem): string { return item.title; }
 
-const FLOW_GROUPS_TAXONOMY = ['Settings', 'Home', 'Account settings', 'Onboarding', 'Logging in'];
-
-// Full Flow values (from `/api/flows/facets`), used to seed the toolbar filter
-// dropdown so it doesn't need a live facet query. FLOW_GROUPS_TAXONOMY above stays a
-// short curated list for the taxonomy quick-links panel.
-const ALL_FLOW_GROUPS = [
-  'Account', 'Account settings', 'Accounts', 'Activity', 'Adding a card', 'Adding a comment',
-  'Adding a description', 'Adding a note', 'Adding a page', 'Adding a product',
-  'Adding a table', 'Adding a task', 'Adding a text', 'Adding an image', 'Admin',
-  'Admin console', 'Agent details', 'Agents', 'Analytics', 'App detail', 'Application detail',
-  'Apps', 'Article detail', 'Asset detail', 'Audience', 'Billing', 'Boards', 'Calendar',
-  'Calls', 'Campaigns', 'Candidate detail', 'Catalog', 'Channel detail', 'Chat',
-  'Chatting with AI', 'Classroom', 'Collection detail', 'Community', 'Companies', 'Company',
-  'Company settings', 'Contacts', 'Content', 'Conversation detail', 'Courses',
-  'Creating a blank doc', 'Creating a board', 'Creating a business', 'Creating a campaign',
-  'Creating a canvas', 'Creating a chat', 'Creating a client', 'Creating a collection',
-  'Creating a community', 'Creating a contract', 'Creating a course', 'Creating a dashboard',
-  'Creating a database', 'Creating a design file', 'Creating a doc', 'Creating a document',
-  'Creating a file', 'Creating a folder', 'Creating a form', 'Creating a goal',
-  'Creating a group', 'Creating a job', 'Creating a list', 'Creating a map',
-  'Creating a message', 'Creating a mural', 'Creating a new message', 'Creating a new page',
-  'Creating a new post', 'Creating a new project', 'Creating a new story',
-  'Creating a new workbook', 'Creating a note', 'Creating a notebook', 'Creating a page',
-  'Creating a playlist', 'Creating a post', 'Creating a presentation', 'Creating a product',
-  'Creating a project', 'Creating a project (from artifact)', 'Creating a prompt',
-  'Creating a report', 'Creating a report (insight)', 'Creating a sheets', 'Creating a site',
-  'Creating a space', 'Creating a spreadsheet', 'Creating a study', 'Creating a table',
-  'Creating a task', 'Creating a team', 'Creating a template', 'Creating a video',
-  'Creating a website with AI', 'Creating a whiteboard', 'Creating a workflow',
-  'Creating a workspace', 'Creating an agent', 'Creating an app', 'Creating an app with AI',
-  'Creating an article', 'Creating an email', 'Creating an event',
-  'Creating an interactive demo', 'Creating an invoice', 'Dashboard', 'Data', 'Discover',
-  'Documents', 'Editing a page', 'Editing a site', 'Editing profile', 'Event detail', 'Events',
-  'Explore', 'Feedback', 'Files', 'Generating a Gamma (generate)', 'Generating an image',
-  'Help center', 'Home', 'Inbox', 'Insights', 'Integrations', 'Invoices', 'Item detail',
-  'Jobs', 'Layout', 'Library', 'Links', 'Location detail', 'Logging in', 'Manage account',
-  'Marketing', 'Meeting details', 'Meetings', 'Members', 'Message', 'Messages', 'Mods tools',
-  'My account', 'My profile', 'New project', 'Notifications', 'Onboarding', 'Order detail',
-  'Organization settings', 'Other Flows', 'Overview', 'Payments', 'People', 'Playground',
-  'Playing a song', 'Post detail', 'Preferences', 'Product detail', 'Products', 'Profile',
-  'Profile settings', 'Project', 'Project detail', 'Project details', 'Project main table',
-  'Project settings', 'Projects', 'Recordings', 'Reports', 'Resources', 'Schedule', 'Search',
-  'Searching flights', 'Sending a message', 'Settings', 'Site settings', 'Space dashboard',
-  'Starting a call', 'Starting a chat', 'Starting a conversation', 'Starting a meeting',
-  'Task detail', 'Tasks', 'Team', 'Team settings', 'Templates', 'Transactions', 'User profile',
-  'User settings', 'Users', 'Wallet', 'Watching a video', 'Workflows', 'Workspace',
-  'Workspace settings', 'Writing a story',
-];
+const FLOW_TAXONOMY_FALLBACK: Array<Pick<FlowTaxonomyCategory, 'slug' | 'name' | 'types'>> = [
+  ['authentication', 'Authentication'], ['onboarding', 'Onboarding'],
+  ['discovery-navigation', 'Discovery & Navigation'], ['search', 'Search'],
+  ['content-detail', 'Content & Detail'], ['creation-editing', 'Creation & Editing'],
+  ['communication-collaboration', 'Communication & Collaboration'],
+  ['commerce-checkout', 'Commerce & Checkout'], ['monetization', 'Monetization'],
+  ['billing', 'Billing'], ['account-settings', 'Account & Settings'],
+  ['retention-engagement', 'Retention & Engagement'],
+  ['system-privacy-support', 'System, Privacy & Support'],
+].map(([slug, name]) => ({ slug, name, types: [] }));
 
 interface FlowsPageViewProps {
   controller: DiscoveryController<
@@ -104,6 +64,7 @@ interface FlowsPageViewProps {
   onOpenFullFlow?: (appId: string, platform: Platform, version: number, flowId: string) => void;
   collections?: ResearchCollection[];
   onCollectionsChange?: (collections: ResearchCollection[]) => void;
+  taxonomy?: readonly FlowTaxonomyCategory[];
 }
 
 export function FlowsPageView({
@@ -119,18 +80,34 @@ export function FlowsPageView({
   onOpenFullFlow,
   collections,
   onCollectionsChange,
+  taxonomy = FLOW_TAXONOMY_FALLBACK as FlowTaxonomyCategory[],
 }: FlowsPageViewProps) {
-  const flowGroups = useMemo<DiscoveryFilterGroup>(() => ({
-    id: 'flowGroups',
-    label: 'Flow groups',
+  const flowCategories = useMemo<DiscoveryFilterGroup>(() => ({
+    id: 'flowCategories',
+    label: 'Category',
     selected: controller.state.filters
-      .filter(({ group }) => group === 'flowGroups')
+      .filter(({ group }) => group === 'flowCategories')
       .map(({ value }) => value),
-    options: ALL_FLOW_GROUPS.map((value) => ({
-      value,
-      section: 'Flow groups',
+    options: taxonomy.map((category) => ({
+      value: category.slug,
+      label: category.name,
+      section: 'Flow categories',
     })),
-  }), [controller.state.filters]);
+  }), [controller.state.filters, taxonomy]);
+  const flowTypes = useMemo<DiscoveryFilterGroup>(() => ({
+    id: 'flowTypes',
+    label: 'Flow type',
+    selected: controller.state.filters
+      .filter(({ group }) => group === 'flowTypes')
+      .map(({ value }) => value),
+    options: taxonomy.flatMap((category) => category.types.map((type) => ({
+      value: `${category.slug}/${type.slug}`,
+      label: type.name,
+      section: category.name,
+      sectionPosition: category.position,
+      position: type.position,
+    }))),
+  }), [controller.state.filters, taxonomy]);
   const catalogItemsByFlowId = useMemo(
     () => new Map(controller.items.map((item) => [item.preview.flow.id, item])),
     [controller.items],
@@ -149,23 +126,23 @@ export function FlowsPageView({
     <DiscoveryPageLayout
       kind="flows"
       header={null}
-      taxonomyLabel="Flow discovery filters"
+      taxonomyLabel="Browse Flow categories"
       taxonomy={(
         <ReferenceDiscoveryFacetGroup
-          label="Flow groups"
+          label="Browse by category"
           className="flows-discovery__facet"
         >
-          {FLOW_GROUPS_TAXONOMY.map((value) => (
+          {taxonomy.map((category) => (
             <Button
-              key={value}
-              label={value}
+              key={category.slug}
+              label={category.name}
               data-flow-taxonomy-option="true"
               variant="ghost"
               size="sm"
-              aria-pressed={flowGroups.selected.includes(value)}
+              aria-pressed={flowCategories.selected.includes(category.slug)}
               onClick={() => controller.toggleFilter({
-                group: flowGroups.id,
-                value,
+                group: flowCategories.id,
+                value: category.slug,
               })}
             />
           ))}
@@ -181,7 +158,7 @@ export function FlowsPageView({
             ariaLabel: 'Flow platform',
             onChange: controller.setPlatform,
           }}
-          filters={[flowGroups]}
+          filters={[flowCategories, flowTypes]}
           resultCount={controller.items.length}
           resultLabels={['flow', 'flows']}
           showResultCount={false}
@@ -224,7 +201,7 @@ export function FlowsPageView({
           if (!item) return undefined;
           return {
             screenCount: item.preview.screenCount,
-            metaLabel: `${item.preview.screenCount} ${item.preview.screenCount === 1 ? 'screen' : 'screens'}`,
+            metaLabel: `${item.preview.screenCount} ${item.preview.screenCount === 1 ? 'screen' : 'screens'} · ${item.category} — ${item.type ?? 'Other content detail'}`,
             sourceAppName: item.preview.appName,
             sourceAppIconUrl: item.preview.appIconUrl,
             documentSource: {
@@ -289,6 +266,14 @@ export function FlowsPage({
 }: FlowsPageProps) {
   const locationKey = useLocationKey();
   const search = locationKey.includes('?') ? locationKey.slice(locationKey.indexOf('?')) : '';
+  const [taxonomy, setTaxonomy] = useState<FlowTaxonomyCategory[]>(FLOW_TAXONOMY_FALLBACK as FlowTaxonomyCategory[]);
+  useEffect(() => {
+    const controller = new AbortController();
+    void loadFlowTaxonomy(controller.signal)
+      .then((categories) => setTaxonomy(categories))
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
   const controller = useFlowsDiscoveryPageController({
     locationSearch: search,
     onNavigate: (nextSearch, mode) => {
@@ -314,6 +299,7 @@ export function FlowsPage({
       onOpenFullFlow={onOpenFullFlow}
       collections={collections}
       onCollectionsChange={onCollectionsChange}
+      taxonomy={taxonomy}
     />
   );
 }

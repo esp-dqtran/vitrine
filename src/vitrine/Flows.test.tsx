@@ -95,8 +95,8 @@ function controller(
     },
     items,
     facets: [
-      { group: 'flowGroups', value: 'Account Management', count: 12 },
-      { group: 'flowGroups', value: 'New User Experience', count: 8 },
+      { group: 'flowCategories', value: 'account-settings', count: 12 },
+      { group: 'flowTypes', value: 'onboarding/create-account', count: 8 },
     ],
     totalCount: 23,
     loading: false,
@@ -128,24 +128,21 @@ test('renders a first-class searchable Flow catalog beside Apps and Sites', () =
 
   assert.match(html, /data-flows-discovery="true"/);
   assert.doesNotMatch(html, /reference-discovery-nav/);
-  assert.match(html, /aria-label="Flow discovery filters"/);
-  assert.match(html, /Flow groups/);
+  assert.match(html, /Browse by category/);
   assert.match(html, /data-flows-filterbar="true"/);
   assert.match(html, /aria-label="Flow discovery controls"/);
   assert.match(html, /aria-label="Flow platform: Web"/);
   assert.doesNotMatch(html, /role="radiogroup"[^>]*aria-label="Flow platform"/);
-  assert.match(html, /Open Flow groups filters/);
+  assert.match(html, /Open Category filters/);
+  assert.match(html, /Open Flow type filters/);
   assert.match(html, /Showing<\/small> <strong>23 flows/);
   assert.equal((html.match(/23 flows/g) ?? []).length, 1);
   assert.doesNotMatch(html, />Popular|>Grouped</);
   assert.doesNotMatch(html, /data-reference-discovery-toolbar="true"/);
-  assert.match(html, />Settings</);
-  assert.match(html, />Home</);
-  assert.match(html, /aria-label="Preview Logging in from Account Management flow screens"/);
-  assert.match(
-    html,
-    /<h2>Logging in <span class="flow-strip-card__title-connector">from<\/span> Account Management<\/h2>/,
-  );
+  assert.match(html, />Authentication</);
+  assert.match(html, />Monetization</);
+  assert.match(html, /aria-label="Preview Logging in flow screens"/);
+  assert.match(html, /<h2>Logging in<\/h2>/);
   assert.match(html, /aria-label="Open Linear app"/);
   assert.match(html, /<img src="\/icons\/linear\.png" alt=""/);
   assert.doesNotMatch(html, /flows-discovery__flow-heading/);
@@ -191,7 +188,7 @@ test('shows the server total independently of loaded cards', () => {
           platform: 'web',
         sort: 'grouped',
           query: '',
-          filters: [{ group: 'flowGroups', value: 'Home' }],
+          filters: [{ group: 'flowCategories', value: 'discovery-navigation' }],
         },
       })}
       onSelectFlow={() => undefined}
@@ -217,9 +214,9 @@ test('caps the visible Flow result total for public visitors', () => {
   assert.doesNotMatch(html, /40 flows/);
 });
 
-test('keeps the top Flow taxonomy a fixed 5-item list regardless of API facets', () => {
+test('keeps the controlled 13-category Flow taxonomy independent from response facets', () => {
   const facets = Array.from({ length: 5_880 }, (_, index) => ({
-    group: 'flowGroups',
+    group: 'flowCategories',
     value: `Flow group ${String(index).padStart(4, '0')}`,
     count: 5_880 - index,
   }));
@@ -232,9 +229,9 @@ test('keeps the top Flow taxonomy a fixed 5-item list regardless of API facets',
   );
 
   const taxonomy = html.match(/data-reference-component="facet-group"[\s\S]*?<\/section>/)?.[0] ?? '';
-  assert.equal((taxonomy.match(/data-flow-taxonomy-option="true"/g) ?? []).length, 5);
-  assert.match(taxonomy, />Settings</);
-  assert.match(taxonomy, />Logging in</);
+  assert.equal((taxonomy.match(/data-flow-taxonomy-option="true"/g) ?? []).length, 13);
+  assert.match(taxonomy, />Authentication</);
+  assert.match(taxonomy, />System, Privacy &amp; Support</);
   assert.doesNotMatch(taxonomy, /Flow group 0000/);
 });
 

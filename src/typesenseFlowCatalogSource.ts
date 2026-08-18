@@ -2,6 +2,12 @@ import type { FlowCatalogItem, FlowCatalogPage } from "./flowCatalogStore.ts";
 import type { Platform } from "./platformFromUrl.ts";
 import type { FlowCatalogIndexDocument } from "./typesenseFlowCatalog.ts";
 
+function taxonomySlug(value: string): string {
+  return value.toLocaleLowerCase("en-US")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 export type PublishedFlowCatalogPageLoader = (input: {
   platform: Platform;
   cursor?: string;
@@ -20,6 +26,7 @@ function indexDocument(item: FlowCatalogItem, platform: Platform): FlowCatalogIn
     preview.appId,
     item.title,
     item.category,
+    item.type ?? '',
     flow.description,
     ...flow.tags,
     ...stepLabels,
@@ -31,6 +38,9 @@ function indexDocument(item: FlowCatalogItem, platform: Platform): FlowCatalogIn
     appName: preview.appName,
     title: item.title,
     category: item.category,
+    categorySlug: taxonomySlug(item.category),
+    type: item.type ?? 'Other content detail',
+    typeKey: `${taxonomySlug(item.category)}/${taxonomySlug(item.type ?? 'Other content detail')}`,
     description: flow.description,
     tags: flow.tags,
     stepLabels,

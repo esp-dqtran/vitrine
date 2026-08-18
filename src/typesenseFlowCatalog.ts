@@ -17,6 +17,9 @@ export interface FlowCatalogIndexDocument {
   appName: string;
   title: string;
   category: string;
+  categorySlug: string;
+  type: string;
+  typeKey: string;
   description: string;
   tags: string[];
   stepLabels: string[];
@@ -28,7 +31,8 @@ export interface FlowCatalogIndexDocument {
 export interface FlowCatalogSearchOptions {
   query: string;
   platform: Platform;
-  flowGroups: readonly string[];
+  flowCategories?: readonly string[];
+  flowTypes?: readonly string[];
   page?: number;
   limit?: number;
 }
@@ -54,11 +58,13 @@ interface TypesenseSearchResponse {
 const escapeFilter = (value: string) => value.replace(/\\/g, "\\\\").replace(/`/g, "\\`");
 const equals = (field: string, value: string) => `${field}:=\`${escapeFilter(value)}\``;
 
-export function flowCatalogTypesenseFilter(input: Pick<FlowCatalogSearchOptions, "platform" | "flowGroups">): string {
-  const groups = [...new Set(input.flowGroups.map((value) => value.trim()).filter(Boolean))];
+export function flowCatalogTypesenseFilter(input: Pick<FlowCatalogSearchOptions, "platform" | "flowCategories" | "flowTypes">): string {
+  const categories = [...new Set((input.flowCategories ?? []).map((value) => value.trim()).filter(Boolean))];
+  const types = [...new Set((input.flowTypes ?? []).map((value) => value.trim()).filter(Boolean))];
   return [
     equals("platform", input.platform),
-    ...(groups.length > 0 ? [`(${groups.map((value) => equals("category", value)).join(" || ")})`] : []),
+    ...(categories.length > 0 ? [`(${categories.map((value) => equals("categorySlug", value)).join(" || ")})`] : []),
+    ...(types.length > 0 ? [`(${types.map((value) => equals("typeKey", value)).join(" || ")})`] : []),
   ].join(" && ");
 }
 
@@ -80,6 +86,9 @@ function flowCollectionSchema(name: string) {
       { name: "appName", type: "string" },
       { name: "title", type: "string" },
       { name: "category", type: "string", facet: true },
+      { name: "categorySlug", type: "string", facet: true },
+      { name: "type", type: "string" },
+      { name: "typeKey", type: "string", facet: true },
       { name: "description", type: "string" },
       { name: "tags", type: "string[]", facet: true },
       { name: "stepLabels", type: "string[]" },
@@ -91,9 +100,11 @@ function flowCollectionSchema(name: string) {
 }
 
 function responseFacets(counts: TypesenseFacetCount[] | undefined): DiscoveryFacet[] {
-  return (counts ?? []).flatMap(({ field_name, counts: values }) => field_name === "category"
-    ? values.map(({ value, count }) => ({ group: "flowGroups", value, count }))
-    : []);
+  return (counts ?? []).flatMap(({ field_name, counts: values }) => field_name === "categorySlug"
+    ? values.map(({ value, count }) => ({ group: "flowCategories", value, count }))
+    : field_name === "typeKey"
+      ? values.map(({ value, count }) => ({ group: "flowTypes", value, count }))
+      : []);
 }
 
 export interface TypesenseFlowCatalogClient {
@@ -146,10 +157,10 @@ export function createTypesenseFlowCatalogClient(
       const page = Math.max(options.page ?? 1, 1);
       const params = new URLSearchParams({
         q: options.query.trim(),
-        query_by: "title,appName,category,tags,stepLabels,description,searchText",
-        query_by_weights: "10,8,6,5,4,3,1",
+        query_by: "title,appName,category,type,tags,stepLabels,description,searchText",
+        query_by_weights: "10,8,6,6,5,4,3,1",
         filter_by: flowCatalogTypesenseFilter(options),
-        facet_by: "category",
+        facet_by: "categorySlug,typeKey",
         sort_by: "_text_match:desc,versionId:desc",
         page: String(page),
         per_page: String(limit),

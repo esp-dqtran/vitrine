@@ -45,6 +45,8 @@ export interface ColorPackStackProps {
   cards: readonly ColorPackCard[];
   label?: string;
   initiallyExpanded?: boolean;
+  /** Reduces card height for fixed-format surfaces without changing card content or overlap rules. */
+  cardHeightScale?: number;
   onExpandedChange?: (expanded: boolean) => void;
   className?: string;
 }
@@ -92,6 +94,7 @@ export function ColorPackStack({
   cards,
   label = 'Color pack',
   initiallyExpanded = true,
+  cardHeightScale = 1,
   onExpandedChange,
   className,
 }: ColorPackStackProps) {
@@ -114,7 +117,8 @@ export function ColorPackStack({
 
   if (!cards.length) return null;
 
-  const cardHeight = Math.round(Math.min(Math.max(width * 0.596, 210), 650));
+  const baseCardHeight = Math.min(Math.max(width * 0.596, 210), 650);
+  const cardHeight = Math.round(baseCardHeight * Math.min(Math.max(cardHeightScale, 0.42), 1));
   const compactOffset = Math.round(cardHeight * 0.39);
   const expandedOverlap = Math.round(Math.min(cardHeight * 0.08, 42));
   const expandedGap = -expandedOverlap;

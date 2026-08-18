@@ -193,6 +193,41 @@ const migrationDefinitions = [
     ],
   },
   {
+    file: "0102_flow_taxonomy.sql",
+    patterns: [
+      /CREATE TABLE flow_categories/,
+      /CREATE TABLE flow_types/,
+      /CREATE TABLE flow_classifications/,
+      /status IN \('needs_review', 'approved'\)/,
+      /flow_classifications_review_queue_idx/,
+      /\('authentication', 'Authentication', 1\)/,
+      /\('system-privacy-support', 'System, Privacy & Support', 13\)/,
+      /\('monetization', 'paywall', 'Paywall', 2\)/,
+      /\('billing', 'cancel-subscription', 'Cancel subscription', 5\)/,
+    ],
+  },
+  {
+    file: "0103_migrate_flow_taxonomy.sql",
+    patterns: [
+      /SET LOCAL statement_timeout = '30min'/,
+      /\('authentication', 'sign-out', 'Sign out', 9\)/,
+      /\('content-detail', 'analytics-report-detail', 'Analytics \/ report detail', 8\)/,
+      /INSERT INTO flow_classifications/,
+      /ON CONFLICT \(flow_id\) DO UPDATE/,
+      /Every canonical Flow must receive a controlled taxonomy classification/,
+    ],
+  },
+  {
+    file: "0104_reclassify_flow_taxonomy.sql",
+    patterns: [
+      /Correct the word-boundary expressions/,
+      /SET LOCAL statement_timeout = '30min'/,
+      /name ~ '\\m\(log\(ging\)\? out\|sign\(ing\)\? out\)\\M'/,
+      /INSERT INTO flow_classifications/,
+      /ON CONFLICT \(flow_id\) DO UPDATE/,
+    ],
+  },
+  {
     file: "0043_project_documents.sql",
     patterns: [
       /CREATE TABLE project_documents/,

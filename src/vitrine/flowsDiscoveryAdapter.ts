@@ -33,7 +33,7 @@ export interface FlowsDiscoveryAdapterDefaults {
 const STATE_DEFINITION: DiscoveryStateDefinition<FlowsDiscoverySort> = {
   platforms: ['web', 'ios', 'android'],
   sorts: ['grouped'],
-  filterGroups: ['flowGroups'],
+  filterGroups: ['flowCategories', 'flowTypes'],
 };
 
 function normalizedDefaults(
@@ -72,8 +72,11 @@ export function createFlowsDiscoveryAdapter(
         query: state.query || undefined,
         cursor: cursor ?? undefined,
         limit: initial.isGuest ? PUBLIC_FLOW_CATALOG_LIMIT : 12,
-        flowGroups: state.filters
-          .filter(({ group }) => group === 'flowGroups')
+        flowCategories: state.filters
+          .filter(({ group }) => group === 'flowCategories')
+          .map(({ value }) => value),
+        flowTypes: state.filters
+          .filter(({ group }) => group === 'flowTypes')
           .map(({ value }) => value),
       }, signal);
     },
@@ -85,7 +88,7 @@ export function selectedFlowDiscoverySearch(
   currentSearch: string,
   query: string,
   platform: FlowsDiscoveryControllerState['platform'],
-  flowGroup?: string,
+  flowCategory?: string,
 ): string {
   const adapter = createFlowsDiscoveryAdapter();
   const current = adapter.parse(currentSearch);
@@ -93,8 +96,8 @@ export function selectedFlowDiscoverySearch(
     ...current,
     platform,
     query,
-    filters: flowGroup
-      ? [{ group: 'flowGroups', value: flowGroup }]
+    filters: flowCategory
+      ? [{ group: 'flowCategories', value: flowCategory }]
       : current.filters,
   });
 }

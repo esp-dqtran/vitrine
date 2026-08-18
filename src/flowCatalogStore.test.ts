@@ -22,6 +22,8 @@ const row = (overrides: Record<string, unknown> = {}) => ({
   category_id: "7",
   category: "Account Management",
   category_key: "account management",
+  flow_type: "Edit profile",
+  flow_type_key: "account-settings/edit-profile",
   category_sort: "account management",
   title: "Editing Profile",
   title_key: "editing profile",
@@ -57,7 +59,7 @@ test("freezes published App versions and canonical taxonomy at one snapshot", as
     calls.push({ sql, values });
     return result(calls.length === 1 ? [row()] : [{
       total_count: 1,
-      facets: [{ group: "flowGroups", value: "Account Management", count: 1 }],
+      facets: [{ group: "flowCategories", value: "account-settings", count: 1 }],
     }]);
   });
 
@@ -300,13 +302,13 @@ test("continues after 800-character stored category and title names with bounded
   assert.match(statements[2]!, /ROW\([\s\S]*title_sort[\s\S]*category_sort[\s\S]*category_id[\s\S]*flow_id[\s\S]*\) > ROW\(/i);
 });
 
-test("normalizes child and parent search variants and applies OR group filters", async () => {
+test("normalizes child and parent search variants and applies controlled category filters", async () => {
   const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
   const page = await publishedFlowCatalogPage({
     platform: "ios",
     sort: "grouped",
     query: "  Billing & Payments! ",
-    flowGroups: ["Account & Profile", "Commerce"],
+    flowCategories: ["account-settings", "commerce-checkout"],
     cursorSecret: secret,
     now: () => new Date(timestamp),
   }, async (sql, values) => {
@@ -314,24 +316,28 @@ test("normalizes child and parent search variants and applies OR group filters",
     return result(calls.length === 1 ? [row()] : [{
       total_count: 1,
       facets: [
-        { group: "flowGroups", value: "Account Management", count: 2 },
-        { group: "flowGroups", value: "Commerce & Finance", count: 1 },
+        { group: "flowCategories", value: "account-settings", count: 2 },
+        { group: "flowCategories", value: "commerce-checkout", count: 1 },
       ],
     }]);
   });
 
   assert.equal(calls[0]!.values?.[2], "billing and payments");
-  assert.deepEqual(calls[0]!.values?.[3], ["account & profile", "commerce"]);
-  assert.deepEqual(calls[0]!.values?.[6], ["bill", "payment"]);
-  assert.equal(calls[0]!.values?.[7], 2);
+  assert.deepEqual(calls[0]!.values?.[3], ["account-settings", "commerce-checkout"]);
+  assert.deepEqual(calls[0]!.values?.[8], ["bill", "payment"]);
+  assert.equal(calls[0]!.values?.[9], 2);
   assert.match(calls[0]!.sql, /canonical\.normalized_name/);
   assert.match(calls[0]!.sql, /parent\.normalized_name/);
+  assert.match(calls[0]!.sql, /LEFT JOIN flow_classifications classification/);
+  assert.match(calls[0]!.sql, /classification\.status = 'approved'/);
+  assert.match(calls[0]!.sql, /LEFT JOIN flow_types classified_type/);
+  assert.match(calls[0]!.sql, /COALESCE\(classified_category\.name/);
   assert.match(calls[0]!.sql, /replace\(canonical\.normalized_name, ' and ', ' '\)/);
   assert.match(calls[0]!.sql, /ANY\(\$4::text\[\]\)/);
   assert.equal(page.totalCount, 1);
   assert.deepEqual(page.facets.map(({ value, count }) => ({ value, count })), [
-    { value: "Account Management", count: 2 },
-    { value: "Commerce & Finance", count: 1 },
+    { value: "account-settings", count: 2 },
+    { value: "commerce-checkout", count: 1 },
   ]);
 });
 
@@ -363,24 +369,24 @@ test("filters and orders natural Flow queries by lightweight taxonomy relevance"
     })] : [{ total_count: 1, facets: [] }]);
   });
 
-  assert.deepEqual(calls[0]!.values?.[6], [
+  assert.deepEqual(calls[0]!.values?.[8], [
     "checkout",
     "payment",
     "method",
     "select",
   ]);
-  assert.equal(calls[0]!.values?.[7], 3);
-  assert.match(calls[0]!.sql, /unnest\(\$7::text\[\]\)/);
-  assert.match(calls[0]!.sql, /relevance\.term_matches >= \$8::int/);
+  assert.equal(calls[0]!.values?.[9], 3);
+  assert.match(calls[0]!.sql, /unnest\(\$9::text\[\]\)/);
+  assert.match(calls[0]!.sql, /relevance\.term_matches >= \$10::int/);
   assert.match(calls[0]!.sql, /ORDER BY ranked\.exact_match DESC,[\s\S]*ranked\.title_term_matches DESC,[\s\S]*ranked\.term_matches DESC/);
 });
 
-test("facets omit their own Flow-group filter while totalCount keeps it", async () => {
+test("facets omit their own category filter while totalCount keeps it", async () => {
   let metadataSql = "";
   const page = await publishedFlowCatalogPage({
     platform: "android",
     sort: "grouped",
-    flowGroups: ["Onboarding"],
+    flowCategories: ["onboarding"],
     cursorSecret: secret,
     now: () => new Date(timestamp),
   }, async (sql) => {
@@ -389,8 +395,8 @@ test("facets omit their own Flow-group filter while totalCount keeps it", async 
       return result([{
         total_count: 4,
         facets: [
-          { group: "flowGroups", value: "Onboarding", count: 4 },
-          { group: "flowGroups", value: "Checkout", count: 3 },
+          { group: "flowCategories", value: "onboarding", count: 4 },
+          { group: "flowCategories", value: "commerce-checkout", count: 3 },
         ],
       }]);
     }
@@ -430,7 +436,7 @@ test("reuses one complete, snapshot-consistent first page for a warm query", asy
     return result(/total_count/.test(sql)
       ? [{
           total_count: 1,
-          facets: [{ group: "flowGroups", value: "Account Management", count: 1 }],
+          facets: [{ group: "flowCategories", value: "account-settings", count: 1 }],
         }]
       : [row()]);
   };
@@ -451,7 +457,7 @@ test("reuses one complete, snapshot-consistent first page for a warm query", asy
 
   await publishedFlowCatalogPage({
     ...input,
-    flowGroups: ["Settings"],
+    flowCategories: ["account-settings"],
   }, runQuery);
   assert.equal(calls, 4, "filter identity has an independent cache entry");
   assert.equal(pageCache.size, 2);

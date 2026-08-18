@@ -452,15 +452,90 @@ test("serves ordered published Categories publicly", async (t) => {
   assert.deepEqual(await response.json(), { categories });
 });
 
+test("serves the Flow taxonomy publicly and keeps classification review admin-only", async (t) => {
+  const categories = [{
+    id: 1,
+    slug: "authentication",
+    name: "Authentication",
+    position: 1,
+    approvedFlowCount: 3,
+    types: [{ id: 7, slug: "password-reset", name: "Password reset", position: 5 }],
+  }];
+  const reviewItems = [{
+    flowId: 9,
+    title: "Reset password",
+    currentCategory: "Account",
+    appFlowCount: 38,
+    appCount: 14,
+    classification: null,
+  }];
+  const saved = {
+    flowId: 9,
+    type: {
+      id: 7,
+      slug: "password-reset",
+      name: "Password reset",
+      position: 5,
+      category: { id: 1, slug: "authentication", name: "Authentication", position: 1 },
+    },
+    status: "approved",
+    confidence: 0.9,
+    source: "manual",
+    reviewedByUserId: admin.id,
+    reviewedAt: "2026-08-17T10:00:00.000Z",
+  };
+  const saves: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    verifyAuthToken: async (token: string) => token === "admin" ? admin : token === "user" ? user : undefined,
+    flowTaxonomyStore: {
+      listPublished: async () => categories,
+      listReviewQueue: async () => reviewItems,
+      saveClassification: async (input: unknown) => {
+        saves.push(input);
+        return saved;
+      },
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const taxonomy = await fetch(`${base}/flow-taxonomy`);
+  assert.equal(taxonomy.status, 200);
+  assert.equal(taxonomy.headers.get("cache-control"), "public, max-age=300");
+  assert.deepEqual(await taxonomy.json(), { categories });
+  assert.equal((await fetch(`${base}/admin/flow-classifications`, {
+    headers: { authorization: "Bearer user" },
+  })).status, 403);
+
+  const queue = await fetch(`${base}/admin/flow-classifications?limit=20`, { headers: adminAuth });
+  assert.equal(queue.status, 200);
+  assert.deepEqual(await queue.json(), { items: reviewItems });
+  const response = await fetch(`${base}/admin/flow-classifications/9`, {
+    method: "PUT",
+    headers: { ...adminAuth, "content-type": "application/json" },
+    body: JSON.stringify({ flowTypeId: 7, status: "approved", confidence: 0.9 }),
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { classification: saved });
+  assert.deepEqual(saves, [{
+    flowId: 9,
+    flowTypeId: 7,
+    status: "approved",
+    confidence: 0.9,
+    source: "manual",
+    reviewedByUserId: admin.id,
+  }]);
+});
+
 test("serves the exact canonical Flow discovery envelope", async (t) => {
   const inputs: unknown[] = [];
-  const facets = [{ group: "flowGroups", value: "Account Management", count: 12 }];
+  const facets = [{ group: "flowCategories", value: "account-settings", count: 12 }];
   const { base, server } = await serve(createApiApp({
     publishedFlowCatalogPage: async (input: unknown) => {
       inputs.push(input);
       return {
         items: [{
           category: "Account Management",
+          type: "Edit profile",
           title: "Editing Profile",
           count: 1081,
         }],
@@ -476,13 +551,14 @@ test("serves the exact canonical Flow discovery envelope", async (t) => {
 
   const response = await fetch(
     `${base}/flows?platform=web&query=profile&sort=grouped`
-      + `&filter=flowGroups.Account%20Management&filter=flowGroups.Security&limit=40`,
+      + `&filter=flowCategories.account-settings&filter=flowTypes.account-settings%2Fedit-profile&limit=40`,
     { headers: adminAuth },
   );
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), {
     items: [{
       category: "Account Management",
+      type: "Edit profile",
       title: "Editing Profile",
       count: 1081,
     }],
@@ -496,7 +572,8 @@ test("serves the exact canonical Flow discovery envelope", async (t) => {
     limit: 40,
     query: "profile",
     sort: "grouped",
-    flowGroups: ["Account Management", "Security"],
+    flowCategories: ["account-settings"],
+    flowTypes: ["account-settings/edit-profile"],
     cursorSecret: "flow-route-secret-0123456789abcdef",
   }]);
 });
@@ -532,7 +609,7 @@ test("uses Typesense for full-text Flow search", async (t) => {
     typesenseFlowCatalog: {
       search: async (input: unknown) => {
         calls.push(input);
-        return { items: [], nextPage: 2, totalCount: 19, facets: [{ group: "flowGroups", value: "Account Management", count: 19 }] };
+        return { items: [], nextPage: 2, totalCount: 19, facets: [{ group: "flowCategories", value: "account-settings", count: 19 }] };
       },
     },
     publishedFlowCatalogPage: async () => {
@@ -542,15 +619,15 @@ test("uses Typesense for full-text Flow search", async (t) => {
   } as never));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/flows/search?platform=web&query=open%20profile&filter=flowGroups.Account%20Management&limit=20`, { headers: adminAuth });
+  const response = await fetch(`${base}/flows/search?platform=web&query=open%20profile&filter=flowCategories.account-settings&limit=20`, { headers: adminAuth });
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("server-timing")?.startsWith("typesense-flow;dur="), true);
   assert.deepEqual(await response.json(), {
     items: [], nextCursor: "typesense-flow:2", totalCount: 19,
-    facets: [{ group: "flowGroups", value: "Account Management", count: 19 }],
+    facets: [{ group: "flowCategories", value: "account-settings", count: 19 }],
   });
   assert.deepEqual(calls, [{
-    query: "open profile", platform: "web", flowGroups: ["Account Management"], page: 1, limit: 20,
+    query: "open profile", platform: "web", flowCategories: ["account-settings"], flowTypes: [], page: 1, limit: 20,
   }]);
 });
 

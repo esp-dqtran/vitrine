@@ -122,11 +122,13 @@ function signature(payload: FlowCatalogCursor, secret: string): string {
 
 export function flowCatalogQueryIdentity(input: {
   query?: string;
-  flowGroups?: readonly string[];
+  flowCategories?: readonly string[];
+  flowTypes?: readonly string[];
 }): string {
   return createHash("sha256").update(JSON.stringify({
     query: input.query ?? "",
-    flowGroups: [...(input.flowGroups ?? [])],
+    flowCategories: [...(input.flowCategories ?? [])],
+    flowTypes: [...(input.flowTypes ?? [])],
   })).digest("base64url");
 }
 

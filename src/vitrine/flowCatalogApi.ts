@@ -9,6 +9,7 @@ import { apiFetch } from './apiFetch.ts';
 
 export interface FlowCatalogItem {
   category: string;
+  type?: string;
   title: string;
   preview: {
     appId: string;
@@ -126,7 +127,8 @@ function flow(value: unknown, field: string): DesignFlow<EvidenceView> {
 
 function catalogItem(value: unknown, field: string): FlowCatalogItem {
   const item = record(value, field);
-  exact(item, ['category', 'preview', 'title'], field);
+  const currentKeys = ['category', 'preview', 'title', 'type'];
+  if (Object.keys(item).sort().join('\0') !== currentKeys.join('\0')) invalid(field);
   const preview = record(item.preview, `${field}.preview`);
   exact(preview, [
     'appIconUrl',
@@ -143,6 +145,7 @@ function catalogItem(value: unknown, field: string): FlowCatalogItem {
   }
   return {
     category: text(item.category, `${field}.category`),
+    type: text(item.type, `${field}.type`),
     title: text(item.title, `${field}.title`),
     preview: {
       appId: text(preview.appId, `${field}.preview.appId`),
@@ -160,9 +163,11 @@ function catalogItem(value: unknown, field: string): FlowCatalogItem {
 function facet(value: unknown, field: string): DiscoveryFacet {
   const item = record(value, field);
   exact(item, ['count', 'group', 'value'], field);
-  if (item.group !== 'flowGroups') invalid(`${field}.group`);
+  if (item.group !== 'flowCategories' && item.group !== 'flowTypes') {
+    invalid(`${field}.group`);
+  }
   return {
-    group: 'flowGroups',
+    group: item.group,
     value: text(item.value, `${field}.value`),
     count: integer(item.count, `${field}.count`),
   };
@@ -189,7 +194,8 @@ export async function loadFlowCatalogPage(
     query?: string;
     cursor?: string;
     limit?: number;
-    flowGroups?: readonly string[];
+    flowCategories?: readonly string[];
+    flowTypes?: readonly string[];
   },
   signal?: AbortSignal,
   fetcher: Fetcher = apiFetch,
@@ -201,8 +207,11 @@ export async function loadFlowCatalogPage(
   });
   if (input.query?.trim()) params.set('query', input.query.trim());
   params.set('sort', 'grouped');
-  for (const group of input.flowGroups ?? []) {
-    params.append('filter', `flowGroups.${group}`);
+  for (const category of input.flowCategories ?? []) {
+    params.append('filter', `flowCategories.${category}`);
+  }
+  for (const type of input.flowTypes ?? []) {
+    params.append('filter', `flowTypes.${type}`);
   }
   if (input.cursor) params.set('cursor', input.cursor);
   const endpoint = `/api/flows${input.query?.trim() ? '/search' : ''}?${params.toString()}`;
@@ -229,7 +238,8 @@ export function loadFlowCatalogFacets(
   input: {
     platform: Platform;
     query?: string;
-    flowGroups?: readonly string[];
+    flowCategories?: readonly string[];
+    flowTypes?: readonly string[];
   },
   query: string,
   selected: readonly string[],
@@ -237,11 +247,14 @@ export function loadFlowCatalogFacets(
 ) {
   const params = new URLSearchParams({ platform: input.platform });
   if (input.query?.trim()) params.set('query', input.query.trim());
-  for (const group of input.flowGroups ?? []) {
-    params.append('filter', `flowGroups.${group}`);
+  for (const category of input.flowCategories ?? []) {
+    params.append('filter', `flowCategories.${category}`);
+  }
+  for (const type of input.flowTypes ?? []) {
+    params.append('filter', `flowTypes.${type}`);
   }
   appendFacetSearchParams(params, {
-    group: 'flowGroups',
+    group: 'flowCategories',
     query,
     selected,
   });

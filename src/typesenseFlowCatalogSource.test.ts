@@ -4,6 +4,7 @@ import { publishedFlowCatalogDocuments } from "./typesenseFlowCatalogSource.ts";
 
 const item = {
   category: "Account Management",
+  type: "Edit profile",
   title: "Edit profile",
   preview: {
     appId: "linear", appName: "Linear", appIconUrl: null, versionId: 9, version: 4,
@@ -34,7 +35,8 @@ test("builds searchable Flow documents from every published platform page", asyn
   assert.equal(documents.length, 1);
   assert.deepEqual(documents[0], {
     id: "web:linear:9:profile", platform: "web", appId: "linear", appName: "Linear",
-    title: "Edit profile", category: "Account Management", description: "Change your profile picture",
+    title: "Edit profile", category: "Account Management", categorySlug: "account-management",
+    type: "Edit profile", typeKey: "account-management/edit-profile", description: "Change your profile picture",
     tags: ["profile"], stepLabels: ["Open profile"],
     searchText: "Linear linear Edit profile Account Management Change your profile picture profile Open profile",
     versionId: 9, card: JSON.stringify(item),
