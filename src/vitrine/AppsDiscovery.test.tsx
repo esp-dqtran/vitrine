@@ -25,6 +25,7 @@ const makeApp = (overrides: Partial<App> = {}): App => ({
   totalScreens: 1,
   platforms: ['web'],
   analyzedScreens: 1,
+  createdAt: new Date().toISOString(),
   lastCapturedAt: '2026-07-20T00:00:00.000Z',
   iconUrl: null,
   description: 'Business workspace',
