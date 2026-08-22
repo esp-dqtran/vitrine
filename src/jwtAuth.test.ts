@@ -32,7 +32,8 @@ test("rejects tampered tokens and tokens from another trust boundary", async () 
     audience: "vitrines",
   });
   const token = (await primary.issueAuthToken(user)).token;
-  const tampered = `${token.slice(0, -1)}${token.endsWith("a") ? "b" : "a"}`;
+  const [header, payload, signature] = token.split(".");
+  const tampered = `${header}.${payload}.${signature.startsWith("a") ? "b" : "a"}${signature.slice(1)}`;
   assert.equal(await primary.verifyAuthToken(tampered), undefined);
   assert.equal(await createJwtAuth({
     secret,
