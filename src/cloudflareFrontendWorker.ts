@@ -253,6 +253,7 @@ export function createCloudflareFrontendWorker(
           }
           headers.set("Cache-Control", IMMUTABLE_CACHE_CONTROL);
           headers.set("Accept-Ranges", "bytes");
+          headers.set("X-Content-Type-Options", "nosniff");
           return headers;
         };
 

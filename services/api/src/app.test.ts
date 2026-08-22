@@ -2058,7 +2058,7 @@ test("serves crawled flows even when an app has not been through AI synthesis", 
   assert.equal(snapshot.flows[0].steps[0].evidence[0].thumbnailUrl, "/api/media/lang-chain/0123456789abcdef?variant=thumb");
 });
 
-test("serves local bulk media", async (t) => {
+test("does not serve legacy local bulk media from the public route", async (t) => {
   const dataDir = mkdtempSync(join(tmpdir(), "astryx-api-"));
   mkdirSync(join(dataDir, "images", "linear"), { recursive: true });
   writeFileSync(join(dataDir, "images", "linear", "0123456789abcdef.webp"), "image");
@@ -2072,7 +2072,7 @@ test("serves local bulk media", async (t) => {
 
   assert.equal(
     (await fetch(`${base}/media/linear/0123456789abcdef`, { headers: adminAuth })).status,
-    200
+    404,
   );
   assert.equal(
     (await fetch(`${base}/media/linear/not-a-hash`, { headers: adminAuth })).status,
@@ -2080,7 +2080,7 @@ test("serves local bulk media", async (t) => {
   );
 });
 
-test("returns public design-system media without exposing invalid sources", async (t) => {
+test("does not expose protected design-system media without an authenticated delivery request", async (t) => {
   const dataDir = mkdtempSync(join(tmpdir(), "astryx-public-media-"));
   mkdirSync(join(dataDir, "images", "linear"), { recursive: true });
   writeFileSync(join(dataDir, "images", "linear", "0123456789abcdef.webp"), "image");
@@ -2115,7 +2115,7 @@ test("returns public design-system media without exposing invalid sources", asyn
   const mediaUrl = snapshot.tokens[0].evidence[0].imageUrl as string;
   assert.equal(snapshot.tokens[1].evidence[0].imageUrl, "");
   assert.equal(mediaUrl, "/api/media/linear/0123456789abcdef");
-  assert.equal((await fetch(`${base}${mediaUrl.replace("/api", "")}`)).status, 200);
+  assert.equal((await fetch(`${base}${mediaUrl.replace("/api", "")}`)).status, 404);
 });
 
 test("keeps health public and rejects private data without a session", async (t) => {
@@ -2840,7 +2840,7 @@ test("redirects authorized object-backed media to a short-lived signed URL", asy
   const { base, server } = await serve(createApiApp({
     verifyAuthToken: async () => admin,
     objectStore: signedStore,
-    adminImageObject: async () => ({ ...previewMetadata, accessClass: "protected" }),
+    entitledImageObject: async () => ({ ...previewMetadata, accessClass: "protected" }),
   }));
   t.after(() => close(server));
   const response = await fetch(`${base}/media/linear/0123456789abcdef`, {
@@ -2852,12 +2852,37 @@ test("redirects authorized object-backed media to a short-lived signed URL", asy
   assert.equal(response.headers.get("cache-control"), "private, max-age=280");
 });
 
+test("does not expose protected object-backed media without an entitlement", async (t) => {
+  const { base, server } = await serve(createApiApp({
+    objectStore: localObjectStore,
+    adminImageObject: async () => ({ ...previewMetadata, accessClass: "protected" }),
+  }));
+  t.after(() => close(server));
+
+  assert.equal(
+    (await fetch(`${base}/media/linear/0123456789abcdef`, { redirect: "manual" })).status,
+    404,
+  );
+});
+
+test("serves explicitly public-preview object-backed media without a session", async (t) => {
+  const { base, server } = await serve(createApiApp({
+    objectStore: localObjectStore,
+    adminImageObject: async () => previewMetadata,
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/media/linear/0123456789abcdef`);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+});
+
 test("passes the thumb variant through to the object lookup, defaulting to full otherwise", async (t) => {
   const seenVariants: Array<string | undefined> = [];
   const { base, server } = await serve(createApiApp({
     verifyAuthToken: async () => admin,
     objectStore: localObjectStore,
-    adminImageObject: async (input) => {
+    entitledImageObject: async (input) => {
       seenVariants.push(input.variant);
       return { ...previewMetadata, accessClass: "protected" };
     },
@@ -2882,7 +2907,7 @@ test("streams protected media through the API when inline delivery is requested"
   const { base, server } = await serve(createApiApp({
     verifyAuthToken: async () => admin,
     objectStore,
-    adminImageObject: async () => protectedMetadata,
+    entitledImageObject: async () => protectedMetadata,
   }));
   t.after(() => close(server));
 
@@ -3082,13 +3107,16 @@ test("loads screens with complete category facets and filters the paged result",
   assert.equal((await elements.json()).nextCursor, "next");
 });
 
-test("returns public Screen and UI Element media URLs", async (t) => {
+test("returns entitlement-gated Screen and UI Element media URLs", async (t) => {
   const dataDir = mkdtempSync(join(tmpdir(), "astryx-section-media-"));
   mkdirSync(join(dataDir, "images", "linear"), { recursive: true });
   writeFileSync(join(dataDir, "images", "linear", "0123456789abcdef.webp"), "image");
   const { base, server } = await serve(createApiApp({
     dataDir,
     verifyAuthToken: async () => user,
+    objectStore: localObjectStore,
+    entitledImageObject: async () => previewMetadata,
+    adminImageObject: async () => undefined,
     canAccessApp: async () => true,
     appPlatforms: async () => ["web"],
     resolveAppVersion: async () => publishedVersion,
@@ -3131,8 +3159,9 @@ test("returns public Screen and UI Element media URLs", async (t) => {
   assert.equal(screenThumbnailUrl.searchParams.get("variant"), "thumb");
   assert.equal(elementUrl.searchParams.get("kind"), "ui_element");
   assert.equal(elementUrl.searchParams.get("i"), "1");
-  assert.equal((await fetch(`${base}${screenUrl.pathname.replace("/api", "")}${screenUrl.search}`)).status, 200);
-  assert.equal((await fetch(`${base}${elementUrl.pathname.replace("/api", "")}${elementUrl.search}`)).status, 200);
+  assert.equal((await fetch(`${base}${screenUrl.pathname.replace("/api", "")}${screenUrl.search}`)).status, 404);
+  assert.equal((await fetch(`${base}${screenUrl.pathname.replace("/api", "")}${screenUrl.search}`, { headers })).status, 200);
+  assert.equal((await fetch(`${base}${elementUrl.pathname.replace("/api", "")}${elementUrl.search}`, { headers })).status, 200);
 });
 
 test("summarizes analyzed UI element crops for the Design System", async (t) => {

@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { canShowPublicSitePreview } from './App.tsx';
 import { SitesPageView } from './components/SitesPage.tsx';
 import * as SitesPageModule from './components/SitesPage.tsx';
+import { CardVideoControl } from './components/CardVideoControl.tsx';
 import * as SiteCardModule from './components/SiteCard.tsx';
 import { SiteVersionView } from './components/SiteVersionPage.tsx';
 import * as SiteVersionPageModule from './components/SiteVersionPage.tsx';
@@ -243,7 +244,7 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.match(html, /data-site-discovery-card="true"/);
   assert.doesNotMatch(html, /Latest · 46 sections/);
   // A first capture reads "New"; a re-captured Site reads "Updated".
-  assert.match(html, /<span class="discovery-card__badge">New<\/span>/);
+  assert.match(html, /<span class="discovery-card__badge site-discovery-card__status">New<\/span>/);
   assert.match(html, /AI-powered visual data platform/);
   // The card is a still until hover; the video element mounts on intent.
   assert.doesNotMatch(html, /<video/);
@@ -257,7 +258,29 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
 
 test('anchors full-page Site posters to the homepage hero in discovery cards', () => {
   const styles = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
-  assert.match(styles, /\.sites-discovery__grid \.site-discovery-card__media > img\s*\{\s*object-position:\s*top center;/);
+  assert.match(styles, /\.sites-discovery__grid \.site-discovery-card__preview > img\s*\{\s*object-position:\s*top center;/);
+});
+
+test('uses the same media-first card composition for Sites and Apps', () => {
+  const styles = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
+  const html = renderToStaticMarkup(<SiteCardModule.SiteCard site={site} onOpen={() => undefined} />);
+
+  assert.match(html, /class="site-discovery-card__preview"/);
+  assert.match(styles, /\.site-discovery-card__media\s*\{[\s\S]*aspect-ratio:\s*1\s*\/\s*1[\s\S]*background:\s*var\(--color-background-surface\)/);
+  assert.match(styles, /\.site-discovery-card__preview\s*\{[\s\S]*width:\s*82%[\s\S]*aspect-ratio:\s*16\s*\/\s*10/);
+  assert.match(styles, /\.site-discovery-card__identity\s*\{[\s\S]*padding:\s*0 2px/);
+});
+
+test('reuses the shared video control for a Site preview after hover or focus', () => {
+  const source = readFileSync(new URL('./components/SiteCard.tsx', import.meta.url), 'utf8');
+  const control = renderToStaticMarkup(
+    <CardVideoControl paused={false} progress={0.4} onToggle={() => undefined} />,
+  );
+
+  assert.match(source, /<CardVideoControl/);
+  assert.match(source, /onTimeUpdate/);
+  assert.match(control, /data-video-progress/);
+  assert.match(control, /Pause video preview/);
 });
 
 test('keeps the Sites hero taxonomy curated when the API returns noisy facets', () => {

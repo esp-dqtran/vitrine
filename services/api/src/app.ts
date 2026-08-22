@@ -1,7 +1,6 @@
 import express from "express";
 import compression from "compression";
 import { bearerToken } from "./bearerAuth.ts";
-import { resolve } from "node:path";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import {
@@ -151,7 +150,6 @@ import {
   crawlFailureObject,
   entitledImageObject,
   imageObjectById,
-  legacyImageReference,
   publishedFlowCatalogPreviewObject,
   publishedFacetPreviewObject,
   publishedPreviewObject,
@@ -534,7 +532,6 @@ const defaults = {
   adminImageObject,
   crawlFailureObject,
   entitledImageObject,
-  legacyImageReference,
   publishedFacetPreviewObject,
   publishedFlowCatalogPreviewObject,
   publishedPreviewObject,
@@ -1750,9 +1747,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   };
   mountPublicSitesRoutes(app, sitesRouteDependencies);
 
-  // Media is intentionally public for now. Browser-native image requests cannot attach the
-  // bearer token kept in session storage, so this route must be mounted before protected API
-  // middleware and must not depend on res.locals.user.
+  // Browser-native image requests cannot attach the bearer token kept in session storage, so
+  // this endpoint is limited to derivatives explicitly classified for the public catalog.
+  // Protected and internal assets must use an authenticated delivery path instead.
   app.get("/media/:app/:hash", async (req, res) => {
     if (!isAppSlug(req.params.app) || !/^[0-9a-f]{16}$/.test(req.params.hash)) {
       res.status(400).json({ error: "invalid media reference" });
@@ -1767,12 +1764,20 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       : undefined;
     const ref = legacyRefSuffix({ hash: req.params.hash, imageKind, index: imageIndex });
     if (deps.objectStore) {
-      const metadata = await deps.adminImageObject({
-        app: req.params.app,
-        hash: ref,
-        variant,
-      });
-      if (metadata) {
+      const user = await resolveRequestUser(req);
+      const metadata = user
+        ? await deps.entitledImageObject({
+            userId: user.id,
+            app: req.params.app,
+            hash: ref,
+            variant,
+          })
+        : await deps.adminImageObject({
+            app: req.params.app,
+            hash: ref,
+            variant,
+          });
+      if (metadata && (user || metadata.accessClass === "public-preview")) {
         try {
           await sendStoredObject(
             deps.objectStore,
@@ -1785,22 +1790,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         }
         return;
       }
-      const legacy = await deps.legacyImageReference({
-        app: req.params.app,
-        hash: ref,
-        publishedOnly: false,
-      });
-      if (!legacy) {
-        res.status(404).json({ error: "image not found" });
-        return;
-      }
     }
-    const path = findBulkImage(deps.dataDir, req.params.app, req.params.hash);
-    if (!path) {
-      res.status(404).json({ error: "image not found" });
-      return;
-    }
-    res.sendFile(resolve(path));
+    res.status(404).json({ error: "image not found" });
   });
   // Threads fetches the post image itself, without Vitrines credentials. This
   // route must remain ahead of the authenticated API middleware, like /media.

@@ -12,6 +12,7 @@ interface DiscoveryCardProps {
   title: ReactNode;
   description: ReactNode;
   metadata?: ReactNode;
+  overlay?: ReactNode;
   articleProps?: HTMLAttributes<HTMLElement>;
 }
 
@@ -25,6 +26,7 @@ export function DiscoveryCard({
   title,
   description,
   metadata,
+  overlay,
   articleProps,
 }: DiscoveryCardProps) {
   const content = (
@@ -77,6 +79,7 @@ export function DiscoveryCard({
           {content}
         </a>
       ) : content}
+      {overlay}
     </article>
   );
 }

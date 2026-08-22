@@ -49,8 +49,8 @@ export function mountPublicSitesRoutes(
     },
   );
 
-  // ponytail: public so <video>/<img src> tags can load them without a bearer
-  // header; mountMedia already 404s accessClass "internal" media either way.
+  // Browser-native media requests cannot attach the bearer token kept in session
+  // storage. Only explicitly public catalog derivatives can be served here.
   mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/media/preview", "preview");
   mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/media/mobile", "mobile");
   mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/pages/:recordId/media", "page");
@@ -578,7 +578,7 @@ async function sendPublicCatalogMedia(
     kind: kind === "preview" ? "preview" : "page",
     ...(recordId === undefined ? {} : { recordId }),
   });
-  if (!metadata || metadata.accessClass === "internal") {
+  if (!metadata || metadata.accessClass !== "public-preview") {
     res.status(404).json({ error: "Site catalog media not found" });
     return;
   }
@@ -608,7 +608,7 @@ function mountMedia(
       kind,
       ...(recordId === undefined ? {} : { recordId }),
     });
-    if (!metadata || metadata.accessClass === "internal") {
+    if (!metadata || metadata.accessClass !== "public-preview") {
       res.status(404).json({ error: "Site media not found" });
       return;
     }

@@ -245,7 +245,7 @@ test("validates positive Site route IDs before store reads", async (t) => {
   assert.equal(reads, 0);
 });
 
-test("resolves each protected Site media route without exposing object keys", async (t) => {
+test("does not expose protected Site media from the public media routes", async (t) => {
   const inputs: Array<Parameters<SitesStore["siteMediaObject"]>[0]> = [];
   const sent: ObjectMetadata[] = [];
   const { base, server } = await serve(fakeStore({
@@ -262,8 +262,7 @@ test("resolves each protected Site media route without exposing object keys", as
   ];
   for (const path of paths) {
     const response = await fetch(`${base}${path}`, { redirect: "manual" });
-    assert.equal(response.status, 302);
-    assert.doesNotMatch(await response.text(), /sites\/1\/versions/);
+    assert.equal(response.status, 404, path);
   }
   assert.deepEqual(inputs, [
     { siteId: 1, versionId: 2, kind: "preview" },
@@ -272,7 +271,7 @@ test("resolves each protected Site media route without exposing object keys", as
     { siteId: 1, versionId: 2, kind: "section", recordId: 4 },
     { siteId: 1, versionId: 2, kind: "poster", recordId: 4 },
   ]);
-  assert.equal(sent.length, 5);
+  assert.equal(sent.length, 0);
 });
 
 test("returns 404 for missing or internal Site media", async (t) => {

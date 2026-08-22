@@ -1905,7 +1905,7 @@ body {
 
 /* Site poster assets can be full-page captures. Anchor those tall images to
    the top so discovery shows the homepage hero instead of a middle section. */
-.sites-discovery__grid .site-discovery-card__media > img {
+.sites-discovery__grid .site-discovery-card__preview > img {
   object-position: top center;
 }
 
@@ -17070,13 +17070,398 @@ body {
   gap: 28px 16px;
 }
 
-.app-discovery-card {
+.app-discovery-card.discovery-card {
+  position: relative;
+  overflow: visible;
+  border: 0;
+  background: transparent;
   color: var(--color-text-primary);
   cursor: pointer;
 }
 
+.app-discovery-card__link {
+  display: grid;
+  gap: 16px;
+}
+
 .app-discovery-card__media {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--reference-card-radius);
+  background: var(--color-background-surface);
+}
+
+.app-discovery-card__identity {
+  padding: 0 2px;
+}
+
+.app-discovery-card.discovery-card .app-discovery-card__media {
+  border-radius: var(--reference-card-radius);
+  transition: none;
+}
+
+.app-discovery-card.discovery-card:hover .app-discovery-card__media,
+.app-discovery-card.discovery-card:focus-within .app-discovery-card__media {
+  border-color: var(--color-border);
+  transform: none;
+}
+
+/* Sites use the same self-contained media tile and identity row as Apps. The
+   Site-specific preview remains lazy, so only the visual frame is shared. */
+.site-discovery-card.discovery-card {
+  position: relative;
+  overflow: visible;
+  border: 0;
   background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.site-discovery-card__link {
+  display: grid;
+  gap: 16px;
+}
+
+.site-discovery-card__media {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--reference-card-radius);
+  background: var(--color-background-surface);
+}
+
+.site-discovery-card__identity {
+  padding: 0 2px;
+}
+
+.site-discovery-card.discovery-card .site-discovery-card__media {
+  border-radius: var(--reference-card-radius);
+  transition: none;
+}
+
+.site-discovery-card.discovery-card:hover .site-discovery-card__media,
+.site-discovery-card.discovery-card:focus-within .site-discovery-card__media {
+  border-color: var(--color-border);
+  transform: none;
+}
+
+.site-discovery-card__preview {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 82%;
+  aspect-ratio: 16 / 10;
+  display: block;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--color-background-muted);
+  transform: translate(-50%, -50%);
+}
+
+.site-discovery-card__preview > img,
+.site-discovery-card__preview > video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+.app-discovery-card__desktop-preview {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 82%;
+  aspect-ratio: 16 / 10;
+  display: block;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--color-background-muted);
+  transform: translate(-50%, -50%);
+  isolation: isolate;
+}
+
+.app-discovery-card__desktop-preview-slide {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  will-change: transform;
+}
+
+.app-discovery-card__desktop-preview-slide[data-slider-leaving='true'] {
+  z-index: 1;
+  animation: app-card-slider-leave 360ms cubic-bezier(0.22, 0.8, 0.25, 1) both;
+}
+
+.app-discovery-card__desktop-preview-slide[data-slider-entering='true'] {
+  animation: app-card-slider-enter 360ms cubic-bezier(0.22, 0.8, 0.25, 1) both;
+}
+
+.app-discovery-card__desktop-preview-slide[data-direction='backward'][data-slider-leaving='true'] {
+  animation-name: app-card-slider-leave-backward;
+}
+
+.app-discovery-card__desktop-preview-slide[data-direction='backward'][data-slider-entering='true'] {
+  animation-name: app-card-slider-enter-backward;
+}
+
+@keyframes app-card-slider-enter {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes app-card-slider-leave {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes app-card-slider-enter-backward {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes app-card-slider-leave-backward {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+.app-discovery-card__status {
+  pointer-events: none;
+}
+
+.discovery-card__video-control,
+.app-discovery-card__slider-status {
+  position: absolute;
+  z-index: 4;
+}
+
+.discovery-card__video-control {
+  /* Match the New/Updated pill inset on the opposing corner. */
+  top: 10px;
+  right: 10px;
+  width: 23px;
+  height: 23px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-background-body) 58%, transparent);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.86);
+  transition:
+    background 140ms ease,
+    opacity 160ms ease,
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.discovery-card:hover .discovery-card__video-control,
+.discovery-card:focus-within .discovery-card__video-control,
+.discovery-card__video-control:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.discovery-card__video-control:hover,
+.discovery-card__video-control:focus-visible {
+  background: color-mix(in srgb, var(--color-background-body) 78%, transparent);
+}
+
+.discovery-card__video-control:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 3px;
+}
+
+.discovery-card__video-control-ring {
+  position: relative;
+  width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.discovery-card__video-control-ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: none;
+  stroke-width: 2.5;
+  transform: rotate(-90deg);
+}
+
+.discovery-card__video-progress-track {
+  stroke: color-mix(in srgb, currentColor 32%, transparent);
+}
+
+.discovery-card__video-progress-value {
+  stroke: currentColor;
+  stroke-linecap: round;
+}
+
+.discovery-card__pause-icon {
+  position: absolute;
+  display: flex;
+  gap: 3px;
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  transition: opacity 140ms ease, transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.discovery-card__pause-icon i {
+  width: 2px;
+  height: 8px;
+  display: block;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.discovery-card__play-icon {
+  position: absolute;
+  width: 0;
+  height: 0;
+  margin-left: 2px;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-left: 6px solid currentColor;
+  opacity: 0;
+  transform: scale(0.62) rotate(-24deg);
+  transition: opacity 140ms ease, transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.discovery-card__video-control[aria-pressed='true'] .discovery-card__pause-icon {
+  opacity: 0;
+  transform: scale(0.62) rotate(24deg);
+}
+
+.discovery-card__video-control[aria-pressed='true'] .discovery-card__play-icon {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.app-discovery-card__slider-status {
+  /* The desktop preview is 82% wide at 16:10, so its lower edge is 75.625%
+     down the square media tile. Keep the position marker attached to it. */
+  top: calc(75.625% + 10px);
+  right: auto;
+  bottom: auto;
+  left: 50%;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity 160ms ease,
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app-discovery-card:hover .app-discovery-card__slider-status,
+.app-discovery-card:focus-within .app-discovery-card__slider-status {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.app-discovery-card__slider-status i {
+  width: 8px;
+  height: 8px;
+  display: block;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-text-primary) 28%, transparent);
+  transform: scale(0.82);
+  transition:
+    background 180ms ease,
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app-discovery-card__slider-status i[data-active='true'] {
+  background: var(--color-text-primary);
+  transform: scale(1);
+}
+
+.app-discovery-card__slider-arrow {
+  position: absolute;
+  /* The media is followed by a 44px identity row plus a 16px gap. Keeping
+     this 30px above the card midpoint locks the controls to the screenshot's
+     midpoint instead of the midpoint of the whole AppCard. */
+  top: calc(50% - 30px);
+  z-index: 4;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 14%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-background-body) 78%, transparent);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) scale(0.92);
+  transition:
+    background 160ms ease,
+    opacity 160ms ease,
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app-discovery-card__slider-arrow--previous {
+  left: calc(9% + 8px);
+}
+
+.app-discovery-card__slider-arrow--next {
+  right: calc(9% + 8px);
+}
+
+.app-discovery-card:hover .app-discovery-card__slider-arrow,
+.app-discovery-card:focus-within .app-discovery-card__slider-arrow,
+.app-discovery-card__slider-arrow:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) scale(1);
+}
+
+.app-discovery-card__slider-arrow:hover,
+.app-discovery-card__slider-arrow:focus-visible {
+  background: color-mix(in srgb, var(--color-background-body) 88%, transparent);
+  transform: translateY(-50%) scale(1.06);
+}
+
+.app-discovery-card__slider-arrow:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 3px;
+}
+
+.app-discovery-card__slider-arrow svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discovery-card__video-control,
+  .app-discovery-card__slider-arrow,
+  .discovery-card__pause-icon,
+  .discovery-card__play-icon,
+  .app-discovery-card__desktop-preview-slide {
+    transition: none;
+    animation: none;
+  }
 }
 
 /* Portrait only when a phone screenshot is actually on the card. Keying this
@@ -17084,6 +17469,11 @@ body {
    app happened to be iOS or Android. */
 .app-discovery-card[data-preview-shape="phone"] .app-discovery-card__media {
   aspect-ratio: 3 / 4;
+}
+
+.app-discovery-card[data-preview-shape="phone"] .app-discovery-card__slider-status {
+  top: auto;
+  bottom: 16px;
 }
 
 .app-discovery-card[data-preview-layout="triptych"] .app-discovery-card__media {

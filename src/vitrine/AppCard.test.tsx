@@ -23,6 +23,7 @@ const app = (screens: Screen[]): App => ({
   totalScreens: screens.length,
   platforms: ['web'],
   analyzedScreens: screens.length,
+  createdAt: new Date().toISOString(),
   lastCapturedAt: '2026-07-25T00:00:00.000Z',
   iconUrl: null,
   description: 'Plan and build products',
@@ -138,6 +139,24 @@ test('keeps a single-screen App card free from an empty next layer', () => {
   assert.doesNotMatch(html, /Jul 25, 2026/);
 });
 
+test('shows New only while an App capture is at most seven days old', () => {
+  const fresh = renderToStaticMarkup(
+    <AppCard app={app([screen(1, '/fresh.png')])} onOpen={() => undefined} />,
+  );
+  const old = renderToStaticMarkup(
+    <AppCard
+      app={{
+        ...app([screen(1, '/old.png')]),
+        createdAt: new Date(Date.now() - (7 * 24 * 60 * 60 * 1_000) - 1).toISOString(),
+      }}
+      onOpen={() => undefined}
+    />,
+  );
+
+  assert.match(fresh, /app-discovery-card__status">New/);
+  assert.doesNotMatch(old, /app-discovery-card__status/);
+});
+
 test('shows the stored app description instead of its category', () => {
   const description = 'Bring all your people data into one place.';
   const html = renderToStaticMarkup(
@@ -153,4 +172,38 @@ test('shows the stored app description instead of its category', () => {
 
   assert.match(html, new RegExp(description));
   assert.doesNotMatch(html, />Productivity</);
+});
+
+test('renders a top-right video control outside the card link', () => {
+  const html = renderToStaticMarkup(
+    <AppCard
+      app={{ ...app([screen(1, '/one.png')]), previewVideoUrl: '/preview.mp4' }}
+      onOpen={() => undefined}
+    />,
+  );
+
+  assert.match(html, /<video[^>]+src="\/preview\.mp4"/);
+  assert.match(html, /aria-label="Pause video preview"/);
+  assert.match(html, /data-video-progress="0"/);
+  assert.match(html, /<\/a><span class="discovery-card__badge app-discovery-card__status">New<\/span><button/);
+});
+
+test('renders slider navigation and position for multiple App previews', () => {
+  const html = renderToStaticMarkup(
+    <AppCard
+      app={app([screen(1, '/one.png'), screen(2, '/two.png'), screen(3, '/three.png')])}
+      slider
+      onOpen={() => undefined}
+    />,
+  );
+
+  assert.match(html, /aria-label="Slide 1 of 3"/);
+  assert.match(html, /aria-label="Previous preview"/);
+  assert.match(html, /aria-label="Next preview"/);
+  assert.match(html, /src="\/one\.png"/);
+  assert.doesNotMatch(html, /src="\/two\.png"/);
+  assert.match(html, /class="app-discovery-card__desktop-preview-slide" data-direction="forward"/);
+  assert.doesNotMatch(html, /data-slider-entering/);
+  assert.equal((html.match(/data-active=/g) ?? []).length, 1);
+  assert.equal((html.match(/app-discovery-card__slider-status[^<]*"><i/g) ?? []).length, 1);
 });

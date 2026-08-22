@@ -42,7 +42,7 @@ const metadata: ObjectMetadata = {
   sha256: "b".repeat(64),
   byteSize: 5,
   contentType: "video/webm",
-  accessClass: "protected",
+  accessClass: "public-preview",
 };
 const cursorSecret = "public-sites-test-secret-0123456789abcdef";
 

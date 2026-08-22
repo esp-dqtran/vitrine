@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type FocusEvent, type MouseEvent } from 'react';
 import type { SiteSummary } from '../types.ts';
 import { AppIcon } from './AppIcon.tsx';
+import { CardVideoControl } from './CardVideoControl.tsx';
 import { DiscoveryCard } from './DiscoveryCard.tsx';
 
 export function SiteCard({
@@ -18,6 +19,8 @@ export function SiteCard({
   // soon as that intent ends, leaving the poster as the only idle media.
   const [previewActive, setPreviewActive] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
+  const [videoPaused, setVideoPaused] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
   const hostname = safeHostname(site.sourceUrl);
   const description = site.description || `${site.sectionCount} captured sections from ${hostname}.`;
 
@@ -31,7 +34,7 @@ export function SiteCard({
     if (!playsVideo) return;
     setPreviewActive(true);
     const video = videoRef.current;
-    if (video) void video.play().catch(() => undefined);
+    if (video) void video.play().catch(() => setVideoPaused(true));
   };
   const stopPreview = () => {
     const video = videoRef.current;
@@ -40,6 +43,22 @@ export function SiteCard({
       video.currentTime = 0;
     }
     setPreviewActive(false);
+    setVideoPaused(false);
+    setVideoProgress(0);
+  };
+  const stopPreviewOnBlur = (event: FocusEvent<HTMLElement>) => {
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+    stopPreview();
+  };
+  const toggleVideo = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      void video.play().catch(() => setVideoPaused(true));
+    } else {
+      video.pause();
+    }
   };
 
   return (
@@ -52,30 +71,41 @@ export function SiteCard({
         onMouseEnter: startPreview,
         onMouseLeave: stopPreview,
         onFocus: startPreview,
-        onBlur: stopPreview,
+        onBlur: stopPreviewOnBlur,
       }}
       media={(
         <>
-          {thumbnailUrl ? (
-            <img src={thumbnailUrl} alt={`${site.name} website preview`} loading="lazy" />
-          ) : (
-            <span className="site-discovery-card__fallback">Preview unavailable</span>
-          )}
-          {playsVideo && previewActive ? (
-            <video
-              ref={videoRef}
-              className="site-discovery-card__video"
-              src={site.previewUrl}
-              poster={thumbnailUrl}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="auto"
-              onError={() => setVideoFailed(true)}
-            />
-          ) : null}
-          <span className="discovery-card__badge">{site.isUpdated ? 'Updated' : 'New'}</span>
+          <span className="site-discovery-card__preview">
+            {thumbnailUrl ? (
+              <img src={thumbnailUrl} alt={`${site.name} website preview`} loading="lazy" />
+            ) : (
+              <span className="site-discovery-card__fallback">Preview unavailable</span>
+            )}
+            {playsVideo && previewActive ? (
+              <video
+                ref={videoRef}
+                className="site-discovery-card__video"
+                src={site.previewUrl}
+                poster={thumbnailUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                onPlay={() => setVideoPaused(false)}
+                onPause={() => setVideoPaused(true)}
+                onTimeUpdate={(event) => {
+                  const { currentTime, duration } = event.currentTarget;
+                  setVideoProgress(Number.isFinite(duration) && duration > 0 ? currentTime / duration : 0);
+                }}
+                onError={() => {
+                  setVideoFailed(true);
+                  setPreviewActive(false);
+                }}
+              />
+            ) : null}
+          </span>
+          <span className="discovery-card__badge site-discovery-card__status">{site.isUpdated ? 'Updated' : 'New'}</span>
         </>
       )}
       // The same tile the App cards use: it handles the initial fallback when a
@@ -92,6 +122,13 @@ export function SiteCard({
       title={site.name}
       description={description}
       metadata={matchLabel}
+      overlay={playsVideo && previewActive ? (
+        <CardVideoControl
+          paused={videoPaused}
+          progress={videoProgress}
+          onToggle={toggleVideo}
+        />
+      ) : undefined}
     />
   );
 }

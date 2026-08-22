@@ -409,6 +409,7 @@ test("Cloudflare serves only public media prefixes straight from R2", async () =
   assert.equal(requestedKey, "prod/thumbnails/1/abc.jpg");
   assert.equal(served.status, 200);
   assert.equal(served.headers.get("Accept-Ranges"), "bytes");
+  assert.equal(served.headers.get("X-Content-Type-Options"), "nosniff");
 
   // Video elements request byte ranges. Answering with the whole file makes
   // seeking impossible, so a Range request must come back as a 206.
@@ -444,6 +445,7 @@ test("Cloudflare serves only public media prefixes straight from R2", async () =
   assert.equal(partial.status, 206);
   assert.equal(partial.headers.get("Content-Range"), "bytes 100-199/5000");
   assert.equal(partial.headers.get("Content-Length"), "100");
+  assert.equal(partial.headers.get("X-Content-Type-Options"), "nosniff");
 
   // Content-addressed keys never change, so a repeat request must come from the
   // colo cache instead of paying for another R2 read.
