@@ -570,7 +570,7 @@ test('preserves app navigation affordance, admin status, and beforeGrid content'
   assert.match(html, /<a[^>]+href="\/apps\/base"[^>]+class="discovery-card__link app-discovery-card__link"/);
   assert.doesNotMatch(html, />In progress</);
   assert.doesNotMatch(html, /0\/2 analyzed/);
-  assert.match(html, /<span class="discovery-card__badge">New<\/span>/);
+  assert.match(html, /<span class="discovery-card__badge app-discovery-card__status">New<\/span>/);
 });
 
 test('uses controller facets and has no page-owned catalog fan-out or pagination observer', async () => {
