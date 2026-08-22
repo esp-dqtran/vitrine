@@ -1,0 +1,123 @@
+:host {
+  color: #f5f7f2;
+  color-scheme: dark;
+  font-family: "Taste Matter", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+body, button, input { font: inherit; }
+
+.taste-hero,
+.taste-challenge,
+.taste-mission,
+.taste-stack,
+.taste-swipe {
+  width: 100%;
+  overflow: hidden;
+}
+
+.taste-hero {
+  position: relative;
+  height: 880px;
+  background: #1e1e1e;
+}
+.taste-hero__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .7s ease; }
+.taste-hero__video.is-ready { opacity: 1; }
+.taste-hero__shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(30,30,30,.04), rgba(30,30,30,.08) 52%, rgba(30,30,30,.5)); }
+.taste-hero__content { position: absolute; inset: auto 40px 32px; display: grid; justify-items: center; gap: 30px; }
+.taste-hero__headline { margin: 0; color: #f5f7f2; font-size: 31px; font-weight: 400; line-height: 1.08; text-align: center; }
+.taste-hero__headline span { display: block; color: #8b8b8b; }
+.taste-mono-link { display: inline-flex; align-items: center; gap: 16px; color: #f5f7f2; font-family: "Taste Mono", monospace; font-size: 13px; letter-spacing: .04em; text-decoration: none; }
+.taste-mono-link span { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid currentColor; border-radius: 16px; transition: transform .25s ease, background .25s ease, color .25s ease; }
+.taste-mono-link:hover span { transform: translate(3px,-3px); background: #f5f7f2; color: #1e1e1e; }
+
+.taste-challenge { container-type: inline-size; height: 780px; display: flex; flex-direction: column; align-items: center; background: #1e1e1e; }
+.taste-challenge__carousel { position: relative; flex: 0 0 auto; width: 80cqw; height: 40cqw; display: flex; align-items: center; justify-content: center; perspective: 90cqw; transform-style: preserve-3d; cursor: grab; touch-action: pan-y; user-select: none; }
+.taste-challenge.is-dragging .taste-challenge__carousel { cursor: grabbing; }
+.taste-challenge__panel { position: absolute; top: calc(50% - 12.25cqw); left: calc(50% - 3.5cqw); width: 7cqw; height: 24.5cqw; display: flex; flex-direction: column; justify-content: space-between; transform-origin: 50% 50% -20.9cqw; will-change: transform; }
+.taste-challenge__item, .taste-challenge__image { width: 7cqw; height: 7cqw; }
+.taste-challenge__item { position: relative; flex: 0 0 auto; }
+.taste-challenge__image { display: block; object-fit: contain; pointer-events: none; user-select: none; }
+.taste-challenge__copy { width: 100%; display: flex; justify-content: center; }
+.taste-challenge__copy--desktop { height: 268px; align-items: flex-start; }
+.taste-challenge__copy--mobile { display: none; }
+.taste-challenge__headline { width: min(504px, 86%); margin: 0; font-size: 28.8px; font-weight: 400; line-height: 36px; text-align: center; }
+.taste-challenge__headline span { color: #8b8b8b; }
+
+.taste-mission { min-height: 650px; padding: 78px 40px; display: grid; grid-template-columns: 1.45fr .78fr; align-items: center; gap: 64px; background: #f5f7f2; color: #111; }
+.taste-mission__art { min-width: 0; }
+.taste-mission__art canvas { display: block; width: 100% !important; height: auto !important; aspect-ratio: 1315 / 1008; object-fit: contain; }
+.taste-mission__copy h2 { margin: 0 0 22px; font-size: 31px; font-weight: 500; line-height: 1.1; }
+.taste-mission__copy p { margin: 0 0 25px; font-size: 16px; font-weight: 400; line-height: 1.4; }
+
+.taste-stack { min-height: 970px; padding: 40px; background: #1e1e1e; color: #f5f7f2; }
+.taste-stack__eyebrow { margin: 0 0 36px; font-family: "Taste Mono", monospace; font-size: 16px; letter-spacing: .04em; }
+.taste-stack__grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid #454649; }
+.taste-stack-card { min-width: 0; padding: 42px 48px 38px; background: #2b2e32; }
+.taste-stack-card + .taste-stack-card { border-left: 1px solid #454649; }
+.taste-stack-card__animation { height: 315px; display: grid; place-items: center; overflow: hidden; }
+.taste-stack-card__animation canvas { width: 100% !important; height: 100% !important; object-fit: contain; }
+.taste-stack-card__rule { height: 1px; margin-bottom: 52px; background: #454649; }
+.taste-stack-card h3 { margin: 0 0 20px; font-size: 29px; font-weight: 400; line-height: 1.2; }
+.taste-stack-card > p { min-height: 78px; margin: 0; color: #8b8b8b; font-size: 16px; font-weight: 300; line-height: 1.4; }
+.taste-stack-card__form { min-height: 58px; margin-top: 46px; padding: 9px; display: grid; grid-template-columns: 1fr 184px; align-items: center; border: 1px solid #606166; border-radius: 12px; }
+.taste-stack-card__form input { width: 100%; padding: 0 14px; color: #f5f7f2; background: transparent; border: 0; outline: 0; }
+.taste-stack-card__form input::placeholder { color: #8b8b8b; }
+.taste-stack-card__form button { height: 40px; color: #f5f7f2; background: transparent; border: 1px solid #f5f7f2; border-radius: 8px; cursor: pointer; }
+.taste-stack-card__form button:hover { color: #1e1e1e; background: #f5f7f2; }
+.taste-stack-card__success { grid-column: 1 / -1; min-height: 0 !important; margin: 0 !important; padding: 0 14px; color: #31ce80 !important; }
+
+.taste-swipe { container-type: inline-size; position: relative; height: 720px; padding: 3.2cqw; border-radius: 10px; background: #eaecE7; color: #111; }
+.taste-swipe__stage { position: relative; width: 100%; height: 100%; overflow: hidden; touch-action: none; }
+.taste-swipe__caption { position: absolute; top: 0; left: 0; display: flex; align-items: center; gap: 10px; color: #747370; font-family: "Taste Mono", monospace; font-size: 11px; line-height: 20px; text-transform: uppercase; letter-spacing: .06em; }
+.taste-swipe__heading { position: absolute; z-index: 4; top: 76px; left: 50%; width: 720px; transform: translateX(-50%); text-align: center; pointer-events: none; }
+.taste-swipe__heading h2, .taste-swipe__heading p { margin: 0; font-size: 46px; font-weight: 700; line-height: 46.92px; }
+.taste-swipe__heading p { color: #747370; }
+.taste-swipe__side { position: absolute; z-index: 5; top: 50%; transform: translateY(-50%); font-family: "Taste Mono", monospace; font-size: 11.3px; line-height: 20px; text-transform: uppercase; letter-spacing: .04em; }
+.taste-swipe__side small { margin-left: 5px; color: #747370; }
+.taste-swipe__side--yes { left: 5.6%; }
+.taste-swipe__side--no { right: 5.6%; }
+.taste-swipe__deck { position: absolute; z-index: 3; left: 50%; top: 50%; width: 0; height: 0; }
+.taste-swipe__tile { position: absolute; top: 0; left: 0; width: clamp(46px, 7.8cqw, 124px); height: clamp(46px, 7.8cqw, 124px); margin: calc(clamp(46px, 7.8cqw, 124px) * -.5); object-fit: cover; clip-path: polygon(25% 6%,75% 6%,100% 50%,75% 94%,25% 94%,0 50%); transition: transform .42s cubic-bezier(.22,1,.36,1); cursor: grab; user-select: none; }
+.taste-swipe__tile.is-dragging { cursor: grabbing; transition: none; }
+.taste-swipe__restart { width: 170px; height: 46px; margin: -23px -85px; border: 1px solid #111; border-radius: 10px; background: transparent; cursor: pointer; }
+.taste-swipe.is-finished { color: #f5f7f2; background: #1e1e1e; }
+.taste-swipe.is-finished .taste-swipe__restart { border-color: #f5f7f2; color: #f5f7f2; }
+
+@media (max-width: 700px) {
+  .taste-hero { height: 720px; }
+  .taste-hero__content { inset: auto 20px 28px; }
+  .taste-hero__headline { font-size: 25px; }
+  .taste-mission { min-height: 820px; padding: 54px 24px; grid-template-columns: 1fr; gap: 38px; }
+  .taste-mission__copy h2 { font-size: 28px; }
+  .taste-desktop-only { display: none; }
+  .taste-stack { padding: 28px 20px; }
+  .taste-stack__grid { grid-template-columns: 1fr; }
+  .taste-stack-card { padding: 28px 24px; }
+  .taste-stack-card + .taste-stack-card { border-top: 1px solid #454649; border-left: 0; }
+  .taste-stack-card__animation { height: 245px; }
+  .taste-stack-card h3 { font-size: 25px; }
+  .taste-stack-card__form { grid-template-columns: 1fr; gap: 10px; }
+  .taste-stack-card__form button { width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .taste-challenge { height: 489px; }
+  .taste-challenge__carousel { width: 80cqw; height: 50cqw; perspective: 90cqw; }
+  .taste-challenge__panel { top: calc(50% - 19.5cqw); left: calc(50% - 6.5cqw); width: 13cqw; height: 39cqw; transform-origin: 50% 50% -38.8cqw; }
+  .taste-challenge__item, .taste-challenge__image { width: 13cqw; height: 13cqw; }
+  .taste-challenge__copy--desktop { display: none; }
+  .taste-challenge__copy--mobile { height: 294px; padding: 64px 24px; display: flex; align-items: flex-start; }
+  .taste-challenge__headline { width: 100%; font-size: 28.8px; line-height: 33.12px; }
+  .taste-swipe { height: 660px; padding: 22px 14px 14px; }
+  .taste-swipe__heading { top: 82px; width: 95%; }
+  .taste-swipe__heading h2, .taste-swipe__heading p { font-size: 34px; }
+  .taste-swipe__tile { width: 72px; height: 72px; margin: -36px; }
+  .taste-swipe__side { top: auto; bottom: 48px; transform: none; }
+  .taste-swipe__side--yes { left: 16px; }
+  .taste-swipe__side--no { right: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .taste-hero__video { display: none; }
+}

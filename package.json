@@ -109,6 +109,7 @@
     "@hocuspocus/extension-database": "^4.4.0",
     "@hocuspocus/provider": "^4.4.0",
     "@hocuspocus/server": "^4.4.0",
+    "@lottiefiles/dotlottie-react": "^0.19.15",
     "@mantine/core": "^8.3.18",
     "@mantine/hooks": "^8.3.18",
     "@modelcontextprotocol/sdk": "^1.30.0",
