@@ -47,6 +47,7 @@ export function createProjectDocumentCollaborationService(
   );
 
   return new Server<ProjectDocumentCollaborationContext>({
+    port: 0,
     quiet: true,
     debounce: 500,
     maxDebounce: 2_000,
