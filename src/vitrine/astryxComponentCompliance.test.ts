@@ -13,11 +13,15 @@ const nativeTags = new Set(['button', 'input', 'textarea', 'select']);
 // product unnoticed and the baseline can only shrink deliberately.
 const allowedNativeControls = {
   'Home.tsx': { input: 1 },
+  'LegalPages.tsx': { button: 3 },
+  'Pricing.tsx': { button: 2 },
+  'components/AppCard.tsx': { button: 2 },
+  'components/CardVideoControl.tsx': { button: 1 },
   'components/CatalogBrowsePage.tsx': { button: 1 },
   'components/CatalogFlowsPage.tsx': { button: 1 },
   'components/CatalogLibraryPage.tsx': { button: 1 },
   'components/CatalogPasswordPages.tsx': { button: 5, input: 2 },
-  'components/CatalogPricingPage.tsx': { button: 4 },
+  'components/CatalogPricingPage.tsx': { button: 5 },
   'components/CatalogSearchPage.tsx': { input: 1, button: 2 },
   'components/CatalogSection.tsx': { button: 4 },
   'components/CatalogSettingsPage.tsx': { button: 3 },

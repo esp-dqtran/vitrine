@@ -87,8 +87,15 @@ export function PricingView({ user, subscription, onBrowse, onSignIn, onCheckout
   const nav = <>{compact ? <AstryxMenu button={{ label: 'Menu', icon: <Icon icon="menu" />, isIconOnly: true, variant: 'ghost', size: 'sm' }} items={[{ label: 'Browse', onClick: onBrowse }, { label: 'Sign in', onClick: onSignIn }]} /> : <><Button label="Browse" variant="ghost" clickAction={onBrowse} /><Button label="Sign in" variant="ghost" clickAction={onSignIn} /></>}<Button label="Get started" variant="primary" size="sm" clickAction={onSignIn} /></>;
 
   return <main className="vitrine-page pricing-v2">
-    <header className="pricing-v2__nav">
-      <Button label="Vitrines" variant="ghost" clickAction={onBrowse} icon={<img src="/favicon.svg" alt="" width={23} />} className="pricing-v2__wordmark" />
+    <header
+      className="pricing-v2__nav"
+      style={{
+        position: 'sticky',
+        background: 'var(--color-background-body)',
+        backdropFilter: 'none',
+      }}
+    >
+      <Button label="Vitrines" variant="ghost" clickAction={onBrowse} icon={<img src="/favicon.svg" alt="" width={26} />} className="pricing-v2__wordmark" />
       <nav aria-label="Pricing navigation" className="pricing-v2__nav-links"><Button label="Library" variant="ghost" clickAction={onBrowse} /><span>Pricing</span></nav>
       <div className="pricing-v2__nav-actions">{nav}</div>
     </header>
