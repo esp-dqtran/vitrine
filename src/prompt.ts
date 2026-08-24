@@ -13,7 +13,9 @@ Return ONLY valid JSON with this exact shape:
 {
   "description": "exhaustive visual description including layout, visible text, components, typography, colors, spacing, and nested content",
   "purpose": "the observed user goal of this screen",
-  "pageType": "short reusable page type such as Login, Dashboard, Settings, Table, Detail, Checkout, or Modal",
+  "pageType": "category for the complete supplied image",
+  "sourcePresentation": "direct-screen|device-mockup|marketing-composite|unknown",
+  "embeddedPageType": "category of the app UI shown inside a marketing composite, otherwise null",
   "productArea": "short product area such as Authentication, Billing, Projects, Account, or Navigation",
   "theme": "light|dark|mixed",
   "visibleStates": ["only states visibly present, such as loading, empty, error, selected navigation, disabled button"],
@@ -23,12 +25,22 @@ Return ONLY valid JSON with this exact shape:
   "icons": ["visibly identifiable icon names or treatments"],
   "imagery": ["observed illustration, photography, avatar, thumbnail, or decorative-image treatments"],
   "contentPatterns": ["observed writing or information patterns such as helper text, metadata row, confirmation copy"],
-  "interactionPatterns": ["only interaction affordances visibly evidenced, such as tabs, disclosure, pagination, bulk selection"],
+  "interactionPatterns": ["only visible affordances, phrased as observations such as visible tabs, disclosure control, pagination controls, or selection checkboxes"],
   "responsiveViewport": "desktop|tablet|mobile|unknown",
   "confidence": 0.0
 }
 
-Confidence is from 0 to 1 and reflects how clearly the screenshot supports the structured observations. Be concrete and exhaustive in description. Do not infer hidden screens, missing states, hover behavior, flow order, or components that are not visible.`;
+First classify the source presentation:
+- direct-screen: the supplied image is the app screen itself.
+- device-mockup: the app screen is shown inside a device frame without a broader promotional layout.
+- marketing-composite: promotional copy, branding, decoration, or multiple device renders frame embedded app UI.
+- unknown: the presentation layer cannot be determined reliably.
+
+For a marketing-composite, describe the outer promotional composition first and the embedded app UI second. Set pageType to Feature Info and set embeddedPageType to the supported category that best describes the primary embedded app UI. For every other presentation, classify the primary visible app UI in pageType and set embeddedPageType to null. Theme describes the complete supplied image; if its outer and embedded surfaces use materially different themes, use mixed and explain both in description.
+
+Interaction patterns are pixel-grounded affordances, not verified runtime behavior. Do not claim that content scrolls, cards are selectable, controls navigate, gestures work, or actions submit unless the pixels directly show that state or affordance. Prefer wording such as "visible search control" over "searches content".
+
+Confidence is from 0 to 1 and reflects how clearly the pixels support the entire structured result. Reserve 0.95-1.0 for a clear, legible direct screen with no material ambiguity; use 0.80-0.94 when details are partially unclear; use 0.60-0.79 for cropped, obscured, or ambiguous UI. A device mockup, marketing composite, or unknown presentation must not exceed 0.90. Be concrete and exhaustive in description. Do not infer hidden screens, missing states, hover behavior, flow order, or components that are not visible.`;
 }
 
 const SYNTHESIS_PLATFORM_NOTE: Record<string, string> = {

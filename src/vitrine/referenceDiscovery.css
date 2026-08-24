@@ -506,6 +506,26 @@
   text-decoration: none;
 }
 
+.reference-discovery__facet button[data-taxonomy-count]::after {
+  content: attr(data-taxonomy-count);
+  margin-inline-start: 12px;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: inherit;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity var(--reference-motion-fast) ease,
+    transform var(--reference-motion-fast) ease;
+}
+
+.reference-discovery__facet button[data-taxonomy-count]:hover::after,
+.reference-discovery__facet button[data-taxonomy-count]:focus-visible::after {
+  opacity: 1;
+  transform: translateX(0);
+}
+
 .reference-discovery-toolbar {
   min-height: var(--reference-toolbar-height);
   display: flex;
@@ -731,6 +751,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .reference-discovery__facet button[data-taxonomy-count]::after,
   .reference-discovery__facet button,
   .reference-discovery-toolbar__sort button,
   .reference-discovery-toolbar__sort button::after,
@@ -833,6 +854,11 @@
 .apps-filterbar__filter--selected {
   border-color: var(--reference-chrome-text);
   box-shadow: inset 0 0 0 1px var(--reference-chrome-text);
+}
+
+.apps-filterbar__filter[data-width-motion='active'] {
+  overflow: clip;
+  will-change: width;
 }
 
 .apps-filterbar__filter--platform {
@@ -1001,6 +1027,14 @@
   padding: 12px;
   overflow: hidden;
   border-radius: inherit;
+}
+
+.apps-filterbar__menu[data-search-motion='active'] {
+  will-change: height;
+}
+
+.apps-filterbar__menu[data-search-motion='active'] .apps-filterbar__options {
+  will-change: opacity, transform;
 }
 
 .apps-filterbar__search {
@@ -1530,6 +1564,10 @@
     overscroll-behavior: contain;
   }
 
+  .astryx-dropdown-panel[data-state='closing']:has(.apps-filterbar__menu) {
+    animation: apps-filter-sheet-out 180ms cubic-bezier(.4, 0, 1, 1) both;
+  }
+
   .apps-filterbar__options {
     overscroll-behavior-y: contain;
     scrollbar-gutter: stable;
@@ -1561,6 +1599,18 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes apps-filter-sheet-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(18px);
   }
 }
 

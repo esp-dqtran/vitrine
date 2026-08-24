@@ -314,6 +314,7 @@ test("selects published Apps globally by Updated At and emits a snapshot cursor"
 
   assert.deepEqual(page.apps.map(({ app }) => app), ["alltrails", "ipsy"]);
   assert.equal(page.apps[0]?.last_captured_at, selected[0]?.updated_at);
+  assert.equal(page.apps[0]?.created_at, selected[0]?.updated_at);
   assert.deepEqual(decodeCatalogCursor(page.nextCursor!, "latest"), {
     v: 2,
     sort: "latest",

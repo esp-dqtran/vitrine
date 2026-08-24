@@ -51,11 +51,18 @@ export interface ColorPaletteCard {
   outlined?: boolean;
 }
 
+export interface ColorPaletteSource {
+  type: 'app' | 'site';
+  name: string;
+  iconUrl?: string;
+}
+
 export interface ColorPalette {
   id: string;
   name: string;
   mood: string;
   kind?: ColorPaletteKind;
+  source?: ColorPaletteSource;
   cards: readonly ColorPaletteCard[];
   gradientRecipe?: ColorPaletteGradientRecipe;
 }

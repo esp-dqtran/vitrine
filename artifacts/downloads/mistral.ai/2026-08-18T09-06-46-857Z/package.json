@@ -1,0 +1,9 @@
+{
+  "name": "mistral-homepage-local-mirror",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "download:assets": "node download-assets.mjs",
+    "start": "node server.mjs"
+  }
+}

@@ -1,0 +1,21 @@
+HTTP/2 200 
+accept-ranges: bytes
+access-control-allow-origin: *
+age: 0
+cache-control: public, max-age=0, must-revalidate
+content-disposition: inline
+content-type: text/html; charset=utf-8
+date: Thu, 20 Aug 2026 01:52:09 GMT
+link: <https://cdn.sanity.io>; rel=preconnect, <https://cloud.umami.is>; rel=dns-prefetch, </_next/static/immutable/media/GeistMono_Variable.p.0b02cdm7g7y6h.woff2>; rel=preload; as="font"; crossorigin=""; type="font/woff2", </_next/static/immutable/media/Geist_Variable-s.p.2-i4fw5gbtlb7.woff2>; rel=preload; as="font"; crossorigin=""; type="font/woff2"
+permissions-policy: camera=(), microphone=(), geolocation=()
+referrer-policy: strict-origin-when-cross-origin
+server: Vercel
+strict-transport-security: max-age=63072000
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+x-content-type-options: nosniff
+x-matched-path: /blog
+x-nextjs-prerender: 1
+x-nextjs-stale-time: 300
+x-vercel-cache: PRERENDER
+x-vercel-id: hkg1::9lfh2-1787190729309-5a29e2504fa9
+

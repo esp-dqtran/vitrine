@@ -27,6 +27,7 @@ function validResult() {
       description: "A verification screen with a spinner",
       purpose: "Wait for verification",
       pageType: "Verification",
+      sourcePresentation: "direct-screen",
       productArea: "Account",
       theme: "light",
       visibleStates: ["loading"],
@@ -40,9 +41,9 @@ function validResult() {
       responsiveViewport: "mobile",
       confidence: 0.98,
     },
-    screenPatterns: [{ slug: "verification", confidence: 0.96 }],
     components: [{
       type: "Loading Indicator",
+      layer: "whole-screen",
       variant: "Circular",
       purpose: "Shows progress",
       anatomy: ["Arc"],
@@ -92,6 +93,8 @@ test("reads a dimension-bounded private image and removes it after analysis", as
   });
 
   assert.equal(result.components[0].type, "Loading Indicator");
+  assert.deepEqual(result.screenPatterns, []);
+  assert.doesNotMatch(invocation?.args.at(-1) ?? "", /screenPatterns/);
   assert.deepEqual(invocation?.args.slice(0, 7), [
     "chat",
     "--model",

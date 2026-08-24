@@ -48,6 +48,7 @@ export type Route =
   | { name: "browse" }
   | { name: "browse-app"; appId: string }
   | { name: "browse-flows" }
+  | { name: "components" }
   | { name: "browse-sites" }
   | { name: "browse-site"; siteSlug: string }
   | { name: "browse-search" }
@@ -75,6 +76,7 @@ export type Route =
     }
   | { name: "sites" }
   | { name: "color" }
+  | { name: "color-compose" }
   | { name: "color-create"; paletteId?: string }
   | { name: "sites-motion" }
   | SiteVersionRoute
@@ -154,6 +156,7 @@ export function parseRoutePath(pathname: string): Route {
   if (path === "/apps") return { name: "apps" };
   if (path === "/browse") return { name: "browse" };
   if (path === "/browse/flows") return { name: "browse-flows" };
+  if (path === "/components") return { name: "components" };
   if (path === "/browse/sites") return { name: "browse-sites" };
   if (path.startsWith("/browse/sites/")) {
     const siteSlug = decodeURIComponent(path.slice("/browse/sites/".length));
@@ -176,6 +179,7 @@ export function parseRoutePath(pathname: string): Route {
   if (path === "/flows") return { name: "flows" };
   if (path === "/sites") return { name: "sites" };
   if (path === "/colors" || path === "/color") return { name: "color" };
+  if (path === "/colors/compose" || path === "/color/compose") return { name: "color-compose" };
   if (path === "/colors/create" || path === "/color/create") return { name: "color-create" };
   if (path === "/sites/motion") return { name: "sites-motion" };
   const siteMatch = path.match(
@@ -450,6 +454,8 @@ export function routeToPath(route: Route): string {
       return `/browse/${encodeURIComponent(route.appId)}`;
     case "browse-flows":
       return "/browse/flows";
+    case "components":
+      return "/components";
     case "browse-sites":
       return "/browse/sites";
     case "browse-site":
@@ -482,6 +488,8 @@ export function routeToPath(route: Route): string {
       return "/sites";
     case "color":
       return "/colors";
+    case "color-compose":
+      return "/colors/compose";
     case "color-create":
       return `/colors/create${route.paletteId ? `?palette=${encodeURIComponent(route.paletteId)}` : ""}`;
     case "sites-motion":

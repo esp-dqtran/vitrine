@@ -146,6 +146,14 @@ const APP_DISCOVERY_TAXONOMY = [
   ...APPS_DISCOVERY_STATIC_FACETS,
 ];
 
+const APP_DISCOVERY_CATEGORY_COUNTS: Readonly<Record<string, number>> = {
+  AI: 104,
+  Finance: 30,
+  CRM: 20,
+  Business: 142,
+  News: 16,
+};
+
 const FILTER_LABELS: Record<AppsFacet['group'], string> = {
   categories: 'Categories',
   screens: 'Screens',
@@ -409,13 +417,16 @@ export function AppsDiscoveryPageView({
               {group.values.map((value) => {
                 const facet = { group: group.group, value } satisfies AppsFacet;
                 const selected = (state.filters[group.group] ?? []).includes(value);
+                const count = APP_DISCOVERY_CATEGORY_COUNTS[value] ?? 0;
                 return (
                   <Button
                     key={value}
                     label={value}
+                    aria-label={`${value}, ${count} apps`}
                     variant="ghost"
                     size="sm"
                     aria-pressed={selected}
+                    data-taxonomy-count={count}
                     data-has-app-preview="true"
                     data-facet-preview={group.group}
                     onPointerEnter={(event) => {
@@ -510,8 +521,10 @@ export function AppsDiscoveryPageView({
     >
       {appsMode ? (
         <div
+          key="apps-results"
           data-apps-discovery-grid="true"
-          className="reference-discovery__grid apps-discovery__grid"
+          data-apps-results-mode="apps"
+          className="reference-discovery__grid apps-discovery__grid apps-discovery__results-transition"
         >
           {renderedApps.map((app) => (
             <AppCard
@@ -524,8 +537,10 @@ export function AppsDiscoveryPageView({
         </div>
       ) : (
         <div
+          key="screen-results"
           data-apps-discovery-screen-grid="true"
-          className="apps-discovery__screen-grid"
+          data-apps-results-mode="screens"
+          className="apps-discovery__screen-grid apps-discovery__results-transition"
         >
           {renderedScreens.map((result) => (
             <AppsDiscoveryScreenCard

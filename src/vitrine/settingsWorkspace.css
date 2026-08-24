@@ -843,6 +843,13 @@
 
 .settings-workspace__integration-steps strong { font-size: 14px; }
 
+.settings-workspace__integration-create-token {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .settings-workspace__integration-endpoint {
   display: flex;
   align-items: center;
@@ -956,6 +963,11 @@
   }
 
   .settings-workspace__integration-endpoint { max-width: 100%; }
+
+  .settings-workspace__integration-create-token {
+    width: 100%;
+    flex-wrap: wrap;
+  }
 
   .settings-workspace__integration-endpoint code { max-width: min(100%, 260px); }
 

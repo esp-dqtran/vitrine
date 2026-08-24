@@ -5,6 +5,10 @@ import { parseColorCollections, parseColorPalettes } from './colorPalettesApi.ts
 
 test('validates the database palette response', () => {
   const databasePalettes = defaultColorPalettes.filter(({ cards }) => cards.length === 3);
+  const sourcedPalette = {
+    ...databasePalettes[0]!,
+    source: { type: 'app' as const, name: 'Mistral AI', iconUrl: '/assets/icons/mistral.webp' },
+  };
   const gradientPalette = {
     ...databasePalettes[0]!,
     id: 'database-gradient',
@@ -14,10 +18,11 @@ test('validates the database palette response', () => {
       gradient: { angle: 135, endHex: '#11162C' },
     })),
   };
-  const palettes = parseColorPalettes({ items: [databasePalettes[0], gradientPalette] });
+  const palettes = parseColorPalettes({ items: [sourcedPalette, gradientPalette] });
   assert.equal(palettes.length, 2);
   assert.equal(palettes[0]?.cards.length, 3);
   assert.equal(palettes[0]?.cards[0]?.color, '#151311');
+  assert.deepEqual(palettes[0]?.source, sourcedPalette.source);
   assert.equal(palettes.at(-1)?.kind, 'gradient');
   assert.equal(palettes.at(-1)?.cards[0]?.gradient?.endHex, '#11162C');
   assert.match(palettes.at(-1)?.cards[0]?.color ?? '', /^linear-gradient/);
@@ -36,6 +41,7 @@ test('validates collection metadata and palette membership', () => {
 
 test('rejects malformed palettes before rendering them', () => {
   assert.throws(() => parseColorPalettes({ items: [{ id: 'broken', name: 'Broken', mood: 'Missing colors', cards: [] }] }), /invalid/);
+  assert.throws(() => parseColorPalettes({ items: [{ ...defaultColorPalettes[0], source: { type: 'web', name: 'Broken' } }] }), /source is invalid/);
   assert.throws(() => parseColorPalettes({ items: 'nope' }), /invalid/);
   assert.throws(() => parseColorCollections({ collections: [{ id: 'broken' }] }), /invalid/);
 });

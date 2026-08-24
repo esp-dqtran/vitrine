@@ -1,0 +1,985 @@
+{
+  "body": {
+    "background": "rgb(255, 255, 255)",
+    "color": "rgb(10, 10, 10)",
+    "fontFamily": "Sneak, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "fontSize": "16px",
+    "lineHeight": "24px"
+  },
+  "buttons": [
+    {
+      "aria": null,
+      "box": {
+        "bottom": 0,
+        "height": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "disabled": false,
+      "text": "L"
+    },
+    {
+      "aria": null,
+      "box": {
+        "bottom": 0,
+        "height": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "disabled": false,
+      "text": "M"
+    },
+    {
+      "aria": null,
+      "box": {
+        "bottom": 0,
+        "height": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "disabled": false,
+      "text": "S"
+    },
+    {
+      "aria": null,
+      "box": {
+        "bottom": 0,
+        "height": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "disabled": false,
+      "text": "L"
+    },
+    {
+      "aria": null,
+      "box": {
+        "bottom": 0,
+        "height": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "disabled": false,
+      "text": "M"
+    },
+    {
+      "aria": null,
+      "box": {
+        "bottom": 0,
+        "height": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "disabled": false,
+      "text": "S"
+    },
+    {
+      "aria": "Previous slides",
+      "box": {
+        "bottom": 1120,
+        "height": 42,
+        "top": 1078,
+        "width": 42,
+        "x": 16,
+        "y": 1078
+      },
+      "disabled": true,
+      "text": ""
+    },
+    {
+      "aria": "Next slides",
+      "box": {
+        "bottom": 1120,
+        "height": 42,
+        "top": 1078,
+        "width": 42,
+        "x": 1222,
+        "y": 1078
+      },
+      "disabled": false,
+      "text": ""
+    },
+    {
+      "aria": "Previous slides",
+      "box": {
+        "bottom": 6006,
+        "height": 42,
+        "top": 5964,
+        "width": 42,
+        "x": 16,
+        "y": 5964
+      },
+      "disabled": true,
+      "text": ""
+    },
+    {
+      "aria": "Next slides",
+      "box": {
+        "bottom": 6006,
+        "height": 42,
+        "top": 5964,
+        "width": 42,
+        "x": 1222,
+        "y": 5964
+      },
+      "disabled": false,
+      "text": ""
+    },
+    {
+      "aria": "play tetris",
+      "box": {
+        "bottom": 7268.5234375,
+        "height": 50,
+        "top": 7218.5234375,
+        "width": 132.6796875,
+        "x": 573.66015625,
+        "y": 7218.5234375
+      },
+      "disabled": false,
+      "text": "play"
+    },
+    {
+      "aria": "Move left",
+      "box": {
+        "bottom": 0,
+        "height": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "disabled": false,
+      "text": ""
+    },
+    {
+      "aria": "Move right",
+      "box": {
+        "bottom": 0,
+        "height": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "disabled": false,
+      "text": ""
+    },
+    {
+      "aria": "Rotate",
+      "box": {
+        "bottom": 0,
+        "height": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "disabled": false,
+      "text": ""
+    },
+    {
+      "aria": "Hard drop",
+      "box": {
+        "bottom": 0,
+        "height": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "disabled": false,
+      "text": ""
+    },
+    {
+      "aria": "Close",
+      "box": {
+        "bottom": 0,
+        "height": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "disabled": false,
+      "text": ""
+    },
+    {
+      "aria": null,
+      "box": {
+        "bottom": 0,
+        "height": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "disabled": false,
+      "text": "play again"
+    }
+  ],
+  "inlineSvg": 13,
+  "links": [
+    {
+      "box": {
+        "bottom": 0,
+        "height": 42,
+        "top": -42,
+        "width": 171.7421875,
+        "x": 1108.2578125,
+        "y": -42
+      },
+      "href": "https://wild.as/",
+      "target": null,
+      "text": "VIEW FULL SITE"
+    },
+    {
+      "box": {
+        "bottom": 1458.234375,
+        "height": 534.234375,
+        "top": 924,
+        "width": 420,
+        "x": 56,
+        "y": 924
+      },
+      "href": "https://wild.as/work/replit-agent-3",
+      "target": "_blank",
+      "text": "View case study Replit Agent 3 The launch landing page for Replit's autonomous AI Agent 3."
+    },
+    {
+      "box": {
+        "bottom": 1458.234375,
+        "height": 534.234375,
+        "top": 924,
+        "width": 420,
+        "x": 504,
+        "y": 924
+      },
+      "href": "https://wild.as/work/serve-robotics",
+      "target": "_blank",
+      "text": "View case study Serve Robotics Brand refresh and website redesign with 3D assets and a design system"
+    },
+    {
+      "box": {
+        "bottom": 1458.234375,
+        "height": 534.234375,
+        "top": 924,
+        "width": 420,
+        "x": 952,
+        "y": 924
+      },
+      "href": "https://wild.as/work/unstructured-website",
+      "target": "_blank",
+      "text": "View case study Unstructured A playful brand site turning complex data into characterful design."
+    },
+    {
+      "box": {
+        "bottom": 1458.234375,
+        "height": 534.234375,
+        "top": 924,
+        "width": 420,
+        "x": 1400,
+        "y": 924
+      },
+      "href": "https://wild.as/work/ouster",
+      "target": "_blank",
+      "text": "View case study Ouster A platform with the same precision as the lidar hardware: a new palette, a te"
+    },
+    {
+      "box": {
+        "bottom": 1458.234375,
+        "height": 534.234375,
+        "top": 924,
+        "width": 420,
+        "x": 1848,
+        "y": 924
+      },
+      "href": "https://wild.as/work/ibm-watsonxdata",
+      "target": "_blank",
+      "text": "View case study IBM watsonx.data Two WebGL modules for IBM's THINK Tour, built with VTProDesign, run"
+    },
+    {
+      "box": {
+        "bottom": 1458.234375,
+        "height": 534.234375,
+        "top": 924,
+        "width": 420,
+        "x": 2296,
+        "y": 924
+      },
+      "href": "https://wild.as/work/the-ordinary",
+      "target": "_blank",
+      "text": "View case study The Ordinary A microsite for the GF 15% Solution launch with Uncommon, taking on ski"
+    },
+    {
+      "box": {
+        "bottom": 1458.234375,
+        "height": 534.234375,
+        "top": 924,
+        "width": 420,
+        "x": 2744,
+        "y": 924
+      },
+      "href": "https://wild.as/work/me-holiday-campaign",
+      "target": "_blank",
+      "text": "View case study Montefiore Einstein A WebGL journey through space to find hidden stars, turning thou"
+    },
+    {
+      "box": {
+        "bottom": 1458.234375,
+        "height": 534.234375,
+        "top": 924,
+        "width": 420,
+        "x": 3192,
+        "y": 924
+      },
+      "href": "https://wild.as/work/tersa",
+      "target": "_blank",
+      "text": "View case study Tersa A new brand and an immersive web experience with headless Shopify pre-order, f"
+    },
+    {
+      "box": {
+        "bottom": 1458.234375,
+        "height": 534.234375,
+        "top": 924,
+        "width": 420,
+        "x": 3640,
+        "y": 924
+      },
+      "href": "https://wild.as/work/nutrafol-brand-refresh",
+      "target": "_blank",
+      "text": "View case study Nutrafol A brand refresh for the hair-wellness leader: a new palette, refined type, "
+    },
+    {
+      "box": {
+        "bottom": 4061.984375,
+        "height": 55.0390625,
+        "top": 4006.9453125,
+        "width": 199.5234375,
+        "x": 584.4375,
+        "y": 4006.9453125
+      },
+      "href": "https://craft.wild.as/bcp",
+      "target": null,
+      "text": "Read the full story"
+    },
+    {
+      "box": {
+        "bottom": 6360.484375,
+        "height": 550.484375,
+        "top": 5810,
+        "width": 420,
+        "x": 56,
+        "y": 5810
+      },
+      "href": "https://week.wild.plus/athens-26",
+      "target": "_blank",
+      "text": "View experiment Wild Week Athens A complete event site in 1.5 weeks with 1.5 designers. Proof that t"
+    },
+    {
+      "box": {
+        "bottom": 6360.484375,
+        "height": 550.484375,
+        "top": 5810,
+        "width": 420,
+        "x": 504,
+        "y": 5810
+      },
+      "href": "https://66.as.wild.tools/",
+      "target": "_blank",
+      "text": "View experiment Very fluffy We asked how fluffy we could make it. The answer: very. CLAUDE COMFY"
+    },
+    {
+      "box": {
+        "bottom": 6360.484375,
+        "height": 550.484375,
+        "top": 5810,
+        "width": 420,
+        "x": 952,
+        "y": 5810
+      },
+      "href": "https://51.as.wild.tools/",
+      "target": "_blank",
+      "text": "View experiment Active heads Playing with Active Theory's activeframe library, pushed somewhere it w"
+    },
+    {
+      "box": {
+        "bottom": 6360.484375,
+        "height": 550.484375,
+        "top": 5810,
+        "width": 420,
+        "x": 1400,
+        "y": 5810
+      },
+      "href": "https://wild.as/labs",
+      "target": "_blank",
+      "text": "View experiment A reliable asset pipeline Turning generative chaos into a repeatable system, with a "
+    },
+    {
+      "box": {
+        "bottom": 6782.53125,
+        "height": 55.0390625,
+        "top": 6727.4921875,
+        "width": 157.1875,
+        "x": 561.40625,
+        "y": 6727.4921875
+      },
+      "href": "mailto:hello@wild.as",
+      "target": null,
+      "text": "Get in touch"
+    },
+    {
+      "box": {
+        "bottom": 7029.453125,
+        "height": 20.5,
+        "top": 7008.953125,
+        "width": 95.421875,
+        "x": 471.9765625,
+        "y": 7008.953125
+      },
+      "href": "mailto:hello@wild.as",
+      "target": null,
+      "text": "hello@wild.as"
+    }
+  ],
+  "media": [
+    {
+      "alt": "wild",
+      "autoplay": false,
+      "box": {
+        "bottom": 129.0078125,
+        "height": 14.2265625,
+        "top": 114.78125,
+        "width": 34,
+        "x": 832.921875,
+        "y": 114.78125
+      },
+      "loop": false,
+      "muted": false,
+      "playsInline": false,
+      "poster": null,
+      "src": "https://craft.wild.as/assets/wild-logo.svg",
+      "tag": "img"
+    },
+    {
+      "alt": null,
+      "autoplay": true,
+      "box": {
+        "bottom": 1298.5,
+        "height": 399,
+        "top": 899.5,
+        "width": 478.7999877929687,
+        "x": 26.600006103515625,
+        "y": 899.5
+      },
+      "loop": true,
+      "muted": true,
+      "playsInline": false,
+      "poster": null,
+      "src": "https://craft.wild.as/assets/work/replit-agent-3.mp4",
+      "tag": "video"
+    },
+    {
+      "alt": null,
+      "autoplay": true,
+      "box": {
+        "bottom": 1298.5,
+        "height": 399,
+        "top": 899.5,
+        "width": 478.8000183105469,
+        "x": 474.6000061035156,
+        "y": 899.5
+      },
+      "loop": true,
+      "muted": true,
+      "playsInline": false,
+      "poster": null,
+      "src": "https://craft.wild.as/assets/work/serve-robotics.mp4",
+      "tag": "video"
+    },
+    {
+      "alt": null,
+      "autoplay": true,
+      "box": {
+        "bottom": 1298.5,
+        "height": 399,
+        "top": 899.5,
+        "width": 478.800048828125,
+        "x": 922.5999755859376,
+        "y": 899.5
+      },
+      "loop": true,
+      "muted": true,
+      "playsInline": false,
+      "poster": null,
+      "src": "https://craft.wild.as/assets/work/unstructured.mp4",
+      "tag": "video"
+    },
+    {
+      "alt": "Ouster",
+      "autoplay": false,
+      "box": {
+        "bottom": 1298.5,
+        "height": 399,
+        "top": 899.5,
+        "width": 478.800048828125,
+        "x": 1370.5999755859375,
+        "y": 899.5
+      },
+      "loop": false,
+      "muted": false,
+      "playsInline": false,
+      "poster": null,
+      "src": "https://craft.wild.as/assets/work/ouster.avif",
+      "tag": "img"
+    },
+    {
+      "alt": null,
+      "autoplay": true,
+      "box": {
+        "bottom": 1298.5,
+        "height": 399,
+        "top": 899.5,
+        "width": 478.7999267578125,
+        "x": 1818.5999755859375,
+        "y": 899.5
+      },
+      "loop": true,
+      "muted": true,
+      "playsInline": false,
+      "poster": null,
+      "src": "https://craft.wild.as/assets/work/ibm.mp4",
+      "tag": "video"
+    },
+    {
+      "alt": null,
+      "autoplay": true,
+      "box": {
+        "bottom": 1298.5,
+        "height": 399,
+        "top": 899.5,
+        "width": 478.7998046875,
+        "x": 2266.60009765625,
+        "y": 899.5
+      },
+      "loop": true,
+      "muted": true,
+      "playsInline": false,
+      "poster": null,
+      "src": "https://craft.wild.as/assets/work/ordinary.mp4",
+      "tag": "video"
+    },
+    {
+      "alt": null,
+      "autoplay": true,
+      "box": {
+        "bottom": 1298.5,
+        "height": 399,
+        "top": 899.5,
+        "width": 478.7998046875,
+        "x": 2714.60009765625,
+        "y": 899.5
+      },
+      "loop": true,
+      "muted": true,
+      "playsInline": false,
+      "poster": null,
+      "src": "https://craft.wild.as/assets/work/montefiore.mp4",
+      "tag": "video"
+    },
+    {
+      "alt": null,
+      "autoplay": true,
+      "box": {
+        "bottom": 1298.5,
+        "height": 399,
+        "top": 899.5,
+        "width": 478.7998046875,
+        "x": 3162.60009765625,
+        "y": 899.5
+      },
+      "loop": true,
+      "muted": true,
+      "playsInline": false,
+      "poster": null,
+      "src": "https://craft.wild.as/assets/work/tersa.mp4",
+      "tag": "video"
+    },
+    {
+      "alt": "Nutrafol",
+      "autoplay": false,
+      "box": {
+        "bottom": 1298.5,
+        "height": 399,
+        "top": 899.5,
+        "width": 478.7998046875,
+        "x": 3610.60009765625,
+        "y": 899.5
+      },
+      "loop": false,
+      "muted": false,
+      "playsInline": false,
+      "poster": null,
+      "src": "https://craft.wild.as/assets/work/nutrafol.avif",
+      "tag": "img"
+    },
+    {
+      "alt": null,
+      "autoplay": true,
+      "box": {
+        "bottom": 6247.5,
+        "height": 525,
+        "top": 5722.5,
+        "width": 630,
+        "x": -49,
+        "y": 5722.5
+      },
+      "loop": true,
+      "muted": true,
+      "playsInline": false,
+      "poster": null,
+      "src": "https://craft.wild.as/assets/experiments/wild-week-athens.mp4",
+      "tag": "video"
+    },
+    {
+      "alt": null,
+      "autoplay": true,
+      "box": {
+        "bottom": 6184.5,
+        "height": 399,
+        "top": 5785.5,
+        "width": 478.8000183105469,
+        "x": 474.6000061035156,
+        "y": 5785.5
+      },
+      "loop": true,
+      "muted": true,
+      "playsInline": false,
+      "poster": null,
+      "src": "https://craft.wild.as/assets/experiments/very-fluffy.mp4",
+      "tag": "video"
+    },
+    {
+      "alt": null,
+      "autoplay": true,
+      "box": {
+        "bottom": 6184.5,
+        "height": 399,
+        "top": 5785.5,
+        "width": 478.800048828125,
+        "x": 922.5999755859376,
+        "y": 5785.5
+      },
+      "loop": true,
+      "muted": true,
+      "playsInline": false,
+      "poster": null,
+      "src": "https://craft.wild.as/assets/experiments/active-heads.mp4",
+      "tag": "video"
+    },
+    {
+      "alt": "A reliable asset pipeline",
+      "autoplay": false,
+      "box": {
+        "bottom": 6184.5,
+        "height": 399,
+        "top": 5785.5,
+        "width": 478.800048828125,
+        "x": 1370.5999755859375,
+        "y": 5785.5
+      },
+      "loop": false,
+      "muted": false,
+      "playsInline": false,
+      "poster": null,
+      "src": "https://craft.wild.as/assets/experiments/asset-pipeline.avif",
+      "tag": "img"
+    }
+  ],
+  "scripts": [
+    {
+      "inline": false,
+      "src": "https://eu-assets.i.posthog.com/static/array.js",
+      "text": null,
+      "type": "text/javascript"
+    },
+    {
+      "inline": true,
+      "src": null,
+      "text": "\n  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(\".\");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement(\"script\")).type=\"text/javascript\",p.crossOrigin=\"a",
+      "type": "text/javascript"
+    },
+    {
+      "inline": false,
+      "src": "https://eu-assets.i.posthog.com/static/1.418.6/web-vitals.js",
+      "text": null,
+      "type": "text/javascript"
+    },
+    {
+      "inline": false,
+      "src": "https://eu-assets.i.posthog.com/array/phc_m9qwJX5U94wAu8h5jZNNVs9d9viWAsyei6km5SeGR5Po/config.js",
+      "text": null,
+      "type": "text/javascript"
+    },
+    {
+      "inline": true,
+      "src": null,
+      "text": "\n/* ===== hero keyvisual: clouds field + neon + decode-to-real-text + detonate; clips into rounded box on scroll ===== */\n(function(){\n  var cv=document.getElementById('hero-kv'), hero=document.getElementById('hero'), origin=document.querySelector('.intro')||document.getElementById('origin'); if(!cv",
+      "type": null
+    },
+    {
+      "inline": true,
+      "src": null,
+      "text": "\n/* ===== generative visualisations: process stages + brand-context-protocol parts ===== */\n(function(){\n  var HEAT=['#1c2541','#3b5bd9','#f5c518','#e0492a'], GREY=['#e4e4e4','#c8c8c8','#a6a6a6','#727272'], NEON='#d8ff00', DPR=Math.min(devicePixelRatio||1,2), PX=6;\n  var ORDER={explore:0,generate:1,",
+      "type": null
+    },
+    {
+      "inline": true,
+      "src": null,
+      "text": "\n/* minimal w-logo appears once the hero header has scrolled away */\n(function(){ var tl=document.getElementById('toplink'), hero=document.getElementById('hero'); if(!hero) return;\n  function upd(){ var on=scrollY > hero.offsetHeight*0.55; if(tl) tl.classList.toggle('show', on); }\n  addEventListener",
+      "type": null
+    },
+    {
+      "inline": true,
+      "src": null,
+      "text": "\n/* fade the pixel controls away over the footer so they don't sit on top of it */\n(function(){ var px=document.querySelector('.pxctl'), ft=document.querySelector('footer');\n  if(!px||!ft||!('IntersectionObserver' in window)) return;\n  new IntersectionObserver(function(es){ es.forEach(function(e){ p",
+      "type": null
+    },
+    {
+      "inline": true,
+      "src": null,
+      "text": "\n/* carousel hover: the slide's own image/video crumbles into chunky pixels at the corners (top overlay, no trail) */\n(function(){\n  if(!(window.matchMedia && matchMedia('(hover:hover) and (pointer:fine)').matches)) return;   /* pointer devices only */\n  var media=[].slice.call(document.querySelecto",
+      "type": null
+    },
+    {
+      "inline": true,
+      "src": null,
+      "text": "\n/* process row: a double helix flowing left -> right, frayed blue chaos resolving into a clean\n   yellow strand with rungs (Explore -> Generate -> Refine -> Scale). Run the cursor through it\n   and the strands part around your hand, then spring back. On the page's 9px grid. */\n(function(){\n  var cv",
+      "type": null
+    },
+    {
+      "inline": false,
+      "src": "https://craft.wild.as/assets/footer-tetris.js",
+      "text": null,
+      "type": null
+    },
+    {
+      "inline": true,
+      "src": null,
+      "text": "\n/* W logo: choppy 3D spin every ~10s (also spins on hover via CSS) */\n(function(){ var l=document.querySelector('.wlogo'); if(!l) return;\n  setInterval(function(){ l.classList.add('spin'); setTimeout(function(){ l.classList.remove('spin'); }, 860); }, 10000); })();\n",
+      "type": null
+    },
+    {
+      "inline": true,
+      "src": null,
+      "text": "\n/* Brand Context Protocol: one continuous \"constellation\" flow across all four stages.\n   Truth (navy) + Skills (blue) are born as loose clouds, flow into a big randomised output (yellow),\n   then at the Brand Check nearly all rise + turn green (pass); a very few drop + turn red (fail). */\n(functio",
+      "type": null
+    }
+  ],
+  "sections": [
+    {
+      "box": {
+        "bottom": 720,
+        "height": 720,
+        "top": 0,
+        "width": 1280,
+        "x": 0,
+        "y": 0
+      },
+      "class": "hero",
+      "id": "hero",
+      "index": 0,
+      "tag": "section",
+      "text": "CRAFT, ENGINEERED. A DESIGN & TECHNOLOGY PARTNER FOR MODERN BRANDS Award-winning websites, apps, and digital content, built with craft and AI."
+    },
+    {
+      "box": {
+        "bottom": 786.2109375,
+        "height": 239.0078125,
+        "top": 547.203125,
+        "width": 1280,
+        "x": 0,
+        "y": 547.203125
+      },
+      "class": "intro",
+      "id": null,
+      "index": 1,
+      "tag": "section",
+      "text": "A short point of view from us on what actually changed in how we work and how the parts that matter didn't change at all. But first, here's some work:"
+    },
+    {
+      "box": {
+        "bottom": 1597.8359375,
+        "height": 814.234375,
+        "top": 783.6015625,
+        "width": 1280,
+        "x": 0,
+        "y": 783.6015625
+      },
+      "class": "caro",
+      "id": "work",
+      "index": 2,
+      "tag": "section",
+      "text": "View case study Replit Agent 3 The launch landing page for Replit's autonomous AI Agent 3. View case study Serve Robotics Brand refresh and website redesign with 3D assets and a de"
+    },
+    {
+      "box": {
+        "bottom": 2048.1796875,
+        "height": 450.34375,
+        "top": 1597.8359375,
+        "width": 1280,
+        "x": 0,
+        "y": 1597.8359375
+      },
+      "class": "sheet",
+      "id": null,
+      "index": 3,
+      "tag": "div",
+      "text": "Born in Vienna, where craft is a discipline. WHERE WE COME FROM In 1903, a few streets from our studio, the Wiener Werkstätte put artists and craftspeople under one roof. Furniture"
+    },
+    {
+      "box": {
+        "bottom": 2823.546875,
+        "height": 775.3671875,
+        "top": 2048.1796875,
+        "width": 1280,
+        "x": 0,
+        "y": 2048.1796875
+      },
+      "class": "sheet",
+      "id": null,
+      "index": 4,
+      "tag": "div",
+      "text": "AI is good at everything except the last 10 percent. WHAT CHANGED The tools are very good now, and everyone has the same ones. A first draft, ten variations, working code: what use"
+    },
+    {
+      "box": {
+        "bottom": 3774.3046875,
+        "height": 950.7578125,
+        "top": 2823.546875,
+        "width": 1280,
+        "x": 0,
+        "y": 2823.546875
+      },
+      "class": "proc",
+      "id": "process",
+      "index": 5,
+      "tag": "section",
+      "text": "Explore. Generate. Refine. Scale. The machine makes the options, we make the calls. In practice that works out to roughly 60 percent exploring, 20 building, 20 refining. 01 Explore"
+    },
+    {
+      "box": {
+        "bottom": 4078.984375,
+        "height": 304.6796875,
+        "top": 3774.3046875,
+        "width": 1280,
+        "x": 0,
+        "y": 3774.3046875
+      },
+      "class": "sheet",
+      "id": null,
+      "index": 6,
+      "tag": "div",
+      "text": "The Brand Context Protocol. WE MAKE YOUR BRAND AI READY Our first product. Every brand we work with ends up with one: a single source that holds the voice, the design and the rules"
+    },
+    {
+      "box": {
+        "bottom": 4712.3359375,
+        "height": 633.3515625,
+        "top": 4078.984375,
+        "width": 1280,
+        "x": 0,
+        "y": 4078.984375
+      },
+      "class": "proc bcp-parts",
+      "id": "protocol-parts",
+      "index": 7,
+      "tag": "section",
+      "text": "01 Brand Truth The one place that holds the voice, the design and the rules we build everything from. 02 Skills A job the system has been taught to do your way, ready whenever you "
+    },
+    {
+      "box": {
+        "bottom": 5434.5546875,
+        "height": 722.21875,
+        "top": 4712.3359375,
+        "width": 1280,
+        "x": 0,
+        "y": 4712.3359375
+      },
+      "class": "sheet",
+      "id": null,
+      "index": 8,
+      "tag": "div",
+      "text": "Move your organisation up the levels of AI. PASSING ON OUR LEARNINGS This is the other half of what we do. We're a design and technology studio working with AI every day, on our ow"
+    },
+    {
+      "box": {
+        "bottom": 6503.4921875,
+        "height": 1068.9375,
+        "top": 5434.5546875,
+        "width": 1280,
+        "x": 0,
+        "y": 5434.5546875
+      },
+      "class": "caro",
+      "id": "lab",
+      "index": 9,
+      "tag": "section",
+      "text": "The tools are everywhere. The judgment isn't. For our creative team, AI has turned into a new layer of expression. The craft isn't new, but it used to need an engineer in the loop."
+    },
+    {
+      "box": {
+        "bottom": 7180.5234375,
+        "height": 677.03125,
+        "top": 6503.4921875,
+        "width": 1280,
+        "x": 0,
+        "y": 6503.4921875
+      },
+      "class": "cta",
+      "id": "contact",
+      "index": 10,
+      "tag": "section",
+      "text": "Get in touch We're a remote studio scattered across five time zones, so the odds are decent that one of us is awake and somewhere near you. Part workshop, mostly Vienna at heart, a"
+    }
+  ],
+  "styles": [
+    {
+      "tag": "style",
+      "text": "\n  @font-face{font-family:\"Sneak\";src:url(\"assets/fonts/Sneak-Light.woff\") format(\"woff\");font-weight:300;font-display:swap;}\n  @font-face{font-family:\"Sneak\";src:url(\"assets/fonts/Sneak-Regular.woff2\") format(\"woff2\");font-weight:400;font-display:swap;}\n  @font-face{font-family:\"Sneak\";src:url(\"assets/fonts/Sneak-Medium.woff2\") format(\"woff2\");font-weight:500;font-display:swap;}\n  :root{\n    --paper:#FFFFFF; --ink:#0A0A0A; --muted:#8b8b8b; --red:#e0492a; --neon:#d8ff00;\n    --line:rgba(10,10,10,.12); --line-2:rgba(10,10,10,.06);\n    --cell:14px; --gutter:56px; --maxw:1176px; --readw:34ch; --radius:26px;   /* spacing snapped to the 14px pixel grid */\n    --mono:\"SFMono-Regular\",ui-monospace,Menlo,Consolas,monospace;\n  }\n  @media(max-width:680px){ :root{--gutter:28px;} }   /* 2 cells on mobile */\n  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}\n  html{scroll-behavior:smooth; overscroll-behavior:none;}\n  body{margin:0; overscroll-behavior:none; background:var(--paper)"
+    }
+  ],
+  "title": "Craft, engineered · wild",
+  "url": "https://craft.wild.as/",
+  "vars": {
+    "--cell": "14px",
+    "--gutter": "56px",
+    "--ink": "#0A0A0A",
+    "--line": "rgba(10,10,10,.12)",
+    "--line-2": "rgba(10,10,10,.06)",
+    "--maxw": "1176px",
+    "--mono": "\"SFMono-Regular\",ui-monospace,Menlo,Consolas,monospace",
+    "--muted": "#8b8b8b",
+    "--neon": "#d8ff00",
+    "--paper": "#FFFFFF",
+    "--radius": "26px",
+    "--readw": "34ch",
+    "--red": "#e0492a"
+  },
+  "viewport": {
+    "height": 720,
+    "scrollHeight": 7306,
+    "width": 1280
+  }
+}

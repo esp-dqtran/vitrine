@@ -8,6 +8,7 @@ import {
   ColorCollectionFeatureCard,
   ColorGalleryPage,
   GradientPaletteCard,
+  PaletteHeader,
   colorCollections,
   colorPalettes,
   filterPalettesByCollectionIds,
@@ -16,8 +17,45 @@ import {
   getGradientPaletteBackground,
   getGradientPaletteCss,
   getPaletteCopyText,
+  getPaletteVibe,
+  getRelatedColors,
   nextColorPaletteRenderCount,
 } from './components/ColorGalleryPage.tsx';
+import {
+  ColorPaletteComposer,
+  contrastRatio,
+  getComposerWheelAngle,
+  getComposerWheelColor,
+  getComposerWheelMarker,
+  getHarmonyPalette,
+  getTintOptions,
+} from './components/ColorPaletteComposer.tsx';
+
+test('renders imported palette source as an accessible icon before the description', () => {
+  const palette = {
+    ...colorPalettes[0]!,
+    id: 'import-mistral-solar',
+    name: 'Mistral Solar',
+    mood: 'From Apps · Mistral AI — kinetic, optimistic, and sun-warmed',
+    source: {
+      type: 'app' as const,
+      name: 'Mistral AI',
+      iconUrl: '/assets/icons/mistral.webp',
+    },
+  };
+  const html = renderToStaticMarkup(
+    <PaletteHeader copyText="#FA520F" palette={palette} successMessage="Copied" />,
+  );
+
+  assert.equal(getPaletteVibe(palette), 'kinetic, optimistic, and sun-warmed');
+  assert.doesNotMatch(html, /From Apps/);
+  assert.match(html, /role="img" aria-label="Mistral AI app"/);
+  assert.match(html, /src="\/assets\/icons\/mistral\.webp"/);
+  assert.match(html, /<strong class="color-gallery__palette-source-name">Mistral AI<\/strong>/);
+  assert.ok(html.indexOf('/assets/icons/mistral.webp') < html.indexOf('>Mistral AI<'));
+  assert.ok(html.indexOf('>Mistral AI<') < html.indexOf('kinetic, optimistic, and sun-warmed'));
+  assert.match(html, /kinetic, optimistic, and sun-warmed/);
+});
 
 test('renders a browsable gallery of solid and layered gradient palettes', () => {
   const html = renderToStaticMarkup(<ColorGalleryPage />);
@@ -143,16 +181,73 @@ test('unpublishes removed database-backed gradients', async () => {
   }
 });
 
-test('filters palettes by color name and exposes the focused search surface', () => {
+test('filters palettes by color name through the shared modal search surface', () => {
   const html = renderToStaticMarkup(
     <ColorGalleryPage query="orchid" searchActive onQueryChange={() => undefined} />,
   );
 
   assert.match(html, /Search the palette library/);
+  assert.match(html, /command-palette-dialog/);
+  assert.match(html, /command-palette-shell/);
+  assert.match(html, /Close palette search/);
+  assert.doesNotMatch(html, /color-gallery__search-panel/);
   assert.match(html, /value="orchid"/);
   assert.match(html, /\d+ of 52 palettes/);
   assert.match(html, /Violet Afterglow/);
   assert.doesNotMatch(html, /Quiet Authority/);
+});
+
+test('turns a submitted hex into a coordinated related-color palette', () => {
+  assert.deepEqual(getRelatedColors('#4a154b')?.map((color) => color.role), [
+    'Lead',
+    'Companion',
+    'Accent',
+  ]);
+  assert.equal(getRelatedColors('#4a154b')?.[0]?.hex, '#4A154B');
+  assert.ok(getRelatedColors('#4a154b')?.every((color) => /^#[\dA-F]{6}$/.test(color.hex)));
+  assert.equal(getRelatedColors('burgundy'), null);
+
+  const html = renderToStaticMarkup(
+    <ColorGalleryPage query="#4a154b" searchActive onQueryChange={() => undefined} />,
+  );
+  assert.match(html, /Related palette/);
+  assert.match(html, /Lead/);
+  assert.match(html, /Companion/);
+  assert.match(html, /Accent/);
+});
+
+test('builds a five-color harmony palette with a wheel-driven editing surface', () => {
+  for (const harmony of ['monochromatic', 'analogous', 'complementary', 'triadic'] as const) {
+    const palette = getHarmonyPalette('#4a154b', harmony);
+    assert.deepEqual(palette.map((color) => color.role), ['Lead', 'Companion', 'Accent']);
+    assert.deepEqual(palette.map((color) => color.weight), ['60%', '30%', '10%']);
+    assert.equal(palette[0]?.hex, '#4A154B');
+    assert.ok(palette.every((color) => /^#[\dA-F]{6}$/.test(color.hex)));
+  }
+  assert.ok(contrastRatio('#111112') >= 4.5);
+
+  const html = renderToStaticMarkup(<ColorPaletteComposer onBack={() => undefined} />);
+  assert.match(html, /Color palette generator and color wheel/);
+  assert.match(html, /Color harmonies/);
+  assert.match(html, /Split complementary/);
+  assert.match(html, /Generate random/);
+  assert.match(html, /Color controls/);
+  assert.match(html, /aria-label="Lock color"/);
+  assert.match(html, /aria-label="Edit tint"/);
+  assert.match(html, /aria-label="Drag to reorder"/);
+  assert.match(html, /aria-label="Delete color"/);
+  assert.match(html, /aria-label="Add color left"/);
+  assert.match(html, /aria-label="Save palette to library"/);
+  assert.match(html, /Create with my color palette/);
+  assert.match(html, /aria-label="Color 5, #056C5C"/);
+  assert.match(html, /aria-label="Download palette"/);
+
+  assert.ok(Math.abs(getComposerWheelAngle('#FF98BB') - 10.2) < 1);
+  assert.ok(Math.abs(getComposerWheelAngle('#056C5C') - 150.2) < 1);
+  assert.deepEqual(getComposerWheelMarker('#424242'), { angle: 0, left: 50, top: 50 });
+  assert.equal(getComposerWheelColor(0, 1, 66 / 255), '#420000');
+  assert.deepEqual(getTintOptions('#424242'), ['#D9D9D9', '#B3B3B3', '#7B7B7B', '#424242', '#323232', '#242424', '#171717']);
+  assert.match(html, /color-composer__wheel-canvas/);
 });
 
 test('uses the same responsive three-up result grid as Apps', async () => {
@@ -398,6 +493,10 @@ test('keeps every palette heading at a fixed two-line metadata height', async ()
   assert.match(
     css,
     /\.color-gallery__palette-mood\s*\{[^}]*-webkit-line-clamp:\s*2;/s,
+  );
+  assert.match(
+    css,
+    /\.color-gallery__palette-source-description\s*\{[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s,
   );
   assert.doesNotMatch(
     css,

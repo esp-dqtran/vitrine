@@ -73,7 +73,16 @@ export function ScreenPreviewDialog({
   const resolution = screenResolution(screen);
   const dimensions = mediaDimensions[screen.id];
   const showNext = canNavigateNext ?? index < total - 1;
+  const pageTypes = [...new Set([
+    usefulLabel(screen.type),
+    usefulLabel(screen.embeddedPageType),
+  ].filter((value): value is string => Boolean(value)))];
+  const uiElementTypes = [...new Set(
+    (screen.uiElements ?? []).map(({ type }) => type),
+  )];
   const analysisGroups = [
+    { label: 'Page Types', values: pageTypes },
+    { label: 'UI Elements', values: uiElementTypes },
     { label: 'Visible states', values: screen.visibleStates },
     { label: 'Components', values: screen.componentNames ?? [] },
     { label: 'Layout patterns', values: screen.layoutPatterns ?? [] },

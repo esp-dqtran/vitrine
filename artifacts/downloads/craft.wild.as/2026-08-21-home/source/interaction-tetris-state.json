@@ -1,0 +1,117 @@
+{
+  "bodyOverflow": "hidden auto",
+  "canvases": [
+    {
+      "height": 1440,
+      "rect": {
+        "height": 720,
+        "width": 1280,
+        "x": 0,
+        "y": 0
+      },
+      "width": 2560
+    },
+    {
+      "height": 779,
+      "rect": {
+        "height": 389.328125,
+        "width": 1168,
+        "x": 56,
+        "y": -3680.046875
+      },
+      "width": 2336
+    },
+    {
+      "height": 779,
+      "rect": {
+        "height": 389.328125,
+        "width": 1168,
+        "x": 56,
+        "y": -2742.015625
+      },
+      "width": 2336
+    },
+    {
+      "height": 749,
+      "rect": {
+        "height": 374.3984375,
+        "width": 1280,
+        "x": 0,
+        "y": 345.5234375
+      },
+      "width": 2560
+    },
+    {
+      "height": 32,
+      "rect": {
+        "height": 13.760009765625,
+        "width": 17.20001220703125,
+        "x": 648.8922729492188,
+        "y": 525.8387451171875
+      },
+      "width": 40
+    },
+    {
+      "height": 1440,
+      "rect": {
+        "height": 720,
+        "width": 1280,
+        "x": 0,
+        "y": 0
+      },
+      "width": 2560
+    }
+  ],
+  "visibleButtons": [
+    {
+      "aria": "Previous slides",
+      "class": "sl-arrow prev",
+      "text": ""
+    },
+    {
+      "aria": "Next slides",
+      "class": "sl-arrow next",
+      "text": ""
+    },
+    {
+      "aria": "Previous slides",
+      "class": "sl-arrow prev",
+      "text": ""
+    },
+    {
+      "aria": "Next slides",
+      "class": "sl-arrow next",
+      "text": ""
+    },
+    {
+      "aria": "play tetris",
+      "class": "tt-teaser",
+      "text": "play"
+    },
+    {
+      "aria": "Move left",
+      "class": "",
+      "text": ""
+    },
+    {
+      "aria": "Move right",
+      "class": "",
+      "text": ""
+    },
+    {
+      "aria": "Rotate",
+      "class": "",
+      "text": ""
+    },
+    {
+      "aria": "Hard drop",
+      "class": "",
+      "text": ""
+    },
+    {
+      "aria": "Close",
+      "class": "tt-close",
+      "text": ""
+    }
+  ]
+}

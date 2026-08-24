@@ -1,4 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
+import {
+  useEffect,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import { Button, CheckboxInput, Icon, IconButton, TextInput } from '@astryxdesign/core';
 import type { Platform } from '../../platformFromUrl.ts';
 import { PLATFORM_LABEL } from '../../platformFromUrl.ts';
@@ -281,6 +290,184 @@ interface DiscoveryFilterMenuProps {
 }
 
 export const DISCOVERY_FILTER_OPTION_RENDER_LIMIT = 200;
+const DISCOVERY_FILTER_WIDTH_MOTION_MS = 180;
+const DISCOVERY_FILTER_SEARCH_MOTION_MS = 180;
+
+function useDiscoveryFilterWidthMotion(
+  containerRef: RefObject<HTMLDivElement | null> | undefined,
+  selectedKey: string,
+) {
+  const previousWidthRef = useRef<number | null>(null);
+  const widthAnimationRef = useRef<Animation | null>(null);
+
+  useLayoutEffect(() => {
+    const container = containerRef?.current;
+    if (!container) return;
+
+    const runningAnimation = widthAnimationRef.current;
+    const interruptedWidth = runningAnimation
+      ? container.getBoundingClientRect().width
+      : null;
+    runningAnimation?.cancel();
+
+    const nextWidth = container.getBoundingClientRect().width;
+    const previousWidth = interruptedWidth ?? previousWidthRef.current;
+    previousWidthRef.current = nextWidth;
+
+    if (
+      previousWidth === null
+      || Math.abs(previousWidth - nextWidth) < 1
+      || typeof container.animate !== 'function'
+      || window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      widthAnimationRef.current = null;
+      container.removeAttribute('data-width-motion');
+      return;
+    }
+
+    container.dataset.widthMotion = 'active';
+    const widthAnimation = container.animate(
+      [
+        { width: `${previousWidth}px` },
+        { width: `${nextWidth}px` },
+      ],
+      {
+        duration: DISCOVERY_FILTER_WIDTH_MOTION_MS,
+        easing: 'cubic-bezier(.16, 1, .3, 1)',
+      },
+    );
+    widthAnimationRef.current = widthAnimation;
+
+    const direction = selectedKey ? -4 : 4;
+    container.querySelector<HTMLElement>('.apps-filterbar__filter-button')?.animate(
+      [
+        { opacity: 0.72, transform: `translateX(${direction}px)` },
+        { opacity: 1, transform: 'translateX(0)' },
+      ],
+      {
+        duration: DISCOVERY_FILTER_WIDTH_MOTION_MS,
+        easing: 'cubic-bezier(.16, 1, .3, 1)',
+      },
+    );
+    container.querySelector<HTMLElement>('.apps-filterbar__clear')?.animate(
+      [
+        { opacity: 0, transform: 'scale(.72)' },
+        { opacity: 1, transform: 'scale(1)' },
+      ],
+      {
+        duration: DISCOVERY_FILTER_WIDTH_MOTION_MS,
+        easing: 'cubic-bezier(.16, 1, .3, 1)',
+      },
+    );
+
+    const clearMotionState = () => {
+      if (widthAnimationRef.current !== widthAnimation) return;
+      widthAnimationRef.current = null;
+      container.removeAttribute('data-width-motion');
+    };
+    void widthAnimation.finished.then(clearMotionState, clearMotionState);
+  }, [containerRef, selectedKey]);
+}
+
+function useDiscoveryFilterSearchMotion(
+  open: boolean,
+  query: string,
+  resultKey: string,
+) {
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const previousHeightRef = useRef<number | null>(null);
+  const heightAnimationRef = useRef<Animation | null>(null);
+  const optionsAnimationRef = useRef<Animation | null>(null);
+  const motionRunRef = useRef(0);
+  const setMenuRef = useCallback((node: HTMLDivElement | null) => {
+    menuRef.current = node;
+    if (node && open && previousHeightRef.current === null) {
+      previousHeightRef.current = node.getBoundingClientRect().height;
+    }
+  }, [open]);
+
+  useLayoutEffect(() => {
+    const menu = menuRef.current;
+    if (!open) {
+      heightAnimationRef.current?.cancel();
+      optionsAnimationRef.current?.cancel();
+      heightAnimationRef.current = null;
+      optionsAnimationRef.current = null;
+      previousHeightRef.current = null;
+      menu?.removeAttribute('data-search-motion');
+      return;
+    }
+    if (!menu) return;
+
+    const runningHeightAnimation = heightAnimationRef.current;
+    const interruptedHeight = runningHeightAnimation
+      ? menu.getBoundingClientRect().height
+      : null;
+    runningHeightAnimation?.cancel();
+    optionsAnimationRef.current?.cancel();
+
+    const nextHeight = menu.getBoundingClientRect().height;
+    const previousHeight = interruptedHeight ?? previousHeightRef.current;
+    previousHeightRef.current = nextHeight;
+
+    if (
+      previousHeight === null
+      || typeof menu.animate !== 'function'
+      || window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      heightAnimationRef.current = null;
+      optionsAnimationRef.current = null;
+      menu.removeAttribute('data-search-motion');
+      return;
+    }
+
+    const options = menu.querySelector<HTMLElement>('.apps-filterbar__options');
+    const run = motionRunRef.current + 1;
+    motionRunRef.current = run;
+    menu.dataset.searchMotion = 'active';
+
+    const heightAnimation = Math.abs(previousHeight - nextHeight) >= 1
+      ? menu.animate(
+        [
+          { height: `${previousHeight}px` },
+          { height: `${nextHeight}px` },
+        ],
+        {
+          duration: DISCOVERY_FILTER_SEARCH_MOTION_MS,
+          easing: 'cubic-bezier(.16, 1, .3, 1)',
+        },
+      )
+      : null;
+    const optionsAnimation = options?.animate(
+      [
+        {
+          opacity: 0.48,
+          transform: `translateY(${query.trim() ? -5 : 5}px)`,
+        },
+        { opacity: 1, transform: 'translateY(0)' },
+      ],
+      {
+        duration: DISCOVERY_FILTER_SEARCH_MOTION_MS,
+        easing: 'cubic-bezier(.16, 1, .3, 1)',
+      },
+    ) ?? null;
+    heightAnimationRef.current = heightAnimation;
+    optionsAnimationRef.current = optionsAnimation;
+
+    const animations = [heightAnimation, optionsAnimation].filter(
+      (animation): animation is Animation => animation !== null,
+    );
+    void Promise.allSettled(animations.map((animation) => animation.finished))
+      .then(() => {
+        if (motionRunRef.current !== run) return;
+        heightAnimationRef.current = null;
+        optionsAnimationRef.current = null;
+        menu.removeAttribute('data-search-motion');
+      });
+  }, [open, query, resultKey]);
+
+  return setMenuRef;
+}
 
 export function discoveryFilterVisibleOptions(
   options: readonly DiscoveryFilterOption[],
@@ -323,6 +510,11 @@ export function DiscoveryFilterMenu({
 }: DiscoveryFilterMenuProps) {
   const selectedCount = group.selected.length;
   const selectedKey = group.selected.join('\0');
+  const motionContainerRef = useRef<HTMLDivElement | null>(null);
+  const setControlRef = useCallback((node: HTMLDivElement | null) => {
+    motionContainerRef.current = node;
+    if (containerRef) containerRef.current = node;
+  }, [containerRef]);
   const loadOptionsRef = useRef(group.loadOptions);
   loadOptionsRef.current = group.loadOptions;
   const [remoteOptions, setRemoteOptions] = useState<{
@@ -372,6 +564,10 @@ export function DiscoveryFilterMenu({
     () => discoveryFilterVisibleOptions(options, query, group.selected),
     [group.selected, options, query],
   );
+  const searchResultKey = useMemo(
+    () => visibleOptions.map(({ section, value }) => `${section}\0${value}`).join('\1'),
+    [visibleOptions],
+  );
   const groupedOptions = useMemo(() => {
     const groups = new Map<string, DiscoveryFilterOption[]>();
     for (const option of visibleOptions) {
@@ -380,6 +576,8 @@ export function DiscoveryFilterMenu({
     return [...groups.entries()];
   }, [visibleOptions]);
   const controlClassName = `discovery-filter-control apps-filterbar__filter ${primary ? 'apps-filterbar__filter--primary' : ''} ${selectedCount ? 'apps-filterbar__filter--selected' : ''} ${filterClassName ?? ''}`;
+  useDiscoveryFilterWidthMotion(motionContainerRef, selectedKey);
+  const setSearchMenuRef = useDiscoveryFilterSearchMotion(open, query, searchResultKey);
 
   if (group.selectionMode === 'single') {
     const selectedValue = group.selected[0];
@@ -387,7 +585,8 @@ export function DiscoveryFilterMenu({
       <div
         className={controlClassName}
         data-filter-group={group.id}
-        ref={containerRef}
+        data-filter-state={selectedCount ? 'active' : 'idle'}
+        ref={setControlRef}
       >
         <AstryxDropdown
           label={selectedValue ?? group.label}
@@ -433,7 +632,8 @@ export function DiscoveryFilterMenu({
     <div
       className={controlClassName}
       data-filter-group={group.id}
-      ref={containerRef}
+      data-filter-state={selectedCount ? 'active' : 'idle'}
+      ref={setControlRef}
     >
       <AstryxDropdown
         mode="panel"
@@ -454,7 +654,7 @@ export function DiscoveryFilterMenu({
           if (nextOpen !== open) onToggleOpen();
         }}
       >
-        <div className="apps-filterbar__menu">
+        <div className="apps-filterbar__menu" ref={setSearchMenuRef}>
           <DiscoveryFilterSearch
             label={group.label}
             query={query}
@@ -532,7 +732,7 @@ export function DiscoveryActiveFilter({
 }
 
 export interface DiscoveryFilterBarProps {
-  kind: 'apps' | 'sites' | 'flows' | 'colors';
+  kind: 'apps' | 'sites' | 'flows' | 'components' | 'colors';
   ariaLabel: string;
   platform: {
     value: Platform;
@@ -626,6 +826,7 @@ export function DiscoveryFilterBar({
         'data-apps-filterbar': kind === 'apps' ? 'true' : undefined,
         'data-sites-filterbar': kind === 'sites' ? 'true' : undefined,
         'data-flows-filterbar': kind === 'flows' ? 'true' : undefined,
+        'data-components-filterbar': kind === 'components' ? 'true' : undefined,
         'data-colors-filterbar': kind === 'colors' ? 'true' : undefined,
       }}
     >

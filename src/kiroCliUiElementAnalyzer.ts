@@ -159,7 +159,6 @@ export function createKiroCliUiElementAnalyzer(
             const parsed = extractKiroCliJson(output, (candidate) =>
               typeof candidate.summary === "string"
               && candidate.screenAnalysis !== undefined
-              && Array.isArray(candidate.screenPatterns)
               && Array.isArray(candidate.components)
             );
             return parseUiElementScreenExtraction(parsed, input.screenPatterns);

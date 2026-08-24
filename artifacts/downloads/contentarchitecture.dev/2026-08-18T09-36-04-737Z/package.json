@@ -1,0 +1,9 @@
+{
+  "name": "content-architecture-homepage-local-mirror",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "extract": "node extract-mhtml.mjs",
+    "start": "node server.mjs"
+  }
+}

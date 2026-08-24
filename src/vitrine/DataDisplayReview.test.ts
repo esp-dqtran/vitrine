@@ -9,7 +9,8 @@ const productCss = readFileSync('src/vitrine/productDataDisplay.css', 'utf8');
 test('builds the Data Display review from production card components', () => {
   assert.match(story, /title: 'Components\/DataDisplay\/Cards and lists'/);
   assert.match(story, /<AppCard/);
-  assert.match(story, /<AppCardSkeleton/);
+  assert.match(story, /<Spinner/);
+  assert.doesNotMatch(story, /AppCardSkeleton/);
   assert.match(story, /<EmptyState/);
   assert.match(story, /title="Production card"/);
   assert.match(story, /title="Grid and interaction states"/);

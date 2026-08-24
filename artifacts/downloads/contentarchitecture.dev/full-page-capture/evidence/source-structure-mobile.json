@@ -1,0 +1,2785 @@
+{
+  "buttons": [
+    {
+      "ariaLabel": "Open menu",
+      "expanded": "false",
+      "pressed": null,
+      "text": "Menu"
+    },
+    {
+      "ariaLabel": "Scroll to the next section",
+      "expanded": null,
+      "pressed": null,
+      "text": ""
+    },
+    {
+      "ariaLabel": "Open the Next.js repository",
+      "expanded": null,
+      "pressed": "true",
+      "text": "Next.js"
+    },
+    {
+      "ariaLabel": "Open the Astro repository",
+      "expanded": null,
+      "pressed": "false",
+      "text": "Astro"
+    },
+    {
+      "ariaLabel": "Hide terminal",
+      "expanded": null,
+      "pressed": "true",
+      "text": "⌘ J"
+    },
+    {
+      "ariaLabel": "Search files",
+      "expanded": null,
+      "pressed": null,
+      "text": "⌘ K"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": ".agents"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": ".husky"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": ".zed"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "true",
+      "pressed": null,
+      "text": "app"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "(web)"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "api"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "favicon.ico"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "llms.txt"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "robots.txt"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "sanity-studio"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "global-not-found.tsx"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "not-found.tsx"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "shared-web-layout.tsx"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "sitemap.ts"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "components"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "docs"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "true",
+      "pressed": null,
+      "text": "features"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "agents"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "api"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "auth"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "blog"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "dom"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "draft-mode"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "fonts"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "legal"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "motion"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "mux"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "page-builder"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "rich-text"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "sanity"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "site"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "spam-prevention"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "style"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "umami"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "utils"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "view-transition"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "lenis.tsx"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "use-content-ready.ts"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "public"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "sanity"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "scripts"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "seed"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "templates"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": ".env.example"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": ".gitignore"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": ".lefthookrc"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": ".mcp.json"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": ".npmrc"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": ".nvmrc"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "AGENTS.md"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "assets.d.ts"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "biome.jsonc"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "CLAUDE.md"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "commitlint.config.mjs"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "env.ts"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "GETTING-STARTED.md"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "lefthook.yml"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "LICENSE.md"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "next.config.ts"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "package-lock.json"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "package.json"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "plopfile.mjs"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "proxy.ts"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "README.md"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "sanity-schema.json"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "sanity.cli.ts"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "sanity.config.ts"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "skills-lock.json"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "tsconfig.json"
+    },
+    {
+      "ariaLabel": "Resize file explorer",
+      "expanded": null,
+      "pressed": null,
+      "text": ""
+    },
+    {
+      "ariaLabel": "Scroll via minimap",
+      "expanded": null,
+      "pressed": null,
+      "text": ""
+    },
+    {
+      "ariaLabel": "Resize terminal",
+      "expanded": null,
+      "pressed": null,
+      "text": ""
+    },
+    {
+      "ariaLabel": "Resize file explorer and terminal",
+      "expanded": null,
+      "pressed": null,
+      "text": ""
+    },
+    {
+      "ariaLabel": "Show the commit graph in the terminal",
+      "expanded": null,
+      "pressed": null,
+      "text": "128 commits"
+    },
+    {
+      "ariaLabel": "Previous slide",
+      "expanded": null,
+      "pressed": null,
+      "text": "[<]"
+    },
+    {
+      "ariaLabel": "Next slide",
+      "expanded": null,
+      "pressed": null,
+      "text": "[>]"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.001 / What stack is this built on?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "true",
+      "pressed": null,
+      "text": "Q.002 / Does it work with Claude Code and Cursor?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.003 / Is the shipped site agent-ready too?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.004 / Am I locked into this exact stack?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.005 / Can I buy both editions?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.006 / Do I need to know Sanity?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.007 / Is this for me if I don't code?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.008 / Can I use this for client work?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.009 / How is this different from other boilerplates?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.010 / Why not just use a free Sanity starter?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.011 / Will it break on Next.js or Astro updates?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.012 / What do I actually get, and for how long?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.013 / Do I need a GitHub account?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.014 / Do you offer support?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.015 / What if I find a bug?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.016 / Can I get a refund?"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Q.017 / What is this not?"
+    },
+    {
+      "ariaLabel": "Inspect this page in Studio mode",
+      "expanded": null,
+      "pressed": null,
+      "text": ""
+    },
+    {
+      "ariaLabel": null,
+      "expanded": "false",
+      "pressed": null,
+      "text": "Learn moreLearn more+"
+    },
+    {
+      "ariaLabel": null,
+      "expanded": null,
+      "pressed": null,
+      "text": "StayStayupdatedupdated"
+    }
+  ],
+  "canvases": [
+    {
+      "aria": null,
+      "display": {
+        "height": 675,
+        "width": 390
+      },
+      "height": 1350,
+      "i": 0,
+      "width": 780
+    },
+    {
+      "aria": null,
+      "display": {
+        "height": 2293,
+        "width": 390
+      },
+      "height": 4586,
+      "i": 1,
+      "width": 780
+    },
+    {
+      "aria": null,
+      "display": {
+        "height": 3360,
+        "width": 390
+      },
+      "height": 3360,
+      "i": 2,
+      "width": 390
+    },
+    {
+      "aria": "Good Fella",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 201,
+      "i": 3,
+      "width": 358
+    },
+    {
+      "aria": "House of Honey",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 201,
+      "i": 4,
+      "width": 358
+    },
+    {
+      "aria": "Aspen Search",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 201,
+      "i": 5,
+      "width": 358
+    },
+    {
+      "aria": "Anuc Home",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 201,
+      "i": 6,
+      "width": 358
+    },
+    {
+      "aria": "Edoardo Lunardi",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 201,
+      "i": 7,
+      "width": 358
+    },
+    {
+      "aria": "Serve Robotics",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 201,
+      "i": 8,
+      "width": 358
+    },
+    {
+      "aria": "Muralia",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 201,
+      "i": 9,
+      "width": 358
+    },
+    {
+      "aria": "blink",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 201,
+      "i": 10,
+      "width": 358
+    },
+    {
+      "aria": "WASL",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 201,
+      "i": 11,
+      "width": 358
+    },
+    {
+      "aria": "Creative Lives in Progress",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 201,
+      "i": 12,
+      "width": 358
+    },
+    {
+      "aria": "The Content Architecture",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 201,
+      "i": 13,
+      "width": 358
+    },
+    {
+      "aria": "Julian Fella",
+      "display": {
+        "height": 48,
+        "width": 48
+      },
+      "height": 96,
+      "i": 14,
+      "width": 96
+    },
+    {
+      "aria": "Elliott Mangham",
+      "display": {
+        "height": 48,
+        "width": 48
+      },
+      "height": 96,
+      "i": 15,
+      "width": 96
+    },
+    {
+      "aria": "Malik Kotb",
+      "display": {
+        "height": 48,
+        "width": 48
+      },
+      "height": 150,
+      "i": 16,
+      "width": 300
+    },
+    {
+      "aria": null,
+      "display": {
+        "height": 679,
+        "width": 78
+      },
+      "height": 679,
+      "i": 17,
+      "width": 78
+    },
+    {
+      "aria": null,
+      "display": {
+        "height": 679,
+        "width": 78
+      },
+      "height": 679,
+      "i": 18,
+      "width": 78
+    },
+    {
+      "aria": null,
+      "display": {
+        "height": 448,
+        "width": 390
+      },
+      "height": 896,
+      "i": 19,
+      "width": 780
+    },
+    {
+      "aria": null,
+      "display": {
+        "height": 844,
+        "width": 390
+      },
+      "height": 1440,
+      "i": 20,
+      "width": 2560
+    }
+  ],
+  "headings": [
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(35, 35, 35)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "40px",
+        "fontWeight": "500",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "40px",
+        "margin": "0px 0px 32px",
+        "padding": "0px"
+      },
+      "tag": "H1",
+      "text": "The Sanity setup agents don't reinvent."
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(35, 35, 35)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "32.1959px",
+        "fontWeight": "500",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "35.4155px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H2",
+      "text": "The page builder alone costs you days. Every single time."
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "32.1959px",
+        "fontWeight": "500",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "35.4155px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H2",
+      "text": "Every decision already made. So you can skip to the actual work."
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "32.1959px",
+        "fontWeight": "500",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "35.4155px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H2",
+      "text": "The work that gets remembered."
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistMono, ui-monospace, SFMono-Regular, \"Roboto Mono\", Menlo, Monaco, \"Liberation Mono\", \"DejaVu Sans Mono\", \"Courier New\", monospace, ui-monospace, monospace",
+        "fontSize": "14.0245px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "17.5306px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Good Fella"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistMono, ui-monospace, SFMono-Regular, \"Roboto Mono\", Menlo, Monaco, \"Liberation Mono\", \"DejaVu Sans Mono\", \"Courier New\", monospace, ui-monospace, monospace",
+        "fontSize": "14.0245px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "17.5306px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "House of Honey"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistMono, ui-monospace, SFMono-Regular, \"Roboto Mono\", Menlo, Monaco, \"Liberation Mono\", \"DejaVu Sans Mono\", \"Courier New\", monospace, ui-monospace, monospace",
+        "fontSize": "14.0245px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "17.5306px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Aspen Search"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistMono, ui-monospace, SFMono-Regular, \"Roboto Mono\", Menlo, Monaco, \"Liberation Mono\", \"DejaVu Sans Mono\", \"Courier New\", monospace, ui-monospace, monospace",
+        "fontSize": "14.0245px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "17.5306px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Anuc Home"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistMono, ui-monospace, SFMono-Regular, \"Roboto Mono\", Menlo, Monaco, \"Liberation Mono\", \"DejaVu Sans Mono\", \"Courier New\", monospace, ui-monospace, monospace",
+        "fontSize": "14.0245px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "17.5306px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Edoardo Lunardi"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistMono, ui-monospace, SFMono-Regular, \"Roboto Mono\", Menlo, Monaco, \"Liberation Mono\", \"DejaVu Sans Mono\", \"Courier New\", monospace, ui-monospace, monospace",
+        "fontSize": "14.0245px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "17.5306px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Serve Robotics"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistMono, ui-monospace, SFMono-Regular, \"Roboto Mono\", Menlo, Monaco, \"Liberation Mono\", \"DejaVu Sans Mono\", \"Courier New\", monospace, ui-monospace, monospace",
+        "fontSize": "14.0245px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "17.5306px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Muralia"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistMono, ui-monospace, SFMono-Regular, \"Roboto Mono\", Menlo, Monaco, \"Liberation Mono\", \"DejaVu Sans Mono\", \"Courier New\", monospace, ui-monospace, monospace",
+        "fontSize": "14.0245px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "17.5306px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "blink"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistMono, ui-monospace, SFMono-Regular, \"Roboto Mono\", Menlo, Monaco, \"Liberation Mono\", \"DejaVu Sans Mono\", \"Courier New\", monospace, ui-monospace, monospace",
+        "fontSize": "14.0245px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "17.5306px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "WASL"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistMono, ui-monospace, SFMono-Regular, \"Roboto Mono\", Menlo, Monaco, \"Liberation Mono\", \"DejaVu Sans Mono\", \"Courier New\", monospace, ui-monospace, monospace",
+        "fontSize": "14.0245px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "17.5306px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Creative Lives in Progress"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistMono, ui-monospace, SFMono-Regular, \"Roboto Mono\", Menlo, Monaco, \"Liberation Mono\", \"DejaVu Sans Mono\", \"Courier New\", monospace, ui-monospace, monospace",
+        "fontSize": "14.0245px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "17.5306px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "The Content Architecture"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(35, 35, 35)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "32.1959px",
+        "fontWeight": "500",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "35.4155px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H2",
+      "text": "Two editions. One architecture. Lifetime updates."
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "32.1959px",
+        "fontWeight": "500",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "35.4155px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H2",
+      "text": "Before you buy"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.001 / What stack is this built on?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.002 / Does it work with Claude Code and Cursor?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.003 / Is the shipped site agent-ready too?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.004 / Am I locked into this exact stack?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.005 / Can I buy both editions?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.006 / Do I need to know Sanity?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.007 / Is this for me if I don't code?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.008 / Can I use this for client work?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.009 / How is this different from other boilerplates?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.010 / Why not just use a free Sanity starter?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.011 / Will it break on Next.js or Astro updates?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.012 / What do I actually get, and for how long?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.013 / Do I need a GitHub account?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.014 / Do you offer support?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.015 / What if I find a bug?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.016 / Can I get a refund?"
+    },
+    {
+      "style": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "fontSize": "16.098px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "gridTemplateColumns": "none",
+        "letterSpacing": "normal",
+        "lineHeight": "20.1224px",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "tag": "H3",
+      "text": "Q.017 / What is this not?"
+    }
+  ],
+  "images": [
+    {
+      "alt": "Good Fella website built on The Content Architecture",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 219,
+      "src": "https://cdn.sanity.io/images/szlvuc1t/production/be3c66bd045bc48cd8cdbd8a42f4488b340547f7-3840x2160.jpg?rect=3,0,3834,2160&w=600&h=338&max-h=2048&max-w=2048&q=85&fit=crop&auto=format",
+      "width": 390
+    },
+    {
+      "alt": "House of Honey website built on The Content Architecture",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 219,
+      "src": "https://cdn.sanity.io/images/szlvuc1t/production/dd1aa647aa9b19c7eb7b72f3649e4425a2c9dd44-3840x2160.jpg?rect=3,0,3834,2160&w=600&h=338&max-h=2048&max-w=2048&q=85&fit=crop&auto=format",
+      "width": 390
+    },
+    {
+      "alt": "Aspen website hero section describing recruiting for software and AI/ML roles",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 219,
+      "src": "https://cdn.sanity.io/images/szlvuc1t/production/d79913ca416f63f31c617b2c3936befb77a3d6ac-3840x2160.jpg?rect=3,0,3834,2160&w=600&h=338&max-h=2048&max-w=2048&q=85&fit=crop&auto=format",
+      "width": 390
+    },
+    {
+      "alt": "Anuc Home website built on The Content Architecture",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 219,
+      "src": "https://cdn.sanity.io/images/szlvuc1t/production/ec80e52f1fe72f2d882ec6a1d067090a79cc4288-3840x2160.jpg?rect=3,0,3834,2160&w=600&h=338&max-h=2048&max-w=2048&q=85&fit=crop&auto=format",
+      "width": 390
+    },
+    {
+      "alt": "Portfolio website homepage for Edoardo Lunardi with featured article, about, and work gallery",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 219,
+      "src": "https://cdn.sanity.io/images/szlvuc1t/production/4f7bcbe2f921c92cdd73ab3e44633209d089071a-3840x2160.jpg?rect=3,0,3834,2160&w=600&h=338&max-h=2048&max-w=2048&q=85&fit=crop&auto=format",
+      "width": 390
+    },
+    {
+      "alt": "Serve Robotics website built on The Content Architecture",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 219,
+      "src": "https://cdn.sanity.io/images/szlvuc1t/production/b7825b5fd0f02439d431345d7c86f0a19ee9f27b-3840x2160.jpg?rect=3,0,3834,2160&w=600&h=338&max-h=2048&max-w=2048&q=85&fit=crop&auto=format",
+      "width": 390
+    },
+    {
+      "alt": "Muralia website built on The Content Architecture",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 219,
+      "src": "https://cdn.sanity.io/images/szlvuc1t/production/2d6f54ea28f4d35e3099be43fe7cedde3c2aebff-3840x2160.jpg?rect=3,0,3834,2160&w=600&h=338&max-h=2048&max-w=2048&q=85&fit=crop&auto=format",
+      "width": 390
+    },
+    {
+      "alt": "blink website built on The Content Architecture",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 219,
+      "src": "https://cdn.sanity.io/images/szlvuc1t/production/2ce1bfb9315017055ecb2efb9daaeda9ae53a02b-3840x2160.jpg?rect=3,0,3834,2160&w=600&h=338&max-h=2048&max-w=2048&q=85&fit=crop&auto=format",
+      "width": 390
+    },
+    {
+      "alt": "WASL Architects website built on The Content Architecture",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 219,
+      "src": "https://cdn.sanity.io/images/szlvuc1t/production/43ece46814425819dfed810ede5aacf6447b9a37-3840x2160.jpg?rect=3,0,3834,2160&w=600&h=338&max-h=2048&max-w=2048&q=85&fit=crop&auto=format",
+      "width": 390
+    },
+    {
+      "alt": "Creative Lives in Progress website built on The Content Architecture",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 219,
+      "src": "https://cdn.sanity.io/images/szlvuc1t/production/619d1accb39f837a13c75efe4e0af4a11977669a-3840x2160.jpg?rect=3,0,3834,2160&w=600&h=338&max-h=2048&max-w=2048&q=85&fit=crop&auto=format",
+      "width": 390
+    },
+    {
+      "alt": "Sanity landing page with headline “The Sanity setup agents don’t reinvent”",
+      "display": {
+        "height": 201,
+        "width": 358
+      },
+      "height": 219,
+      "src": "https://cdn.sanity.io/images/szlvuc1t/production/fbf09e00b0fe7ada7d5a6d5eb452449d7e122b6e-3840x2160.png?rect=3,0,3834,2160&w=600&h=338&max-h=2048&max-w=2048&q=85&fit=crop&auto=format",
+      "width": 390
+    },
+    {
+      "alt": "",
+      "display": {
+        "height": 48,
+        "width": 48
+      },
+      "height": 512,
+      "src": "https://cdn.sanity.io/images/szlvuc1t/production/ffbe610b30c6bdd31d413a5e16821db3f489b4cd-512x512.jpg?w=512&h=512&max-h=2048&max-w=2048&q=85&fit=crop&auto=format",
+      "width": 512
+    },
+    {
+      "alt": "",
+      "display": {
+        "height": 48,
+        "width": 48
+      },
+      "height": 512,
+      "src": "https://cdn.sanity.io/images/szlvuc1t/production/21e750fd3ee0a6217523a980b741bb38ce2a3336-512x512.png?w=512&h=512&max-h=2048&max-w=2048&q=85&fit=crop&auto=format",
+      "width": 512
+    },
+    {
+      "alt": "",
+      "display": {
+        "height": 48,
+        "width": 48
+      },
+      "height": 0,
+      "src": "https://cdn.sanity.io/images/szlvuc1t/production/d8178d0c978dc78b2848cb4684cd92812a4cd6a6-800x800.jpg?w=800&h=800&max-h=2048&max-w=2048&q=85&fit=crop&auto=format",
+      "width": 0
+    },
+    {
+      "alt": "",
+      "display": {
+        "height": 32,
+        "width": 32
+      },
+      "height": 64,
+      "src": "https://github.com/GoodFellaStudio.png?size=64",
+      "width": 64
+    },
+    {
+      "alt": "",
+      "display": {
+        "height": 32,
+        "width": 32
+      },
+      "height": 64,
+      "src": "https://github.com/elliottmangham.png?size=64",
+      "width": 64
+    },
+    {
+      "alt": "",
+      "display": {
+        "height": 32,
+        "width": 32
+      },
+      "height": 64,
+      "src": "https://github.com/studioboldest.png?size=64",
+      "width": 64
+    },
+    {
+      "alt": "",
+      "display": {
+        "height": 32,
+        "width": 32
+      },
+      "height": 64,
+      "src": "https://github.com/malikkotb.png?size=64",
+      "width": 64
+    },
+    {
+      "alt": "",
+      "display": {
+        "height": 32,
+        "width": 32
+      },
+      "height": 64,
+      "src": "https://github.com/MinhChanh6.png?size=64",
+      "width": 64
+    }
+  ],
+  "links": [
+    {
+      "href": "https://www.contentarchitecture.dev/",
+      "target": "",
+      "text": ""
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/#features",
+      "target": "",
+      "text": "FeaturesFeatures"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/#the-repo",
+      "target": "",
+      "text": "The repoThe repo"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/#showcase",
+      "target": "",
+      "text": "ShowcaseShowcase"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/#pricing",
+      "target": "",
+      "text": "PricingPricing"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/#faq",
+      "target": "",
+      "text": "FAQFAQ"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/blog",
+      "target": "",
+      "text": "BlogBlog"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/",
+      "target": "",
+      "text": ""
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/#pricing",
+      "target": "",
+      "text": "GetGetaccessaccess"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/#pricing",
+      "target": "",
+      "text": "GET-ACCESS.md"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/#pricing",
+      "target": "",
+      "text": "~/the-content-architecture-next-js > get-access # €549 · one-time"
+    },
+    {
+      "href": "https://www.awwwards.com/",
+      "target": "_blank",
+      "text": "Awwwards"
+    },
+    {
+      "href": "https://thefwa.com/",
+      "target": "_blank",
+      "text": "FWA"
+    },
+    {
+      "href": "https://www.cssdesignawards.com/",
+      "target": "_blank",
+      "text": "CSSDA"
+    },
+    {
+      "href": "https://good-fella.com/",
+      "target": "_blank",
+      "text": "Good Fella"
+    },
+    {
+      "href": "https://www.houseofhoney.com/",
+      "target": "_blank",
+      "text": "House of Honey"
+    },
+    {
+      "href": "https://www.aspensearch.com/",
+      "target": "_blank",
+      "text": "Aspen Search"
+    },
+    {
+      "href": "https://www.anuchome.com/",
+      "target": "_blank",
+      "text": "Anuc Home"
+    },
+    {
+      "href": "https://www.edoardolunardi.dev/",
+      "target": "_blank",
+      "text": "Edoardo Lunardi"
+    },
+    {
+      "href": "https://www.serverobotics.com/",
+      "target": "_blank",
+      "text": "Serve Robotics"
+    },
+    {
+      "href": "https://www.muralia.at/",
+      "target": "_blank",
+      "text": "Muralia"
+    },
+    {
+      "href": "https://www.blink.trade/",
+      "target": "_blank",
+      "text": "blink"
+    },
+    {
+      "href": "https://www.waslarchitects.com/",
+      "target": "_blank",
+      "text": "WASL"
+    },
+    {
+      "href": "https://creativelivesinprogress.com/",
+      "target": "_blank",
+      "text": "Creative Lives in Progress"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/",
+      "target": "_blank",
+      "text": "The Content Architecture"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/checkout?plan=next&code=ASTROLAUNCH",
+      "target": "",
+      "text": "GetGetaccessaccess"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/checkout?plan=astro&code=ASTROLAUNCH",
+      "target": "",
+      "text": "GetGetaccessaccess"
+    },
+    {
+      "href": "mailto:hello@edoardolunardi.dev",
+      "target": "",
+      "text": "Email me"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/#pricing",
+      "target": "",
+      "text": "GetGetaccessaccess"
+    },
+    {
+      "href": "mailto:hello@edoardolunardi.dev",
+      "target": "",
+      "text": "Email me"
+    },
+    {
+      "href": "https://github.com/signup",
+      "target": "_blank",
+      "text": "Creating one"
+    },
+    {
+      "href": "https://www.edoardolunardi.dev/blog/the-content-architecture-cms-structure",
+      "target": "_blank",
+      "text": "read the article series"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/#the-repo",
+      "target": "",
+      "text": "browse the real repo above"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/#showcase",
+      "target": "",
+      "text": "sites already shipped"
+    },
+    {
+      "href": "mailto:hello@edoardolunardi.dev",
+      "target": "",
+      "text": "email me"
+    },
+    {
+      "href": "https://www.edoardolunardi.dev/blog/the-content-architecture-cms-structure",
+      "target": "_blank",
+      "text": "article series"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/blog",
+      "target": "",
+      "text": "BlogBlog"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/roadmap",
+      "target": "",
+      "text": "RoadmapRoadmap"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/#pricing",
+      "target": "",
+      "text": "Get accessGet access"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/legal/privacy-policy",
+      "target": "",
+      "text": "Privacy PolicyPrivacy Policy"
+    },
+    {
+      "href": "https://www.contentarchitecture.dev/legal/terms-of-service",
+      "target": "",
+      "text": "Terms Of ServiceTerms Of Service"
+    },
+    {
+      "href": "https://edoardolunardi.dev/",
+      "target": "",
+      "text": "Built by edoardolunardi.dev"
+    }
+  ],
+  "page": {
+    "body": {
+      "backgroundColor": "rgb(241, 238, 231)",
+      "borderRadius": "0px",
+      "color": "rgb(35, 35, 35)",
+      "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+      "fontSize": "16.098px",
+      "fontWeight": "400",
+      "gap": "normal",
+      "gridTemplateColumns": "none",
+      "letterSpacing": "normal",
+      "lineHeight": "20.1224px",
+      "margin": "0px",
+      "padding": "0px"
+    },
+    "scrollHeight": 13022,
+    "scrollWidth": 390
+  },
+  "sections": [
+    {
+      "className": "relative grid min-h-svh grid-cols-1 grid-rows-[auto_80vh] gap-x-16 bg-off-white text-black lg:grid-cols-12 lg:grid-rows-1",
+      "heading": "The Sanity setup agents don't reinvent.",
+      "id": null,
+      "rect": {
+        "height": 1223,
+        "width": 390,
+        "x": 0,
+        "y": 0
+      },
+      "text": "BUILT FOR AGENTIC DEVELOPMENT.\n\nThe Sanity\nsetup agents\ndon't reinvent.\nEvery run invents a new one, none decided. This Sanity\nkit for Next.js and Astro commits six years of decisions.\nYour agent builds inside them, and checks its work\nthrough MCP and a real Chrome.\nGET\nACCESS\nCLICK & HOLD"
+    },
+    {
+      "className": "bg-off-white py-72 text-black lg:py-160",
+      "heading": "The page builder alone costs you days. Every single time.",
+      "id": null,
+      "rect": {
+        "height": 776,
+        "width": 390,
+        "x": 0,
+        "y": 1223
+      },
+      "text": "COMMON PROBLEMS\n001 Agent redesigns the architecture on every prompt ∞ HRS. 002 Page builder schema + section registration + preview ~5 HRS. 003 Draft mode + live preview + webhook revalidation ~4 HRS. 004 CDN vs. data cache — stale content after publish ~3 HRS. 005 Studio structure editors can actually use ~3 HRS. 006 SEO metadata, OG images, sitemaps, robots.txt ~2 HRS. 007 Rewriting the same 12 components ~2 HRS. 008 Redirects, analytics, view transitions, Mux ~2 HRS. 009 Contact form + spam guard + Resend wiring ~1 HR. 010 ESLint, Prettier, Biome, git hooks ~1 HR. 011 Basic auth for staging environments ~1 HR. ESTIMATED TIME LOST: ~24 HOURS PER PROJECT (3 FULL DAYS)\n001\nAgent redesigns the architecture on every prompt\n∞ HRS\n002\nPage builder schema + section registration + preview\n~5 HRS\n003\nDraft mode + live preview + webhook revalidation\n~4 HRS\n004\nCDN vs. data cache — stale content after publish\n~3 HRS\n005\nStudio structure editors can actually use\n~3 HRS\n006\nSEO metadata, OG images, sitemaps, robots.txt\n~2 HRS\n007\nRewriting the same 12 components\n~2 HRS\n008\nRedirects, analytics, view transitions, Mux\n~2 HRS\n009\nContact form + spam guard + Resend wiring\n~1 HR\n010\nESLint, Prettier, Biome, git hooks\n~1 HR\n011\nBasic auth for staging environments\n~1 HR\n \nESTIMATED TIME LOST: ~24 HOURS PER PROJECT  (3 FULL DAYS)\nThe page builder\nalone costs you days.\nEvery single time.\nIt's never the easy stuff that hurts. It's the page builder,\nmodeled from scratch again. Draft mode and live\npreview, wired up and subtly broken again. The cache\nbug where published content goes stale and the client\nswears you shipped something wrong. A Studio\nstructure your editors actually understand, instead of\none they email you about.\nThis is the part nobody quotes for and everybody\nrebuilds. Days gone before the real work starts."
+    },
+    {
+      "className": "relative isolate min-h-svh pt-72 pb-64 text-white lg:py-160",
+      "heading": "Every decision already made. So you can skip to the actual work.",
+      "id": "features",
+      "rect": {
+        "height": 2293,
+        "width": 390,
+        "x": 0,
+        "y": 1999
+      },
+      "text": "CLICK\nEvery decision already\nmade. So you can skip\nto the actual work.\nThe production foundation under my client work:\nhundreds of decisions, schema, fetching, structure,\nSEO, made once over six years and committed. Clone it,\nrename it, ship. Committed decisions are also why\nagents work here: inside them an agent ships, without\nthem it redesigns.\n\n001 / AGENT-NATIVE\n\nAGENTS.md and a dozen scoped skills load the\nconventions before the first prompt, so Claude Code or\nCursor builds inside the decisions instead of proposing\na new architecture per run. Two MCP servers ship in the\nrepo: one reads the running app, one drives a real\nChrome. The agent checks its own work.\n\n002 / AGENT-READY IN PRODUCTION\n\nThe shipped site stays legible to agents: an editable\nllms.txt drafted from your content, and a token-light\nMarkdown twin of every page on the same URL. A\nfeature you can put in your own proposals.\n\n003 / SCHEMA AS A SYSTEM\n\nDocument roles, factory functions, singletons. Every\nschema looks the same, so every editor knows where to\ngo. You never model the structure from scratch again.\n\n004 / THE HARD FIELDS, ALREADY BUILT\n\nThe three fields nobody gets right the first time. A link\nfield that handles every kind of link. A media field that\nreturns image, Mux, Rive, and Lottie in one shape,\ndimensions included, so layout never shifts. A page\nbuilder with guardrails. Typed, composed everywhere.\n\n005 / FETCH LAYER, SOLVED\n\nCDN bypassed in production, Data Cache doing the\nwork, webhooks invalidating on publish, draft mode\nwired in. Stale content after publish stops being a\nmidnight problem.\n\n006 / A STUDIO EDITORS ACTUALLY USE\n\nEvery document type where editors expect it. Pages\nown their routes, singletons stay locked, no hunting.\nClients stop emailing to ask where their homepage\nlives.\n\n007 / SEO, DONE NOT DEFERRED\n\nPer-page metadata from schema, sitemap driven by\nSanity, OpenGraph with auto-cropped images,\nrobots.txt included. Nothing bolted on the week before\nlaunch.\n\n008 / PRODUCTION-READY FROM DAY ONE\n\nBasic auth, spam-protected forms, redirects managed\nin Sanity, analytics, view transitions. The plumbing you\nreconfigure every project, already wired.\n\n009 / WIRED UP, NOT JUST CLONED\n\nAn interactive setup script provisions the Sanity project,\nmints tokens, wires CORS and the revalidation\nwebhook, and writes your .env. Migration scripts back\nup production and move content between\nenvironments. The first run is handled, not documented."
+    },
+    {
+      "className": "h-svh bg-off-white px-16 py-72 text-black lg:p-80",
+      "id": "the-repo",
+      "rect": {
+        "height": 844,
+        "width": 390,
+        "x": 0,
+        "y": 4292
+      },
+      "text": "NEXT.JS\nASTRO\nTHIS IS THE ACTUAL REPO.\n.AGENTS\n.HUSKY\n.ZED\nAPP\n(WEB)\nAPI\nFAVICON.ICO\nLLMS.TXT\nROBOTS.TXT\nSANITY-STUDIO\nGLOBAL-NOT-FOUND.TSX\nNOT-FOUND.TSX\nSHARED-WEB-LAYOUT.TSX\nSITEMAP.TS\nCOMPONENTS\nDOCS\nFEATURES\nAGENTS\nAPI\nAUTH\nBLOG\nDOM\nDRAFT-MODE\nFONTS\nLEGAL\nMOTION\nMUX\nPAGE-BUILDER\nRICH-TEXT\nSANITY\nSITE\nSPAM-PREVENTION\nSTYLE\nUMAMI\nUTILS\nVIEW-TRANSITION\nLENIS.TSX\nUSE-CONTENT-READY.TS\nPUBLIC\nSANITY\nSCRIPTS\nSEED\nTEMPLATES\n.ENV.EXAMPLE\n.GITIGNORE\n.LEFTHOOKRC\n.MCP.JSON\n.NPMRC\n.NVMRC\nAGENTS.MD\nASSETS.D.TS\nBIOME.JSONC\nCLAUDE.MD\nCOMMITLINT.CONFIG.MJS\nENV.TS\nGETTING-STARTED.MD\nLEFTHOOK.YML\nLICENSE.MD\nNEXT.CONFIG.TS\nPACKAGE-LOCK.JSON\nPACKAGE.JSON\nPLOPFILE.MJS\nPROXY.TS\nREADME.MD\nGET-ACCESS.MD\nSANITY-SCHEMA.JSON\nSANITY.CLI.TS\nSANITY.CONFIG.TS\nSKILLS-LOCK.JSON\nTSCONFIG.JSON\nREADME.MD\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n39\n40\n41\n42\n43\n44\n45\n46\n47\n48\n49\n50\n51\n52\n53\n54\n55\n56\n57\n58\n59\n60\n61\n62\n63\n64\n65\n66\n67\n68\n69\n70\n71\n72\n73\n74\n75\n76\n77\n78\n79\n80\n81\n82\n83\n84\n85\n86\n87\n88\n89\n90\n91\n92\n93\n94\n95\n96\n97\n98\n99\n100\n101\n102\n103\n104\n105\n106\n107\n108\n109\n110\n111\n112\n113\n114\n115\n116\n117\n118\n119\n120\n121\n122\n123\n124\n125\n126\n127\n128\n129\n130\n131\n132\n133\n134\n135\n136\n137\n138\n139\n140\n141\n142\n143\n144\n145\n146\n147\n148\n149\n150\n151\n152\n153\n154\n155\n156\n157\n158\n159\n160\n161\n162\n# The Content Architecture (Next.js)\n\nA modern Next.js 16.3 starter with Sanity CMS integration.\n\n## Features\n\n- Next.js 16.3 with App Router and Server Components\n- Sanity CMS with in-app Studio\n- TypeScript 6, Tailwind CSS 4, and Biome\n- Reusable components, page builder sections, and rich text blocks\n- **Cache Components** ([the modern Next.js caching model](https://nextjs.org/docs/app/getting-started/cache-components)): every page prerenders into a static shell with a one-year lifetime, and publishing in the Studio is the only revalidation signal (webhook + tags, no timers). See [`docs/sanity/revalidation-and-caching.md`](docs/sanity/revalidation-and-caching.md).\n- Draft mode with Sanity Live, Visual Editing, and SEO helpers\n- **HTTP Basic Auth (optional)** — `proxy.ts` gates the site or individual URLs using **`BASIC_AUTH_*` environment variables** and **CMS toggles** (Settings → Security, per-entry “Password protect”). See [`docs/features/basic-auth.md`](docs/features/basic-auth.md).\n- Feature modules for redirects, Umami analytics, and spam prevention\n- **llms.txt for AI assistants**: an editable, AI-generated [`/llms.txt`](https://llmstxt.org) drafted from your content with Sanity Agent Actions (Site, Agents tab). See [`docs/features/llms-txt.md`](docs/features/llms-txt.md).\n- **Agent Markdown (content negotiation)**: pages and articles serve a token-light Markdown version to agents that send `Accept: text/markdown`, on the same URL. Generated and stored per page from the Agents tab (one click), then served verbatim. See [`docs/features/agent-markdown.md`](docs/features/agent-markdown.md).\n- Scaffolding via Plop for repeatable section/block generation\n- Starter **seed dataset** (`seed/`), imported by `npm run sanity:project-setup` so a new project boots with example content\n- [`@mantine/hooks`](https://mantine.dev/hooks/getting-started/) for shared React hooks; `features/dom/use-breakpoint.ts` wraps [`useMediaQuery`](https://mantine.dev/hooks/use-media-query/) for Tailwind-aligned breakpoints and touch detection, alongside `constants` / `parseResponsiveValues`\n\n## Getting Started\n\n**New here? Start with [`GETTING-STARTED.md`](GETTING-STARTED.md).** It is the guided, top to bottom path from a fresh clone to your first rendered section. The sections below are the reference.\n\n### Prerequisites\n\n- Node.js 24.15.0, pinned in `.nvmrc` and in `package.json` (`engines`, `volta`). `engines` requires the `^24.15.0` LTS line, so npm refuses to install on any other major.\n- npm >= 11.6.2\n\n### Installation\n\n```bash\nnpm install\n```\n\n### Environment Variables\n\nCreate a `.env` file and add at least:\n\n```env\nSANITY_API_VIEW_TOKEN=your-view-token\nSANITY_API_EDIT_TOKEN=your-edit-token\n# Optional: only needed if you register the Sanity publish webhook\nSANITY_REVALIDATE_SECRET=your-revalidate-secret\nRESEND_API_KEY=your-resend-api-key\nRESEND_EMAIL_FROM=notifications@your-domain.com\nNEXT_PUBLIC_URL=http://localhost:3000\nNEXT_PUBLIC_SANITY_DATASET=production\nNEXT_PUBLIC_SANITY_PROJECT_ID=your-project-id\nNEXT_PUBLIC_SANITY_API_VERSION=2025-02-19\nNEXT_PUBLIC_SANITY_STUDIO_BASE_PATH=/studio\n```\n\n`NEXT_PUBLIC_SANITY_STUDIO_BASE_PATH` is the **public** URL for Studio. The Next.js app mounts Studio under `app/sanity-studio/…`; `next.config.ts` rewrites the public path to that folder. If a **content page** must use the same path (e.g. you need `/studio` for a page), set this variable to a different path (e.g. `/admin`) in every environment. See [`docs/sanity/studio-and-structure.md`](docs/sanity/studio-and-structure.md#public-url-rewrites-and-reserved-paths).\n\n### HTTP Basic Auth (optional)\n\nFor staging or client-review gates, set **`BASIC_AUTH_USERNAME`** and **`BASIC_AUTH_PASSWORD`** in the same environment as the app (local `.env` or your host’s secrets). Turn protection on in **Sanity** (site-wide and/or per document with “Password protect”); credentials are **not** stored in the CMS. Full behavior, exclusions, and Draft Mode bypass: [`docs/features/basic-auth.md`](docs/features/basic-auth.md).\n\n### Seed starter content\n\n`npm run sanity:project-setup` imports the bundled example content at the end of its run, unless you answer its last question with **Completely empty**. To load it separately (a blank dataset, a second dataset, a reset), with the CLI authenticated (`npm run sanity:cli -- login`):\n\n```bash\nnpm run sanity:dataset-import -- --file seed/seed-dataset.tar.gz\n```\n\nSee [`docs/sanity/seed-dataset.md`](docs/sanity/seed-dataset.md).\n\n### Development\n\n```bash\nnpm run dev\n```\n\n- App: [http://localhost:3000](http://localhost:3000)\n- Studio: `http://localhost:3000` + your `NEXT_PUBLIC_SANITY_STUDIO_BASE_PATH` (see [`docs/sanity/studio-and-structure.md`](docs/sanity/studio-and-structure.md#public-url-rewrites-and-reserved-paths))\n\n### Build\n\n```bash\nnpm run build\nnpm run start\n```\n\n## Docs\n\nFeature-level docs now live in `docs/` so the root README stays lightweight.\n\n- Documentation hub: `docs/README.md`\n- Sanity setup overview: `docs/sanity/README.md`\n- **HTTP Basic Auth** (env + CMS toggles, `proxy.ts`): `docs/features/basic-auth.md`\n- Redirects: `docs/features/redirects.md`\n- Code generation (Plop): `docs/features/code-generation.md`\n- Spam prevention: `docs/features/spam-prevention.md`\n- Animated content (`AnimatedText`, motion wrappers, gating): `docs/features/animated-content.md`\n- Contact form notifications: `docs/features/contact-form-notifications.md`\n- Umami tracking: `docs/features/umami-tracking.md`\n- llms.txt and AI agents (Site, Agents tab, Sanity Agent Actions): `docs/features/llms-txt.md`\n- Agent Markdown (per-page Markdown via `Accept`-header content negotiation, `proxy.ts`): `docs/features/agent-markdown.md`\n- Git hooks: `docs/features/git-hooks.md`\n- Agent skills: `docs/features/agent-skills.md`\n- Dataset export, import, and migration: `docs/sanity/dataset-migration.md`\n- Seed dataset (starter content): `docs/sanity/seed-dataset.md`\n- Sanity project setup (CLI bootstrap): `docs/sanity/project-setup.md`\n\n## Scripts\n\n- `npm run dev`: Start development server\n- `npm run build`: Build for production\n- `npm run start`: Start production server\n- `npm run check`: Run all checks (`check.*` in parallel)\n- `npm run check.types`: TypeScript type checking\n- `npm run check.biome`: Biome lint (errors only)\n- `npm run format`: Format with Biome\n- `npm test`: Run the unit tests\n- `npm run plop`: Scaffold new sections and rich text blocks\n- `npm run clear`: Remove local build and cache output (`.next`, `node_modules/.cache`)\n- `npm run sanity:typegen`: Generate Sanity types\n- `npm run sanity:cli`: Run the Sanity CLI with `.env` loaded (via dotenvx)\n- `npm run sanity:schema-deploy`: Deploy the schema to Sanity (required by Agent Actions)\n- `npm run sanity:dataset-export`: Backup a dataset to `./backups/` (see `docs/sanity/dataset-migration.md`)\n- `npm run sanity:dataset-import`: Restore a `.tar.gz` into a dataset (see `docs/sanity/dataset-migration.md`)\n- `npm run sanity:dataset-migrate`: Copy one dataset into another (see `docs/sanity/dataset-migration.md`)\n\nEvery `sanity:*` script above is interactive: run it with no flags and it asks what it needs, prints a summary, and confirms before touching anything. Flags answer those questions up front, `--dry-run` prints the plan and stops, and `--yes` skips every prompt (see `scripts/README.md`).\n- `npm run sanity:project-setup`: Interactive wizard for a Sanity project, tokens, CORS, revalidate webhook, and `.env` (see `docs/sanity/project-setup.md`)\n\n## Project Structure\n\n```text\n.\n|-- app/                 # Next.js App Router\n|-- components/          # Shared React components\n|-- features/            # Feature modules\n|-- public/              # Static assets\n|-- sanity/              # Sanity config, schema, structure\n|-- seed/                # Starter dataset shipped with the template\n|-- scripts/sanity-dataset/  # Dataset export & migration CLIs\n|-- scripts/sanity-project-setup/  # Sanity project bootstrap (tokens, CORS, webhook, .env, seed)\n|-- docs/                # Project documentation\n|-- proxy.ts             # Next.js 16 Proxy (Basic Auth: env credentials + CMS toggles)\n|-- next.config.ts      # Next.js config and redirects\n`-- env.ts               # Typed environment config\n```\n\n## Agent Skills\n\nAI guidance for this repository lives in `AGENTS.md` and `.agents/skills/`.\n\n## Learn More\n\n- [Next.js Documentation](https://nextjs.org/docs)\n- [Sanity Documentation](https://www.sanity.io/docs)\n- [Tailwind CSS Documentation](https://tailwindcss.com/docs)\n\n## License\n\nCommercial, one license per buyer. Build unlimited personal, commercial, and client projects with it, and sell what you build. Do not resell or republish the boilerplate itself.\n\nSee [`LICENSE.md`](LICENSE.md) for the full terms, and the [Terms of Service](https://www.contentarchitecture.dev/terms-of-service) for the purchase terms.\n\nTERMINAL\n~/the-content-architecture-next-js > get-access   # €549 · one-time\n~/the-content-architecture-next-js > \n⎇\nMAIN\nUPDATED TODAY\n128 COMMITS"
+    },
+    {
+      "className": "relative isolate bg-black px-16 py-72 text-white lg:px-80 lg:py-160",
+      "heading": "The work that gets remembered.",
+      "id": "showcase",
+      "rect": {
+        "height": 3258,
+        "width": 390,
+        "x": 0,
+        "y": 5136
+      },
+      "text": "The work that\ngets remembered.\nReal sites, shipped on The Content Architecture. With\nthe plumbing already handled, the effort goes where it\nshows. The work here has been recognized by\nAwwwards, FWA, and CSSDA, and picked up across\ndesign directories.\nGOOD FELLA\nHOUSE OF HONEY\nASPEN SEARCH\nANUC HOME\nEDOARDO LUNARDI\nSERVE ROBOTICS\nMURALIA\nBLINK\nWASL\nCREATIVE LIVES IN PROGRESS\nTHE CONTENT ARCHITECTURE"
+    },
+    {
+      "className": "relative isolate overflow-x-clip bg-black py-72 text-white lg:pb-160",
+      "id": "reviews",
+      "rect": {
+        "height": 548,
+        "width": 390,
+        "x": 0,
+        "y": 8395
+      },
+      "text": "“We shipped the Good Fella site on an early version and it saved us tons of time. Six months in, we're still building pages and sections in an afternoon without fighting the setup.”\n“We shipped the Good Fella site on an early version and it saved us tons of time. Six months in, we're still building pages and sections in an afternoon without fighting the setup.”\n\nJULIAN FELLA\n\nCO-FOUNDER, GOOD FELLA\n\n“Edo and I ran a client project on this together. The plumbing was already handled, so the week we'd normally lose to setup went into the creative work the client actually remembers.”\n“Edo and I ran a client project on this together. The plumbing was already handled, so the week we'd normally lose to setup went into the creative work the client actually remembers.”\n\nELLIOTT MANGHAM\n\nFOUNDER & FRONTEND ENGINEER\n\n“I opened the fetch layer and found the revalidation problem I'd burned two days on last project, already solved and committed. That one folder paid for the whole thing, and the rest is six years of decisions I'd have made the slow way.”\n“I opened the fetch layer and found the revalidation problem I'd burned two days on last project, already solved and committed. That one folder paid for the whole thing, and the rest is six years of decisions I'd have made the slow way.”\n\nMALIK KOTB\n\nWEB DESIGNER & ENGINEER\n\n[<]\n\n02\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n/03\n\n[>]\n\nSlide 2 of 3"
+    },
+    {
+      "className": "bg-off-white py-72 text-black lg:py-160",
+      "heading": "Two editions. One architecture. Lifetime updates.",
+      "id": "pricing",
+      "rect": {
+        "height": 1332,
+        "width": 390,
+        "x": 0,
+        "y": 8943
+      },
+      "text": "Two editions.\n\nOne architecture.\n\nLifetime updates.\n\nTRUSTED BY 30+ ENGINEERS\n\nNEXT.JS\nAVAILABLE NOW\n€399\n€\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n€549\n€\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n001\nTHE NEXT.JS 16 + SANITY V6 REPO\n002\nFOR NEXT.JS + SANITY ENGINEERS, NOT NO-CODE\nGET\nACCESS\nASTRO\nAVAILABLE NOW\n€399\n€\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n€549\n€\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n001\nTHE ASTRO 7 + SANITY V6 REPO\n002\nFOR ASTRO + SANITY ENGINEERS, NOT NO-CODE\nGET\nACCESS\nEVERY EDITION INCLUDES\n001\nONE-TIME FEE, NO SUBSCRIPTION\n002\nPERPETUAL LICENSE, UNLIMITED PROJECTS\n003\nCOMMERCIAL USE, NO ATTRIBUTION\n004\nLIFETIME UPDATES, INCLUDED\n005\nAGENT-READY: SKILLS, MCP, LLMS.TXT\n006\nPRIVATE GITHUB DISCUSSIONS\n007\nDIRECT LINE TO THE MAINTAINER\n008\nFULL SOURCE ON PURCHASE, SALES FINAL\n009\nALL PRICES IN EUR\nAlready own one edition? The second one is not full price. Email me and I will send you a code."
+    },
+    {
+      "className": "relative isolate bg-black px-16 py-72 text-white lg:px-80 lg:py-160",
+      "heading": "Before you buy",
+      "id": "faq",
+      "rect": {
+        "height": 2015,
+        "width": 390,
+        "x": 0,
+        "y": 10274
+      },
+      "text": "Before you buy\nGET\nACCESS\nQ.001 / WHAT STACK IS THIS BUILT ON?\nTwo editions, one architecture. The Next.js edition runs Next.js 16 with the App Router and React Compiler; the Astro edition runs Astro 7. Both share Sanity v6, TypeScript in strict mode, Tailwind 4, and Biome for lint and format. Deploys on Vercel out of the box; the Next.js edition also runs on Cloudflare via OpenNext.\nQ.002 / DOES IT WORK WITH CLAUDE CODE AND CURSOR?\nIt is built for it. AGENTS.md plus a dozen scoped skills mean any agentic tool ingests the conventions and boundaries before you write a prompt. Ask an agent to build this from scratch and you get a different architecture every run. Here the decisions are already made, so the agent works inside them instead of inventing new ones. You still read and write the real code yourself; the agent works inside the architecture, it does not write the app for you.\nIt also ships two preconfigured MCP servers. One reads the running Next.js dev server: compilation errors, routes, docs that match the installed version. The other drives a real Chrome: screenshots across viewports, performance traces, screencasts of transitions it can review frame by frame. The agent doesn't just know the conventions, it can look at the app it's changing.\nQ.003 / IS THE SHIPPED SITE AGENT-READY TOO?\nYes. Every site built on this ships with an editable llms.txt, drafted from your content with Sanity Agent Actions from the Site document, and a token-light Markdown version of every page and article, served on the same URL to any agent that sends Accept: text/markdown. You generate it per page in Studio, review it, and it is served verbatim. Your client's site is readable by assistants and agentic crawlers on day one, a line item you can put in your own proposal.\nQ.004 / AM I LOCKED INTO THIS EXACT STACK?\nNo. The opinion lives in the architecture, and the tools sit on top of it. Tailwind, Biome, Mux, Rive, Lottie, these are the defaults I reach for on most projects, wired in cleanly so they come out just as cleanly. Don't want Tailwind? Pull it. Prefer ESLint over Biome? Swap it. No Mux, Rive, or Lottie in this project? Drop them. What you are really buying is the patterns underneath, how content is modeled, fetched, and composed. The libraries are just what I ship with on 90% of my projects.\nThe Sanity layer is decoupled by design too. Every import inside the sanity/ folder is relative or an external package, nothing reaches into the app code, so you can lift the whole Studio, schema, and field primitives into another project. The content layer doesn't hold you hostage to the front end.\nQ.005 / CAN I BUY BOTH EDITIONS?\nYes, and you should not pay twice for the same architecture. Both editions model content the same way, so the second repo is mostly a re-read of patterns you already know. If you own one and want the other, whether that is today or a year from now, you pay a reduced price for it.\nThere is no automatic checkout for it. Email me from the address you bought with and I will send you a discount code for the second edition.\nQ.006 / DO I NEED TO KNOW SANITY?\nSome, yes. This is a real codebase, not a no-code template. You should be comfortable in a Sanity schema file and a Next.js or Astro project. If you are, you will feel at home in minutes. If you have never opened a schema, the article series is the best place to start before deciding.\nQ.007 / IS THIS FOR ME IF I DON'T CODE?\nNo, and I'd rather tell you here than take your money. This is a real Next.js or Astro and Sanity codebase, not a no-code tool: no visual page builder, no drag-and-drop editor. You clone the repo and write real code on top of it. If you don't work in Next.js or Astro with Sanity, it isn't for you.\nQ.008 / CAN I USE THIS FOR CLIENT WORK?\nYes. Unlimited projects, commercial use, no attribution required. Use it on every client site you ship. The one thing you cannot do is resell the architecture itself as a competing product.\nQ.009 / HOW IS THIS DIFFERENT FROM OTHER BOILERPLATES?\nMost boilerplates give you a pile of features. This gives you decisions. Every hard call, document modeling, the fetch layer, revalidation, the link and media fields, was made once over six years and committed. It is opinionated on purpose, and it is the architecture I ship my own client work on, not a side project cleaned up for sale.\nQ.010 / WHY NOT JUST USE A FREE SANITY STARTER?\nA free starter gets you a clean install and the easy parts. What it leaves you is the work that actually costs the days: a page builder with guardrails, the fetch layer and revalidation, the link and media fields, a Studio structure your editors don't email you about. Those decisions are still yours to make on every project. Here they're already made, over six years of real client work, and committed. You're not paying for code you could scaffold in an afternoon. You're paying to skip the part nobody quotes for.\nQ.011 / WILL IT BREAK ON NEXT.JS OR ASTRO UPDATES?\nThis is my daily driver, so I keep it current. Next.js and Astro majors, Sanity migrations, breaking plugin changes, I handle them and push the update. Your license includes every update for as long as I maintain it, which is for as long as I am using it myself.\nQ.012 / WHAT DO I ACTUALLY GET, AND FOR HOW LONG?\nThe full repo on day one, a perpetual license, and lifetime updates included, not sold as a separate tier. One payment, no subscription. You own it forever.\nQ.013 / DO I NEED A GITHUB ACCOUNT?\nYes. The repo is delivered as private GitHub access: you enter your username at checkout, and access is granted to that exact account, including every future update. No account yet? Creating one takes a minute, then come back and buy.\nQ.014 / DO YOU OFFER SUPPORT?\nBuyers get a private GitHub Discussions space, threaded and searchable, where I answer questions directly. For anything bigger, I am reachable by email. What you will not find is a Discord to get lost in or a support queue that routes you to a bot.\nQ.015 / WHAT IF I FIND A BUG?\nTell me, and it gets fixed in the codebase, usually fast. A bug you hit is a bug my own client projects will hit too, so fixing it is in my interest as much as yours. The patch ships to everyone.\nQ.016 / CAN I GET A REFUND?\nBecause you get the full source on purchase, sales are final, the same way every serious code product works. Once the repo is cloned, it cannot be un-cloned. So I have put everything you need to decide up front: read the article series for the full reasoning, browse the real repo above, and look at the sites already shipped on it. If something is unclear before you buy, email me and I will answer honestly, sometimes that means telling you it is not the right fit.\nQ.017 / WHAT IS THIS NOT?\nIt is a set of architectural decisions, made once over six years and committed, that gets you to the real work faster. You write real code on top of it. There is no no-code editor, no UI kit or component library to theme, no auth-billing-dashboard SaaS scaffolding, and no course wrapped around it, though the article series explains the reasoning behind it. You buy it once and own it."
+    },
+    {
+      "className": "bg-off-white px-16 py-72 lg:p-80",
+      "id": null,
+      "rect": {
+        "height": 297,
+        "width": 390,
+        "x": 0,
+        "y": 12289
+      },
+      "text": "THE CONTENT ARCHITECTURE\n /$$$$$$$$ /$$                                                       /$$            /$$$$$$              /$$                              \n|__  $$__/| $$                                                      | $$           /$$__  $$            | $$                              \n   | $$   | $$$$$$$   /$$$$$$        /$$$$$$$   /$$$$$$  /$$   /$$ /$$$$$$        |__/  \\ $$        /$$$$$$$  /$$$$$$  /$$   /$$  /$$$$$$$\n   | $$   | $$__  $$ /$$__  $$      | $$__  $$ /$$__  $$|  $$ /$$/|_  $$_/           /$$$$$/       /$$__  $$ |____  $$| $$  | $$ /$$_____/\n   | $$   | $$  \\ $$| $$$$$$$$      | $$  \\ $$| $$$$$$$$ \\  $$$$/   | $$            |___  $$      | $$  | $$  /$$$$$$$| $$  | $$|  $$$$$$ \n   | $$   | $$  | $$| $$_____/      | $$  | $$| $$_____/  >$$  $$   | $$ /$$       /$$  \\ $$      | $$  | $$ /$$__  $$| $$  | $$ \\____  $$\n   | $$   | $$  | $$|  $$$$$$$      | $$  | $$|  $$$$$$$ /$$/\\  $$  |  $$$$/      |  $$$$$$/      |  $$$$$$$|  $$$$$$$|  $$$$$$$ /$$$$$$$/\n   |__/   |__/  |__/ \\_______/      |__/  |__/ \\_______/|__/  \\__/   \\___/         \\______/        \\_______/ \\_______/ \\____  $$|_______/ \n                                                                                                                       /$$  | $$          \n                                                                                                                      |  $$$$$$/          \n                                                                                                                       \\______/           \n                                                                                                                                          \n                                                                                                                                          \n  /$$$$$$   /$$$$$$   /$$$$$$        /$$   /$$  /$$$$$$  /$$   /$$  /$$$$$$   /$$$$$$$                                                    \n |____  $$ /$$__  $$ /$$__  $$      | $$  | $$ /$$__  $$| $$  | $$ /$$__  $$ /$$_____/                                                    \n  /$$$$$$$| $$  \\__/| $$$$$$$$      | $$  | $$| $$  \\ $$| $$  | $$| $$  \\__/|  $$$$$$                                                     \n /$$__  $$| $$      | $$_____/      | $$  | $$| $$  | $$| $$  | $$| $$       \\____  $$                                                    \n|  $$$$$$$| $$      |  $$$$$$$      |  $$$$$$$|  $$$$$$/|  $$$$$$/| $$       /$$$$$$$//$$                                                 \n \\_______/|__/       \\_______/       \\____  $$ \\______/  \\______/ |__/      |_______/|__/                                                 \n                                     /$$  | $$                                                                                            \n                                    |  $$$$$$/                                                                                            \n                                     \\______/                                                                                             "
+    },
+    {
+      "className": "group fixed top-8 right-8 z-3 aspect-video h-44 lg:top-16 lg:right-16 lg:h-54",
+      "id": null,
+      "rect": {
+        "height": 44,
+        "width": 78,
+        "x": 304,
+        "y": 3973
+      },
+      "text": ""
+    },
+    {
+      "className": "fixed right-8 bottom-8 z-4 lg:right-16 lg:bottom-16",
+      "id": null,
+      "rect": {
+        "height": 75,
+        "width": 88,
+        "x": 294,
+        "y": 4726
+      },
+      "text": "LEARN MORE\n \n+"
+    }
+  ],
+  "stylesheets": [
+    "https://www.contentarchitecture.dev/_next/static/immutable/chunks/20i4gyevcsaon.css",
+    "https://www.contentarchitecture.dev/_next/static/immutable/chunks/41dd7myy6mu18.css",
+    "https://www.contentarchitecture.dev/_next/static/immutable/chunks/3k9-onrok7n76.css"
+  ],
+  "svgs": [
+    {
+      "aria": "The Content Architecture",
+      "height": null,
+      "i": 0,
+      "viewBox": "0 0 400 400",
+      "width": null
+    },
+    {
+      "aria": "The Content Architecture",
+      "height": null,
+      "i": 1,
+      "viewBox": "0 0 400 400",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 2,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 3,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 4,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 5,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 6,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 7,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 8,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 9,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 10,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 11,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 12,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 13,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 14,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 15,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 16,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 17,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 18,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 19,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 20,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 21,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 22,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 23,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 24,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 25,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 26,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 27,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 28,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 29,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 30,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 31,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 32,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 33,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 34,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 35,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 36,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 37,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 38,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 39,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 40,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 41,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 42,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 43,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 44,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 45,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 46,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 47,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 48,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 49,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 50,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 51,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 52,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 53,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 54,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 55,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 56,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 57,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 58,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 59,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 60,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 61,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 62,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 63,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 64,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 65,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 66,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 67,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 68,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 69,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 70,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 71,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 72,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 73,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 74,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 75,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 76,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 77,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 78,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 79,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 80,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 81,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 82,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 83,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 84,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 85,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 86,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 87,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 88,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 89,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 90,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 91,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 92,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 93,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 94,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 95,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 96,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 97,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 98,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 99,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 100,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 101,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 102,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 103,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 104,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 105,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 106,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 107,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 108,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 109,
+      "viewBox": "0 0 16 16",
+      "width": null
+    },
+    {
+      "aria": null,
+      "height": null,
+      "i": 110,
+      "viewBox": "0 0 16 16",
+      "width": null
+    }
+  ],
+  "title": "Agent-Ready Sanity Kit for Next.js & Astro | The Content Architecture",
+  "url": "https://www.contentarchitecture.dev/",
+  "videos": [],
+  "viewport": {
+    "dpr": 1,
+    "height": 844,
+    "width": 390
+  }
+}

@@ -1,0 +1,25 @@
+.full-component-gallery-page { min-height: 100svh; background: var(--black); color: #fff; }
+.full-component-gallery-header { position: sticky; z-index: 20; top: 0; display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; min-height: 52px; padding: 10px 24px; border-bottom: 1px solid rgb(255 255 255 / 14%); background: rgb(35 35 35 / 92%); backdrop-filter: blur(12px); color: rgb(255 255 255 / 55%); font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; }
+.full-component-gallery-header a { color: #fff; text-decoration: none; }
+.full-component-gallery-header span { text-align: center; }
+.full-component-gallery-header b { color: var(--orange); font-weight: 400; text-align: right; }
+.full-component-gallery-hero { min-height: 58svh; padding: clamp(64px, 9vw, 150px) clamp(24px, 9vw, 144px); border-bottom: 1px solid rgb(255 255 255 / 14%); background: radial-gradient(circle at 75% 20%, rgb(255 145 0 / 13%), transparent 28%), var(--black); }
+.full-component-gallery-hero > p:first-child { margin: 0 0 20px; color: var(--orange); font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; }
+.full-component-gallery-hero h1 { max-width: 1080px; margin: 0; font-size: clamp(58px, 10vw, 148px); font-weight: 500; line-height: .84; letter-spacing: -.055em; }
+.full-component-gallery-hero > p:nth-of-type(2) { max-width: 680px; margin: 36px 0 0; color: rgb(255 255 255 / 60%); font-size: clamp(16px, 2vw, 22px); line-height: 1.4; }
+.full-component-gallery-hero nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 36px; }
+.full-component-gallery-hero nav a { padding: 7px 10px; border: 1px solid rgb(255 255 255 / 20%); color: #fff; font-family: var(--font-mono); font-size: 11px; text-decoration: none; text-transform: uppercase; }
+.full-component-gallery-hero nav a:hover { border-color: var(--orange); color: var(--orange); }
+.full-component-group { border-bottom: 1px solid rgb(255 255 255 / 14%); scroll-margin-top: 52px; }
+.full-component-group > header { display: flex; align-items: baseline; justify-content: space-between; padding: 24px clamp(24px, 9vw, 144px); border-bottom: 1px solid rgb(255 255 255 / 14%); background: #1b1b1b; color: rgb(255 255 255 / 55%); font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; }
+.full-component-group > header > div { display: grid; gap: 6px; }
+.full-component-group > header p { margin: 0; color: rgb(255 255 255 / 38%); font-family: var(--font-sans); font-size: 13px; line-height: 1.35; text-transform: none; }
+.full-component-group > header b { color: var(--orange); font-weight: 400; }
+.full-component-item { scroll-margin-top: 52px; border-bottom: 1px solid rgb(255 255 255 / 14%); }
+.full-component-item > header { display: grid; grid-template-columns: 180px minmax(0, 1fr) auto; gap: 20px; align-items: baseline; padding: 20px clamp(24px, 9vw, 144px); background: #202020; }
+.full-component-item > header span, .full-component-item > header code { color: rgb(255 255 255 / 38%); font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; }
+.full-component-item > header h2 { margin: 0; font-size: clamp(28px, 4vw, 54px); font-weight: 500; line-height: .95; }
+.full-component-item__stage { min-height: 360px; overflow: hidden; background: #171717; }
+.full-component-item__placeholder { display: grid; min-height: 360px; place-items: center; color: rgb(255 255 255 / 35%); font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; }
+.full-component-item__stage .component-preview__page-module { min-height: 460px; }
+@media (max-width: 720px) { .full-component-gallery-header { grid-template-columns: 1fr auto; padding-inline: 16px; } .full-component-gallery-header span { display: none; } .full-component-item > header { grid-template-columns: 1fr; gap: 8px; } .full-component-item > header code { overflow-wrap: anywhere; } }

@@ -1,0 +1,12 @@
+{
+  "assets": [
+    {
+      "bytes": 56544,
+      "contentType": "image/jpeg",
+      "id": "sanity-d8178d0c978dc78b2848cb4684cd92812a4cd6a6",
+      "path": "supplemental-assets/sanity-d8178d0c978dc78b2848cb4684cd92812a4cd6a6.jpg",
+      "sha256": "2b0478777b694ab9813ab2820d450fe4813ace98f2ae81f0fa4a836735fbf844",
+      "url": "https://cdn.sanity.io/images/szlvuc1t/production/d8178d0c978dc78b2848cb4684cd92812a4cd6a6-800x800.jpg?w=800&h=800&max-h=2048&max-w=2048&q=85&fit=crop&auto=format"
+    }
+  ]
+}

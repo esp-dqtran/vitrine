@@ -14,6 +14,11 @@ const MEDIA_TARGET = process.env.VITRINE_MEDIA_TARGET ?? "https://vitrines.ai";
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    // Reconstructed components live beside their downloaded source project.
+    // Keep their hooks on the Vitrines React runtime when Vite follows those imports.
+    dedupe: ["react", "react-dom"],
+  },
   server: {
     port: Number(process.env.PORT) || 5173,
     // ngrok's free-tier subdomain changes on every restart — allow the whole domain rather

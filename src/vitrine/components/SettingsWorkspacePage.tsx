@@ -81,6 +81,7 @@ export function SettingsWorkspacePage({
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [mcpTokens, setMcpTokens] = useState<McpAccessToken[]>([]);
+  const [mcpTokenLabel, setMcpTokenLabel] = useState('');
   const [newMcpToken, setNewMcpToken] = useState('');
   const [mcpBusy, setMcpBusy] = useState(false);
   const [mcpError, setMcpError] = useState('');
@@ -143,13 +144,14 @@ export function SettingsWorkspacePage({
   };
 
   const createFlowAccessToken = async () => {
-    if (mcpBusy) return;
+    if (mcpBusy || !mcpTokenLabel.trim()) return;
     setMcpBusy(true);
     setMcpError('');
     try {
-      const created = await createMcpAccessToken();
+      const created = await createMcpAccessToken(mcpTokenLabel.trim());
       setNewMcpToken(created.token);
       setMcpTokens((current) => [created.accessToken, ...current]);
+      setMcpTokenLabel('');
     } catch (reason) {
       setMcpError((reason as Error).message);
     } finally {
@@ -356,7 +358,10 @@ export function SettingsWorkspacePage({
                   <li>
                     <span aria-hidden="true">1</span>
                     <div><strong>Create an access token</strong><p>Use this token only for your MCP client. It is shown once.</p></div>
-                    <Button label="Create token" size="sm" variant="primary" isDisabled={mcpBusy} isLoading={mcpBusy} clickAction={() => void createFlowAccessToken()} />
+                    <div className="settings-workspace__integration-create-token">
+                      <TextInput label="Token name" isLabelHidden value={mcpTokenLabel} onChange={setMcpTokenLabel} placeholder="Personal Codex" width="220px" />
+                      <Button label="Create token" size="sm" variant="primary" isDisabled={mcpBusy || !mcpTokenLabel.trim()} isLoading={mcpBusy} clickAction={() => void createFlowAccessToken()} />
+                    </div>
                   </li>
                   <li>
                     <span aria-hidden="true">2</span>

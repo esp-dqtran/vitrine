@@ -16,6 +16,8 @@ export interface AppIconProps {
    * and have to be letterboxed instead of cropped.
    */
   fit?: 'cover' | 'contain';
+  /** Optional source-type marker used by mixed App/Site catalog surfaces. */
+  'data-component-source-type'?: 'app' | 'site';
 }
 
 // Shared app logo tile: renders the icon image, and falls back to an
@@ -30,6 +32,7 @@ export function AppIcon({
   className,
   fallbackTextColor = '#fff',
   fit = 'cover',
+  'data-component-source-type': componentSourceType,
 }: AppIconProps) {
   const [failed, setFailed] = useState(false);
   const showImage = Boolean(iconUrl) && !failed;
@@ -38,6 +41,7 @@ export function AppIcon({
   return (
     <span
       className={['app-icon', className].filter(Boolean).join(' ')}
+      data-component-source-type={componentSourceType}
       style={{
         width: size,
         height: size,

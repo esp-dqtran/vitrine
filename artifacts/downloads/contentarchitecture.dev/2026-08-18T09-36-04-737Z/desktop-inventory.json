@@ -1,0 +1,1397 @@
+{
+  "assets": [
+    {
+      "id": "6fe18f32568471ea",
+      "kind": "font",
+      "name": "GeistMono_Variable.p.0b02cdm7g7y6h.woff2",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "link"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 85,
+          "property": "href"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/media/GeistMono_Variable.p.0b02cdm7g7y6h.woff2"
+    },
+    {
+      "id": "423e12cf21a9c0ae",
+      "kind": "font",
+      "name": "Geist_Variable-s.p.2-i4fw5gbtlb7.woff2",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "link"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 86,
+          "property": "href"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/media/Geist_Variable-s.p.2-i4fw5gbtlb7.woff2"
+    },
+    {
+      "id": "d2ed906b78130003",
+      "kind": "stylesheet",
+      "name": "2_51z1gyo4a7z.css",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "link"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 40,
+          "property": "href"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/2_51z1gyo4a7z.css"
+    },
+    {
+      "id": "dfc466a93f24484d",
+      "kind": "stylesheet",
+      "name": "41dd7myy6mu18.css",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "link"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 41,
+          "property": "href"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/41dd7myy6mu18.css"
+    },
+    {
+      "id": "51774f71472c434e",
+      "kind": "script",
+      "name": "2zqsbm8s85161.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "link"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 42,
+          "property": "href"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 5745,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/2zqsbm8s85161.js"
+    },
+    {
+      "id": "0d954943aa2ae9f1",
+      "kind": "script",
+      "name": "1191lj8_x8otc.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 43,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/1191lj8_x8otc.js"
+    },
+    {
+      "id": "1966bdac1653348c",
+      "kind": "script",
+      "name": "3uols5lsshuk4.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 44,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/3uols5lsshuk4.js"
+    },
+    {
+      "id": "c8d30b5b4356166a",
+      "kind": "script",
+      "name": "0qqwje3s51w3w.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 46,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/0qqwje3s51w3w.js"
+    },
+    {
+      "id": "45e4ae7dc4461bd7",
+      "kind": "script",
+      "name": "07v142o5owpy6.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 45,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/07v142o5owpy6.js"
+    },
+    {
+      "id": "56505e25a1a786c2",
+      "kind": "script",
+      "name": "turbopack-1kl_odt7zjpji.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 48,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/turbopack-1kl_odt7zjpji.js"
+    },
+    {
+      "id": "6f2b761a1e9c65a9",
+      "kind": "script",
+      "name": "2ty-5kg0gfifh.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 47,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/2ty-5kg0gfifh.js"
+    },
+    {
+      "id": "33d332caf67a51e3",
+      "kind": "script",
+      "name": "3s04hdh3surxk.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 49,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/3s04hdh3surxk.js"
+    },
+    {
+      "id": "e77966e85a222601",
+      "kind": "script",
+      "name": "18tf3urgj5fmb.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 53,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/18tf3urgj5fmb.js"
+    },
+    {
+      "id": "577f4f2f83ec5c78",
+      "kind": "script",
+      "name": "0ieve45mzn-y0.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 52,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/0ieve45mzn-y0.js"
+    },
+    {
+      "id": "f49b5c0666a8835d",
+      "kind": "script",
+      "name": "2wht6bsskmp2p.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 50,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/2wht6bsskmp2p.js"
+    },
+    {
+      "id": "c8d2f1a872b8a7d5",
+      "kind": "script",
+      "name": "2xc2dh2dwvl_j.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 51,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/2xc2dh2dwvl_j.js"
+    },
+    {
+      "id": "48ef6040a1f791a1",
+      "kind": "script",
+      "name": "09mtc2cui9o70.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 54,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/09mtc2cui9o70.js"
+    },
+    {
+      "id": "dd265990c3a6e3db",
+      "kind": "script",
+      "name": "0qeprtltepsse.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 56,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/0qeprtltepsse.js"
+    },
+    {
+      "id": "ff4e4140cc79619d",
+      "kind": "script",
+      "name": "2c-pdp2kayq5r.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 58,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/2c-pdp2kayq5r.js"
+    },
+    {
+      "id": "6a6b727bf7565a4e",
+      "kind": "script",
+      "name": "047zeiz7cpl85.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 55,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/047zeiz7cpl85.js"
+    },
+    {
+      "id": "3b1404194dab861a",
+      "kind": "script",
+      "name": "1c_fslojrob26.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 60,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/1c_fslojrob26.js"
+    },
+    {
+      "id": "5c2d1f0fb0e0bed6",
+      "kind": "script",
+      "name": "01sb7nfhmtgn6.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 57,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/01sb7nfhmtgn6.js"
+    },
+    {
+      "id": "0f5f98992aa75207",
+      "kind": "script",
+      "name": "1rsnj0oiweikz.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 59,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/1rsnj0oiweikz.js"
+    },
+    {
+      "id": "f73047df8a251905",
+      "kind": "script",
+      "name": "3_oomvuvhsq9s.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 61,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/3_oomvuvhsq9s.js"
+    },
+    {
+      "id": "f0f242b634222c28",
+      "kind": "script",
+      "name": "0j_picj56bzzf.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "link"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 63,
+          "property": "href"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 100,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/0j_picj56bzzf.js"
+    },
+    {
+      "id": "4eccbd99aba5cb13",
+      "kind": "script",
+      "name": "0v-noeunuh6gp.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "link"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 65,
+          "property": "href"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 102,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/0v-noeunuh6gp.js"
+    },
+    {
+      "id": "65d0ba2cf2a9fa15",
+      "kind": "script",
+      "name": "111y8o_d2a781.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 62,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/111y8o_d2a781.js"
+    },
+    {
+      "id": "e91aba398a02d32c",
+      "kind": "script",
+      "name": "24dj8g5w10l6w.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "link"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 64,
+          "property": "href"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 101,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/24dj8g5w10l6w.js"
+    },
+    {
+      "id": "74ad7698615f53d9",
+      "kind": "script",
+      "name": "2exkopeui2oq8.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 89,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/2exkopeui2oq8.js"
+    },
+    {
+      "id": "e58d1aa9b820c891",
+      "kind": "script",
+      "name": "2tx5uh07-wn5t.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 90,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/2tx5uh07-wn5t.js"
+    },
+    {
+      "id": "8519b97e3e015e6f",
+      "kind": "other",
+      "name": "blog",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "fetch"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/blog?_rsc=5CB68i4pnAekjehf"
+    },
+    {
+      "id": "17a7ac5a92bfa326",
+      "kind": "other",
+      "name": "roadmap",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "fetch"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/roadmap?_rsc=42ZwTBD4YWO61ECZ"
+    },
+    {
+      "id": "906909165be8cfaf",
+      "kind": "other",
+      "name": "privacy-policy",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "fetch"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/privacy-policy?_rsc=42ZwTBD4YWO61ECZ"
+    },
+    {
+      "id": "4893f9f526b72d85",
+      "kind": "other",
+      "name": "terms-of-service",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "fetch"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/terms-of-service?_rsc=42ZwTBD4YWO61ECZ"
+    },
+    {
+      "id": "cd0b42b2283151dd",
+      "kind": "script",
+      "name": "22siqkl4hoq_u.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 94,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/22siqkl4hoq_u.js"
+    },
+    {
+      "id": "dc80149659a67bab",
+      "kind": "script",
+      "name": "0-o87iokf3sck.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 95,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/0-o87iokf3sck.js"
+    },
+    {
+      "id": "700c04d97e014d11",
+      "kind": "stylesheet",
+      "name": "3k9-onrok7n76.css",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "link"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 96,
+          "property": "href"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/3k9-onrok7n76.css"
+    },
+    {
+      "id": "ac0f55b2bb1f2de5",
+      "kind": "script",
+      "name": "3lsseb4_0emc1.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 97,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/3lsseb4_0emc1.js"
+    },
+    {
+      "id": "de8015bd8f312ec4",
+      "kind": "script",
+      "name": "3h27dmotebbmr.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 98,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/3h27dmotebbmr.js"
+    },
+    {
+      "id": "92945738044621ed",
+      "kind": "other",
+      "name": "blog",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "fetch"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/blog?_rsc=IOU67p1zu2WxWUfw"
+    },
+    {
+      "id": "87e4918c106c73ba",
+      "kind": "script",
+      "name": "1awsvxe-2ei9a.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 99,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/1awsvxe-2ei9a.js"
+    },
+    {
+      "id": "b312a458045ee8d8",
+      "kind": "script",
+      "name": "1f0xm7ygc_qxi.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 103,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/1f0xm7ygc_qxi.js"
+    },
+    {
+      "id": "471bb6565233dea3",
+      "kind": "script",
+      "name": "24zt1s2thev4b.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 104,
+          "property": "src"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/24zt1s2thev4b.js"
+    },
+    {
+      "id": "936c902c53343728",
+      "kind": "script",
+      "name": "script.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 5791,
+          "property": "src"
+        }
+      ],
+      "url": "https://cloud.umami.is/script.js"
+    },
+    {
+      "id": "e93c2fb821dfc9fe",
+      "kind": "image",
+      "name": "be3c66bd045bc48cd8cdbd8a42f4488b340547f7-3840x2160.jpg",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 2906,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://cdn.sanity.io/images/szlvuc1t/production/be3c66bd045bc48cd8cdbd8a42f4488b340547f7-3840x2160.jpg?w=1440&h=810&max-h=2048&max-w=2048&q=85&fit=crop&auto=format"
+    },
+    {
+      "id": "9c0df30029ea5792",
+      "kind": "image",
+      "name": "dd1aa647aa9b19c7eb7b72f3649e4425a2c9dd44-3840x2160.jpg",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 2918,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://cdn.sanity.io/images/szlvuc1t/production/dd1aa647aa9b19c7eb7b72f3649e4425a2c9dd44-3840x2160.jpg?w=1440&h=810&max-h=2048&max-w=2048&q=85&fit=crop&auto=format"
+    },
+    {
+      "id": "7bbffe08a33746f6",
+      "kind": "image",
+      "name": "d79913ca416f63f31c617b2c3936befb77a3d6ac-3840x2160.jpg",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 2930,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://cdn.sanity.io/images/szlvuc1t/production/d79913ca416f63f31c617b2c3936befb77a3d6ac-3840x2160.jpg?w=1440&h=810&max-h=2048&max-w=2048&q=85&fit=crop&auto=format"
+    },
+    {
+      "id": "f5aa9c4faf5a3f7d",
+      "kind": "image",
+      "name": "ec80e52f1fe72f2d882ec6a1d067090a79cc4288-3840x2160.jpg",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 2942,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://cdn.sanity.io/images/szlvuc1t/production/ec80e52f1fe72f2d882ec6a1d067090a79cc4288-3840x2160.jpg?w=1440&h=810&max-h=2048&max-w=2048&q=85&fit=crop&auto=format"
+    },
+    {
+      "id": "3d5fcae412d0268d",
+      "kind": "image",
+      "name": "4f7bcbe2f921c92cdd73ab3e44633209d089071a-3840x2160.jpg",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 2954,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://cdn.sanity.io/images/szlvuc1t/production/4f7bcbe2f921c92cdd73ab3e44633209d089071a-3840x2160.jpg?w=1440&h=810&max-h=2048&max-w=2048&q=85&fit=crop&auto=format"
+    },
+    {
+      "id": "a11c5a88c3b5f3a4",
+      "kind": "image",
+      "name": "b7825b5fd0f02439d431345d7c86f0a19ee9f27b-3840x2160.jpg",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 2966,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://cdn.sanity.io/images/szlvuc1t/production/b7825b5fd0f02439d431345d7c86f0a19ee9f27b-3840x2160.jpg?w=1440&h=810&max-h=2048&max-w=2048&q=85&fit=crop&auto=format"
+    },
+    {
+      "id": "4d0961a7df5e825a",
+      "kind": "image",
+      "name": "2ce1bfb9315017055ecb2efb9daaeda9ae53a02b-3840x2160.jpg",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 2990,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://cdn.sanity.io/images/szlvuc1t/production/2ce1bfb9315017055ecb2efb9daaeda9ae53a02b-3840x2160.jpg?w=1440&h=810&max-h=2048&max-w=2048&q=85&fit=crop&auto=format"
+    },
+    {
+      "id": "bbaaecaca34be223",
+      "kind": "image",
+      "name": "2d6f54ea28f4d35e3099be43fe7cedde3c2aebff-3840x2160.jpg",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 2978,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://cdn.sanity.io/images/szlvuc1t/production/2d6f54ea28f4d35e3099be43fe7cedde3c2aebff-3840x2160.jpg?w=1440&h=810&max-h=2048&max-w=2048&q=85&fit=crop&auto=format"
+    },
+    {
+      "id": "4a9418c4c0b3b40c",
+      "kind": "image",
+      "name": "43ece46814425819dfed810ede5aacf6447b9a37-3840x2160.jpg",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3002,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://cdn.sanity.io/images/szlvuc1t/production/43ece46814425819dfed810ede5aacf6447b9a37-3840x2160.jpg?w=1440&h=810&max-h=2048&max-w=2048&q=85&fit=crop&auto=format"
+    },
+    {
+      "id": "df06fa892718b239",
+      "kind": "image",
+      "name": "619d1accb39f837a13c75efe4e0af4a11977669a-3840x2160.jpg",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3014,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://cdn.sanity.io/images/szlvuc1t/production/619d1accb39f837a13c75efe4e0af4a11977669a-3840x2160.jpg?w=1440&h=810&max-h=2048&max-w=2048&q=85&fit=crop&auto=format"
+    },
+    {
+      "id": "00eb102cc8690185",
+      "kind": "image",
+      "name": "fbf09e00b0fe7ada7d5a6d5eb452449d7e122b6e-3840x2160.png",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3026,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://cdn.sanity.io/images/szlvuc1t/production/fbf09e00b0fe7ada7d5a6d5eb452449d7e122b6e-3840x2160.png?w=1440&h=810&max-h=2048&max-w=2048&q=85&fit=crop&auto=format"
+    },
+    {
+      "id": "5252068ecc36a2d4",
+      "kind": "image",
+      "name": "ffbe610b30c6bdd31d413a5e16821db3f489b4cd-512x512.jpg",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3056,
+          "property": "src"
+        }
+      ],
+      "url": "https://cdn.sanity.io/images/szlvuc1t/production/ffbe610b30c6bdd31d413a5e16821db3f489b4cd-512x512.jpg?w=512&h=512&max-h=2048&max-w=2048&q=85&fit=crop&auto=format"
+    },
+    {
+      "id": "4d6bd4ad4d41d1ac",
+      "kind": "image",
+      "name": "21e750fd3ee0a6217523a980b741bb38ce2a3336-512x512.png",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3085,
+          "property": "src"
+        }
+      ],
+      "url": "https://cdn.sanity.io/images/szlvuc1t/production/21e750fd3ee0a6217523a980b741bb38ce2a3336-512x512.png?w=512&h=512&max-h=2048&max-w=2048&q=85&fit=crop&auto=format"
+    },
+    {
+      "id": "dcd429f8688ec752",
+      "kind": "image",
+      "name": "GoodFellaStudio.png",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3213,
+          "property": "src"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3213,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://github.com/GoodFellaStudio.png?size=64"
+    },
+    {
+      "id": "c84cc1cd59e30a58",
+      "kind": "image",
+      "name": "elliottmangham.png",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3215,
+          "property": "src"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3215,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://github.com/elliottmangham.png?size=64"
+    },
+    {
+      "id": "57c8c5843a29db2e",
+      "kind": "image",
+      "name": "malikkotb.png",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3219,
+          "property": "src"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3219,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://github.com/malikkotb.png?size=64"
+    },
+    {
+      "id": "8adacf594ddb47d1",
+      "kind": "image",
+      "name": "MinhChanh6.png",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3221,
+          "property": "src"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3221,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://github.com/MinhChanh6.png?size=64"
+    },
+    {
+      "id": "47de64bc3650b214",
+      "kind": "image",
+      "name": "studioboldest.png",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3217,
+          "property": "src"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3217,
+          "property": "srcset"
+        }
+      ],
+      "url": "https://github.com/studioboldest.png?size=64"
+    },
+    {
+      "id": "5f52fc13c99f3621",
+      "kind": "other",
+      "name": "checkout",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "fetch"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/checkout?plan=next&code=ASTROLAUNCH&_rsc=5CB68i4pnAekjehf"
+    },
+    {
+      "id": "8ee11047c4130127",
+      "kind": "other",
+      "name": "checkout",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "fetch"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/checkout?plan=astro&code=ASTROLAUNCH&_rsc=5CB68i4pnAekjehf"
+    },
+    {
+      "id": "b63eda1a793daee3",
+      "kind": "other",
+      "name": "checkout",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "fetch"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/checkout?plan=next&code=ASTROLAUNCH&_rsc=m6aOsjyEf0KHFvDm"
+    },
+    {
+      "id": "bb1217d17540cc80",
+      "kind": "other",
+      "name": "checkout",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "fetch"
+        }
+      ],
+      "url": "https://www.contentarchitecture.dev/checkout?_rsc=5CB68i4pnAekjehf"
+    }
+  ],
+  "id": "d2a40537-9056-4ea7-83da-d15d775bd513",
+  "inlineSvgs": [
+    {
+      "id": "9fbd66caadd9cf0c",
+      "markup": "<svg viewBox=\"0 0 400 400\" fill=\"currentColor\" role=\"img\" aria-label=\"The Content Architecture\" class=\"shrink-0 size-30\"><path d=\"M24.2348 393.968L23.5393 400H0.695518L0 393.968H24.2348Z M86.8621 393.968L86.1666 400H57.0601L56.3651 393.968H86.8621Z M155.752 393.968L155.057 400H132.213L131.518 393.968H155.752Z M224.643 393.968L223.947 400H194.841L194.145 393.968H224.643Z M293.533 393.968L292.837 400H269.994L269.298 393.968H293.533Z M356.161 393.968L355.465 400H338.884L338.188 393.968H356.161Z M30.4975 382.38L29.802 388.413H0.695518L0 382.38H30.4975Z M99.3875 382.38L98.692 388.413H69.586L68.8905 382.38H99.3875Z M162.015 382.38L161.319 388.413H138.476L137.781 382.38H162.015Z M230.905 382.38L230.21 388.413H207.366L206.671 382.38H230.905Z M293.533 382.38L292.837 388.413H269.994L269.298 382.38H293.533Z M356.161 382.38L355.465 388.413H338.884L338.188 382.38H356.161Z M43.023 370.793L42.3275 376.826H13.221L12.5255 370.793H43.023Z M105.65 370.793L104.955 376.826H75.8488L75.1532 370.793H105.65Z M168.278 370.793L167.582 376.826H144.739L144.043 370.793H168.278Z M237.168 370.793L236.473 376.826H207.366L206.671 370.793H237.168Z M299.795 370.793L299.1 376.826H276.257L275.561 370.793H299.795Z M362.424 370.793L361.728 376.826H338.884L338.188 370.793H362.424Z M55.5484 359.206L54.8529 365.238H25.7464L25.0509 359.206H55.5484Z M111.913 359.206L111.217 365.238H88.3737L87.6787 359.206H111.913Z M180.803 359.206L180.107 365.238H151.001L150.306 359.206H180.803Z M237.168 359.206L236.473 365.238H213.629L212.934 359.206H237.168Z M299.795 359.206L299.1 365.238H276.257L275.561 359.206H299.795Z M381.212 359.206L380.516 365.238H338.884L338.188 359.206H381.212Z M68.0739 347.619L67.3784 353.651H38.2719L37.5764 347.619H68.0739Z M130.701 347.619L130.006 353.651H100.899L100.204 347.619H130.701Z M187.066 347.619L186.37 353.651H163.527L162.831 347.619H187.066Z M243.431 347.619L242.735 353.651H219.892L219.196 347.619H243.431Z M306.058 347.619L305.363 353.651H282.519L281.824 347.619H306.058Z M400 347.619L399.304 353.651H345.147L344.451 347.619H400Z M80.5993 336.031L79.9038 342.063H50.7973L50.1023 336.031H80.5993Z M136.964 336.031L136.268 342.063H107.162L106.467 336.031H136.964Z M193.328 336.031L192.633 342.063H169.79L169.094 336.031H193.328Z M249.694 336.031L248.998 342.063H226.154L225.459 336.031H249.694Z M312.321 336.031L311.625 342.063H288.782L288.087 336.031H312.321Z M400 336.031L399.304 342.063H382.723L382.028 336.031H400Z M11.7093 336.031L11.1411 340.955L3.13724 336.031H11.7093Z M24.2348 324.444L23.5393 330.476H0.695518L0 324.444H24.2348Z M86.8621 324.444L86.1666 330.476H57.0601L56.3651 324.444H86.8621Z M149.489 324.444L148.794 330.476H113.425L112.73 324.444H149.489Z M199.592 324.444L198.896 330.476H176.052L175.357 324.444H199.592Z M255.956 324.444L255.261 330.476H232.417L231.722 324.444H255.956Z M312.321 324.444L311.625 330.476H288.782L288.087 324.444H312.321Z M36.7602 312.857L36.0647 318.889H0.695518L0 312.857H36.7602Z M99.3875 312.857L98.692 318.889H69.586L68.8905 312.857H99.3875Z M155.752 312.857L155.057 318.889H125.951L125.255 312.857H155.752Z M205.854 312.857L205.158 318.889H182.315L181.62 312.857H205.854Z M262.219 312.857L261.523 318.889H238.68L237.985 312.857H262.219Z M318.584 312.857L317.888 318.889H295.045L294.349 312.857H318.584Z M49.2857 301.269L48.5902 307.302H13.221L12.5255 301.269H49.2857Z M111.913 301.269L111.217 307.302H82.111L81.416 301.269H111.913Z M162.015 301.269L161.319 307.302H132.213L131.518 301.269H162.015Z M218.38 301.269L217.684 307.302H188.578L187.882 301.269H218.38Z M268.482 301.269L267.786 307.302H244.942L244.247 301.269H268.482Z M349.898 301.269L349.203 307.302H295.045L294.349 301.269H349.898Z M61.8112 289.682L61.1156 295.714H32.0092L31.3136 289.682H61.8112Z M124.438 289.682L123.743 295.714H94.6364L93.9414 289.682H124.438Z M174.54 289.682L173.845 295.714H144.739L144.043 289.682H174.54Z M224.643 289.682L223.947 295.714H194.841L194.145 289.682H224.643Z M274.744 289.682L274.049 295.714H251.205L250.51 289.682H274.744Z M393.737 289.682L393.042 295.714H320.096L319.4 289.682H393.737Z M80.5993 278.095L79.9038 284.127H44.5346L43.8391 278.095H80.5993Z M136.964 278.095L136.268 284.127H107.162L106.467 278.095H136.964Z M187.066 278.095L186.37 284.127H157.264L156.569 278.095H187.066Z M230.905 278.095L230.21 284.127H207.366L206.671 278.095H230.905Z M281.007 278.095L280.312 284.127H251.205L250.51 278.095H281.007Z M400 278.095L399.304 284.127H351.409L350.714 278.095H400Z M93.1248 266.508L92.4293 272.54H57.0601L56.3651 266.508H93.1248Z M149.489 266.508L148.794 272.54H113.425L112.73 266.508H149.489Z M193.328 266.508L192.633 272.54H163.527L162.831 266.508H193.328Z M237.168 266.508L236.473 272.54H213.629L212.934 266.508H237.168Z M299.795 266.508L299.1 272.54H263.731L263.036 266.508H299.795Z M400 266.508L399.304 272.54H382.723L382.028 266.508H400Z M24.2348 254.92L23.5393 260.953H0.695518L0 254.92H24.2348Z M105.65 254.92L104.955 260.953H69.586L68.8905 254.92H105.65Z M155.752 254.92L155.057 260.953H125.951L125.255 254.92H155.752Z M205.854 254.92L205.158 260.953H169.79L169.094 254.92H205.854Z M243.431 254.92L242.735 260.953H219.892L219.196 254.92H243.431Z M324.846 254.92L324.151 260.953H269.994L269.298 254.92H324.846Z M49.2857 243.333L48.5902 249.366H6.95825L6.26273 243.333H49.2857Z M124.438 243.333L123.743 249.366H88.3737L87.6787 243.333H124.438Z M168.278 243.333L167.582 249.366H138.476L137.781 243.333H168.278Z M212.117 243.333L211.421 249.366H182.315L181.62 243.333H212.117Z M262.219 243.333L261.523 249.366H232.417L231.722 243.333H262.219Z M349.898 243.333L349.203 249.366H301.307L300.612 243.333H349.898Z M61.8112 231.745L61.1156 237.778H25.7464L25.0509 231.745H61.8112Z M136.964 231.745L136.268 237.778H100.899L100.204 231.745H136.964Z M180.803 231.745L180.107 237.778H151.001L150.306 231.745H180.803Z M218.38 231.745L217.684 237.778H194.841L194.145 231.745H218.38Z M274.744 231.745L274.049 237.778H238.68L237.985 231.745H274.744Z M374.949 231.745L374.254 237.778H320.096L319.4 231.745H374.949Z M80.5993 220.158L79.9038 226.191H38.2719L37.5764 220.158H80.5993Z M149.489 220.158L148.794 226.191H113.425L112.73 220.158H149.489Z M193.328 220.158L192.633 226.191H163.527L162.831 220.158H193.328Z M230.905 220.158L230.21 226.191H201.103L200.408 220.158H230.905Z M293.533 220.158L292.837 226.191H251.205L250.51 220.158H293.533Z M393.737 220.158L393.042 226.191H345.147L344.451 220.158H393.737Z M93.1248 208.571L92.4293 214.603H57.0601L56.3651 208.571H93.1248Z M162.015 208.571L161.319 214.603H125.951L125.255 208.571H162.015Z M243.431 208.571L242.735 214.603H169.79L169.094 208.571H243.431Z M312.321 208.571L311.625 214.603H269.994L269.298 208.571H312.321Z M400 208.571L399.304 214.603H363.935L363.239 208.571H400Z M17.9721 196.984L17.2765 203.016H0.695518L0 196.984H17.9721Z M111.913 196.984L111.217 203.016H69.586L68.8905 196.984H111.913Z M262.219 196.984L261.523 203.016H138.476L137.781 196.984H262.219Z M331.109 196.984L330.413 203.016H288.782L288.087 196.984H331.109Z M400 196.984L399.304 203.016H382.723L382.028 196.984H400Z M36.7602 185.397L36.0647 191.429H0.695518L0 185.397H36.7602Z M130.701 185.397L130.006 191.429H88.3737L87.6787 185.397H130.701Z M230.905 185.397L230.21 191.429H157.264L156.569 185.397H230.905Z M274.744 185.397L274.049 191.429H238.68L237.985 185.397H274.744Z M343.635 185.397L342.94 191.429H307.57L306.875 185.397H343.635Z M55.5484 173.809L54.8529 179.842H6.95825L6.26273 173.809H55.5484Z M149.489 173.809L148.794 179.842H107.162L106.467 173.809H149.489Z M199.592 173.809L198.896 179.842H169.79L169.094 173.809H199.592Z M237.168 173.809L236.473 179.842H207.366L206.671 173.809H237.168Z M287.27 173.809L286.574 179.842H251.205L250.51 173.809H287.27Z M362.424 173.809L361.728 179.842H320.096L319.4 173.809H362.424Z M80.5993 162.222L79.9038 168.255H25.7464L25.0509 162.222H80.5993Z M162.015 162.222L161.319 168.255H125.951L125.255 162.222H162.015Z M205.854 162.222L205.158 168.255H182.315L181.62 162.222H205.854Z M249.694 162.222L248.998 168.255H219.892L219.196 162.222H249.694Z M299.795 162.222L299.1 168.255H263.731L263.036 162.222H299.795Z M374.949 162.222L374.254 168.255H338.884L338.188 162.222H374.949Z M99.3875 150.635L98.692 156.667H50.7973L50.1023 150.635H99.3875Z M168.278 150.635L167.582 156.667H138.476L137.781 150.635H168.278Z M218.38 150.635L217.684 156.667H188.578L187.882 150.635H218.38Z M262.219 150.635L261.523 156.667H232.417L231.722 150.635H262.219Z M312.321 150.635L311.625 156.667H276.257L275.561 150.635H312.321Z M393.737 150.635L393.042 156.667H351.409L350.714 150.635H393.737Z M130.701 139.047L130.006 145.08H75.8488L75.1532 139.047H130.701Z M180.803 139.047L180.107 145.08H157.264L156.569 139.047H180.803Z M230.905 139.047L230.21 145.08H194.841L194.145 139.047H230.905Z M274.744 139.047L274.049 145.08H244.942L244.247 139.047H274.744Z M331.109 139.047L330.413 145.08H295.045L294.349 139.047H331.109Z M400 139.047L399.304 145.08H376.46L375.765 139.047H400Z M17.9721 127.46L17.2765 133.492H0.695518L0 127.46H17.9721Z M136.964 127.46L136.268 133.492H100.899L100.204 127.46H136.964Z M187.066 127.46L186.371 133.492H163.527L162.831 127.46H187.066Z M237.169 127.46L236.473 133.492H207.366L206.671 127.46H237.169Z M287.27 127.46L286.575 133.492H251.205L250.51 127.46H287.27Z M343.635 127.46L342.94 133.492H307.57L306.875 127.46H343.635Z M49.2857 115.873L48.5902 121.905H0.695518L0 115.873H49.2857Z M149.489 115.873L148.794 121.905H119.688L118.992 115.873H149.489Z M193.329 115.873L192.634 121.905H169.79L169.094 115.873H193.329Z M243.431 115.873L242.736 121.905H213.629L212.934 115.873H243.431Z M293.533 115.873L292.838 121.905H263.731L263.036 115.873H293.533Z M356.161 115.873L355.465 121.905H320.096L319.4 115.873H356.161Z M80.5993 104.286L79.9038 110.318H6.95825L6.26273 104.286H80.5993Z M149.489 104.286L148.794 110.318H125.951L125.255 104.286H149.489Z M205.855 104.286L205.159 110.318H176.052L175.357 104.286H205.855Z M255.957 104.286L255.261 110.318H226.154L225.459 104.286H255.957Z M306.059 104.286L305.364 110.318H276.257L275.561 104.286H306.059Z M368.686 104.286L367.991 110.318H338.884L338.188 104.286H368.686Z M105.65 92.6983L104.955 98.7307H50.7973L50.1023 92.6983H105.65Z M155.752 92.6983L155.057 98.7307H132.213L131.518 92.6983H155.752Z M212.118 92.6983L211.422 98.7307H182.315L181.62 92.6983H212.118Z M268.482 92.6983L267.787 98.7307H238.68L237.985 92.6983H268.482Z M318.584 92.6983L317.889 98.7307H288.782L288.087 92.6983H318.584Z M387.475 92.6983L386.779 98.7307H351.409L350.714 92.6983H387.475Z M105.65 81.1111L104.955 87.1435H82.111L81.416 81.1111H105.65Z M162.015 81.1111L161.319 87.1435H138.476L137.781 81.1111H162.015Z M218.38 81.1111L217.685 87.1435H194.841L194.145 81.1111H218.38Z M274.745 81.1111L274.049 87.1435H244.942L244.247 81.1111H274.745Z M331.109 81.1111L330.414 87.1435H301.307L300.612 81.1111H331.109Z M400 81.1111L399.304 87.1435H363.935L363.239 81.1111H400Z M111.913 69.5238L111.217 75.5562H88.3737L87.6787 69.5238H111.913Z M168.278 69.5238L167.583 75.5562H144.739L144.043 69.5238H168.278Z M224.643 69.5238L223.948 75.5562H201.103L200.408 69.5238H224.643Z M287.27 69.5238L286.575 75.5562H251.205L250.51 69.5238H287.27Z M343.635 69.5238L342.94 75.5562H313.833L313.137 69.5238H343.635Z M400 69.5238L399.304 75.5562H376.46L375.765 69.5238H400Z M17.9721 57.9366L17.2765 63.969H0.695518L0 57.9366H17.9721Z M111.913 57.9366L111.217 63.969H88.3737L87.6787 57.9366H111.913Z M174.541 57.9366L173.846 63.969H151.001L150.306 57.9366H174.541Z M230.906 57.9366L230.21 63.969H207.366L206.671 57.9366H230.906Z M293.533 57.9366L292.838 63.969H263.731L263.036 57.9366H293.533Z M349.898 57.9366L349.203 63.969H320.096L319.4 57.9366H349.898Z M400 57.9366L399.432 62.8605L391.428 57.9366H400Z M55.5484 46.3489L54.8529 52.3818H0.695518L0 46.3489H55.5484Z M118.176 46.3489L117.48 52.3818H94.6364L93.9414 46.3489H118.176Z M180.803 46.3489L180.108 52.3818H157.264L156.569 46.3489H180.803Z M237.169 46.3489L236.473 52.3818H213.629L212.934 46.3489H237.169Z M299.796 46.3489L299.101 52.3818H269.994L269.298 46.3489H299.796Z M362.424 46.3489L361.728 52.3818H332.621L331.926 46.3489H362.424Z M61.8112 34.7617L61.1156 40.7941H19.4837L18.7882 34.7617H61.8112Z M124.438 34.7617L123.743 40.7941H100.899L100.204 34.7617H124.438Z M187.066 34.7617L186.371 40.7941H163.527L162.831 34.7617H187.066Z M249.694 34.7617L248.998 40.7941H219.892L219.196 34.7617H249.694Z M312.321 34.7617L311.626 40.7941H288.782L288.087 34.7617H312.321Z M374.949 34.7617L374.254 40.7941H345.147L344.451 34.7617H374.949Z M61.8112 23.1745L61.1156 29.2069H38.2719L37.5764 23.1745H61.8112Z M124.438 23.1745L123.743 29.2069H100.899L100.204 23.1745H124.438Z M193.329 23.1745L192.634 29.2069H163.527L162.831 23.1745H193.329Z M255.957 23.1745L255.261 29.2069H232.417L231.722 23.1745H255.957Z M324.847 23.1745L324.152 29.2069H295.045L294.349 23.1745H324.847Z M387.475 23.1745L386.779 29.2069H357.672L356.977 23.1745H387.475Z M61.8112 11.5872L61.1156 17.6196H44.5346L43.8391 11.5872H61.8112Z M130.701 11.5872L130.006 17.6196H107.162L106.467 11.5872H130.701Z M193.329 11.5872L192.634 17.6196H169.79L169.094 11.5872H193.329Z M262.219 11.5872L261.524 17.6196H238.68L237.985 11.5872H262.219Z M331.109 11.5872L330.414 17.6196H301.307L300.612 11.5872H331.109Z M400 11.5872L399.304 17.6196H370.197L369.502 11.5872H400Z M61.8112 0L61.1156 6.0324H44.5346L43.8391 0H61.8112Z M130.701 0L130.006 6.0324H107.162L106.467 0H130.701Z M205.855 0L205.159 6.0324H176.052L175.357 0H205.855Z M268.482 0L267.787 6.0324H244.942L244.247 0H268.482Z M343.635 0L342.94 6.0324H313.833L313.137 0H343.635Z M400 0L399.304 6.0324H376.46L375.765 0H400Z\"></path></svg>",
+      "name": "The Content Architecture"
+    },
+    {
+      "id": "20df6dd104e1c27d",
+      "markup": "<svg viewBox=\"0 0 400 400\" fill=\"currentColor\" role=\"img\" aria-label=\"The Content Architecture\" class=\"shrink-0 size-24\"><path d=\"M24.2348 393.968L23.5393 400H0.695518L0 393.968H24.2348Z M86.8621 393.968L86.1666 400H57.0601L56.3651 393.968H86.8621Z M155.752 393.968L155.057 400H132.213L131.518 393.968H155.752Z M224.643 393.968L223.947 400H194.841L194.145 393.968H224.643Z M293.533 393.968L292.837 400H269.994L269.298 393.968H293.533Z M356.161 393.968L355.465 400H338.884L338.188 393.968H356.161Z M30.4975 382.38L29.802 388.413H0.695518L0 382.38H30.4975Z M99.3875 382.38L98.692 388.413H69.586L68.8905 382.38H99.3875Z M162.015 382.38L161.319 388.413H138.476L137.781 382.38H162.015Z M230.905 382.38L230.21 388.413H207.366L206.671 382.38H230.905Z M293.533 382.38L292.837 388.413H269.994L269.298 382.38H293.533Z M356.161 382.38L355.465 388.413H338.884L338.188 382.38H356.161Z M43.023 370.793L42.3275 376.826H13.221L12.5255 370.793H43.023Z M105.65 370.793L104.955 376.826H75.8488L75.1532 370.793H105.65Z M168.278 370.793L167.582 376.826H144.739L144.043 370.793H168.278Z M237.168 370.793L236.473 376.826H207.366L206.671 370.793H237.168Z M299.795 370.793L299.1 376.826H276.257L275.561 370.793H299.795Z M362.424 370.793L361.728 376.826H338.884L338.188 370.793H362.424Z M55.5484 359.206L54.8529 365.238H25.7464L25.0509 359.206H55.5484Z M111.913 359.206L111.217 365.238H88.3737L87.6787 359.206H111.913Z M180.803 359.206L180.107 365.238H151.001L150.306 359.206H180.803Z M237.168 359.206L236.473 365.238H213.629L212.934 359.206H237.168Z M299.795 359.206L299.1 365.238H276.257L275.561 359.206H299.795Z M381.212 359.206L380.516 365.238H338.884L338.188 359.206H381.212Z M68.0739 347.619L67.3784 353.651H38.2719L37.5764 347.619H68.0739Z M130.701 347.619L130.006 353.651H100.899L100.204 347.619H130.701Z M187.066 347.619L186.37 353.651H163.527L162.831 347.619H187.066Z M243.431 347.619L242.735 353.651H219.892L219.196 347.619H243.431Z M306.058 347.619L305.363 353.651H282.519L281.824 347.619H306.058Z M400 347.619L399.304 353.651H345.147L344.451 347.619H400Z M80.5993 336.031L79.9038 342.063H50.7973L50.1023 336.031H80.5993Z M136.964 336.031L136.268 342.063H107.162L106.467 336.031H136.964Z M193.328 336.031L192.633 342.063H169.79L169.094 336.031H193.328Z M249.694 336.031L248.998 342.063H226.154L225.459 336.031H249.694Z M312.321 336.031L311.625 342.063H288.782L288.087 336.031H312.321Z M400 336.031L399.304 342.063H382.723L382.028 336.031H400Z M11.7093 336.031L11.1411 340.955L3.13724 336.031H11.7093Z M24.2348 324.444L23.5393 330.476H0.695518L0 324.444H24.2348Z M86.8621 324.444L86.1666 330.476H57.0601L56.3651 324.444H86.8621Z M149.489 324.444L148.794 330.476H113.425L112.73 324.444H149.489Z M199.592 324.444L198.896 330.476H176.052L175.357 324.444H199.592Z M255.956 324.444L255.261 330.476H232.417L231.722 324.444H255.956Z M312.321 324.444L311.625 330.476H288.782L288.087 324.444H312.321Z M36.7602 312.857L36.0647 318.889H0.695518L0 312.857H36.7602Z M99.3875 312.857L98.692 318.889H69.586L68.8905 312.857H99.3875Z M155.752 312.857L155.057 318.889H125.951L125.255 312.857H155.752Z M205.854 312.857L205.158 318.889H182.315L181.62 312.857H205.854Z M262.219 312.857L261.523 318.889H238.68L237.985 312.857H262.219Z M318.584 312.857L317.888 318.889H295.045L294.349 312.857H318.584Z M49.2857 301.269L48.5902 307.302H13.221L12.5255 301.269H49.2857Z M111.913 301.269L111.217 307.302H82.111L81.416 301.269H111.913Z M162.015 301.269L161.319 307.302H132.213L131.518 301.269H162.015Z M218.38 301.269L217.684 307.302H188.578L187.882 301.269H218.38Z M268.482 301.269L267.786 307.302H244.942L244.247 301.269H268.482Z M349.898 301.269L349.203 307.302H295.045L294.349 301.269H349.898Z M61.8112 289.682L61.1156 295.714H32.0092L31.3136 289.682H61.8112Z M124.438 289.682L123.743 295.714H94.6364L93.9414 289.682H124.438Z M174.54 289.682L173.845 295.714H144.739L144.043 289.682H174.54Z M224.643 289.682L223.947 295.714H194.841L194.145 289.682H224.643Z M274.744 289.682L274.049 295.714H251.205L250.51 289.682H274.744Z M393.737 289.682L393.042 295.714H320.096L319.4 289.682H393.737Z M80.5993 278.095L79.9038 284.127H44.5346L43.8391 278.095H80.5993Z M136.964 278.095L136.268 284.127H107.162L106.467 278.095H136.964Z M187.066 278.095L186.37 284.127H157.264L156.569 278.095H187.066Z M230.905 278.095L230.21 284.127H207.366L206.671 278.095H230.905Z M281.007 278.095L280.312 284.127H251.205L250.51 278.095H281.007Z M400 278.095L399.304 284.127H351.409L350.714 278.095H400Z M93.1248 266.508L92.4293 272.54H57.0601L56.3651 266.508H93.1248Z M149.489 266.508L148.794 272.54H113.425L112.73 266.508H149.489Z M193.328 266.508L192.633 272.54H163.527L162.831 266.508H193.328Z M237.168 266.508L236.473 272.54H213.629L212.934 266.508H237.168Z M299.795 266.508L299.1 272.54H263.731L263.036 266.508H299.795Z M400 266.508L399.304 272.54H382.723L382.028 266.508H400Z M24.2348 254.92L23.5393 260.953H0.695518L0 254.92H24.2348Z M105.65 254.92L104.955 260.953H69.586L68.8905 254.92H105.65Z M155.752 254.92L155.057 260.953H125.951L125.255 254.92H155.752Z M205.854 254.92L205.158 260.953H169.79L169.094 254.92H205.854Z M243.431 254.92L242.735 260.953H219.892L219.196 254.92H243.431Z M324.846 254.92L324.151 260.953H269.994L269.298 254.92H324.846Z M49.2857 243.333L48.5902 249.366H6.95825L6.26273 243.333H49.2857Z M124.438 243.333L123.743 249.366H88.3737L87.6787 243.333H124.438Z M168.278 243.333L167.582 249.366H138.476L137.781 243.333H168.278Z M212.117 243.333L211.421 249.366H182.315L181.62 243.333H212.117Z M262.219 243.333L261.523 249.366H232.417L231.722 243.333H262.219Z M349.898 243.333L349.203 249.366H301.307L300.612 243.333H349.898Z M61.8112 231.745L61.1156 237.778H25.7464L25.0509 231.745H61.8112Z M136.964 231.745L136.268 237.778H100.899L100.204 231.745H136.964Z M180.803 231.745L180.107 237.778H151.001L150.306 231.745H180.803Z M218.38 231.745L217.684 237.778H194.841L194.145 231.745H218.38Z M274.744 231.745L274.049 237.778H238.68L237.985 231.745H274.744Z M374.949 231.745L374.254 237.778H320.096L319.4 231.745H374.949Z M80.5993 220.158L79.9038 226.191H38.2719L37.5764 220.158H80.5993Z M149.489 220.158L148.794 226.191H113.425L112.73 220.158H149.489Z M193.328 220.158L192.633 226.191H163.527L162.831 220.158H193.328Z M230.905 220.158L230.21 226.191H201.103L200.408 220.158H230.905Z M293.533 220.158L292.837 226.191H251.205L250.51 220.158H293.533Z M393.737 220.158L393.042 226.191H345.147L344.451 220.158H393.737Z M93.1248 208.571L92.4293 214.603H57.0601L56.3651 208.571H93.1248Z M162.015 208.571L161.319 214.603H125.951L125.255 208.571H162.015Z M243.431 208.571L242.735 214.603H169.79L169.094 208.571H243.431Z M312.321 208.571L311.625 214.603H269.994L269.298 208.571H312.321Z M400 208.571L399.304 214.603H363.935L363.239 208.571H400Z M17.9721 196.984L17.2765 203.016H0.695518L0 196.984H17.9721Z M111.913 196.984L111.217 203.016H69.586L68.8905 196.984H111.913Z M262.219 196.984L261.523 203.016H138.476L137.781 196.984H262.219Z M331.109 196.984L330.413 203.016H288.782L288.087 196.984H331.109Z M400 196.984L399.304 203.016H382.723L382.028 196.984H400Z M36.7602 185.397L36.0647 191.429H0.695518L0 185.397H36.7602Z M130.701 185.397L130.006 191.429H88.3737L87.6787 185.397H130.701Z M230.905 185.397L230.21 191.429H157.264L156.569 185.397H230.905Z M274.744 185.397L274.049 191.429H238.68L237.985 185.397H274.744Z M343.635 185.397L342.94 191.429H307.57L306.875 185.397H343.635Z M55.5484 173.809L54.8529 179.842H6.95825L6.26273 173.809H55.5484Z M149.489 173.809L148.794 179.842H107.162L106.467 173.809H149.489Z M199.592 173.809L198.896 179.842H169.79L169.094 173.809H199.592Z M237.168 173.809L236.473 179.842H207.366L206.671 173.809H237.168Z M287.27 173.809L286.574 179.842H251.205L250.51 173.809H287.27Z M362.424 173.809L361.728 179.842H320.096L319.4 173.809H362.424Z M80.5993 162.222L79.9038 168.255H25.7464L25.0509 162.222H80.5993Z M162.015 162.222L161.319 168.255H125.951L125.255 162.222H162.015Z M205.854 162.222L205.158 168.255H182.315L181.62 162.222H205.854Z M249.694 162.222L248.998 168.255H219.892L219.196 162.222H249.694Z M299.795 162.222L299.1 168.255H263.731L263.036 162.222H299.795Z M374.949 162.222L374.254 168.255H338.884L338.188 162.222H374.949Z M99.3875 150.635L98.692 156.667H50.7973L50.1023 150.635H99.3875Z M168.278 150.635L167.582 156.667H138.476L137.781 150.635H168.278Z M218.38 150.635L217.684 156.667H188.578L187.882 150.635H218.38Z M262.219 150.635L261.523 156.667H232.417L231.722 150.635H262.219Z M312.321 150.635L311.625 156.667H276.257L275.561 150.635H312.321Z M393.737 150.635L393.042 156.667H351.409L350.714 150.635H393.737Z M130.701 139.047L130.006 145.08H75.8488L75.1532 139.047H130.701Z M180.803 139.047L180.107 145.08H157.264L156.569 139.047H180.803Z M230.905 139.047L230.21 145.08H194.841L194.145 139.047H230.905Z M274.744 139.047L274.049 145.08H244.942L244.247 139.047H274.744Z M331.109 139.047L330.413 145.08H295.045L294.349 139.047H331.109Z M400 139.047L399.304 145.08H376.46L375.765 139.047H400Z M17.9721 127.46L17.2765 133.492H0.695518L0 127.46H17.9721Z M136.964 127.46L136.268 133.492H100.899L100.204 127.46H136.964Z M187.066 127.46L186.371 133.492H163.527L162.831 127.46H187.066Z M237.169 127.46L236.473 133.492H207.366L206.671 127.46H237.169Z M287.27 127.46L286.575 133.492H251.205L250.51 127.46H287.27Z M343.635 127.46L342.94 133.492H307.57L306.875 127.46H343.635Z M49.2857 115.873L48.5902 121.905H0.695518L0 115.873H49.2857Z M149.489 115.873L148.794 121.905H119.688L118.992 115.873H149.489Z M193.329 115.873L192.634 121.905H169.79L169.094 115.873H193.329Z M243.431 115.873L242.736 121.905H213.629L212.934 115.873H243.431Z M293.533 115.873L292.838 121.905H263.731L263.036 115.873H293.533Z M356.161 115.873L355.465 121.905H320.096L319.4 115.873H356.161Z M80.5993 104.286L79.9038 110.318H6.95825L6.26273 104.286H80.5993Z M149.489 104.286L148.794 110.318H125.951L125.255 104.286H149.489Z M205.855 104.286L205.159 110.318H176.052L175.357 104.286H205.855Z M255.957 104.286L255.261 110.318H226.154L225.459 104.286H255.957Z M306.059 104.286L305.364 110.318H276.257L275.561 104.286H306.059Z M368.686 104.286L367.991 110.318H338.884L338.188 104.286H368.686Z M105.65 92.6983L104.955 98.7307H50.7973L50.1023 92.6983H105.65Z M155.752 92.6983L155.057 98.7307H132.213L131.518 92.6983H155.752Z M212.118 92.6983L211.422 98.7307H182.315L181.62 92.6983H212.118Z M268.482 92.6983L267.787 98.7307H238.68L237.985 92.6983H268.482Z M318.584 92.6983L317.889 98.7307H288.782L288.087 92.6983H318.584Z M387.475 92.6983L386.779 98.7307H351.409L350.714 92.6983H387.475Z M105.65 81.1111L104.955 87.1435H82.111L81.416 81.1111H105.65Z M162.015 81.1111L161.319 87.1435H138.476L137.781 81.1111H162.015Z M218.38 81.1111L217.685 87.1435H194.841L194.145 81.1111H218.38Z M274.745 81.1111L274.049 87.1435H244.942L244.247 81.1111H274.745Z M331.109 81.1111L330.414 87.1435H301.307L300.612 81.1111H331.109Z M400 81.1111L399.304 87.1435H363.935L363.239 81.1111H400Z M111.913 69.5238L111.217 75.5562H88.3737L87.6787 69.5238H111.913Z M168.278 69.5238L167.583 75.5562H144.739L144.043 69.5238H168.278Z M224.643 69.5238L223.948 75.5562H201.103L200.408 69.5238H224.643Z M287.27 69.5238L286.575 75.5562H251.205L250.51 69.5238H287.27Z M343.635 69.5238L342.94 75.5562H313.833L313.137 69.5238H343.635Z M400 69.5238L399.304 75.5562H376.46L375.765 69.5238H400Z M17.9721 57.9366L17.2765 63.969H0.695518L0 57.9366H17.9721Z M111.913 57.9366L111.217 63.969H88.3737L87.6787 57.9366H111.913Z M174.541 57.9366L173.846 63.969H151.001L150.306 57.9366H174.541Z M230.906 57.9366L230.21 63.969H207.366L206.671 57.9366H230.906Z M293.533 57.9366L292.838 63.969H263.731L263.036 57.9366H293.533Z M349.898 57.9366L349.203 63.969H320.096L319.4 57.9366H349.898Z M400 57.9366L399.432 62.8605L391.428 57.9366H400Z M55.5484 46.3489L54.8529 52.3818H0.695518L0 46.3489H55.5484Z M118.176 46.3489L117.48 52.3818H94.6364L93.9414 46.3489H118.176Z M180.803 46.3489L180.108 52.3818H157.264L156.569 46.3489H180.803Z M237.169 46.3489L236.473 52.3818H213.629L212.934 46.3489H237.169Z M299.796 46.3489L299.101 52.3818H269.994L269.298 46.3489H299.796Z M362.424 46.3489L361.728 52.3818H332.621L331.926 46.3489H362.424Z M61.8112 34.7617L61.1156 40.7941H19.4837L18.7882 34.7617H61.8112Z M124.438 34.7617L123.743 40.7941H100.899L100.204 34.7617H124.438Z M187.066 34.7617L186.371 40.7941H163.527L162.831 34.7617H187.066Z M249.694 34.7617L248.998 40.7941H219.892L219.196 34.7617H249.694Z M312.321 34.7617L311.626 40.7941H288.782L288.087 34.7617H312.321Z M374.949 34.7617L374.254 40.7941H345.147L344.451 34.7617H374.949Z M61.8112 23.1745L61.1156 29.2069H38.2719L37.5764 23.1745H61.8112Z M124.438 23.1745L123.743 29.2069H100.899L100.204 23.1745H124.438Z M193.329 23.1745L192.634 29.2069H163.527L162.831 23.1745H193.329Z M255.957 23.1745L255.261 29.2069H232.417L231.722 23.1745H255.957Z M324.847 23.1745L324.152 29.2069H295.045L294.349 23.1745H324.847Z M387.475 23.1745L386.779 29.2069H357.672L356.977 23.1745H387.475Z M61.8112 11.5872L61.1156 17.6196H44.5346L43.8391 11.5872H61.8112Z M130.701 11.5872L130.006 17.6196H107.162L106.467 11.5872H130.701Z M193.329 11.5872L192.634 17.6196H169.79L169.094 11.5872H193.329Z M262.219 11.5872L261.524 17.6196H238.68L237.985 11.5872H262.219Z M331.109 11.5872L330.414 17.6196H301.307L300.612 11.5872H331.109Z M400 11.5872L399.304 17.6196H370.197L369.502 11.5872H400Z M61.8112 0L61.1156 6.0324H44.5346L43.8391 0H61.8112Z M130.701 0L130.006 6.0324H107.162L106.467 0H130.701Z M205.855 0L205.159 6.0324H176.052L175.357 0H205.855Z M268.482 0L267.787 6.0324H244.942L244.247 0H268.482Z M343.635 0L342.94 6.0324H313.833L313.137 0H343.635Z M400 0L399.304 6.0324H376.46L375.765 0H400Z\"></path></svg>",
+      "name": "The Content Architecture"
+    },
+    {
+      "id": "a6b2683a3a2cb656",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"shrink-0 size-14\"><rect x=\"2\" y=\"3\" width=\"12\" height=\"10\" rx=\"1.5\"></rect><path d=\"M4.6 6.6 6.6 8.2 4.6 9.8\" stroke-width=\"1.1\"></path><path d=\"M7.8 10h2.8\" stroke-width=\"1.1\"></path></svg>",
+      "name": "svg-3"
+    },
+    {
+      "id": "8ba2065cf8e76c65",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"shrink-0 size-14\"><circle cx=\"7\" cy=\"7\" r=\"4.25\"></circle><path d=\"M10.3 10.3 14 14\" stroke-width=\"1.4\"></path></svg>",
+      "name": "svg-4"
+    },
+    {
+      "id": "9c9781366a029c44",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[0.85em] shrink-0 opacity-50 transition-transform duration-200 ease-out motion-reduce:transition-none\"><path d=\"M6 4l4 4-4 4\"></path></svg>",
+      "name": "svg-5"
+    },
+    {
+      "id": "dbd7bbc9654858ce",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0\"><path d=\"M2.2 5.3c0-.77.53-1.4 1.3-1.4h2.7c.4 0 .77.18 1.02.5l.5.65c.25.32.62.5 1.02.5h3.5c.77 0 1.3.63 1.3 1.4v4.5c0 .77-.53 1.4-1.3 1.4H3.5c-.77 0-1.3-.63-1.3-1.4V5.3Z\" stroke-width=\"1.1\"></path></svg>",
+      "name": "svg-6"
+    },
+    {
+      "id": "2139e4b4a94cd8dd",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[0.85em] shrink-0 opacity-50 transition-transform duration-200 ease-out motion-reduce:transition-none\"><path d=\"M6 4l4 4-4 4\"></path></svg>",
+      "name": "svg-7"
+    },
+    {
+      "id": "a0b2136dbfbad85a",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0\"><path d=\"M2.2 5.3c0-.77.53-1.4 1.3-1.4h2.7c.4 0 .77.18 1.02.5l.5.65c.25.32.62.5 1.02.5h3.5c.77 0 1.3.63 1.3 1.4v4.5c0 .77-.53 1.4-1.3 1.4H3.5c-.77 0-1.3-.63-1.3-1.4V5.3Z\" stroke-width=\"1.1\"></path></svg>",
+      "name": "svg-8"
+    },
+    {
+      "id": "21377250d9070716",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[0.85em] shrink-0 opacity-50 transition-transform duration-200 ease-out motion-reduce:transition-none\"><path d=\"M6 4l4 4-4 4\"></path></svg>",
+      "name": "svg-9"
+    },
+    {
+      "id": "6e1391e4db0347b3",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0\"><path d=\"M2.2 5.3c0-.77.53-1.4 1.3-1.4h2.7c.4 0 .77.18 1.02.5l.5.65c.25.32.62.5 1.02.5h3.5c.77 0 1.3.63 1.3 1.4v4.5c0 .77-.53 1.4-1.3 1.4H3.5c-.77 0-1.3-.63-1.3-1.4V5.3Z\" stroke-width=\"1.1\"></path></svg>",
+      "name": "svg-10"
+    },
+    {
+      "id": "0aebd3ec02b8b20f",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[0.85em] shrink-0 opacity-50 transition-transform duration-200 ease-out motion-reduce:transition-none\"><path d=\"M6 4l4 4-4 4\"></path></svg>",
+      "name": "svg-11"
+    },
+    {
+      "id": "9521a72567da9ba9",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0\"><path d=\"M2.2 5.3c0-.77.53-1.4 1.3-1.4h2.7c.4 0 .77.18 1.02.5l.5.65c.25.32.62.5 1.02.5h3.5c.77 0 1.3.63 1.3 1.4v4.5c0 .77-.53 1.4-1.3 1.4H3.5c-.77 0-1.3-.63-1.3-1.4V5.3Z\" stroke-width=\"1.1\"></path></svg>",
+      "name": "svg-12"
+    },
+    {
+      "id": "cbe92f64a5602610",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[0.85em] shrink-0 opacity-50 transition-transform duration-200 ease-out motion-reduce:transition-none\"><path d=\"M6 4l4 4-4 4\"></path></svg>",
+      "name": "svg-13"
+    },
+    {
+      "id": "2fddd6c773124f88",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0\"><path d=\"M2.2 5.3c0-.77.53-1.4 1.3-1.4h2.7c.4 0 .77.18 1.02.5l.5.65c.25.32.62.5 1.02.5h3.5c.77 0 1.3.63 1.3 1.4v4.5c0 .77-.53 1.4-1.3 1.4H3.5c-.77 0-1.3-.63-1.3-1.4V5.3Z\" stroke-width=\"1.1\"></path></svg>",
+      "name": "svg-14"
+    },
+    {
+      "id": "c66507947b5fa8cf",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[0.85em] shrink-0 opacity-50 transition-transform duration-200 ease-out motion-reduce:transition-none\"><path d=\"M6 4l4 4-4 4\"></path></svg>",
+      "name": "svg-15"
+    },
+    {
+      "id": "4026ab23db3b0b36",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0\"><path d=\"M2.2 5.3c0-.77.53-1.4 1.3-1.4h2.7c.4 0 .77.18 1.02.5l.5.65c.25.32.62.5 1.02.5h3.5c.77 0 1.3.63 1.3 1.4v4.5c0 .77-.53 1.4-1.3 1.4H3.5c-.77 0-1.3-.63-1.3-1.4V5.3Z\" stroke-width=\"1.1\"></path></svg>",
+      "name": "svg-16"
+    },
+    {
+      "id": "b1a31bef01d20c7a",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[0.85em] shrink-0 opacity-50 transition-transform duration-200 ease-out motion-reduce:transition-none\"><path d=\"M6 4l4 4-4 4\"></path></svg>",
+      "name": "svg-17"
+    },
+    {
+      "id": "1a12046e1fdc312a",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0\"><path d=\"M2.2 5.3c0-.77.53-1.4 1.3-1.4h2.7c.4 0 .77.18 1.02.5l.5.65c.25.32.62.5 1.02.5h3.5c.77 0 1.3.63 1.3 1.4v4.5c0 .77-.53 1.4-1.3 1.4H3.5c-.77 0-1.3-.63-1.3-1.4V5.3Z\" stroke-width=\"1.1\"></path></svg>",
+      "name": "svg-18"
+    },
+    {
+      "id": "5fcbbc4b018c5f4f",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[0.85em] shrink-0 opacity-50 transition-transform duration-200 ease-out motion-reduce:transition-none\"><path d=\"M6 4l4 4-4 4\"></path></svg>",
+      "name": "svg-19"
+    },
+    {
+      "id": "48212a17cb50da9f",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0\"><path d=\"M2.2 5.3c0-.77.53-1.4 1.3-1.4h2.7c.4 0 .77.18 1.02.5l.5.65c.25.32.62.5 1.02.5h3.5c.77 0 1.3.63 1.3 1.4v4.5c0 .77-.53 1.4-1.3 1.4H3.5c-.77 0-1.3-.63-1.3-1.4V5.3Z\" stroke-width=\"1.1\"></path></svg>",
+      "name": "svg-20"
+    },
+    {
+      "id": "206227cd107040ac",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[0.85em] shrink-0 opacity-50 transition-transform duration-200 ease-out motion-reduce:transition-none\"><path d=\"M6 4l4 4-4 4\"></path></svg>",
+      "name": "svg-21"
+    },
+    {
+      "id": "166d48db5dc5cbdd",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0\"><path d=\"M2.2 5.3c0-.77.53-1.4 1.3-1.4h2.7c.4 0 .77.18 1.02.5l.5.65c.25.32.62.5 1.02.5h3.5c.77 0 1.3.63 1.3 1.4v4.5c0 .77-.53 1.4-1.3 1.4H3.5c-.77 0-1.3-.63-1.3-1.4V5.3Z\" stroke-width=\"1.1\"></path></svg>",
+      "name": "svg-22"
+    },
+    {
+      "id": "6d470f5975953bd2",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[0.85em] shrink-0 opacity-50 transition-transform duration-200 ease-out motion-reduce:transition-none\"><path d=\"M6 4l4 4-4 4\"></path></svg>",
+      "name": "svg-23"
+    },
+    {
+      "id": "d9b54dca08202175",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0\"><path d=\"M2.2 5.3c0-.77.53-1.4 1.3-1.4h2.7c.4 0 .77.18 1.02.5l.5.65c.25.32.62.5 1.02.5h3.5c.77 0 1.3.63 1.3 1.4v4.5c0 .77-.53 1.4-1.3 1.4H3.5c-.77 0-1.3-.63-1.3-1.4V5.3Z\" stroke-width=\"1.1\"></path></svg>",
+      "name": "svg-24"
+    },
+    {
+      "id": "867ca6c25482d091",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M3 5.6h4.1\"></path><path d=\"M10.7 5.6h2.3\"></path><circle cx=\"8.9\" cy=\"5.6\" r=\"1.4\"></circle><path d=\"M3 10.4h2.3\"></path><path d=\"M8.9 10.4h4.1\"></path><circle cx=\"7.1\" cy=\"10.4\" r=\"1.4\"></circle></svg>",
+      "name": "svg-25"
+    },
+    {
+      "id": "dc80301629092df8",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M3 5.6h4.1\"></path><path d=\"M10.7 5.6h2.3\"></path><circle cx=\"8.9\" cy=\"5.6\" r=\"1.4\"></circle><path d=\"M3 10.4h2.3\"></path><path d=\"M8.9 10.4h4.1\"></path><circle cx=\"7.1\" cy=\"10.4\" r=\"1.4\"></circle></svg>",
+      "name": "svg-26"
+    },
+    {
+      "id": "129c29ce6e8aebd9",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M4.3 2.6h4.8L12 5.5V13a.6.6 0 0 1-.6.6H4.3a.6.6 0 0 1-.6-.6V3.2a.6.6 0 0 1 .6-.6Z\"></path><path d=\"M9 2.8v2.8h2.8\"></path></svg>",
+      "name": "svg-27"
+    },
+    {
+      "id": "71953152e03218a7",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M6.7 4c-1 0-1.4.5-1.4 1.4v1c0 .8-.3 1.2-1 1.6.7.4 1 .8 1 1.6v1c0 .9.4 1.4 1.4 1.4\"></path><path d=\"M9.3 4c1 0 1.4.5 1.4 1.4v1c0 .8.3 1.2 1 1.6-.7.4-1 .8-1 1.6v1c0 .9-.4 1.4-1.4 1.4\"></path></svg>",
+      "name": "svg-28"
+    },
+    {
+      "id": "5e59b4e8578d5b3e",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M3 5.6h4.1\"></path><path d=\"M10.7 5.6h2.3\"></path><circle cx=\"8.9\" cy=\"5.6\" r=\"1.4\"></circle><path d=\"M3 10.4h2.3\"></path><path d=\"M8.9 10.4h4.1\"></path><circle cx=\"7.1\" cy=\"10.4\" r=\"1.4\"></circle></svg>",
+      "name": "svg-29"
+    },
+    {
+      "id": "2149849125787cc7",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M3 5.6h4.1\"></path><path d=\"M10.7 5.6h2.3\"></path><circle cx=\"8.9\" cy=\"5.6\" r=\"1.4\"></circle><path d=\"M3 10.4h2.3\"></path><path d=\"M8.9 10.4h4.1\"></path><circle cx=\"7.1\" cy=\"10.4\" r=\"1.4\"></circle></svg>",
+      "name": "svg-30"
+    },
+    {
+      "id": "4b7616974642b464",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M4.3 2.6h4.8L12 5.5V13a.6.6 0 0 1-.6.6H4.3a.6.6 0 0 1-.6-.6V3.2a.6.6 0 0 1 .6-.6Z\"></path><path d=\"M9 2.8v2.8h2.8\"></path><path d=\"M5.7 8.6h4.1\" stroke-width=\"0.95\"></path><path d=\"M5.7 10.6h4.1\" stroke-width=\"0.95\"></path></svg>",
+      "name": "svg-31"
+    },
+    {
+      "id": "2e360b101796813e",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M6 5.5 3.5 8 6 10.5\"></path><path d=\"M10 5.5 12.5 8 10 10.5\"></path><path d=\"M9 4.8 7 11.2\" stroke-width=\"1\"></path></svg>",
+      "name": "svg-32"
+    },
+    {
+      "id": "067cfa073ecfbde4",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M6.7 4c-1 0-1.4.5-1.4 1.4v1c0 .8-.3 1.2-1 1.6.7.4 1 .8 1 1.6v1c0 .9.4 1.4 1.4 1.4\"></path><path d=\"M9.3 4c1 0 1.4.5 1.4 1.4v1c0 .8.3 1.2 1 1.6-.7.4-1 .8-1 1.6v1c0 .9-.4 1.4-1.4 1.4\"></path></svg>",
+      "name": "svg-33"
+    },
+    {
+      "id": "343017b1c1f7fad6",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M4.3 2.6h4.8L12 5.5V13a.6.6 0 0 1-.6.6H4.3a.6.6 0 0 1-.6-.6V3.2a.6.6 0 0 1 .6-.6Z\"></path><path d=\"M9 2.8v2.8h2.8\"></path><path d=\"M5.7 8.6h4.1\" stroke-width=\"0.95\"></path><path d=\"M5.7 10.6h4.1\" stroke-width=\"0.95\"></path></svg>",
+      "name": "svg-34"
+    },
+    {
+      "id": "1f8ad4d0a20ec363",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M6 5.5 3.5 8 6 10.5\"></path><path d=\"M10 5.5 12.5 8 10 10.5\"></path><path d=\"M9 4.8 7 11.2\" stroke-width=\"1\"></path></svg>",
+      "name": "svg-35"
+    },
+    {
+      "id": "48b74a1798780c50",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M4.3 2.6h4.8L12 5.5V13a.6.6 0 0 1-.6.6H4.3a.6.6 0 0 1-.6-.6V3.2a.6.6 0 0 1 .6-.6Z\"></path><path d=\"M9 2.8v2.8h2.8\"></path><path d=\"M5.7 8.6h4.1\" stroke-width=\"0.95\"></path><path d=\"M5.7 10.6h4.1\" stroke-width=\"0.95\"></path></svg>",
+      "name": "svg-36"
+    },
+    {
+      "id": "bb2c716aeeacb529",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M3 5.6h4.1\"></path><path d=\"M10.7 5.6h2.3\"></path><circle cx=\"8.9\" cy=\"5.6\" r=\"1.4\"></circle><path d=\"M3 10.4h2.3\"></path><path d=\"M8.9 10.4h4.1\"></path><circle cx=\"7.1\" cy=\"10.4\" r=\"1.4\"></circle></svg>",
+      "name": "svg-37"
+    },
+    {
+      "id": "f273522344f52498",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M4.3 2.6h4.8L12 5.5V13a.6.6 0 0 1-.6.6H4.3a.6.6 0 0 1-.6-.6V3.2a.6.6 0 0 1 .6-.6Z\"></path><path d=\"M9 2.8v2.8h2.8\"></path><path d=\"M5.7 8.6h4.1\" stroke-width=\"0.95\"></path><path d=\"M5.7 10.6h4.1\" stroke-width=\"0.95\"></path></svg>",
+      "name": "svg-38"
+    },
+    {
+      "id": "adea20ce840722b3",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M6 5.5 3.5 8 6 10.5\"></path><path d=\"M10 5.5 12.5 8 10 10.5\"></path><path d=\"M9 4.8 7 11.2\" stroke-width=\"1\"></path></svg>",
+      "name": "svg-39"
+    },
+    {
+      "id": "3ec3f93ab85f9da1",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M6 5.5 3.5 8 6 10.5\"></path><path d=\"M10 5.5 12.5 8 10 10.5\"></path><path d=\"M9 4.8 7 11.2\" stroke-width=\"1\"></path></svg>",
+      "name": "svg-40"
+    },
+    {
+      "id": "2835f9069407b8b4",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M6.7 4c-1 0-1.4.5-1.4 1.4v1c0 .8-.3 1.2-1 1.6.7.4 1 .8 1 1.6v1c0 .9.4 1.4 1.4 1.4\"></path><path d=\"M9.3 4c1 0 1.4.5 1.4 1.4v1c0 .8.3 1.2 1 1.6-.7.4-1 .8-1 1.6v1c0 .9-.4 1.4-1.4 1.4\"></path></svg>",
+      "name": "svg-41"
+    },
+    {
+      "id": "34a07cbd6cbdfbbb",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M6.7 4c-1 0-1.4.5-1.4 1.4v1c0 .8-.3 1.2-1 1.6.7.4 1 .8 1 1.6v1c0 .9.4 1.4 1.4 1.4\"></path><path d=\"M9.3 4c1 0 1.4.5 1.4 1.4v1c0 .8.3 1.2 1 1.6-.7.4-1 .8-1 1.6v1c0 .9-.4 1.4-1.4 1.4\"></path></svg>",
+      "name": "svg-42"
+    },
+    {
+      "id": "0d60516acdc315f1",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M6 5.5 3.5 8 6 10.5\"></path><path d=\"M10 5.5 12.5 8 10 10.5\"></path><path d=\"M9 4.8 7 11.2\" stroke-width=\"1\"></path></svg>",
+      "name": "svg-43"
+    },
+    {
+      "id": "4434397a4ca61130",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M6 5.5 3.5 8 6 10.5\"></path><path d=\"M10 5.5 12.5 8 10 10.5\"></path><path d=\"M9 4.8 7 11.2\" stroke-width=\"1\"></path></svg>",
+      "name": "svg-44"
+    },
+    {
+      "id": "7e5c4c56d33478f1",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M4.3 2.6h4.8L12 5.5V13a.6.6 0 0 1-.6.6H4.3a.6.6 0 0 1-.6-.6V3.2a.6.6 0 0 1 .6-.6Z\"></path><path d=\"M9 2.8v2.8h2.8\"></path><path d=\"M5.7 8.6h4.1\" stroke-width=\"0.95\"></path><path d=\"M5.7 10.6h4.1\" stroke-width=\"0.95\"></path></svg>",
+      "name": "svg-45"
+    },
+    {
+      "id": "13078504b1069909",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M6.7 4c-1 0-1.4.5-1.4 1.4v1c0 .8-.3 1.2-1 1.6.7.4 1 .8 1 1.6v1c0 .9.4 1.4 1.4 1.4\"></path><path d=\"M9.3 4c1 0 1.4.5 1.4 1.4v1c0 .8.3 1.2 1 1.6-.7.4-1 .8-1 1.6v1c0 .9-.4 1.4-1.4 1.4\"></path></svg>",
+      "name": "svg-46"
+    },
+    {
+      "id": "85581abfbfd80b61",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M6 5.5 3.5 8 6 10.5\"></path><path d=\"M10 5.5 12.5 8 10 10.5\"></path><path d=\"M9 4.8 7 11.2\" stroke-width=\"1\"></path></svg>",
+      "name": "svg-47"
+    },
+    {
+      "id": "7ffc4bf378941ebd",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M6 5.5 3.5 8 6 10.5\"></path><path d=\"M10 5.5 12.5 8 10 10.5\"></path><path d=\"M9 4.8 7 11.2\" stroke-width=\"1\"></path></svg>",
+      "name": "svg-48"
+    },
+    {
+      "id": "c938494e833a007f",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M6.7 4c-1 0-1.4.5-1.4 1.4v1c0 .8-.3 1.2-1 1.6.7.4 1 .8 1 1.6v1c0 .9.4 1.4 1.4 1.4\"></path><path d=\"M9.3 4c1 0 1.4.5 1.4 1.4v1c0 .8.3 1.2 1 1.6-.7.4-1 .8-1 1.6v1c0 .9-.4 1.4-1.4 1.4\"></path></svg>",
+      "name": "svg-49"
+    },
+    {
+      "id": "94b2e44072d25cb1",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-current/70\"><path d=\"M6.7 4c-1 0-1.4.5-1.4 1.4v1c0 .8-.3 1.2-1 1.6.7.4 1 .8 1 1.6v1c0 .9.4 1.4 1.4 1.4\"></path><path d=\"M9.3 4c1 0 1.4.5 1.4 1.4v1c0 .8.3 1.2 1 1.6-.7.4-1 .8-1 1.6v1c0 .9-.4 1.4-1.4 1.4\"></path></svg>",
+      "name": "svg-50"
+    },
+    {
+      "id": "74248d3af20dee00",
+      "markup": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-[1.05em] shrink-0 text-white/30\"><path d=\"M4 12.5V9.5\" stroke-width=\"1.6\"></path><path d=\"M6.8 12.5V6.5\" stroke-width=\"1.6\"></path><path d=\"M9.6 12.5V8\" stroke-width=\"1.6\"></path><path d=\"M12.4 12.5V4.5\" stroke-width=\"1.6\"></path></svg>",
+      "name": "svg-51"
+    }
+  ],
+  "pageUrl": "https://www.contentarchitecture.dev/",
+  "summary": {
+    "byKind": {
+      "font": 2,
+      "image": 18,
+      "other": 9,
+      "script": 34,
+      "stylesheet": 3,
+      "video": 0
+    },
+    "inlineSvgCount": 51,
+    "totalCount": 66
+  }
+}

@@ -1,0 +1,1909 @@
+{
+  "assets": [
+    {
+      "bytes": 11141,
+      "contentType": "application/javascript; charset=UTF-8",
+      "id": "2061ccde824d9daca7d95c40",
+      "path": "assets-complete/2061ccde824d9daca7d95c40.js",
+      "sha256": "257ef1b7dd06f88a465e5badb58c57b62cf678d7618ecc2929aa3b428e848122",
+      "url": "https://mistral.ai/.netlify/scripts/rum"
+    },
+    {
+      "bytes": 1414,
+      "contentType": "image/webp",
+      "id": "ad21629fba22b7ed47b4402b",
+      "path": "assets-complete/ad21629fba22b7ed47b4402b.webp",
+      "sha256": "53a91e131147770861c42e091fa142eeaa4dc2d0d5eef73da7f020470681659c",
+      "url": "https://mistral.ai/_astro/06a82fa5-050c-46a7-98aa-3a4d2170ab75_1ccDzB.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1414,
+      "contentType": "image/webp",
+      "id": "1a9600dd6707d8ac94c36c1b",
+      "path": "assets-complete/1a9600dd6707d8ac94c36c1b.webp",
+      "sha256": "53a91e131147770861c42e091fa142eeaa4dc2d0d5eef73da7f020470681659c",
+      "url": "https://mistral.ai/_astro/06a82fa5-050c-46a7-98aa-3a4d2170ab75_2vBuKG.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1414,
+      "contentType": "image/webp",
+      "id": "1416c4f2bc4c42fe8255190f",
+      "path": "assets-complete/1416c4f2bc4c42fe8255190f.webp",
+      "sha256": "53a91e131147770861c42e091fa142eeaa4dc2d0d5eef73da7f020470681659c",
+      "url": "https://mistral.ai/_astro/06a82fa5-050c-46a7-98aa-3a4d2170ab75_ETC2B.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1414,
+      "contentType": "image/webp",
+      "id": "18b0cb1e6a8929a78a938e9b",
+      "path": "assets-complete/18b0cb1e6a8929a78a938e9b.webp",
+      "sha256": "53a91e131147770861c42e091fa142eeaa4dc2d0d5eef73da7f020470681659c",
+      "url": "https://mistral.ai/_astro/06a82fa5-050c-46a7-98aa-3a4d2170ab75_LrdPE.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1414,
+      "contentType": "image/webp",
+      "id": "243119333a9e8606ed00a948",
+      "path": "assets-complete/243119333a9e8606ed00a948.webp",
+      "sha256": "53a91e131147770861c42e091fa142eeaa4dc2d0d5eef73da7f020470681659c",
+      "url": "https://mistral.ai/_astro/06a82fa5-050c-46a7-98aa-3a4d2170ab75_ZdMyB.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 27100,
+      "contentType": "image/webp",
+      "id": "db3efd48f4616b5c81050618",
+      "path": "assets-complete/db3efd48f4616b5c81050618.webp",
+      "sha256": "54be87b312cb00614ccf6f8ee5a3a5aaea68d5a6936c65ad661ad3a4e83519e6",
+      "url": "https://mistral.ai/_astro/21f61f6a-4bae-40f1-b0c5-9792a0a31268_241373.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 29722,
+      "contentType": "image/webp",
+      "id": "a5bfdb2240895f84fba70752",
+      "path": "assets-complete/a5bfdb2240895f84fba70752.webp",
+      "sha256": "100349855dc8d445a15035cd2156c74af496ac46867aea8a37f808dce5a42289",
+      "url": "https://mistral.ai/_astro/21f61f6a-4bae-40f1-b0c5-9792a0a31268_2qbQTe.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 29722,
+      "contentType": "image/webp",
+      "id": "d416a65c5806fb572e4b8bbf",
+      "path": "assets-complete/d416a65c5806fb572e4b8bbf.webp",
+      "sha256": "100349855dc8d445a15035cd2156c74af496ac46867aea8a37f808dce5a42289",
+      "url": "https://mistral.ai/_astro/21f61f6a-4bae-40f1-b0c5-9792a0a31268_Z1PMhw4.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 29722,
+      "contentType": "image/webp",
+      "id": "b3b09be5bc0e94fa20266a55",
+      "path": "assets-complete/b3b09be5bc0e94fa20266a55.webp",
+      "sha256": "100349855dc8d445a15035cd2156c74af496ac46867aea8a37f808dce5a42289",
+      "url": "https://mistral.ai/_astro/21f61f6a-4bae-40f1-b0c5-9792a0a31268_Z2vCBdG.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 12112,
+      "contentType": "image/webp",
+      "id": "d6da334c4508358c94a2e02e",
+      "path": "assets-complete/d6da334c4508358c94a2e02e.webp",
+      "sha256": "4829fa6ed88ac2221e6ab3f0cc471d7cd05acb85911fdda47959cb303ed5ef68",
+      "url": "https://mistral.ai/_astro/21f61f6a-4bae-40f1-b0c5-9792a0a31268_v4uqj.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 7114,
+      "contentType": "image/webp",
+      "id": "c0927759437a6cf96fccbc6c",
+      "path": "assets-complete/c0927759437a6cf96fccbc6c.webp",
+      "sha256": "f98c47d1b9ffb1ffa08d72cd2fc66f38ebb494b574a1028c37fe9a90f5211d83",
+      "url": "https://mistral.ai/_astro/26fa92fe-a99a-4597-a24e-7a11c097edf9_24DY5L.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 7114,
+      "contentType": "image/webp",
+      "id": "894f3953e8dee859eca2253c",
+      "path": "assets-complete/894f3953e8dee859eca2253c.webp",
+      "sha256": "f98c47d1b9ffb1ffa08d72cd2fc66f38ebb494b574a1028c37fe9a90f5211d83",
+      "url": "https://mistral.ai/_astro/26fa92fe-a99a-4597-a24e-7a11c097edf9_2cbrsk.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 7114,
+      "contentType": "image/webp",
+      "id": "71fb95040a85361af8732a54",
+      "path": "assets-complete/71fb95040a85361af8732a54.webp",
+      "sha256": "f98c47d1b9ffb1ffa08d72cd2fc66f38ebb494b574a1028c37fe9a90f5211d83",
+      "url": "https://mistral.ai/_astro/26fa92fe-a99a-4597-a24e-7a11c097edf9_Z1qCRCV.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 7114,
+      "contentType": "image/webp",
+      "id": "3b056060f92e1d43d56657e0",
+      "path": "assets-complete/3b056060f92e1d43d56657e0.webp",
+      "sha256": "f98c47d1b9ffb1ffa08d72cd2fc66f38ebb494b574a1028c37fe9a90f5211d83",
+      "url": "https://mistral.ai/_astro/26fa92fe-a99a-4597-a24e-7a11c097edf9_ZFEHHa.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 7114,
+      "contentType": "image/webp",
+      "id": "bae1b8b4f47c0b92853c99ac",
+      "path": "assets-complete/bae1b8b4f47c0b92853c99ac.webp",
+      "sha256": "f98c47d1b9ffb1ffa08d72cd2fc66f38ebb494b574a1028c37fe9a90f5211d83",
+      "url": "https://mistral.ai/_astro/26fa92fe-a99a-4597-a24e-7a11c097edf9_wTufp.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 3782,
+      "contentType": "image/webp",
+      "id": "936ece70643cdf964dcef76e",
+      "path": "assets-complete/936ece70643cdf964dcef76e.webp",
+      "sha256": "bc38990d3194dd30b171cf358fc91b9f61973ea5c6fcc07ab82b7f98ea8c533a",
+      "url": "https://mistral.ai/_astro/442043bc-1910-41f4-830f-da531bb85112_1Duoqz.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 3782,
+      "contentType": "image/webp",
+      "id": "16aa77e9c5f28f6331a836d6",
+      "path": "assets-complete/16aa77e9c5f28f6331a836d6.webp",
+      "sha256": "bc38990d3194dd30b171cf358fc91b9f61973ea5c6fcc07ab82b7f98ea8c533a",
+      "url": "https://mistral.ai/_astro/442043bc-1910-41f4-830f-da531bb85112_1IA66b.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 3168,
+      "contentType": "image/webp",
+      "id": "2df10455b259e4998a6877e0",
+      "path": "assets-complete/2df10455b259e4998a6877e0.webp",
+      "sha256": "3c024fbca1269b461fa4698a995224153187c6f30e3dcb65fd11f4058aa6dc74",
+      "url": "https://mistral.ai/_astro/442043bc-1910-41f4-830f-da531bb85112_20Dm8L.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 3782,
+      "contentType": "image/webp",
+      "id": "87659891fb423621a3719885",
+      "path": "assets-complete/87659891fb423621a3719885.webp",
+      "sha256": "bc38990d3194dd30b171cf358fc91b9f61973ea5c6fcc07ab82b7f98ea8c533a",
+      "url": "https://mistral.ai/_astro/442043bc-1910-41f4-830f-da531bb85112_ZFARV4.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 3782,
+      "contentType": "image/webp",
+      "id": "d308baa114ed118df0533483",
+      "path": "assets-complete/d308baa114ed118df0533483.webp",
+      "sha256": "bc38990d3194dd30b171cf358fc91b9f61973ea5c6fcc07ab82b7f98ea8c533a",
+      "url": "https://mistral.ai/_astro/442043bc-1910-41f4-830f-da531bb85112_ZajFj5.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 16640,
+      "contentType": "image/webp",
+      "id": "78e798c925e8f3104382e60f",
+      "path": "assets-complete/78e798c925e8f3104382e60f.webp",
+      "sha256": "e3c4cc8d45c6fcc6d00968b5f4ff8fd87b7f8e0490ea3d88013722914f0ef09f",
+      "url": "https://mistral.ai/_astro/5d09066e-9c71-4875-912d-d1ba4b651903_5b8cT.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 29186,
+      "contentType": "image/webp",
+      "id": "82b166dfa7e33de3c5f15e9c",
+      "path": "assets-complete/82b166dfa7e33de3c5f15e9c.webp",
+      "sha256": "dd3a111e6372892ab2e8604ac0ce69212b391a7f2bc2951b17b79e73b24be4e5",
+      "url": "https://mistral.ai/_astro/5d09066e-9c71-4875-912d-d1ba4b651903_Z1XiAti.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 46646,
+      "contentType": "image/webp",
+      "id": "0312ed871ffc3966e5c61cf5",
+      "path": "assets-complete/0312ed871ffc3966e5c61cf5.webp",
+      "sha256": "8faa704c5b79aa1bb58ce02d83d09db712a9bedc8734b1b875c8b7dd2c75f301",
+      "url": "https://mistral.ai/_astro/5d09066e-9c71-4875-912d-d1ba4b651903_ZE4OV5.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 8106,
+      "contentType": "image/webp",
+      "id": "7b0b7deb67088d7608de87d8",
+      "path": "assets-complete/7b0b7deb67088d7608de87d8.webp",
+      "sha256": "79927fc90e9799bf5c5827fdd6e32e2a29363e9b73be87f57ed5b409df737f84",
+      "url": "https://mistral.ai/_astro/5d09066e-9c71-4875-912d-d1ba4b651903_eJzK2.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 38994,
+      "contentType": "image/webp",
+      "id": "086df7bb99f99c18cb1d13d8",
+      "path": "assets-complete/086df7bb99f99c18cb1d13d8.webp",
+      "sha256": "20d7feae6d37e40e5fe28ad437c3ae0ee2eaa7ebd965afcec3e19af357533f6c",
+      "url": "https://mistral.ai/_astro/5d09066e-9c71-4875-912d-d1ba4b651903_kSYs3.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2194,
+      "contentType": "image/webp",
+      "id": "4d483b8de5c61605e0ccf9f2",
+      "path": "assets-complete/4d483b8de5c61605e0ccf9f2.webp",
+      "sha256": "ebd31c60cccb2e7ae5925db9a31e59f4bc0207ddde9abcd76ed79ac34cf42135",
+      "url": "https://mistral.ai/_astro/6aec4419-ebfd-4f19-8432-17fec33e0929_1XD608.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2194,
+      "contentType": "image/webp",
+      "id": "8cf1fefa4c8526488251f75a",
+      "path": "assets-complete/8cf1fefa4c8526488251f75a.webp",
+      "sha256": "ebd31c60cccb2e7ae5925db9a31e59f4bc0207ddde9abcd76ed79ac34cf42135",
+      "url": "https://mistral.ai/_astro/6aec4419-ebfd-4f19-8432-17fec33e0929_2tUiC7.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 6552,
+      "contentType": "image/webp",
+      "id": "5d3a0c5a87d07e9bc36a0960",
+      "path": "assets-complete/5d3a0c5a87d07e9bc36a0960.webp",
+      "sha256": "0784341df00a07dd34c2be47cf15c43941d3a17a19be6ce6dae97611c98df732",
+      "url": "https://mistral.ai/_astro/6aec4419-ebfd-4f19-8432-17fec33e0929_Z20hazy.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2194,
+      "contentType": "image/webp",
+      "id": "c0eb74bc4862d56b1bf54a77",
+      "path": "assets-complete/c0eb74bc4862d56b1bf54a77.webp",
+      "sha256": "ebd31c60cccb2e7ae5925db9a31e59f4bc0207ddde9abcd76ed79ac34cf42135",
+      "url": "https://mistral.ai/_astro/6aec4419-ebfd-4f19-8432-17fec33e0929_Z2hkqC9.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2194,
+      "contentType": "image/webp",
+      "id": "c551505887dafb764f6e997f",
+      "path": "assets-complete/c551505887dafb764f6e997f.webp",
+      "sha256": "ebd31c60cccb2e7ae5925db9a31e59f4bc0207ddde9abcd76ed79ac34cf42135",
+      "url": "https://mistral.ai/_astro/6aec4419-ebfd-4f19-8432-17fec33e0929_Z2mq8hK.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 6616,
+      "contentType": "image/webp",
+      "id": "8f14e59aa82bebf3ffd4475e",
+      "path": "assets-complete/8f14e59aa82bebf3ffd4475e.webp",
+      "sha256": "befb290063aa8974154b5139112dabcf6a8c76df55f0e450212adfb9be6a1b44",
+      "url": "https://mistral.ai/_astro/7f1f6ea0-97f7-4358-8788-b59e367ff08d_2cvihX.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 6616,
+      "contentType": "image/webp",
+      "id": "aad59e53930b3ded07cdb84f",
+      "path": "assets-complete/aad59e53930b3ded07cdb84f.webp",
+      "sha256": "befb290063aa8974154b5139112dabcf6a8c76df55f0e450212adfb9be6a1b44",
+      "url": "https://mistral.ai/_astro/7f1f6ea0-97f7-4358-8788-b59e367ff08d_62KoL.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 6616,
+      "contentType": "image/webp",
+      "id": "02278cff03bc72845280d5f7",
+      "path": "assets-complete/02278cff03bc72845280d5f7.webp",
+      "sha256": "befb290063aa8974154b5139112dabcf6a8c76df55f0e450212adfb9be6a1b44",
+      "url": "https://mistral.ai/_astro/7f1f6ea0-97f7-4358-8788-b59e367ff08d_Z1doSj3.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 6616,
+      "contentType": "image/webp",
+      "id": "98ce3d01d59a64329cdf4b53",
+      "path": "assets-complete/98ce3d01d59a64329cdf4b53.webp",
+      "sha256": "befb290063aa8974154b5139112dabcf6a8c76df55f0e450212adfb9be6a1b44",
+      "url": "https://mistral.ai/_astro/7f1f6ea0-97f7-4358-8788-b59e367ff08d_Z2dOFBe.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 6616,
+      "contentType": "image/webp",
+      "id": "55fc56278d84c98b78dfe3bc",
+      "path": "assets-complete/55fc56278d84c98b78dfe3bc.webp",
+      "sha256": "befb290063aa8974154b5139112dabcf6a8c76df55f0e450212adfb9be6a1b44",
+      "url": "https://mistral.ai/_astro/7f1f6ea0-97f7-4358-8788-b59e367ff08d_dWUoC.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2692,
+      "contentType": "image/webp",
+      "id": "25c92b9618b4ce41dd87761f",
+      "path": "assets-complete/25c92b9618b4ce41dd87761f.webp",
+      "sha256": "6c255a4736492bd22fc4b3ab3c51829154eac54ed9e11487d1c1e56e83125218",
+      "url": "https://mistral.ai/_astro/82c0be94-218c-4b33-9de4-363576ca6cdc_1EfewQ.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2692,
+      "contentType": "image/webp",
+      "id": "dc2766af52c878568b344c47",
+      "path": "assets-complete/dc2766af52c878568b344c47.webp",
+      "sha256": "6c255a4736492bd22fc4b3ab3c51829154eac54ed9e11487d1c1e56e83125218",
+      "url": "https://mistral.ai/_astro/82c0be94-218c-4b33-9de4-363576ca6cdc_1Re2HB.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2692,
+      "contentType": "image/webp",
+      "id": "2d14ddfa0c4aa6d300ff80b6",
+      "path": "assets-complete/2d14ddfa0c4aa6d300ff80b6.webp",
+      "sha256": "6c255a4736492bd22fc4b3ab3c51829154eac54ed9e11487d1c1e56e83125218",
+      "url": "https://mistral.ai/_astro/82c0be94-218c-4b33-9de4-363576ca6cdc_1miICT.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2692,
+      "contentType": "image/webp",
+      "id": "71fff3c987942d1d8068ae6c",
+      "path": "assets-complete/71fff3c987942d1d8068ae6c.webp",
+      "sha256": "6c255a4736492bd22fc4b3ab3c51829154eac54ed9e11487d1c1e56e83125218",
+      "url": "https://mistral.ai/_astro/82c0be94-218c-4b33-9de4-363576ca6cdc_2qUfW7.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2692,
+      "contentType": "image/webp",
+      "id": "9ef13d2b4e513027ee0e8b57",
+      "path": "assets-complete/9ef13d2b4e513027ee0e8b57.webp",
+      "sha256": "6c255a4736492bd22fc4b3ab3c51829154eac54ed9e11487d1c1e56e83125218",
+      "url": "https://mistral.ai/_astro/82c0be94-218c-4b33-9de4-363576ca6cdc_Z1mgdnf.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 65112,
+      "contentType": "image/webp",
+      "id": "b2caafb83dd08268ff002ba9",
+      "path": "assets-complete/b2caafb83dd08268ff002ba9.webp",
+      "sha256": "88bee3530fa2b068f813179335aca5bd8a8005be15277d72c84d73b21c6ee921",
+      "url": "https://mistral.ai/_astro/Advanced%20R_D_1YhAB6.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 18604,
+      "contentType": "image/webp",
+      "id": "5176008c5b06ac9879d55927",
+      "path": "assets-complete/5176008c5b06ac9879d55927.webp",
+      "sha256": "5cfe0886ba9349b476bd8fd40fc112c140b04084ef4fc763724538520c00d559",
+      "url": "https://mistral.ai/_astro/Advanced%20R_D_20hVOj.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 89064,
+      "contentType": "image/webp",
+      "id": "150c9378bae969d673a1dc8c",
+      "path": "assets-complete/150c9378bae969d673a1dc8c.webp",
+      "sha256": "278fcfd83110dd98d5c30c994073337c63a1cb1a9bb17efed7e83bb6e7c487fb",
+      "url": "https://mistral.ai/_astro/Advanced%20R_D_Z1aAB1x.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 8008,
+      "contentType": "image/webp",
+      "id": "0bb038544210b51268fdd97e",
+      "path": "assets-complete/0bb038544210b51268fdd97e.webp",
+      "sha256": "89c3965a1a65a243c1fcd47b66179b393f46a084163cd5a570d99f26ebddf103",
+      "url": "https://mistral.ai/_astro/Advanced%20R_D_ZWEYqF.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 36910,
+      "contentType": "image/webp",
+      "id": "784b671220c5fcf61a3846d9",
+      "path": "assets-complete/784b671220c5fcf61a3846d9.webp",
+      "sha256": "087081476d55645ae85e7c427564ef3e09dfdda7094d629ad51b8d6fab163b4d",
+      "url": "https://mistral.ai/_astro/Advanced%20R_D_eaXib.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 16131,
+      "contentType": "application/javascript; charset=UTF-8",
+      "id": "2b2073b6d49739834d88f9cc",
+      "path": "assets-complete/2b2073b6d49739834d88f9cc.js",
+      "sha256": "7af92b2ada408aea479ed95cc24691e78c7f1d29abff1befa6e9cdf9e5c4d551",
+      "url": "https://mistral.ai/_astro/ClientRouter.astro_astro_type_script_index_0_lang.gsQRVjdk.js?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 179824,
+      "contentType": "image/webp",
+      "id": "fd50bb6df470e88966f7a828",
+      "path": "assets-complete/fd50bb6df470e88966f7a828.webp",
+      "sha256": "31cf1ba4d7837429332e8e38d2df44fbf4554b78c37537a8396c6eb987a978c7",
+      "url": "https://mistral.ai/_astro/Forge_16WwLw.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 252634,
+      "contentType": "image/webp",
+      "id": "b4d0d9706aa77700c8b78829",
+      "path": "assets-complete/b4d0d9706aa77700c8b78829.webp",
+      "sha256": "b9ffe7c907003be103b45c31b39a5b8fb541948b004296ac3c1f056321bd135a",
+      "url": "https://mistral.ai/_astro/Forge_1ftrWd.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 13946,
+      "contentType": "image/webp",
+      "id": "af57e4ba418d99403ba4195d",
+      "path": "assets-complete/af57e4ba418d99403ba4195d.webp",
+      "sha256": "06a08e05c41f5f0e4cd13653378481f6c7e08baae1c5ce3f59c391efd63c70e2",
+      "url": "https://mistral.ai/_astro/Forge_2uWrsL.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 108544,
+      "contentType": "image/webp",
+      "id": "2a36b3d7663c3c44c5733be8",
+      "path": "assets-complete/2a36b3d7663c3c44c5733be8.webp",
+      "sha256": "76467a5551dd66eacf1a3afec6a03f612beb9f9e318d1b677dfcfdc5eab35d3c",
+      "url": "https://mistral.ai/_astro/Forge_Z2ffKz8.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 42974,
+      "contentType": "image/webp",
+      "id": "8eaa7f083bd6f25f95a89239",
+      "path": "assets-complete/8eaa7f083bd6f25f95a89239.webp",
+      "sha256": "e43a900afa0cd53f370dbc3346ae2a5649daaaef929f22c22f0c37d36e32da80",
+      "url": "https://mistral.ai/_astro/Forge_cePnQ.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 89252,
+      "contentType": "image/webp",
+      "id": "3b38562688560e5074353e71",
+      "path": "assets-complete/3b38562688560e5074353e71.webp",
+      "sha256": "20f9b02eed5022bc7adadcb9bf66284c04cafaf8ee84edc5d294704982948f5b",
+      "url": "https://mistral.ai/_astro/Robostral-navigate_1D5snp.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 89252,
+      "contentType": "image/webp",
+      "id": "eb316814ecd8da1f74f2f425",
+      "path": "assets-complete/eb316814ecd8da1f74f2f425.webp",
+      "sha256": "20f9b02eed5022bc7adadcb9bf66284c04cafaf8ee84edc5d294704982948f5b",
+      "url": "https://mistral.ai/_astro/Robostral-navigate_2lHiJb.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 89252,
+      "contentType": "image/webp",
+      "id": "62d0369839ca8150abb60742",
+      "path": "assets-complete/62d0369839ca8150abb60742.webp",
+      "sha256": "20f9b02eed5022bc7adadcb9bf66284c04cafaf8ee84edc5d294704982948f5b",
+      "url": "https://mistral.ai/_astro/Robostral-navigate_Z1UrJMU.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 52868,
+      "contentType": "image/webp",
+      "id": "13e5727005f2470db550d29a",
+      "path": "assets-complete/13e5727005f2470db550d29a.webp",
+      "sha256": "d0f803d5211d4ef9e5ae85078dcb3e45ba6be052d9a9456b12928b40681b39f9",
+      "url": "https://mistral.ai/_astro/Robostral-navigate_Z26xm79.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 22418,
+      "contentType": "image/webp",
+      "id": "455dc5ff81835114d5a68551",
+      "path": "assets-complete/455dc5ff81835114d5a68551.webp",
+      "sha256": "92ceac9bbd44f885c3bd0bbcce5be87189ea9b5d774dd54451200477d180ef8b",
+      "url": "https://mistral.ai/_astro/Robostral-navigate_ZA6fLF.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 21362,
+      "contentType": "image/webp",
+      "id": "d00d49bffae440aa9c471977",
+      "path": "assets-complete/d00d49bffae440aa9c471977.webp",
+      "sha256": "23a32033207be27c3831d197a469e3d8453a69db0772878cb289c86ced23121f",
+      "url": "https://mistral.ai/_astro/Studio_Z1Hi7Iw.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 69558,
+      "contentType": "image/webp",
+      "id": "1e9e6255131f306797d41164",
+      "path": "assets-complete/1e9e6255131f306797d41164.webp",
+      "sha256": "5c5eb877c63be814e8958bfa032605b9ba008e0207cd92486f86df30965c76e2",
+      "url": "https://mistral.ai/_astro/Studio_Z1p0YOi.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 8660,
+      "contentType": "image/webp",
+      "id": "b032390aafa7ab4120c39451",
+      "path": "assets-complete/b032390aafa7ab4120c39451.webp",
+      "sha256": "b7cbbd159ad6d49e5d6fc261d80f66ce83670ca89fc9e87672a6390470ac98e0",
+      "url": "https://mistral.ai/_astro/Studio_Z29N748.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 154174,
+      "contentType": "image/webp",
+      "id": "37b4b8e9837cba7d2830914c",
+      "path": "assets-complete/37b4b8e9837cba7d2830914c.webp",
+      "sha256": "25361bb6aa804d053bbe11eb5c00bf35f6cc9be37da9edeac967574c0115e315",
+      "url": "https://mistral.ai/_astro/Studio_bwyxp.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 224148,
+      "contentType": "image/webp",
+      "id": "7020119db746153106a5a91a",
+      "path": "assets-complete/7020119db746153106a5a91a.webp",
+      "sha256": "a27385f5e07e336eece8dcdc7d139bdbb798b46d1ac306530ed048ca22a2cfd3",
+      "url": "https://mistral.ai/_astro/Studio_yuEsE.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 38042,
+      "contentType": "image/webp",
+      "id": "8517327744fc0a6f7ba94cfb",
+      "path": "assets-complete/8517327744fc0a6f7ba94cfb.webp",
+      "sha256": "5efd9ccc25078c1fd32d1efc6ffa9d0318d4874741aa61c04d7f67b850c3823d",
+      "url": "https://mistral.ai/_astro/Thumbnail-Blog-GLM-OptB_1rJmvT.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 124714,
+      "contentType": "image/webp",
+      "id": "a60ada76213bb1c73d9a0260",
+      "path": "assets-complete/a60ada76213bb1c73d9a0260.webp",
+      "sha256": "5bf9634ac468937915a1b39fc4b22daa82a2b5461887c271d13f299d1b7e4ddd",
+      "url": "https://mistral.ai/_astro/Thumbnail-Blog-GLM-OptB_Z20uyc9.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 13646,
+      "contentType": "image/webp",
+      "id": "4cbf81eba5478499b5995825",
+      "path": "assets-complete/4cbf81eba5478499b5995825.webp",
+      "sha256": "d175ef51eb03cd91082b30963a5b5ca50b7aa264e689f41369ce4ff86bb07168",
+      "url": "https://mistral.ai/_astro/Thumbnail-Blog-GLM-OptB_Z8Y6Ep.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 299242,
+      "contentType": "image/webp",
+      "id": "caabea19df49a4ce359b294f",
+      "path": "assets-complete/caabea19df49a4ce359b294f.webp",
+      "sha256": "ecdb0354e6f84381417cb180c9b2f577cfe083d862d73d9a74b398ce29404dcb",
+      "url": "https://mistral.ai/_astro/Thumbnail-Blog-GLM-OptB_ZnJ3Lx.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 405796,
+      "contentType": "image/webp",
+      "id": "2c45c038d3ff6ed50807e8d2",
+      "path": "assets-complete/2c45c038d3ff6ed50807e8d2.webp",
+      "sha256": "15f2dce00c79c8346aed06e1a2c53ebcd97a8435b64350b0fb5fe80908ae56e6",
+      "url": "https://mistral.ai/_astro/Thumbnail-Blog-GLM-OptB_lilvC.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 193358,
+      "contentType": "image/webp",
+      "id": "01327a875a0e43a5e84e2336",
+      "path": "assets-complete/01327a875a0e43a5e84e2336.webp",
+      "sha256": "708c9e1c865ee46110d0e4643f2699037a309cce3118e5ee9f16f6870f2676a5",
+      "url": "https://mistral.ai/_astro/Thumbnail-Model-OCR_1Hlztf.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 119824,
+      "contentType": "image/webp",
+      "id": "9cb7644d5c19e0938dcc77fe",
+      "path": "assets-complete/9cb7644d5c19e0938dcc77fe.webp",
+      "sha256": "7bb67318e7cddceb1f822e1871d78b9efdbf94053c0409990ce58766a6bf685b",
+      "url": "https://mistral.ai/_astro/Thumbnail-Model-OCR_1n4XtM.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 193358,
+      "contentType": "image/webp",
+      "id": "80a9ddc7f11b2bee0b166de6",
+      "path": "assets-complete/80a9ddc7f11b2bee0b166de6.webp",
+      "sha256": "708c9e1c865ee46110d0e4643f2699037a309cce3118e5ee9f16f6870f2676a5",
+      "url": "https://mistral.ai/_astro/Thumbnail-Model-OCR_Z1Jkuyv.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 47630,
+      "contentType": "image/webp",
+      "id": "250da1115f95893156c146a1",
+      "path": "assets-complete/250da1115f95893156c146a1.webp",
+      "sha256": "04f4c0ee2e4945f6eefaae044203405207cf8c40d48e71016b57f72ed9d4c739",
+      "url": "https://mistral.ai/_astro/Thumbnail-Model-OCR_Z1KHbj6.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 7298,
+      "contentType": "image/webp",
+      "id": "beee0b3f83006e5dec3c15dc",
+      "path": "assets-complete/beee0b3f83006e5dec3c15dc.webp",
+      "sha256": "7af6af28af383451db0f275726ce4fdacc0919f19c619f5ec61d2ccb924399f5",
+      "url": "https://mistral.ai/_astro/Thumbnail-Model-OCR_Z1jB4DK.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 290990,
+      "contentType": "image/webp",
+      "id": "3c62f16ef057b398128bbdbc",
+      "path": "assets-complete/3c62f16ef057b398128bbdbc.webp",
+      "sha256": "05e01522cd22f94fe321f3066691eb7d7dc8fd0b4659347dafe4199d3a5696fd",
+      "url": "https://mistral.ai/_astro/Thumbnail-Model_Shieldstral@2x_1FLB4P.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 22308,
+      "contentType": "image/webp",
+      "id": "07979e88dc408f5cee907045",
+      "path": "assets-complete/07979e88dc408f5cee907045.webp",
+      "sha256": "880b84c04b1f9d95e833816eaea51f47a1cad896da48f443bd066b387a39ab64",
+      "url": "https://mistral.ai/_astro/Thumbnail-Model_Shieldstral@2x_2ozeX5.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 454036,
+      "contentType": "image/webp",
+      "id": "bd100c98e8b9113f8bdccece",
+      "path": "assets-complete/bd100c98e8b9113f8bdccece.webp",
+      "sha256": "f043ca045267c37e11fe7d437755d77e4a99d4bdaf93181cec22dd2997ba70ae",
+      "url": "https://mistral.ai/_astro/Thumbnail-Model_Shieldstral@2x_ZUxlF0.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 7982,
+      "contentType": "image/webp",
+      "id": "cbf7c985d291aeafebfb8222",
+      "path": "assets-complete/cbf7c985d291aeafebfb8222.webp",
+      "sha256": "b7a0ed1ea4340b3fcd5f3dd0547be8e97d8dceb62823fbe1a603c2e36b77e459",
+      "url": "https://mistral.ai/_astro/Thumbnail-Model_Shieldstral@2x_ZlNnvD.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 105412,
+      "contentType": "image/webp",
+      "id": "13b8c75c0bdb45a248c3de9c",
+      "path": "assets-complete/13b8c75c0bdb45a248c3de9c.webp",
+      "sha256": "0a8174d4f897864c03bb728b2e59233ea0801b0c3ecc95400da4b87e83b62ae9",
+      "url": "https://mistral.ai/_astro/Thumbnail-Model_Shieldstral@2x_kxyi6.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 23180,
+      "contentType": "image/webp",
+      "id": "3afff4c037fcf58bc97487e5",
+      "path": "assets-complete/3afff4c037fcf58bc97487e5.webp",
+      "sha256": "e1058cec4a9ef9ae1cd9a95ba97fc062a2676d289ca63313598d6adccf094c81",
+      "url": "https://mistral.ai/_astro/Vibe%20for%20code_19eatg.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 76786,
+      "contentType": "image/webp",
+      "id": "92710a99f1cc36fbcfcbf48c",
+      "path": "assets-complete/92710a99f1cc36fbcfcbf48c.webp",
+      "sha256": "ba8b4f9caf93bebd8cf0d403cf9074a75082540e8470a7e5f920262c4fc451d2",
+      "url": "https://mistral.ai/_astro/Vibe%20for%20code_1OzmRn.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 8096,
+      "contentType": "image/webp",
+      "id": "316386b917a9686e5acab146",
+      "path": "assets-complete/316386b917a9686e5acab146.webp",
+      "sha256": "90da1ef6c88423e85028ba6a420a8879f88d328998d324315c3e15bd37f5fba1",
+      "url": "https://mistral.ai/_astro/Vibe%20for%20code_Z318ho.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 177112,
+      "contentType": "image/webp",
+      "id": "a32ced91c702e6cfe3319f17",
+      "path": "assets-complete/a32ced91c702e6cfe3319f17.webp",
+      "sha256": "43551f96f670a2f5d06f4d0989daaaaccd92862b9f9165d4bf90cf903e74dbc2",
+      "url": "https://mistral.ai/_astro/Vibe%20for%20code_ZEsBLn.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 255112,
+      "contentType": "image/webp",
+      "id": "86b0749822a6d15c6f90563e",
+      "path": "assets-complete/86b0749822a6d15c6f90563e.webp",
+      "sha256": "3ab1b958bd28d92a19bd47c2835d98a5bc35d14d3acec2f02edcc331141aa36b",
+      "url": "https://mistral.ai/_astro/Vibe%20for%20code_ZVhAxB.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 8712,
+      "contentType": "image/webp",
+      "id": "195621d64800ff43b281bfdd",
+      "path": "assets-complete/195621d64800ff43b281bfdd.webp",
+      "sha256": "61653124f497583f29aa87b12fad5a8819eb1f497a97980b5dc71908c0b2fe8e",
+      "url": "https://mistral.ai/_astro/Vibe_1Oj6fS.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 73236,
+      "contentType": "image/webp",
+      "id": "f8aca9bef4a7f24d54118cef",
+      "path": "assets-complete/f8aca9bef4a7f24d54118cef.webp",
+      "sha256": "b9e8c61e253e7b783a5edc4b223bb0d0b54a3124622b2ed5f4642f5e9b938952",
+      "url": "https://mistral.ai/_astro/Vibe_2evwDA.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 228002,
+      "contentType": "image/webp",
+      "id": "95bf4a83326c29f9ee2813b9",
+      "path": "assets-complete/95bf4a83326c29f9ee2813b9.webp",
+      "sha256": "9543524250643ad854b01a599ece0e4d4cf4e0c78cdc5d6df5f0ac6fb79eedf9",
+      "url": "https://mistral.ai/_astro/Vibe_H432M.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 160164,
+      "contentType": "image/webp",
+      "id": "b696ad5e55157fb5d256550b",
+      "path": "assets-complete/b696ad5e55157fb5d256550b.webp",
+      "sha256": "399ac98b5957904861e563359e8fe8deae5a30a2921e7317ce557dbf886ce7da",
+      "url": "https://mistral.ai/_astro/Vibe_Z1o48Xd.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 24426,
+      "contentType": "image/webp",
+      "id": "9195ca1f60cfe8b4390d63ee",
+      "path": "assets-complete/9195ca1f60cfe8b4390d63ee.webp",
+      "sha256": "04aeb535bddd384833734c0511e6573a467a8bf1db125eee8bb8fae99c75e0f4",
+      "url": "https://mistral.ai/_astro/Vibe_Z4Nlit.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 12286,
+      "contentType": "image/webp",
+      "id": "365b2f58cab6064015207e49",
+      "path": "assets-complete/365b2f58cab6064015207e49.webp",
+      "sha256": "f48ec2daf08a81e4945aef00291dabf8616ac6a1a07c7e91cd8ae6c81e6b7d66",
+      "url": "https://mistral.ai/_astro/a76ee02b-0791-4c49-bd10-9e950b4f4e50_Z1WnrBw.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 17850,
+      "contentType": "image/webp",
+      "id": "ae3b01ced8d6431ebe2172ec",
+      "path": "assets-complete/ae3b01ced8d6431ebe2172ec.webp",
+      "sha256": "03862fd542a55282f14ac993c215b39259774729664785238e40907d7f2e498e",
+      "url": "https://mistral.ai/_astro/a76ee02b-0791-4c49-bd10-9e950b4f4e50_Z2aIV5i.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 12286,
+      "contentType": "image/webp",
+      "id": "8debb06817d4de528c5cc528",
+      "path": "assets-complete/8debb06817d4de528c5cc528.webp",
+      "sha256": "f48ec2daf08a81e4945aef00291dabf8616ac6a1a07c7e91cd8ae6c81e6b7d66",
+      "url": "https://mistral.ai/_astro/a76ee02b-0791-4c49-bd10-9e950b4f4e50_ZA4bGf.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 12286,
+      "contentType": "image/webp",
+      "id": "6be0504272c9a8f9d1a7ee2e",
+      "path": "assets-complete/6be0504272c9a8f9d1a7ee2e.webp",
+      "sha256": "f48ec2daf08a81e4945aef00291dabf8616ac6a1a07c7e91cd8ae6c81e6b7d66",
+      "url": "https://mistral.ai/_astro/a76ee02b-0791-4c49-bd10-9e950b4f4e50_bJexk.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 12286,
+      "contentType": "image/webp",
+      "id": "085f114733a22c4630fd7540",
+      "path": "assets-complete/085f114733a22c4630fd7540.webp",
+      "sha256": "f48ec2daf08a81e4945aef00291dabf8616ac6a1a07c7e91cd8ae6c81e6b7d66",
+      "url": "https://mistral.ai/_astro/a76ee02b-0791-4c49-bd10-9e950b4f4e50_vxtG2.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 30422,
+      "contentType": "image/webp",
+      "id": "a53eb982a4e7008436319877",
+      "path": "assets-complete/a53eb982a4e7008436319877.webp",
+      "sha256": "a9d863eead0f81b57c380e9f320c68b3d871da4ec430beb61d63d276bdd894c7",
+      "url": "https://mistral.ai/_astro/a8daabbe-2965-469d-bb3c-6acdee6aa350_1F81Qy.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 17570,
+      "contentType": "image/webp",
+      "id": "de994be0a58aadd5dae0bac9",
+      "path": "assets-complete/de994be0a58aadd5dae0bac9.webp",
+      "sha256": "9bb4ca20419e660b0f8beb65d5e0fb773a78dce76f93b61901bd6df73aa0d741",
+      "url": "https://mistral.ai/_astro/a8daabbe-2965-469d-bb3c-6acdee6aa350_20q8Da.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 9118,
+      "contentType": "image/webp",
+      "id": "a2d39c540199f17f471ef13a",
+      "path": "assets-complete/a2d39c540199f17f471ef13a.webp",
+      "sha256": "7f60801d4c8751f8f2cddb903bc52a1d77571f576b39b9af7cdbc7084ed83d12",
+      "url": "https://mistral.ai/_astro/a8daabbe-2965-469d-bb3c-6acdee6aa350_29YAbi.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 39096,
+      "contentType": "image/webp",
+      "id": "a7fa47239995b41fc4d88555",
+      "path": "assets-complete/a7fa47239995b41fc4d88555.webp",
+      "sha256": "90b87c1bc2a329f4012ec681c11496e86b9ae83ae37f03cb3574aae1eb0846d3",
+      "url": "https://mistral.ai/_astro/a8daabbe-2965-469d-bb3c-6acdee6aa350_Z15Qw12.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 48128,
+      "contentType": "image/webp",
+      "id": "24c9737a386a8c4c9967ea4c",
+      "path": "assets-complete/24c9737a386a8c4c9967ea4c.webp",
+      "sha256": "0112af7663fa29919d854f31352ce7b1fe4c84523a595bb49386bbcd59d60de7",
+      "url": "https://mistral.ai/_astro/a8daabbe-2965-469d-bb3c-6acdee6aa350_Z25Plpa.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1290,
+      "contentType": "image/webp",
+      "id": "7d57436ccdba47cacb5828cb",
+      "path": "assets-complete/7d57436ccdba47cacb5828cb.webp",
+      "sha256": "2dcd65485952c182fb373aeea796b5bce9af86d7906621a860728c58bb858d92",
+      "url": "https://mistral.ai/_astro/ai-app_1zC8s5.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1290,
+      "contentType": "image/webp",
+      "id": "856265800964a816be1381be",
+      "path": "assets-complete/856265800964a816be1381be.webp",
+      "sha256": "2dcd65485952c182fb373aeea796b5bce9af86d7906621a860728c58bb858d92",
+      "url": "https://mistral.ai/_astro/ai-app_LCReD.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1290,
+      "contentType": "image/webp",
+      "id": "9e518bfe3fc3d91f96d61cb6",
+      "path": "assets-complete/9e518bfe3fc3d91f96d61cb6.webp",
+      "sha256": "2dcd65485952c182fb373aeea796b5bce9af86d7906621a860728c58bb858d92",
+      "url": "https://mistral.ai/_astro/ai-app_Z1fbUBt.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1290,
+      "contentType": "image/webp",
+      "id": "3ddde3180cc1800a30ff0533",
+      "path": "assets-complete/3ddde3180cc1800a30ff0533.webp",
+      "sha256": "2dcd65485952c182fb373aeea796b5bce9af86d7906621a860728c58bb858d92",
+      "url": "https://mistral.ai/_astro/ai-app_Z2q9iqE.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1290,
+      "contentType": "image/webp",
+      "id": "57143bd40b75855cc9b548db",
+      "path": "assets-complete/57143bd40b75855cc9b548db.webp",
+      "sha256": "2dcd65485952c182fb373aeea796b5bce9af86d7906621a860728c58bb858d92",
+      "url": "https://mistral.ai/_astro/ai-app_bCaDH.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 5475,
+      "contentType": "text/css; charset=UTF-8",
+      "id": "0d661e6a0705756d42240938",
+      "path": "assets-complete/0d661e6a0705756d42240938.css",
+      "sha256": "8b1b65ced920891568b77e13478f212ef05c23d9d08940af25fc6eb8c4644ed0",
+      "url": "https://mistral.ai/_astro/astro.DmvKaGb6.css"
+    },
+    {
+      "bytes": 3872,
+      "contentType": "image/webp",
+      "id": "701f6380a5a0b2dcaaf8b72f",
+      "path": "assets-complete/701f6380a5a0b2dcaaf8b72f.webp",
+      "sha256": "6ecc290b26b6ff2b5ea05f64ff8f0ae1b5ab565cb10fc9824530ba4fc5424f09",
+      "url": "https://mistral.ai/_astro/b6837a3d-5fb3-42e5-909b-d43bbc7f0b53_Z14pNS4.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 3872,
+      "contentType": "image/webp",
+      "id": "820a540ef88770c739e24869",
+      "path": "assets-complete/820a540ef88770c739e24869.webp",
+      "sha256": "6ecc290b26b6ff2b5ea05f64ff8f0ae1b5ab565cb10fc9824530ba4fc5424f09",
+      "url": "https://mistral.ai/_astro/b6837a3d-5fb3-42e5-909b-d43bbc7f0b53_Z18FRCN.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 3872,
+      "contentType": "image/webp",
+      "id": "cc5355c73cad513fecacf845",
+      "path": "assets-complete/cc5355c73cad513fecacf845.webp",
+      "sha256": "6ecc290b26b6ff2b5ea05f64ff8f0ae1b5ab565cb10fc9824530ba4fc5424f09",
+      "url": "https://mistral.ai/_astro/b6837a3d-5fb3-42e5-909b-d43bbc7f0b53_Z19vvxF.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 3872,
+      "contentType": "image/webp",
+      "id": "919fe58230c1c6f3555ad1ae",
+      "path": "assets-complete/919fe58230c1c6f3555ad1ae.webp",
+      "sha256": "6ecc290b26b6ff2b5ea05f64ff8f0ae1b5ab565cb10fc9824530ba4fc5424f09",
+      "url": "https://mistral.ai/_astro/b6837a3d-5fb3-42e5-909b-d43bbc7f0b53_ZCoF0O.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 7624,
+      "contentType": "image/webp",
+      "id": "6b5c3981b98b5d818ce0264b",
+      "path": "assets-complete/6b5c3981b98b5d818ce0264b.webp",
+      "sha256": "294146d7175e8f42dcfc042afcc52b4b0fa60488d653e6906f3c7386ef02f583",
+      "url": "https://mistral.ai/_astro/b6837a3d-5fb3-42e5-909b-d43bbc7f0b53_ZMmxPt.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2904,
+      "contentType": "image/webp",
+      "id": "cdeb4eb7860aaad2b677c52e",
+      "path": "assets-complete/cdeb4eb7860aaad2b677c52e.webp",
+      "sha256": "e5d025bf4270fb49e555d13068fa45418c88c0918def71c061243c3ce8cd415f",
+      "url": "https://mistral.ai/_astro/cbb6a4fa-11fd-407e-bb8c-62a60945e051_1IfkLe.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2904,
+      "contentType": "image/webp",
+      "id": "047bb17fba7582bc051d7094",
+      "path": "assets-complete/047bb17fba7582bc051d7094.webp",
+      "sha256": "e5d025bf4270fb49e555d13068fa45418c88c0918def71c061243c3ce8cd415f",
+      "url": "https://mistral.ai/_astro/cbb6a4fa-11fd-407e-bb8c-62a60945e051_1QrLEg.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2904,
+      "contentType": "image/webp",
+      "id": "386e23fdc899db928df555a2",
+      "path": "assets-complete/386e23fdc899db928df555a2.webp",
+      "sha256": "e5d025bf4270fb49e555d13068fa45418c88c0918def71c061243c3ce8cd415f",
+      "url": "https://mistral.ai/_astro/cbb6a4fa-11fd-407e-bb8c-62a60945e051_2mn5IX.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2904,
+      "contentType": "image/webp",
+      "id": "7518ade585c28f70ad437139",
+      "path": "assets-complete/7518ade585c28f70ad437139.webp",
+      "sha256": "e5d025bf4270fb49e555d13068fa45418c88c0918def71c061243c3ce8cd415f",
+      "url": "https://mistral.ai/_astro/cbb6a4fa-11fd-407e-bb8c-62a60945e051_2uUmbu.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2904,
+      "contentType": "image/webp",
+      "id": "1d4b7e105de5cb78e61872af",
+      "path": "assets-complete/1d4b7e105de5cb78e61872af.webp",
+      "sha256": "e5d025bf4270fb49e555d13068fa45418c88c0918def71c061243c3ce8cd415f",
+      "url": "https://mistral.ai/_astro/cbb6a4fa-11fd-407e-bb8c-62a60945e051_ZR7alS.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2632,
+      "contentType": "image/webp",
+      "id": "d0fbb0bff37cce6978a18edb",
+      "path": "assets-complete/d0fbb0bff37cce6978a18edb.webp",
+      "sha256": "be246294c339bc3c97518b2a294c130ec589dcd7e00d74069f1f1a2a6b90e686",
+      "url": "https://mistral.ai/_astro/cd0def9e-9249-4e70-b27a-5f8681e1da96_Z1hbQsk.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2632,
+      "contentType": "image/webp",
+      "id": "6b27df7fdd342b61020c4809",
+      "path": "assets-complete/6b27df7fdd342b61020c4809.webp",
+      "sha256": "be246294c339bc3c97518b2a294c130ec589dcd7e00d74069f1f1a2a6b90e686",
+      "url": "https://mistral.ai/_astro/cd0def9e-9249-4e70-b27a-5f8681e1da96_Z29Sp2j.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2632,
+      "contentType": "image/webp",
+      "id": "1230b702c56c590b29d1414e",
+      "path": "assets-complete/1230b702c56c590b29d1414e.webp",
+      "sha256": "be246294c339bc3c97518b2a294c130ec589dcd7e00d74069f1f1a2a6b90e686",
+      "url": "https://mistral.ai/_astro/cd0def9e-9249-4e70-b27a-5f8681e1da96_Z2f42t0.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2632,
+      "contentType": "image/webp",
+      "id": "f0d3b3f632f06bb01fe79a32",
+      "path": "assets-complete/f0d3b3f632f06bb01fe79a32.webp",
+      "sha256": "be246294c339bc3c97518b2a294c130ec589dcd7e00d74069f1f1a2a6b90e686",
+      "url": "https://mistral.ai/_astro/cd0def9e-9249-4e70-b27a-5f8681e1da96_ZEo41L.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2632,
+      "contentType": "image/webp",
+      "id": "74577fc9061b81c23ce7471a",
+      "path": "assets-complete/74577fc9061b81c23ce7471a.webp",
+      "sha256": "be246294c339bc3c97518b2a294c130ec589dcd7e00d74069f1f1a2a6b90e686",
+      "url": "https://mistral.ai/_astro/cd0def9e-9249-4e70-b27a-5f8681e1da96_ZlPFDM.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1750,
+      "contentType": "image/webp",
+      "id": "d63e333604000c1a4cbe781f",
+      "path": "assets-complete/d63e333604000c1a4cbe781f.webp",
+      "sha256": "cdbd417dd6a87e4807f1c19b4d932be5a4dc2229d9514a9d480fbe81be024fef",
+      "url": "https://mistral.ai/_astro/dc098524-95c1-47fb-8f6b-885570951c90_1dcWo2.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1750,
+      "contentType": "image/webp",
+      "id": "e06fb1222a9ee75dcc6e1127",
+      "path": "assets-complete/e06fb1222a9ee75dcc6e1127.webp",
+      "sha256": "cdbd417dd6a87e4807f1c19b4d932be5a4dc2229d9514a9d480fbe81be024fef",
+      "url": "https://mistral.ai/_astro/dc098524-95c1-47fb-8f6b-885570951c90_21ew9x.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1750,
+      "contentType": "image/webp",
+      "id": "67331c19ccfa2cfdb49e50b1",
+      "path": "assets-complete/67331c19ccfa2cfdb49e50b1.webp",
+      "sha256": "cdbd417dd6a87e4807f1c19b4d932be5a4dc2229d9514a9d480fbe81be024fef",
+      "url": "https://mistral.ai/_astro/dc098524-95c1-47fb-8f6b-885570951c90_26kdO9.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 4484,
+      "contentType": "image/webp",
+      "id": "3f7fe72926a035ffcb894b96",
+      "path": "assets-complete/3f7fe72926a035ffcb894b96.webp",
+      "sha256": "0bf1d508a1f91aa14e9f1550fe5aca9c98577d52844b36f382fd5ddd0afa682b",
+      "url": "https://mistral.ai/_astro/dc098524-95c1-47fb-8f6b-885570951c90_2nntQJ.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1750,
+      "contentType": "image/webp",
+      "id": "c6115fcc06e03031e99cceef",
+      "path": "assets-complete/c6115fcc06e03031e99cceef.webp",
+      "sha256": "cdbd417dd6a87e4807f1c19b4d932be5a4dc2229d9514a9d480fbe81be024fef",
+      "url": "https://mistral.ai/_astro/dc098524-95c1-47fb-8f6b-885570951c90_GUJL3.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 2240,
+      "contentType": "image/webp",
+      "id": "5da4fa7352e4e8022fa39f79",
+      "path": "assets-complete/5da4fa7352e4e8022fa39f79.webp",
+      "sha256": "c08fe6a7b10e859de9819bec7d6b34bb0b81a6357d3c1356387cbf606a02d2e0",
+      "url": "https://mistral.ai/_astro/efd7ac08-62fa-427d-97ed-8f0f8629fde9_1NT9w.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1530,
+      "contentType": "image/webp",
+      "id": "587018789417f5be9742b40f",
+      "path": "assets-complete/587018789417f5be9742b40f.webp",
+      "sha256": "e57cc6e2b2a2c51bbb9bc35ada4c58e3c04d35a2d4d51b911c91bce4a14a6db9",
+      "url": "https://mistral.ai/_astro/efd7ac08-62fa-427d-97ed-8f0f8629fde9_Z13QmIt.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1530,
+      "contentType": "image/webp",
+      "id": "7a509da2ec6f7dccb0b4086a",
+      "path": "assets-complete/7a509da2ec6f7dccb0b4086a.webp",
+      "sha256": "e57cc6e2b2a2c51bbb9bc35ada4c58e3c04d35a2d4d51b911c91bce4a14a6db9",
+      "url": "https://mistral.ai/_astro/efd7ac08-62fa-427d-97ed-8f0f8629fde9_ZfelS4.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1530,
+      "contentType": "image/webp",
+      "id": "76ddda9bf23a14cf41a5d598",
+      "path": "assets-complete/76ddda9bf23a14cf41a5d598.webp",
+      "sha256": "e57cc6e2b2a2c51bbb9bc35ada4c58e3c04d35a2d4d51b911c91bce4a14a6db9",
+      "url": "https://mistral.ai/_astro/efd7ac08-62fa-427d-97ed-8f0f8629fde9_Zkk3xF.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1530,
+      "contentType": "image/webp",
+      "id": "54c1547250d7fa155f1ae5f8",
+      "path": "assets-complete/54c1547250d7fa155f1ae5f8.webp",
+      "sha256": "e57cc6e2b2a2c51bbb9bc35ada4c58e3c04d35a2d4d51b911c91bce4a14a6db9",
+      "url": "https://mistral.ai/_astro/efd7ac08-62fa-427d-97ed-8f0f8629fde9_Zxza6u.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 71696,
+      "contentType": "image/webp",
+      "id": "62b82a19b7d31030ec047c08",
+      "path": "assets-complete/62b82a19b7d31030ec047c08.webp",
+      "sha256": "257bc6272f0bc53403751e0ba9b66d408e452ccac05583994a18ae6130eaf001",
+      "url": "https://mistral.ai/_astro/graphic-compute-home-page_1pRjua.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 26704,
+      "contentType": "image/webp",
+      "id": "3e11c3f044c1eb268a415800",
+      "path": "assets-complete/3e11c3f044c1eb268a415800.webp",
+      "sha256": "3634a63e15e83e767d60dc02aa11bf0c55b680a3f94edfb4ae75b490da0796f5",
+      "url": "https://mistral.ai/_astro/graphic-compute-home-page_1vQ9VH.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 12050,
+      "contentType": "image/webp",
+      "id": "63a3674b0023eb77f958716b",
+      "path": "assets-complete/63a3674b0023eb77f958716b.webp",
+      "sha256": "0cbeb737841ab48b8d0fc3190e5463bc59dc1ca8545968df3ce383290296235c",
+      "url": "https://mistral.ai/_astro/graphic-compute-home-page_29ED2p.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 200340,
+      "contentType": "image/webp",
+      "id": "ff53fe767b5d2490dd19cc95",
+      "path": "assets-complete/ff53fe767b5d2490dd19cc95.webp",
+      "sha256": "42130e0e8158387874948b59acb4d7e63179bafe9650cd73cb566339f63c6f85",
+      "url": "https://mistral.ai/_astro/graphic-compute-home-page_2kfI4N.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 121998,
+      "contentType": "image/webp",
+      "id": "c7bcee7699bc8ffa966a876f",
+      "path": "assets-complete/c7bcee7699bc8ffa966a876f.webp",
+      "sha256": "88f34247ae98619e172a9967bbfd35a353a4070d65f0e3c270b94b5ff8ca3ae3",
+      "url": "https://mistral.ai/_astro/graphic-compute-home-page_ZS77JI.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 12669,
+      "contentType": "text/css; charset=UTF-8",
+      "id": "14562d520b152756d57d14f6",
+      "path": "assets-complete/14562d520b152756d57d14f6.css",
+      "sha256": "91fb915454d12ffa9ed4dcc11e539b99ec6c9a4ee14cc3db56539651d8c07ac9",
+      "url": "https://mistral.ai/_astro/hero-post-robostral.Cg5FRTVX.css"
+    },
+    {
+      "bytes": 1458,
+      "contentType": "image/webp",
+      "id": "449a48fa7266ef14f25e26de",
+      "path": "assets-complete/449a48fa7266ef14f25e26de.webp",
+      "sha256": "184759b8b73ad6f9088b4caf5ef6562ab16bfbeeb42787e7c64d8b2d270e1893",
+      "url": "https://mistral.ai/_astro/hsbc-dark-1_1B4cFf.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1458,
+      "contentType": "image/webp",
+      "id": "e16955e124a34cace1a98dc0",
+      "path": "assets-complete/e16955e124a34cace1a98dc0.webp",
+      "sha256": "184759b8b73ad6f9088b4caf5ef6562ab16bfbeeb42787e7c64d8b2d270e1893",
+      "url": "https://mistral.ai/_astro/hsbc-dark-1_1iYfue.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1458,
+      "contentType": "image/webp",
+      "id": "9ffa22dfa22061ef8c0206fe",
+      "path": "assets-complete/9ffa22dfa22061ef8c0206fe.webp",
+      "sha256": "184759b8b73ad6f9088b4caf5ef6562ab16bfbeeb42787e7c64d8b2d270e1893",
+      "url": "https://mistral.ai/_astro/hsbc-dark-1_Z1rOvsq.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1458,
+      "contentType": "image/webp",
+      "id": "e03e3f1e244f9aff7956d002",
+      "path": "assets-complete/e03e3f1e244f9aff7956d002.webp",
+      "sha256": "184759b8b73ad6f9088b4caf5ef6562ab16bfbeeb42787e7c64d8b2d270e1893",
+      "url": "https://mistral.ai/_astro/hsbc-dark-1_Z9Rh6e.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1458,
+      "contentType": "image/webp",
+      "id": "225e3b37ad9299ae7cbcb046",
+      "path": "assets-complete/225e3b37ad9299ae7cbcb046.webp",
+      "sha256": "184759b8b73ad6f9088b4caf5ef6562ab16bfbeeb42787e7c64d8b2d270e1893",
+      "url": "https://mistral.ai/_astro/hsbc-dark-1_ZrJbBw.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1634,
+      "contentType": "image/webp",
+      "id": "877301142a369efd24df9192",
+      "path": "assets-complete/877301142a369efd24df9192.webp",
+      "sha256": "70b6eb24b2c1847f18c9a00c64bd15357525686d7c2e9adfc9226db35382b30c",
+      "url": "https://mistral.ai/_astro/hsbc-white_1bhV5L.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1634,
+      "contentType": "image/webp",
+      "id": "f6f7ed99ac55c8bf6dacbc44",
+      "path": "assets-complete/f6f7ed99ac55c8bf6dacbc44.webp",
+      "sha256": "70b6eb24b2c1847f18c9a00c64bd15357525686d7c2e9adfc9226db35382b30c",
+      "url": "https://mistral.ai/_astro/hsbc-white_Z1ERs9C.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1634,
+      "contentType": "image/webp",
+      "id": "50bedb7e51e608f679dfbf85",
+      "path": "assets-complete/50bedb7e51e608f679dfbf85.webp",
+      "sha256": "70b6eb24b2c1847f18c9a00c64bd15357525686d7c2e9adfc9226db35382b30c",
+      "url": "https://mistral.ai/_astro/hsbc-white_ZIPgvQ.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1634,
+      "contentType": "image/webp",
+      "id": "9233d5bc0748f7280d25d678",
+      "path": "assets-complete/9233d5bc0748f7280d25d678.webp",
+      "sha256": "70b6eb24b2c1847f18c9a00c64bd15357525686d7c2e9adfc9226db35382b30c",
+      "url": "https://mistral.ai/_astro/hsbc-white_ZLfATM.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1634,
+      "contentType": "image/webp",
+      "id": "f23fa305c9e1e20a6edb888c",
+      "path": "assets-complete/f23fa305c9e1e20a6edb888c.webp",
+      "sha256": "70b6eb24b2c1847f18c9a00c64bd15357525686d7c2e9adfc9226db35382b30c",
+      "url": "https://mistral.ai/_astro/hsbc-white_Zdf4EF.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 9752,
+      "contentType": "image/webp",
+      "id": "bc2c630a2a2628fc951ee2c7",
+      "path": "assets-complete/bc2c630a2a2628fc951ee2c7.webp",
+      "sha256": "61f81c62e7cf4821bab27f1d82fe2e334f3df1c9a613343afd294e30d15e142b",
+      "url": "https://mistral.ai/_astro/htx_vertical_logo_reverse_1jw2LR.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 9752,
+      "contentType": "image/webp",
+      "id": "b01c9a0ee26b1e14587730da",
+      "path": "assets-complete/b01c9a0ee26b1e14587730da.webp",
+      "sha256": "61f81c62e7cf4821bab27f1d82fe2e334f3df1c9a613343afd294e30d15e142b",
+      "url": "https://mistral.ai/_astro/htx_vertical_logo_reverse_6AE2G.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 9752,
+      "contentType": "image/webp",
+      "id": "c6c5f09ed379477e371f1807",
+      "path": "assets-complete/c6c5f09ed379477e371f1807.webp",
+      "sha256": "61f81c62e7cf4821bab27f1d82fe2e334f3df1c9a613343afd294e30d15e142b",
+      "url": "https://mistral.ai/_astro/htx_vertical_logo_reverse_98xDt.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 9752,
+      "contentType": "image/webp",
+      "id": "fa09b9d2e0d4fe966ebd6c12",
+      "path": "assets-complete/fa09b9d2e0d4fe966ebd6c12.webp",
+      "sha256": "61f81c62e7cf4821bab27f1d82fe2e334f3df1c9a613343afd294e30d15e142b",
+      "url": "https://mistral.ai/_astro/htx_vertical_logo_reverse_Z1S0iDi.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 9752,
+      "contentType": "image/webp",
+      "id": "727b3a4c3f267b496c3488de",
+      "path": "assets-complete/727b3a4c3f267b496c3488de.webp",
+      "sha256": "61f81c62e7cf4821bab27f1d82fe2e334f3df1c9a613343afd294e30d15e142b",
+      "url": "https://mistral.ai/_astro/htx_vertical_logo_reverse_Z2gEGxf.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1368201,
+      "contentType": "application/javascript; charset=UTF-8",
+      "id": "9cc0d696062908241a206438",
+      "path": "assets-complete/9cc0d696062908241a206438.js",
+      "sha256": "c4a7dff4947ed6fb5446ada8f426c158597d31ccb4af9cf1c44e6bf337cb6586",
+      "url": "https://mistral.ai/_astro/layout.astro_astro_type_script_index_1_lang.DnP0PH_d.js?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 160307,
+      "contentType": "text/css; charset=UTF-8",
+      "id": "90772367a5a7d3a75724b4f6",
+      "path": "assets-complete/90772367a5a7d3a75724b4f6.css",
+      "sha256": "6d92ceb39c55d91ad4bf3e225978cebf6f4201795353d3cbd80df4c176d54173",
+      "url": "https://mistral.ai/_astro/layout.ph6PzY6m.css"
+    },
+    {
+      "bytes": 3792,
+      "contentType": "image/webp",
+      "id": "ccd4aa9fd47bcd273305d8f5",
+      "path": "assets-complete/ccd4aa9fd47bcd273305d8f5.webp",
+      "sha256": "f110cef502304597a243702cd095630fba4cff2cc99414b18533c75061f2c0cd",
+      "url": "https://mistral.ai/_astro/logo-asml-white_WnGTS.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 3792,
+      "contentType": "image/webp",
+      "id": "d093c6338205b43e3c0fce7f",
+      "path": "assets-complete/d093c6338205b43e3c0fce7f.webp",
+      "sha256": "f110cef502304597a243702cd095630fba4cff2cc99414b18533c75061f2c0cd",
+      "url": "https://mistral.ai/_astro/logo-asml-white_Z2ct7Pe.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 3792,
+      "contentType": "image/webp",
+      "id": "0272aa436a5c9a6912a339c2",
+      "path": "assets-complete/0272aa436a5c9a6912a339c2.webp",
+      "sha256": "f110cef502304597a243702cd095630fba4cff2cc99414b18533c75061f2c0cd",
+      "url": "https://mistral.ai/_astro/logo-asml-white_ZRVCdP.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 3792,
+      "contentType": "image/webp",
+      "id": "b05f53c4ccddeb68ca73d59f",
+      "path": "assets-complete/b05f53c4ccddeb68ca73d59f.webp",
+      "sha256": "f110cef502304597a243702cd095630fba4cff2cc99414b18533c75061f2c0cd",
+      "url": "https://mistral.ai/_astro/logo-asml-white_Zcxz5y.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 10574,
+      "contentType": "image/webp",
+      "id": "d28afcf026e46895c7766760",
+      "path": "assets-complete/d28afcf026e46895c7766760.webp",
+      "sha256": "f446714d745826dbcfcb39bc0bc050f7fe94392bcb95a65a112607cadb0242ac",
+      "url": "https://mistral.ai/_astro/logo-asml-white_mJ2E4.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 9656,
+      "contentType": "image/webp",
+      "id": "e7e068bd287e4019ac5b564e",
+      "path": "assets-complete/e7e068bd287e4019ac5b564e.webp",
+      "sha256": "c42bae278c7d2ad5dc17d1327ad488469503eb24e69abe9362441f64cdba5a45",
+      "url": "https://mistral.ai/_astro/logo-austrian-academy-of-sciences-white_1O59eP.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 37074,
+      "contentType": "image/webp",
+      "id": "e4b4e29074cb34589b5d6029",
+      "path": "assets-complete/e4b4e29074cb34589b5d6029.webp",
+      "sha256": "a2bf97f7fddd48f44211ff5bedbb543c5269b45ff4374797aa41852cd5fb401f",
+      "url": "https://mistral.ai/_astro/logo-austrian-academy-of-sciences-white_1fs5C9.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 37074,
+      "contentType": "image/webp",
+      "id": "51a6d758de1fc73832f11090",
+      "path": "assets-complete/51a6d758de1fc73832f11090.webp",
+      "sha256": "a2bf97f7fddd48f44211ff5bedbb543c5269b45ff4374797aa41852cd5fb401f",
+      "url": "https://mistral.ai/_astro/logo-austrian-academy-of-sciences-white_26dYpz.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 20864,
+      "contentType": "image/webp",
+      "id": "eacf24b156eea68493ed8f6f",
+      "path": "assets-complete/eacf24b156eea68493ed8f6f.webp",
+      "sha256": "79664f8fcc0538f856325387029bf369a12b03c39f14c5b2ec97916ed1c02327",
+      "url": "https://mistral.ai/_astro/logo-austrian-academy-of-sciences-white_E3DAP.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 38392,
+      "contentType": "image/webp",
+      "id": "317657efa463b8a296153880",
+      "path": "assets-complete/317657efa463b8a296153880.webp",
+      "sha256": "f83fc18bbf77f9a180194686883a0c37ca617c59ecf1923bea0a63e10976eb54",
+      "url": "https://mistral.ai/_astro/logo-austrian-academy-of-sciences-white_cTkV9.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1194,
+      "contentType": "image/webp",
+      "id": "bd9c59611128c8619c53efc2",
+      "path": "assets-complete/bd9c59611128c8619c53efc2.webp",
+      "sha256": "5096c4419c86f3e95792b36848bf55e2313e4260677a64b4b0944244848cf822",
+      "url": "https://mistral.ai/_astro/logo-compute_1MaKe7.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1194,
+      "contentType": "image/webp",
+      "id": "c1bead5dba0591971700576f",
+      "path": "assets-complete/c1bead5dba0591971700576f.webp",
+      "sha256": "5096c4419c86f3e95792b36848bf55e2313e4260677a64b4b0944244848cf822",
+      "url": "https://mistral.ai/_astro/logo-compute_Z11svP2.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1194,
+      "contentType": "image/webp",
+      "id": "6a54a77603e1c3ce958c88c9",
+      "path": "assets-complete/6a54a77603e1c3ce958c88c9.webp",
+      "sha256": "5096c4419c86f3e95792b36848bf55e2313e4260677a64b4b0944244848cf822",
+      "url": "https://mistral.ai/_astro/logo-compute_Z1AAbCQ.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1194,
+      "contentType": "image/webp",
+      "id": "bf48363472069c74097430a3",
+      "path": "assets-complete/bf48363472069c74097430a3.webp",
+      "sha256": "5096c4419c86f3e95792b36848bf55e2313e4260677a64b4b0944244848cf822",
+      "url": "https://mistral.ai/_astro/logo-compute_Z1P9afi.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1194,
+      "contentType": "image/webp",
+      "id": "88ae8ff852fcc378855df5b1",
+      "path": "assets-complete/88ae8ff852fcc378855df5b1.webp",
+      "sha256": "5096c4419c86f3e95792b36848bf55e2313e4260677a64b4b0944244848cf822",
+      "url": "https://mistral.ai/_astro/logo-compute_ZDL3ab.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1208,
+      "contentType": "image/webp",
+      "id": "9c3b0b52e80961aef167ffe6",
+      "path": "assets-complete/9c3b0b52e80961aef167ffe6.webp",
+      "sha256": "752036245e7c41d1ff6d63b49ebf05dbf69f35b91e569696ff2652d464e90cac",
+      "url": "https://mistral.ai/_astro/logo-forge_29oynK.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1208,
+      "contentType": "image/webp",
+      "id": "e8cf1b5768b42630aa9f7b3d",
+      "path": "assets-complete/e8cf1b5768b42630aa9f7b3d.webp",
+      "sha256": "752036245e7c41d1ff6d63b49ebf05dbf69f35b91e569696ff2652d464e90cac",
+      "url": "https://mistral.ai/_astro/logo-forge_Z1mQhkS.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1208,
+      "contentType": "image/webp",
+      "id": "f0b3a43e04e9ad92bd594f1b",
+      "path": "assets-complete/f0b3a43e04e9ad92bd594f1b.webp",
+      "sha256": "752036245e7c41d1ff6d63b49ebf05dbf69f35b91e569696ff2652d464e90cac",
+      "url": "https://mistral.ai/_astro/logo-forge_ZFCTMS.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1208,
+      "contentType": "image/webp",
+      "id": "62c3f19e67af8687a6749727",
+      "path": "assets-complete/62c3f19e67af8687a6749727.webp",
+      "sha256": "752036245e7c41d1ff6d63b49ebf05dbf69f35b91e569696ff2652d464e90cac",
+      "url": "https://mistral.ai/_astro/logo-forge_ZGr7XD.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1208,
+      "contentType": "image/webp",
+      "id": "49c6dc13e64d13f30050e7ac",
+      "path": "assets-complete/49c6dc13e64d13f30050e7ac.webp",
+      "sha256": "752036245e7c41d1ff6d63b49ebf05dbf69f35b91e569696ff2652d464e90cac",
+      "url": "https://mistral.ai/_astro/logo-forge_ZypF4m.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 9562,
+      "contentType": "image/webp",
+      "id": "7447977e1fe1dc6f3dca4410",
+      "path": "assets-complete/7447977e1fe1dc6f3dca4410.webp",
+      "sha256": "9d57cd5e4946d5b15fdf94e8c27b7ec107265c4b49cfa2a2682edcc8decbf358",
+      "url": "https://mistral.ai/_astro/logo-stellantis-white_1dlEn5.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 16390,
+      "contentType": "image/webp",
+      "id": "d797f74ca45ee26a7605c369",
+      "path": "assets-complete/d797f74ca45ee26a7605c369.webp",
+      "sha256": "552eda709c4454c165a7ddc10789d90aa4f97af71a954681125f431da3267af0",
+      "url": "https://mistral.ai/_astro/logo-stellantis-white_Z15fEr5.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 26836,
+      "contentType": "image/webp",
+      "id": "2c9f683fd8b28dd50d4741c8",
+      "path": "assets-complete/2c9f683fd8b28dd50d4741c8.webp",
+      "sha256": "ddc39c4e966b8427c5c66745af7e0a9bad7588bce68dfde6ab53712fef6d0cfe",
+      "url": "https://mistral.ai/_astro/logo-stellantis-white_Z1uc9QL.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 4950,
+      "contentType": "image/webp",
+      "id": "631560863ea27a3221e108f8",
+      "path": "assets-complete/631560863ea27a3221e108f8.webp",
+      "sha256": "70ef0d7525d23e9827b7329bf20dff47780c0cba18761f4f1e64732193a297da",
+      "url": "https://mistral.ai/_astro/logo-stellantis-white_ZwkF0S.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 30042,
+      "contentType": "image/webp",
+      "id": "b259dcd7df1ccec9deee1b73",
+      "path": "assets-complete/b259dcd7df1ccec9deee1b73.webp",
+      "sha256": "eb50a0f2995d7e532b68b19a711b378be34f0219fe6dbc53d5b78c256f3af097",
+      "url": "https://mistral.ai/_astro/logo-stellantis-white_ZxKm7G.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1588,
+      "contentType": "image/webp",
+      "id": "a0731cddd9ad3badd9a486d2",
+      "path": "assets-complete/a0731cddd9ad3badd9a486d2.webp",
+      "sha256": "32d74055335fd4aeeec2ceceeb3f9907cd964048c9a857aa0cdc1ccdfd6106cc",
+      "url": "https://mistral.ai/_astro/logo-vibe-code_Z28I9Ug.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1588,
+      "contentType": "image/webp",
+      "id": "8742bafaef50790c31edf844",
+      "path": "assets-complete/8742bafaef50790c31edf844.webp",
+      "sha256": "32d74055335fd4aeeec2ceceeb3f9907cd964048c9a857aa0cdc1ccdfd6106cc",
+      "url": "https://mistral.ai/_astro/logo-vibe-code_ZWcAcP.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1588,
+      "contentType": "image/webp",
+      "id": "111253bedeb70be63d165b17",
+      "path": "assets-complete/111253bedeb70be63d165b17.webp",
+      "sha256": "32d74055335fd4aeeec2ceceeb3f9907cd964048c9a857aa0cdc1ccdfd6106cc",
+      "url": "https://mistral.ai/_astro/logo-vibe-code_ZmCjpX.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1588,
+      "contentType": "image/webp",
+      "id": "8f8f7fef7fac9fb19837564e",
+      "path": "assets-complete/8f8f7fef7fac9fb19837564e.webp",
+      "sha256": "32d74055335fd4aeeec2ceceeb3f9907cd964048c9a857aa0cdc1ccdfd6106cc",
+      "url": "https://mistral.ai/_astro/logo-vibe-code_Zo4lKU.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1588,
+      "contentType": "image/webp",
+      "id": "aa75b3485d22d160a8d21deb",
+      "path": "assets-complete/aa75b3485d22d160a8d21deb.webp",
+      "sha256": "32d74055335fd4aeeec2ceceeb3f9907cd964048c9a857aa0cdc1ccdfd6106cc",
+      "url": "https://mistral.ai/_astro/logo-vibe-code_drDoK.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 369372,
+      "contentType": "image/webp",
+      "id": "796ddd81dfff2675ac990c5b",
+      "path": "assets-complete/796ddd81dfff2675ac990c5b.webp",
+      "sha256": "26654c0c97c98b0bbe0a0fffd8d35dcfe065a8ddb44a88ef59e11ebf19a412f1",
+      "url": "https://mistral.ai/_astro/thumbnail-asml_13LgpB.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 541058,
+      "contentType": "image/webp",
+      "id": "838191c5496e11b2be72971e",
+      "path": "assets-complete/838191c5496e11b2be72971e.webp",
+      "sha256": "6a3798ce276a7f032e14265fd8060bee555daf3f880c996f80c055675e11e93d",
+      "url": "https://mistral.ai/_astro/thumbnail-asml_Z1WWqsl.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 165542,
+      "contentType": "image/webp",
+      "id": "909bbdb5daddcc0d74defcec",
+      "path": "assets-complete/909bbdb5daddcc0d74defcec.webp",
+      "sha256": "8b3c73b2735e40be9673398f9e672e3dc522bbeb35b7eac6177637983c010ffd",
+      "url": "https://mistral.ai/_astro/thumbnail-asml_Z25QO8s.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 15400,
+      "contentType": "image/webp",
+      "id": "a1fc8f519d451139d2b5fe68",
+      "path": "assets-complete/a1fc8f519d451139d2b5fe68.webp",
+      "sha256": "db3387535885e6968b295b075015493c48cfb221413349ed01dc3d4564c405b8",
+      "url": "https://mistral.ai/_astro/thumbnail-asml_ZVWODc.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 53834,
+      "contentType": "image/webp",
+      "id": "2db9432a4e3189508d4204ef",
+      "path": "assets-complete/2db9432a4e3189508d4204ef.webp",
+      "sha256": "b7e2a5c0b2cb7c91ff265f6150c5ef32d83c93fec78ea3fc41db06a8a2845068",
+      "url": "https://mistral.ai/_astro/thumbnail-asml_Zonyyw.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 228534,
+      "contentType": "image/webp",
+      "id": "4f8f53c25b6a6db066e228be",
+      "path": "assets-complete/4f8f53c25b6a6db066e228be.webp",
+      "sha256": "75987efe7c0b4adf307a4be98856b2a9b15810a1e2769980142b68c52d5115fc",
+      "url": "https://mistral.ai/_astro/thumbnail-austrian-academy-of-sciences_VDSPi.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 15898,
+      "contentType": "image/webp",
+      "id": "06e7aeadef1ffe82c4e60454",
+      "path": "assets-complete/06e7aeadef1ffe82c4e60454.webp",
+      "sha256": "a4288408bfb712e80e01af81738fcd3b43f8fa8fd93b86598df6adcce229b78c",
+      "url": "https://mistral.ai/_astro/thumbnail-austrian-academy-of-sciences_Z2cOTY8.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 172968,
+      "contentType": "image/webp",
+      "id": "edb2504730eece472c6d2f6e",
+      "path": "assets-complete/edb2504730eece472c6d2f6e.webp",
+      "sha256": "1dec4e73b732e1ff420a15ba8608b207c2f1b53fbc365b8277f5b854452e40f0",
+      "url": "https://mistral.ai/_astro/thumbnail-austrian-academy-of-sciences_ZCP0S9.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 97856,
+      "contentType": "image/webp",
+      "id": "490301c1098d08a30a96cd21",
+      "path": "assets-complete/490301c1098d08a30a96cd21.webp",
+      "sha256": "eebd3a4b402b543e2c226764ef22d7603c5e43c917b214f0bb77489a9b9ab752",
+      "url": "https://mistral.ai/_astro/thumbnail-austrian-academy-of-sciences_Zgk383.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 46744,
+      "contentType": "image/webp",
+      "id": "3f27f150ba677e783a74196e",
+      "path": "assets-complete/3f27f150ba677e783a74196e.webp",
+      "sha256": "326229cfc80edfc9e13e4bebdfe1a42b8c16df9080844ca75df8d206610e463f",
+      "url": "https://mistral.ai/_astro/thumbnail-austrian-academy-of-sciences_jJpNU.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 84964,
+      "contentType": "image/webp",
+      "id": "7c1d6bbffd26fccc9a76227b",
+      "path": "assets-complete/7c1d6bbffd26fccc9a76227b.webp",
+      "sha256": "152610ffe1ab4642743b8ba2ba583e4fe6d3473b9b9feb1e3e6409426aceee79",
+      "url": "https://mistral.ai/_astro/thumbnail-cma-cgm_25c2Rx.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 412400,
+      "contentType": "image/webp",
+      "id": "e017144706712001788b187a",
+      "path": "assets-complete/e017144706712001788b187a.webp",
+      "sha256": "5d3cefa0be89acebb25e70ef482a4f0c756807ebefa99b59e834e4d878d79068",
+      "url": "https://mistral.ai/_astro/thumbnail-cma-cgm_Z1O8JBm.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 25542,
+      "contentType": "image/webp",
+      "id": "9d24b5d84765c85ddb28098c",
+      "path": "assets-complete/9d24b5d84765c85ddb28098c.webp",
+      "sha256": "e0cee6f5f84da406d6ff4e8bce0d76c0e5e340b0d1a503a9b8210d271ce8c27f",
+      "url": "https://mistral.ai/_astro/thumbnail-cma-cgm_Z2hUp4S.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 212802,
+      "contentType": "image/webp",
+      "id": "0f25dcf964aa9a31ac248870",
+      "path": "assets-complete/0f25dcf964aa9a31ac248870.webp",
+      "sha256": "e5aacbe6a21d52a3eaf3e6409d5f8b3a0166f6429a3422ea7d5bc5e44a22b24a",
+      "url": "https://mistral.ai/_astro/thumbnail-cma-cgm_Z2lxBbv.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 540384,
+      "contentType": "image/webp",
+      "id": "e47885006f48c84e72a0086b",
+      "path": "assets-complete/e47885006f48c84e72a0086b.webp",
+      "sha256": "34a65a4d7a53540d7923544304b90aae840a14cb0f63f496a301b940cbd578ea",
+      "url": "https://mistral.ai/_astro/thumbnail-cma-cgm_ZpBOFV.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 12382,
+      "contentType": "image/webp",
+      "id": "ec5e6b388f9a743494e5d9ee",
+      "path": "assets-complete/ec5e6b388f9a743494e5d9ee.webp",
+      "sha256": "1f1085fb11803cf91ea7473c91355b1d0f6c4ebee006c9d7c79fd1decca0a2cd",
+      "url": "https://mistral.ai/_astro/thumbnail-epo_1i3ulk.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 213050,
+      "contentType": "image/webp",
+      "id": "74df780c6542ae28e62c4dfc",
+      "path": "assets-complete/74df780c6542ae28e62c4dfc.webp",
+      "sha256": "5c0a3e215127cce9b6f6b364cb31b053bfdbb04ed1bf18ebdcb2c99c9ef863ad",
+      "url": "https://mistral.ai/_astro/thumbnail-epo_1pqHM3.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 43290,
+      "contentType": "image/webp",
+      "id": "044a5086f3163aeb30966135",
+      "path": "assets-complete/044a5086f3163aeb30966135.webp",
+      "sha256": "05917fec3ecd5df96a9d7416cabef470473ccac2596b212bd0aa835081e01050",
+      "url": "https://mistral.ai/_astro/thumbnail-epo_Z1ksVUc.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 293164,
+      "contentType": "image/webp",
+      "id": "76f8c8d303139d1d12de5e6f",
+      "path": "assets-complete/76f8c8d303139d1d12de5e6f.webp",
+      "sha256": "1345be74da9248b8e3634453f5a9a1302454ea54dfcee68a4b181463a0c918c6",
+      "url": "https://mistral.ai/_astro/thumbnail-epo_Z1uQ75i.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 105254,
+      "contentType": "image/webp",
+      "id": "fb345f09a3d9536b42ca7487",
+      "path": "assets-complete/fb345f09a3d9536b42ca7487.webp",
+      "sha256": "55c4117bf2c1c95ade7aa50fc56fa06e71287e2646215d4eae4ac385e4939240",
+      "url": "https://mistral.ai/_astro/thumbnail-epo_ZlLLwD.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 147232,
+      "contentType": "image/webp",
+      "id": "61ba9e7eed374767877aecce",
+      "path": "assets-complete/61ba9e7eed374767877aecce.webp",
+      "sha256": "0c25232ed2e91c67bc9e1207a9143f4bacbbf33365903b1e3fbe9ade271d1fca",
+      "url": "https://mistral.ai/_astro/thumbnail-hsbc_2gjGz8.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 424934,
+      "contentType": "image/webp",
+      "id": "bfae4163b3f5066b30743742",
+      "path": "assets-complete/bfae4163b3f5066b30743742.webp",
+      "sha256": "dd9e4f84507f9d6251980a558d8e7af60dbda2c7a4cdb5837b7830818cf56b78",
+      "url": "https://mistral.ai/_astro/thumbnail-hsbc_2oe5ff.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 19670,
+      "contentType": "image/webp",
+      "id": "591603a00eb760a2910be716",
+      "path": "assets-complete/591603a00eb760a2910be716.webp",
+      "sha256": "f0db14df3041bbd63650af365c30e92000a9a9f771d3fc645d1a268d5915dfef",
+      "url": "https://mistral.ai/_astro/thumbnail-hsbc_ZNn2o1.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 54636,
+      "contentType": "image/webp",
+      "id": "275490dd7b404b4d2c2599ad",
+      "path": "assets-complete/275490dd7b404b4d2c2599ad.webp",
+      "sha256": "8e1eee0dacdddfe80cf746411b8265b9bcb83691ab53fdd84816a9a966d3957b",
+      "url": "https://mistral.ai/_astro/thumbnail-hsbc_ZfMLjl.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 312194,
+      "contentType": "image/webp",
+      "id": "5ef2bc08ba5aac9871b298f1",
+      "path": "assets-complete/5ef2bc08ba5aac9871b298f1.webp",
+      "sha256": "6c6f3fd7ebb698a056937fa52c2b3072978df65ea2edf016afeafc0ff8dff89f",
+      "url": "https://mistral.ai/_astro/thumbnail-hsbc_kKDjg.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 479852,
+      "contentType": "image/webp",
+      "id": "8cab9fb1f33cbd8fbd86dcd2",
+      "path": "assets-complete/8cab9fb1f33cbd8fbd86dcd2.webp",
+      "sha256": "881f2af47f96840e18fc5e7d3d81517f4e80f42761700082bd7e1f8a5c1f1cfc",
+      "url": "https://mistral.ai/_astro/thumbnail-stellantis_1eTuST.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 667030,
+      "contentType": "image/webp",
+      "id": "2f56e77fc853d22d0de0b532",
+      "path": "assets-complete/2f56e77fc853d22d0de0b532.webp",
+      "sha256": "be4719d109b902e4617aa4b7857dc491116d07ec25eac81b7542ac88c9924003",
+      "url": "https://mistral.ai/_astro/thumbnail-stellantis_2knrJX.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 88192,
+      "contentType": "image/webp",
+      "id": "c1697de7687b71ccd1d50246",
+      "path": "assets-complete/c1697de7687b71ccd1d50246.webp",
+      "sha256": "3d06ea86c5ce5200150925f9989c7a7f4ea36cb91aadeb6c747a4b94866e21ee",
+      "url": "https://mistral.ai/_astro/thumbnail-stellantis_Z11gfdB.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 232252,
+      "contentType": "image/webp",
+      "id": "8011e85593fd762e10a8d29c",
+      "path": "assets-complete/8011e85593fd762e10a8d29c.webp",
+      "sha256": "f9cb6050b6684e9432f2c90becca473e66dcdf1f1bfcb3dd28032d7795778429",
+      "url": "https://mistral.ai/_astro/thumbnail-stellantis_Z1E5tt1.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 25932,
+      "contentType": "image/webp",
+      "id": "84b15ecf6b40687834ab1d65",
+      "path": "assets-complete/84b15ecf6b40687834ab1d65.webp",
+      "sha256": "1c54e795cc7893e4dc736fda247cda9d3e9d430edf9a02f560baf6bd3439b3f2",
+      "url": "https://mistral.ai/_astro/thumbnail-stellantis_Z1hkzjc.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1214,
+      "contentType": "image/webp",
+      "id": "289c7ce722207e36b04ceaa3",
+      "path": "assets-complete/289c7ce722207e36b04ceaa3.webp",
+      "sha256": "5f665f54b627b18eecdec750d82a366150c3807ad6be85972255783e2aaeeb4e",
+      "url": "https://mistral.ai/_astro/vibe_149Qy9.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1214,
+      "contentType": "image/webp",
+      "id": "3270602ea81f18db1a2553ba",
+      "path": "assets-complete/3270602ea81f18db1a2553ba.webp",
+      "sha256": "5f665f54b627b18eecdec750d82a366150c3807ad6be85972255783e2aaeeb4e",
+      "url": "https://mistral.ai/_astro/vibe_19h78z.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1214,
+      "contentType": "image/webp",
+      "id": "e57b4b1bd235adbd6df409da",
+      "path": "assets-complete/e57b4b1bd235adbd6df409da.webp",
+      "sha256": "5f665f54b627b18eecdec750d82a366150c3807ad6be85972255783e2aaeeb4e",
+      "url": "https://mistral.ai/_astro/vibe_1vG0Qz.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1214,
+      "contentType": "image/webp",
+      "id": "e7129fd37e14ecbb99c0ba37",
+      "path": "assets-complete/e7129fd37e14ecbb99c0ba37.webp",
+      "sha256": "5f665f54b627b18eecdec750d82a366150c3807ad6be85972255783e2aaeeb4e",
+      "url": "https://mistral.ai/_astro/vibe_Z1bVjyH.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 1214,
+      "contentType": "image/webp",
+      "id": "12bf273fac99be039fc58dc7",
+      "path": "assets-complete/12bf273fac99be039fc58dc7.webp",
+      "sha256": "5f665f54b627b18eecdec750d82a366150c3807ad6be85972255783e2aaeeb4e",
+      "url": "https://mistral.ai/_astro/vibe_Z20p2OU.webp?dpl=6a836a524a4d4d00080c5200"
+    },
+    {
+      "bytes": 3365,
+      "contentType": "image/svg+xml",
+      "id": "9c0948117e21829c1f7006e8",
+      "path": "assets-complete/9c0948117e21829c1f7006e8.svg",
+      "sha256": "aee2a5fe4a38b2a3983eefd9d28e4f9742eedeccbf3cc0eacebed93a7efb055c",
+      "url": "https://mistral.ai/cms-media/api/media/file/0ff12545-4d8e-40f2-a13d-9f09063720a5.svg"
+    },
+    {
+      "bytes": 6427,
+      "contentType": "image/svg+xml",
+      "id": "bf74b9bb46dbe5a4ba86827a",
+      "path": "assets-complete/bf74b9bb46dbe5a4ba86827a.svg",
+      "sha256": "47c8d4b0bf38c886102f3ae86026e6281332688750fbef0fa0dc9a46f15b7f48",
+      "url": "https://mistral.ai/cms-media/api/media/file/2a1ffaf3-f171-460b-be1b-fc734aa776aa.svg"
+    },
+    {
+      "bytes": 1266,
+      "contentType": "image/svg+xml",
+      "id": "4e99d01e8fd5b215ec9f6f82",
+      "path": "assets-complete/4e99d01e8fd5b215ec9f6f82.svg",
+      "sha256": "19a6f15a4ac147d19870d3f3d89fa0666aba35ee80ce5b722ee51434f9ba08ca",
+      "url": "https://mistral.ai/cms-media/api/media/file/5afa738c-4dae-451a-aac0-104e037c64a5.svg"
+    },
+    {
+      "bytes": 2064,
+      "contentType": "image/svg+xml",
+      "id": "7ecc9fa4456a953f04842c83",
+      "path": "assets-complete/7ecc9fa4456a953f04842c83.svg",
+      "sha256": "ac0d5ec410d13a10ed2608d18dab52125124f8f03f04a2cd06d13c495b1fe2da",
+      "url": "https://mistral.ai/cms-media/api/media/file/bag.svg"
+    },
+    {
+      "bytes": 5252,
+      "contentType": "image/svg+xml",
+      "id": "cd0cae0d3685f3b555b6e687",
+      "path": "assets-complete/cd0cae0d3685f3b555b6e687.svg",
+      "sha256": "d98cdc3553fb8d7a4757898e3fdafbdf8ee0ec756e80ca35f7d931208665fc1f",
+      "url": "https://mistral.ai/cms-media/api/media/file/cubes.svg"
+    },
+    {
+      "bytes": 1273,
+      "contentType": "image/svg+xml",
+      "id": "ebc11577e52b6f6c1ac171c2",
+      "path": "assets-complete/ebc11577e52b6f6c1ac171c2.svg",
+      "sha256": "755baaa3532f51cd1b898355530d55283f7eec740409406757d4511e686687c8",
+      "url": "https://mistral.ai/cms-media/api/media/file/da97422f-47c7-4a3b-bc7e-759f994e5f4e.svg"
+    },
+    {
+      "bytes": 4179,
+      "contentType": "image/svg+xml",
+      "id": "744482fba84481d8c582cc6e",
+      "path": "assets-complete/744482fba84481d8c582cc6e.svg",
+      "sha256": "065ae94378aa643c3b65499c2678d5ba21402aec600e76faca3bb3d88192043e",
+      "url": "https://mistral.ai/cms-media/api/media/file/earth.svg"
+    },
+    {
+      "bytes": 3607,
+      "contentType": "image/svg+xml",
+      "id": "e8bf34ea3f0f0b1fe406be68",
+      "path": "assets-complete/e8bf34ea3f0f0b1fe406be68.svg",
+      "sha256": "21f455baf603c63a5bbf9db3e76aa09d213982d66db069f26f52a365e086728b",
+      "url": "https://mistral.ai/cms-media/api/media/file/file.svg"
+    },
+    {
+      "bytes": 1966,
+      "contentType": "image/svg+xml",
+      "id": "d6ce39a076ae1d3676724144",
+      "path": "assets-complete/d6ce39a076ae1d3676724144.svg",
+      "sha256": "31c5e6335a284eed4b9cb8b47719c8045de5b81eb6b799c09bcef10e6f12cec5",
+      "url": "https://mistral.ai/cms-media/api/media/file/icon-m-code-window.svg"
+    },
+    {
+      "bytes": 4427,
+      "contentType": "image/svg+xml",
+      "id": "4004508457c50cd94d17bc2b",
+      "path": "assets-complete/4004508457c50cd94d17bc2b.svg",
+      "sha256": "c0aedb861efc7c0ad9faaeb17176fc1c1cab4d1a70aa3bcc06812450977ba04a",
+      "url": "https://mistral.ai/cms-media/api/media/file/icon-m-flower.svg"
+    },
+    {
+      "bytes": 7266,
+      "contentType": "image/svg+xml",
+      "id": "8adc2489e892dbb9a717147a",
+      "path": "assets-complete/8adc2489e892dbb9a717147a.svg",
+      "sha256": "06fa215246acc4cb528e5d58f22192f430748aab81b8f83b402ce59d4896b4c4",
+      "url": "https://mistral.ai/cms-media/api/media/file/icon-m-lightbulb.svg"
+    },
+    {
+      "bytes": 10383,
+      "contentType": "image/svg+xml",
+      "id": "f9e101d479e0dfa0b99f0ab7",
+      "path": "assets-complete/f9e101d479e0dfa0b99f0ab7.svg",
+      "sha256": "43ddfb3fbb251b5d5f6900827fe94940a81d7b3d738e6442961e5a47d41102ad",
+      "url": "https://mistral.ai/cms-media/api/media/file/icon-m-microphone.svg"
+    },
+    {
+      "bytes": 7753,
+      "contentType": "image/svg+xml",
+      "id": "bddfbd81d8bf38106ea1eaac",
+      "path": "assets-complete/bddfbd81d8bf38106ea1eaac.svg",
+      "sha256": "8fa574691cc8d8baa04e17b1e11c7f4ff52bab0b53f492fa22b847dc45133572",
+      "url": "https://mistral.ai/cms-media/api/media/file/icon-m-mountain.svg"
+    },
+    {
+      "bytes": 17224,
+      "contentType": "image/svg+xml",
+      "id": "b91b0b98f7577dbf86d7bc61",
+      "path": "assets-complete/b91b0b98f7577dbf86d7bc61.svg",
+      "sha256": "44b5f255397649a6589fbe5e5ccb9d1c12b94a57bb94c62f4f99bbdeb388b2d6",
+      "url": "https://mistral.ai/cms-media/api/media/file/logo-cma-cgm-white.svg"
+    },
+    {
+      "bytes": 126274,
+      "contentType": "image/svg+xml",
+      "id": "7dbc2a2f8405ab786a85f052",
+      "path": "assets-complete/7dbc2a2f8405ab786a85f052.svg",
+      "sha256": "0dc7e0849a8cc0b61aa2f8c48cf587d6ae8cf5b2998839df1b57c00878e40362",
+      "url": "https://mistral.ai/cms-media/api/media/file/logo-epo-white.svg"
+    },
+    {
+      "bytes": 45349,
+      "contentType": "image/svg+xml",
+      "id": "2d7491e07b9392262a80a4a7",
+      "path": "assets-complete/2d7491e07b9392262a80a4a7.svg",
+      "sha256": "76b48e66906feab19da0f59365f7607e345a5f9da8cf45dbad2dee41fa0c7c7f",
+      "url": "https://mistral.ai/cms-media/api/media/file/logo-snowflake-black.svg"
+    },
+    {
+      "bytes": 45349,
+      "contentType": "image/svg+xml",
+      "id": "7f8a8aa3e676f13a21c783e5",
+      "path": "assets-complete/7f8a8aa3e676f13a21c783e5.svg",
+      "sha256": "89e9320af72386ce61fd58e70aa866495486a8b9ee2fda8cac1b48a025144ad1",
+      "url": "https://mistral.ai/cms-media/api/media/file/logo-snowflake-white.svg"
+    },
+    {
+      "bytes": 9114,
+      "contentType": "image/svg+xml",
+      "id": "cdb4960c0b4de846ad35da55",
+      "path": "assets-complete/cdb4960c0b4de846ad35da55.svg",
+      "sha256": "43e238191d1dc0fc359b47292cdf26ed908077329da28366ec801a321e60d237",
+      "url": "https://mistral.ai/cms-media/api/media/file/logo-totalenergies-color.svg"
+    },
+    {
+      "bytes": 1751,
+      "contentType": "image/svg+xml",
+      "id": "be082677e8763bbc124a49ea",
+      "path": "assets-complete/be082677e8763bbc124a49ea.svg",
+      "sha256": "f10324dafcf0ab943d1eb0fcbfc9fc6a651a78662db1c4595d53292d2b1d9b05",
+      "url": "https://mistral.ai/cms-media/api/media/file/ocr.svg"
+    },
+    {
+      "bytes": 2168,
+      "contentType": "image/svg+xml",
+      "id": "1777fdf328515febc862946b",
+      "path": "assets-complete/1777fdf328515febc862946b.svg",
+      "sha256": "9c974180cd9984d384c2e41af60d50fb988703439cebb0da5dd7dc952992bb58",
+      "url": "https://mistral.ai/cms-media/api/media/file/robot.svg"
+    },
+    {
+      "bytes": 3860,
+      "contentType": "image/svg+xml",
+      "id": "a425354b9ca673b5d7ec5579",
+      "path": "assets-complete/a425354b9ca673b5d7ec5579.svg",
+      "sha256": "e1f9823587cc9202fdedf3e5188a1919dc268059c08b811efb1646cc05654550",
+      "url": "https://mistral.ai/cms-media/api/media/file/satelite.svg"
+    },
+    {
+      "bytes": 26993,
+      "contentType": "image/gif",
+      "id": "40113d1d055a97cac1a6cc81",
+      "path": "assets-complete/40113d1d055a97cac1a6cc81.gif",
+      "sha256": "9631057a4246ffd59a778e47d5ef03efeb9d679849c9258929a765dff58a3fb1",
+      "url": "https://mistral.ai/images/cat/cat-sitting-black.gif"
+    }
+  ],
+  "failures": []
+}

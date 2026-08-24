@@ -14,7 +14,7 @@ import {
 import type { Platform } from '../../platformFromUrl';
 import type { App, ProgressSnapshot, Screen } from '../../vitrine/types';
 import { AppCard } from '../../vitrine/components/AppCard';
-import { AppCardSkeleton } from '../../vitrine/components/AppCardSkeleton';
+import { Spinner } from '../../vitrine/components/Spinner';
 import {
   AstryxDropdown,
   AstryxDropdownDivider,
@@ -545,7 +545,7 @@ function PrimaryPrimitives() {
 
       <Primitive
         name="Skeleton"
-        usedBy="AppCardSkeleton while the initial Apps result set is loading."
+        usedBy="Discovery results while the initial result set is loading."
         demoClassName="apps-components__primitive-demo--stack"
       >
         <Skeleton width="100%" height={42} radius="rounded" index={0} />
@@ -655,7 +655,7 @@ function AppsScreenComponents() {
       <Section
         index="05"
         title="App results"
-        description="AppCard → DiscoveryCard with PlaceholderImage, Badge, identity metadata, plus AppCardSkeleton loading state."
+        description="AppCard → DiscoveryCard with PlaceholderImage, Badge, identity metadata, plus a quiet loading state."
       >
         <div className="apps-components__cards">
           <AppCard
@@ -668,7 +668,9 @@ function AppsScreenComponents() {
             platform="web"
             onOpen={() => {}}
           />
-          <AppCardSkeleton />
+          <div className="apps-components__card-loading" role="status" aria-label="Loading App card preview">
+            <Spinner size="lg" shade="subtle" aria-hidden="true" />
+          </div>
         </div>
         <p className="apps-components__card-note">
           Card styling is the local DiscoveryCard system; it is not the generic

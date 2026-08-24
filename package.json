@@ -72,6 +72,8 @@
     "flow-analysis:kiro-recover": "node --env-file-if-exists=.env --import tsx scripts/flow-analysis/recover-kiro-reconciliations.ts",
     "ui-elements:extract": "node --env-file=.env --import tsx scripts/extract-ui-elements.ts",
     "ui-elements:extract:kiro": "node --env-file=.env --import tsx scripts/extract-ui-elements.ts --provider kiro",
+    "ui-elements:crop:kiro": "node --env-file=.env --import tsx scripts/extract-ui-elements.ts --provider kiro --crop-ui-elements",
+    "screen-analysis:sweep": "node --env-file=.env --import tsx scripts/sweep-screen-analysis.ts",
     "ui-elements:launch:kiro": "node --import tsx scripts/launch-ui-element-extraction.ts",
     "ui-elements:launch:kiro:full": "node --import tsx scripts/launch-ui-element-extraction.ts --limit 5000 --concurrency 3 --restart-on-failure",
     "ui-elements:prune-overlays": "node --env-file=.env --import tsx scripts/prune-occluded-ui-elements.ts",

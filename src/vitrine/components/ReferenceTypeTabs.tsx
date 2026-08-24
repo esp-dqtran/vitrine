@@ -1,7 +1,8 @@
 import { ToggleButton } from '@astryxdesign/core';
+import { useEffect, useRef } from 'react';
 import { navigate } from '../router.ts';
 
-export type ReferenceType = 'apps' | 'sites' | 'color' | 'flows' | 'projects';
+export type ReferenceType = 'apps' | 'sites' | 'color' | 'flows' | 'components' | 'projects';
 
 interface ReferenceTypeTabsProps {
   active: ReferenceType;
@@ -21,13 +22,24 @@ export function ReferenceTypeTabs({
           ? { name: 'color' }
           : value === 'flows'
             ? { name: 'flows' }
+            : value === 'components'
+              ? { name: 'components' }
             : { name: 'projects' },
   ),
   className,
-  values = ['apps', 'sites', 'flows', 'color'],
+  values = ['apps', 'sites', 'flows', 'components', 'color'],
 }: ReferenceTypeTabsProps) {
+  const tablistRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    tablistRef.current
+      ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
+      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, [active]);
+
   return (
     <div
+      ref={tablistRef}
       role="tablist"
       aria-label="Reference type"
       className={className}
@@ -42,7 +54,9 @@ export function ReferenceTypeTabs({
               ? 'Sites'
               : value === 'color'
                 ? 'Colors'
-                : value === 'flows' ? 'Flows' : 'Projects'}
+                : value === 'flows'
+                  ? 'Flows'
+                  : value === 'components' ? 'Components' : 'Projects'}
           isPressed={active === value}
           onPressedChange={() => onChange(value)}
           role="tab"

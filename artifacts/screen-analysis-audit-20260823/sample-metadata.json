@@ -1,0 +1,650 @@
+[
+  {
+    "screen_image_id": 919621,
+    "app": "simple-contacts",
+    "platform": "ios",
+    "page_type": "Onboarding",
+    "presentation": "direct-screen",
+    "source_object_key": "images/919621/68856d9af749db09f19ecbe1aeed02ad159fc04427ef79257f267adfdb96ab26.png",
+    "type": "Logo",
+    "layer": "whole-screen",
+    "variant": "Brand",
+    "purpose": "Identifies the SimpleContacts product.",
+    "x": 0.271,
+    "y": 0.051,
+    "width": 0.471,
+    "height": 0.036,
+    "confidence": 0.99,
+    "review_status": "accepted",
+    "crop_quality": {
+      "issues": [],
+      "passed": true,
+      "refined": true,
+      "contentBounds": {
+        "top": 8,
+        "left": 7,
+        "width": 523,
+        "height": 88
+      }
+    },
+    "crop_object_key": "ui-elements/crops/93cbee291a170b88c0181aa5984dda6f9fb5ec0acb954049d08087f70b6b97fa.png"
+  },
+  {
+    "screen_image_id": 919621,
+    "app": "simple-contacts",
+    "platform": "ios",
+    "page_type": "Onboarding",
+    "presentation": "direct-screen",
+    "source_object_key": "images/919621/68856d9af749db09f19ecbe1aeed02ad159fc04427ef79257f267adfdb96ab26.png",
+    "type": "Illustration",
+    "layer": "whole-screen",
+    "variant": "Line-art",
+    "purpose": "Visually communicates an eye-examination and prescription context.",
+    "x": 0.257,
+    "y": 0.212,
+    "width": 0.501,
+    "height": 0.243,
+    "confidence": 0.99,
+    "review_status": "accepted",
+    "crop_quality": {
+      "issues": [],
+      "passed": true,
+      "refined": false,
+      "contentBounds": {
+        "top": 19,
+        "left": 6,
+        "width": 557,
+        "height": 597
+      }
+    },
+    "crop_object_key": "ui-elements/crops/5b80dc1a2d9d269504514685d9757658203f67ec27eed816a3fba0cab7945482.png"
+  },
+  {
+    "screen_image_id": 919621,
+    "app": "simple-contacts",
+    "platform": "ios",
+    "page_type": "Onboarding",
+    "presentation": "direct-screen",
+    "source_object_key": "images/919621/68856d9af749db09f19ecbe1aeed02ad159fc04427ef79257f267adfdb96ab26.png",
+    "type": "Button",
+    "layer": "whole-screen",
+    "variant": "Filled",
+    "purpose": "Presents the option for users who already have a prescription.",
+    "x": 0.064,
+    "y": 0.736,
+    "width": 0.884,
+    "height": 0.061,
+    "confidence": 0.99,
+    "review_status": "pending",
+    "crop_quality": {
+      "issues": [
+        "excess-padding"
+      ],
+      "passed": false,
+      "refined": false,
+      "contentBounds": {
+        "top": 30,
+        "left": 19,
+        "width": 984,
+        "height": 125
+      }
+    },
+    "crop_object_key": "ui-elements/crops/d95db77fa3678639ca0541c411399349e18e22da2a63d835a2c02e0b2028080b.png"
+  },
+  {
+    "screen_image_id": 919621,
+    "app": "simple-contacts",
+    "platform": "ios",
+    "page_type": "Onboarding",
+    "presentation": "direct-screen",
+    "source_object_key": "images/919621/68856d9af749db09f19ecbe1aeed02ad159fc04427ef79257f267adfdb96ab26.png",
+    "type": "Button",
+    "layer": "whole-screen",
+    "variant": "Filled",
+    "purpose": "Presents the option for users who need to renew a prescription.",
+    "x": 0.064,
+    "y": 0.814,
+    "width": 0.884,
+    "height": 0.06,
+    "confidence": 0.99,
+    "review_status": "pending",
+    "crop_quality": {
+      "issues": [
+        "excess-padding"
+      ],
+      "passed": false,
+      "refined": false,
+      "contentBounds": {
+        "top": 32,
+        "left": 19,
+        "width": 984,
+        "height": 121
+      }
+    },
+    "crop_object_key": "ui-elements/crops/4803daf2ebb36d08589faa803a157ae646a8b479098eb3ba67522614b8b1da69.png"
+  },
+  {
+    "screen_image_id": 919621,
+    "app": "simple-contacts",
+    "platform": "ios",
+    "page_type": "Onboarding",
+    "presentation": "direct-screen",
+    "source_object_key": "images/919621/68856d9af749db09f19ecbe1aeed02ad159fc04427ef79257f267adfdb96ab26.png",
+    "type": "Link",
+    "layer": "whole-screen",
+    "variant": "Underlined",
+    "purpose": "Provides an account login option.",
+    "x": 0.346,
+    "y": 0.905,
+    "width": 0.321,
+    "height": 0.014,
+    "confidence": 0.98,
+    "review_status": "pending",
+    "crop_quality": {
+      "issues": [
+        "excess-padding"
+      ],
+      "passed": false,
+      "refined": false,
+      "contentBounds": {
+        "top": 36,
+        "left": 334,
+        "width": 2,
+        "height": 1
+      }
+    },
+    "crop_object_key": "ui-elements/crops/987eb58bfb31a8a3ca0ad133ac30290943c5418f93da744c9471c757c6ee2970.png"
+  },
+  {
+    "screen_image_id": 1253065,
+    "app": "instamotor",
+    "platform": "ios",
+    "page_type": "Marketplace Home",
+    "presentation": "direct-screen",
+    "source_object_key": "images/1253065/e54f32d1a3cc0077f02d390611941278a4ff4dd507a6625aeb8cc9604169b3f5.png",
+    "type": "Search Bar",
+    "layer": "whole-screen",
+    "variant": "Outlined with filter segment",
+    "purpose": "Provide a visible way to search for cars and access filtering.",
+    "x": 0.05,
+    "y": 0.056,
+    "width": 0.75,
+    "height": 0.049,
+    "confidence": 0.99,
+    "review_status": "accepted",
+    "crop_quality": {
+      "issues": [],
+      "passed": true,
+      "refined": false,
+      "contentBounds": {
+        "top": 0,
+        "left": 7,
+        "width": 829,
+        "height": 126
+      }
+    },
+    "crop_object_key": "ui-elements/crops/fe430ac27406513952c1bcd8ea426f6d808ce10aabe54caf91530d8e831396b8.png"
+  },
+  {
+    "screen_image_id": 1253065,
+    "app": "instamotor",
+    "platform": "ios",
+    "page_type": "Marketplace Home",
+    "presentation": "direct-screen",
+    "source_object_key": "images/1253065/e54f32d1a3cc0077f02d390611941278a4ff4dd507a6625aeb8cc9604169b3f5.png",
+    "type": "Button",
+    "layer": "whole-screen",
+    "variant": "Text",
+    "purpose": "Present the visible Sell action.",
+    "x": 0.866,
+    "y": 0.069,
+    "width": 0.084,
+    "height": 0.026,
+    "confidence": 0.97,
+    "review_status": "pending",
+    "crop_quality": {
+      "issues": [
+        "excess-padding"
+      ],
+      "passed": false,
+      "refined": false,
+      "contentBounds": {
+        "top": 14,
+        "left": 0,
+        "width": 58,
+        "height": 39
+      }
+    },
+    "crop_object_key": "ui-elements/crops/2c8f92b43a0bea92b4be1dbeff3e8a2f04a012251f2c9764db836a233a987e70.png"
+  },
+  {
+    "screen_image_id": 1253065,
+    "app": "instamotor",
+    "platform": "ios",
+    "page_type": "Marketplace Home",
+    "presentation": "direct-screen",
+    "source_object_key": "images/1253065/e54f32d1a3cc0077f02d390611941278a4ff4dd507a6625aeb8cc9604169b3f5.png",
+    "type": "Tab",
+    "layer": "whole-screen",
+    "variant": "Selected",
+    "purpose": "Show the active Discover category within the horizontal tab row.",
+    "x": 0,
+    "y": 0.142,
+    "width": 0.344,
+    "height": 0.045,
+    "confidence": 0.99,
+    "review_status": "pending",
+    "crop_quality": {
+      "issues": [
+        "excess-padding"
+      ],
+      "passed": false,
+      "refined": false,
+      "contentBounds": {
+        "top": 30,
+        "left": 0,
+        "width": 377,
+        "height": 85
+      }
+    },
+    "crop_object_key": "ui-elements/crops/eefb9127ae547ebe106c9100c954de0ae01486a15d6e99e0329f9ad1dec0a780.png"
+  },
+  {
+    "screen_image_id": 1253065,
+    "app": "instamotor",
+    "platform": "ios",
+    "page_type": "Marketplace Home",
+    "presentation": "direct-screen",
+    "source_object_key": "images/1253065/e54f32d1a3cc0077f02d390611941278a4ff4dd507a6625aeb8cc9604169b3f5.png",
+    "type": "Grid List",
+    "layer": "whole-screen",
+    "variant": "Two-column populated",
+    "purpose": "Present recommended vehicle listings in a repeated grid.",
+    "x": 0.033,
+    "y": 0.265,
+    "width": 0.967,
+    "height": 0.619,
+    "confidence": 0.99,
+    "review_status": "accepted",
+    "crop_quality": {
+      "issues": [],
+      "passed": true,
+      "refined": false,
+      "contentBounds": {
+        "top": 41,
+        "left": 21,
+        "width": 1054,
+        "height": 1527
+      }
+    },
+    "crop_object_key": "ui-elements/crops/7d99e47721be29850581b5825f718c38d83d724c38c4dc530e3058936a91ce1b.png"
+  },
+  {
+    "screen_image_id": 1253065,
+    "app": "instamotor",
+    "platform": "ios",
+    "page_type": "Marketplace Home",
+    "presentation": "direct-screen",
+    "source_object_key": "images/1253065/e54f32d1a3cc0077f02d390611941278a4ff4dd507a6625aeb8cc9604169b3f5.png",
+    "type": "Toolbar",
+    "layer": "whole-screen",
+    "variant": "Bottom navigation with Buy selected",
+    "purpose": "Present the persistent primary navigation destinations.",
+    "x": 0,
+    "y": 0.884,
+    "width": 1,
+    "height": 0.116,
+    "confidence": 0.99,
+    "review_status": "accepted",
+    "crop_quality": {
+      "issues": [],
+      "passed": true,
+      "refined": false,
+      "contentBounds": {
+        "top": 0,
+        "left": 0,
+        "width": 1125,
+        "height": 266
+      }
+    },
+    "crop_object_key": "ui-elements/crops/a96ca7b0b127ef4db80e935324e0b31222fadc92fd7a72d10d831c9e8319b07d.png"
+  },
+  {
+    "screen_image_id": 1891806,
+    "app": "windy",
+    "platform": "web",
+    "page_type": "Weather map and route-planning dashboard",
+    "presentation": "direct-screen",
+    "source_object_key": "images/1891806/01168168f1bbcdd4cd75312090ccab39227c269fd9593185add15bc41641128d.jpg",
+    "type": "Logo",
+    "layer": "whole-screen",
+    "variant": "Brand",
+    "purpose": "Identifies the Windy weather application.",
+    "x": 0.442,
+    "y": 0.013,
+    "width": 0.091,
+    "height": 0.044,
+    "confidence": 0.99,
+    "review_status": "pending",
+    "crop_quality": {
+      "issues": [
+        "content-clipped"
+      ],
+      "passed": false,
+      "refined": true,
+      "contentBounds": {
+        "top": 0,
+        "left": 0,
+        "width": 780,
+        "height": 161
+      }
+    },
+    "crop_object_key": "ui-elements/crops/e8c47e78ac5074b164daad96ad929f0549faa979c415be1f33bff95f11361be1.png"
+  },
+  {
+    "screen_image_id": 1891806,
+    "app": "windy",
+    "platform": "web",
+    "page_type": "Weather map and route-planning dashboard",
+    "presentation": "direct-screen",
+    "source_object_key": "images/1891806/01168168f1bbcdd4cd75312090ccab39227c269fd9593185add15bc41641128d.jpg",
+    "type": "Search Bar",
+    "layer": "whole-screen",
+    "variant": "Filled",
+    "purpose": "Provides a visible field for entering or searching for a map location.",
+    "x": 0.043,
+    "y": 0.014,
+    "width": 0.16,
+    "height": 0.041,
+    "confidence": 0.99,
+    "review_status": "accepted",
+    "crop_quality": {
+      "issues": [],
+      "passed": true,
+      "refined": false,
+      "contentBounds": {
+        "top": 0,
+        "left": 0,
+        "width": 456,
+        "height": 66
+      }
+    },
+    "crop_object_key": "ui-elements/crops/897a25cd0240636421f1d72b5cc7d791f2913da93a5e751d7d25be5401f03285.png"
+  },
+  {
+    "screen_image_id": 1891806,
+    "app": "windy",
+    "platform": "web",
+    "page_type": "Weather map and route-planning dashboard",
+    "presentation": "direct-screen",
+    "source_object_key": "images/1891806/01168168f1bbcdd4cd75312090ccab39227c269fd9593185add15bc41641128d.jpg",
+    "type": "Toolbar",
+    "layer": "whole-screen",
+    "variant": "Floating vertical",
+    "purpose": "Presents map, weather-layer, and display controls along the right side of the map.",
+    "x": 0.867,
+    "y": 0.014,
+    "width": 0.117,
+    "height": 0.474,
+    "confidence": 0.97,
+    "review_status": "accepted",
+    "crop_quality": {
+      "issues": [],
+      "passed": true,
+      "refined": false,
+      "contentBounds": {
+        "top": 0,
+        "left": 0,
+        "width": 333,
+        "height": 759
+      }
+    },
+    "crop_object_key": "ui-elements/crops/6607c28592c8c327699bdd90408d65ce448c401733fa8ccbc6690120fe158564.png"
+  },
+  {
+    "screen_image_id": 1891806,
+    "app": "windy",
+    "platform": "web",
+    "page_type": "Weather map and route-planning dashboard",
+    "presentation": "direct-screen",
+    "source_object_key": "images/1891806/01168168f1bbcdd4cd75312090ccab39227c269fd9593185add15bc41641128d.jpg",
+    "type": "Table",
+    "layer": "whole-screen",
+    "variant": "Forecast with elevation profile",
+    "purpose": "Presents route-related weather measurements and terrain information across multiple forecast columns.",
+    "x": 0,
+    "y": 0.63,
+    "width": 1,
+    "height": 0.324,
+    "confidence": 0.98,
+    "review_status": "accepted",
+    "crop_quality": {
+      "issues": [],
+      "passed": true,
+      "refined": false,
+      "contentBounds": {
+        "top": 0,
+        "left": 0,
+        "width": 2732,
+        "height": 519
+      }
+    },
+    "crop_object_key": "ui-elements/crops/3491a299d0b9622e2a230b9feded66e5c69f97f521aace55637a822638bc8127.png"
+  },
+  {
+    "screen_image_id": 1891806,
+    "app": "windy",
+    "platform": "web",
+    "page_type": "Weather map and route-planning dashboard",
+    "presentation": "direct-screen",
+    "source_object_key": "images/1891806/01168168f1bbcdd4cd75312090ccab39227c269fd9593185add15bc41641128d.jpg",
+    "type": "Segmented Control",
+    "layer": "whole-screen",
+    "variant": "Car, hiking selected",
+    "purpose": "Displays route-planning activity modes available in the bottom toolbar.",
+    "x": 0.112,
+    "y": 0.96,
+    "width": 0.39,
+    "height": 0.04,
+    "confidence": 0.96,
+    "review_status": "pending",
+    "crop_quality": {
+      "issues": [
+        "excess-padding"
+      ],
+      "passed": false,
+      "refined": false,
+      "contentBounds": {
+        "top": 1,
+        "left": 29,
+        "width": 1080,
+        "height": 47
+      }
+    },
+    "crop_object_key": "ui-elements/crops/bcb625bab96ce9ba6b40a17f8226b98f9b820acd71dedb0ed64c6d065bff9dc8.png"
+  },
+  {
+    "screen_image_id": 1907522,
+    "app": "usa-today",
+    "platform": "ios",
+    "page_type": "Feature Info",
+    "presentation": "marketing-composite",
+    "source_object_key": "images/1907522/3fc72b6c4a472b259dd1f28190f9463d6343e44cf3bc48adaea6ad7b826f3f17.webp",
+    "type": "Logo",
+    "layer": "outer-presentation",
+    "variant": "Wordmark",
+    "purpose": "Identifies the eNEWSPAPER product.",
+    "x": 0.149,
+    "y": 0.091,
+    "width": 0.386,
+    "height": 0.023,
+    "confidence": 0.99,
+    "review_status": "pending",
+    "crop_quality": {
+      "issues": [
+        "content-clipped"
+      ],
+      "passed": false,
+      "refined": true,
+      "contentBounds": {
+        "top": 0,
+        "left": 0,
+        "width": 570,
+        "height": 96
+      }
+    },
+    "crop_object_key": "ui-elements/crops/08bee9cc3a1e093673bce02e68e5098b0466e9347556f405beabf3fb3ab38593.png"
+  },
+  {
+    "screen_image_id": 1907522,
+    "app": "usa-today",
+    "platform": "ios",
+    "page_type": "Feature Info",
+    "presentation": "marketing-composite",
+    "source_object_key": "images/1907522/3fc72b6c4a472b259dd1f28190f9463d6343e44cf3bc48adaea6ad7b826f3f17.webp",
+    "type": "Banner",
+    "layer": "outer-presentation",
+    "variant": "Promotional",
+    "purpose": "Communicates the paperless newspaper-access proposition.",
+    "x": 0.142,
+    "y": 0.132,
+    "width": 0.711,
+    "height": 0.105,
+    "confidence": 0.97,
+    "review_status": "accepted",
+    "crop_quality": {
+      "issues": [],
+      "passed": true,
+      "refined": false,
+      "contentBounds": {
+        "top": 0,
+        "left": 0,
+        "width": 445,
+        "height": 143
+      }
+    },
+    "crop_object_key": "ui-elements/crops/633757242b102b0a176050ce8480558d45591701a299a4c73e1f834754b73c45.png"
+  },
+  {
+    "screen_image_id": 1907522,
+    "app": "usa-today",
+    "platform": "ios",
+    "page_type": "Feature Info",
+    "presentation": "marketing-composite",
+    "source_object_key": "images/1907522/3fc72b6c4a472b259dd1f28190f9463d6343e44cf3bc48adaea6ad7b826f3f17.webp",
+    "type": "Hero Image",
+    "layer": "outer-presentation",
+    "variant": "Smartphone Mockup",
+    "purpose": "Visually demonstrates the newspaper experience on a mobile device.",
+    "x": 0.12,
+    "y": 0.325,
+    "width": 0.815,
+    "height": 0.675,
+    "confidence": 0.97,
+    "review_status": "accepted",
+    "crop_quality": {
+      "issues": [],
+      "passed": true,
+      "refined": false,
+      "contentBounds": {
+        "top": 0,
+        "left": 0,
+        "width": 509,
+        "height": 894
+      }
+    },
+    "crop_object_key": "ui-elements/crops/f1f243829bbd521ee38f4a089a9a8abc99ddabc9300b044ab684755412b46b02.png"
+  },
+  {
+    "screen_image_id": 1907522,
+    "app": "usa-today",
+    "platform": "ios",
+    "page_type": "Feature Info",
+    "presentation": "marketing-composite",
+    "source_object_key": "images/1907522/3fc72b6c4a472b259dd1f28190f9463d6343e44cf3bc48adaea6ad7b826f3f17.webp",
+    "type": "Logo",
+    "layer": "embedded-ui",
+    "variant": "Newspaper Masthead",
+    "purpose": "Identifies the displayed newspaper edition.",
+    "x": 0.191,
+    "y": 0.404,
+    "width": 0.536,
+    "height": 0.027,
+    "confidence": 0.96,
+    "review_status": "pending",
+    "crop_quality": {
+      "issues": [
+        "content-clipped"
+      ],
+      "passed": false,
+      "refined": true,
+      "contentBounds": {
+        "top": 0,
+        "left": 0,
+        "width": 600,
+        "height": 108
+      }
+    },
+    "crop_object_key": "ui-elements/crops/1412e86f028c5165d2d13659f6d9f730331090f094e88d8e9dc983931a17cb40.png"
+  },
+  {
+    "screen_image_id": 1907522,
+    "app": "usa-today",
+    "platform": "ios",
+    "page_type": "Feature Info",
+    "presentation": "marketing-composite",
+    "source_object_key": "images/1907522/3fc72b6c4a472b259dd1f28190f9463d6343e44cf3bc48adaea6ad7b826f3f17.webp",
+    "type": "Illustration",
+    "layer": "embedded-ui",
+    "variant": "Editorial Sports Illustration",
+    "purpose": "Illustrates the prominent sports-related newspaper story.",
+    "x": 0.37,
+    "y": 0.477,
+    "width": 0.505,
+    "height": 0.164,
+    "confidence": 0.88,
+    "review_status": "accepted",
+    "crop_quality": {
+      "issues": [],
+      "passed": true,
+      "refined": false,
+      "contentBounds": {
+        "top": 0,
+        "left": 0,
+        "width": 317,
+        "height": 223
+      }
+    },
+    "crop_object_key": "ui-elements/crops/a83c152ed674b70b2456b651e3f2b320db1a92ffb65a94ea5932cc3e20851711.png"
+  },
+  {
+    "screen_image_id": 1907522,
+    "app": "usa-today",
+    "platform": "ios",
+    "page_type": "Feature Info",
+    "presentation": "marketing-composite",
+    "source_object_key": "images/1907522/3fc72b6c4a472b259dd1f28190f9463d6343e44cf3bc48adaea6ad7b826f3f17.webp",
+    "type": "Button",
+    "layer": "embedded-ui",
+    "variant": "Outlined Icon",
+    "purpose": "Provides a visible directional control over the newspaper content.",
+    "x": 0.844,
+    "y": 0.633,
+    "width": 0.06,
+    "height": 0.025,
+    "confidence": 0.87,
+    "review_status": "accepted",
+    "crop_quality": {
+      "issues": [],
+      "passed": true,
+      "refined": false,
+      "contentBounds": {
+        "top": 0,
+        "left": 4,
+        "width": 35,
+        "height": 35
+      }
+    },
+    "crop_object_key": "ui-elements/crops/cd71db634c565eb7023e3a2188ff7d99bff8a60e96a93eca68a94550f8245b8d.png"
+  }
+]

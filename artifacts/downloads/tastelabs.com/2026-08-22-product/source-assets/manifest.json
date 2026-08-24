@@ -1,0 +1,668 @@
+{
+  "assets": [
+    {
+      "contentType": "image/svg+xml",
+      "id": "3d2767fc4873eeff",
+      "kind": "image",
+      "name": "6a306ae79b1ce1b28e27e16b_5b4c828c6dbacad50282c2cdc22e9af0_taste_Logo.svg",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/3d2767fc4873eeff.svg",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a306ae79b1ce1b28e27e16b_5b4c828c6dbacad50282c2cdc22e9af0_taste_Logo.svg"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "9e041653cb7d0001",
+      "kind": "image",
+      "name": "6a2a88c120da484882613836_MacBook%20Pro%2016_%20-%201.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/9e041653cb7d0001.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a2a88c120da484882613836_MacBook%20Pro%2016_%20-%201.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "b1a055108f757037",
+      "kind": "image",
+      "name": "6a1e7e5a9f4ba81ca00fc311_202605_TheTasteAI_Ana%201.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/b1a055108f757037.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a1e7e5a9f4ba81ca00fc311_202605_TheTasteAI_Ana%201.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "3c2e09a77558e89a",
+      "kind": "image",
+      "name": "6a1e7e6ff0513cfd007b3ebc_202605_TheTasteAI_Maria%201.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/3c2e09a77558e89a.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a1e7e6ff0513cfd007b3ebc_202605_TheTasteAI_Maria%201.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "35ffe3650059ba21",
+      "kind": "image",
+      "name": "6a1e7e6f43bb13657f8ff32a_202605_TheTasteAI_Lauta%201.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/35ffe3650059ba21.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a1e7e6f43bb13657f8ff32a_202605_TheTasteAI_Lauta%201.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "5af0a1564f4e0c71",
+      "kind": "image",
+      "name": "6a1e7e6f84ce331e9429e3de_202605_TheTasteAI_Marcelo%201.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/5af0a1564f4e0c71.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a1e7e6f84ce331e9429e3de_202605_TheTasteAI_Marcelo%201.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "79ed84a6a3fc6829",
+      "kind": "image",
+      "name": "6a1e7e6fd6193b3508367ca2_202605_TheTasteAI_Lucas%201.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/79ed84a6a3fc6829.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a1e7e6fd6193b3508367ca2_202605_TheTasteAI_Lucas%201.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "9a4fe15ed8c41bb6",
+      "kind": "image",
+      "name": "6a1e7e6fe7da16cc3735f965_202605_TheTasteAI_Remi%201.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/9a4fe15ed8c41bb6.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a1e7e6fe7da16cc3735f965_202605_TheTasteAI_Remi%201.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "5924d454c61681dc",
+      "kind": "image",
+      "name": "6a1e7e6f162f46304527f1ae_202605_TheTasteAI_Joseph%201.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/5924d454c61681dc.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a1e7e6f162f46304527f1ae_202605_TheTasteAI_Joseph%201.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "70252bbaf1eafca6",
+      "kind": "image",
+      "name": "6a1e7e6fca5c9e934a8fa9e5_202605_TheTasteAI_Matthew%201.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/70252bbaf1eafca6.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a1e7e6fca5c9e934a8fa9e5_202605_TheTasteAI_Matthew%201.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "0a37af7fd87467c6",
+      "kind": "image",
+      "name": "6a1e7e6f81cf1a2962919a3e_202605_TheTasteAI_Hami%201.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/0a37af7fd87467c6.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a1e7e6f81cf1a2962919a3e_202605_TheTasteAI_Hami%201.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "34ea0e1a07f5297c",
+      "kind": "image",
+      "name": "6a1e7e6f8497e7a448d5fe13_202605_TheTasteAI_Dave%201.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/34ea0e1a07f5297c.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a1e7e6f8497e7a448d5fe13_202605_TheTasteAI_Dave%201.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "64e717c7fe43aca0",
+      "kind": "image",
+      "name": "6a1e7e7038e1c40ab357ce2e_202605_TheTasteAI_Thais1%201.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/64e717c7fe43aca0.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a1e7e7038e1c40ab357ce2e_202605_TheTasteAI_Thais1%201.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "9bb517978006d415",
+      "kind": "image",
+      "name": "6a1e7e70d4ba43c9a67d6ebd_202605_TheTasteAI_Mo%201.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/9bb517978006d415.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a1e7e70d4ba43c9a67d6ebd_202605_TheTasteAI_Mo%201.avif"
+    },
+    {
+      "contentType": "text/css",
+      "id": "7051bd3fdc58779b",
+      "kind": "stylesheet",
+      "name": "lenis.css",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/7051bd3fdc58779b.css",
+      "url": "https://unpkg.com/lenis@1.3.17/dist/lenis.css"
+    },
+    {
+      "contentType": "text/css",
+      "id": "0dffe3fe2f73e29e",
+      "kind": "stylesheet",
+      "name": "swiper-bundle.min.css",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/0dffe3fe2f73e29e.css",
+      "url": "https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css"
+    },
+    {
+      "contentType": "text/css",
+      "id": "8ba46cb148b5a692",
+      "kind": "stylesheet",
+      "name": "flickity.css",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/8ba46cb148b5a692.css",
+      "url": "https://unpkg.com/flickity@2.3.0/dist/flickity.css"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "c7565164577dc11c",
+      "kind": "image",
+      "name": "6a50cb1142b609298bb2d75d_448c933e9deebbb2156d4ae1d58d188c_Frame%201171280140.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/c7565164577dc11c.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb1142b609298bb2d75d_448c933e9deebbb2156d4ae1d58d188c_Frame%201171280140.avif"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "8445c08ed4950ecd",
+      "kind": "image",
+      "name": "6a4636bb8a1cc7d7c60a4a14_160c7ca07ef76d7691c66b85b13f14ac_btn_icon_1.svg",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/8445c08ed4950ecd.svg",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a4636bb8a1cc7d7c60a4a14_160c7ca07ef76d7691c66b85b13f14ac_btn_icon_1.svg"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "29a6ce04018d9d5c",
+      "kind": "image",
+      "name": "6a4636bba2a554599fb5249b_ddb41a8244dc0b690deafb351b9e9b3f_btn_icon_2.svg",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/29a6ce04018d9d5c.svg",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a4636bba2a554599fb5249b_ddb41a8244dc0b690deafb351b9e9b3f_btn_icon_2.svg"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "471b28d147800403",
+      "kind": "image",
+      "name": "6a50cb119b397fb853e34b86_de05d9ebd3cc9297bd79ca13f63bbd86_Frame%201171280137.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/471b28d147800403.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb119b397fb853e34b86_de05d9ebd3cc9297bd79ca13f63bbd86_Frame%201171280137.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "a726ac998a4031e9",
+      "kind": "image",
+      "name": "6a50cb117f04b11c29aea486_ab1e2f502f4f5a9711ee55518b286ae9_Frame%201171280141.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/a726ac998a4031e9.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb117f04b11c29aea486_ab1e2f502f4f5a9711ee55518b286ae9_Frame%201171280141.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "0e9f1254dea70588",
+      "kind": "image",
+      "name": "6a50cb117fba4e209a4c71ea_4aa8e137ef5595f1cdfce591c930ae61_Frame%201171280139.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/0e9f1254dea70588.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb117fba4e209a4c71ea_4aa8e137ef5595f1cdfce591c930ae61_Frame%201171280139.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "9bf8a4f72c61e6e8",
+      "kind": "image",
+      "name": "6a50cb1142b609298bb2d74b_093da6815205c58ef56f0fb47c1e9da8_Frame%201171280138.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/9bf8a4f72c61e6e8.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb1142b609298bb2d74b_093da6815205c58ef56f0fb47c1e9da8_Frame%201171280138.avif"
+    },
+    {
+      "contentType": "image/png",
+      "id": "3c2bc405d0b93dc0",
+      "kind": "image",
+      "name": "6a50cb112dd15c70d1860836_ee4e1d2628004fdd3fa05ce3cfacfdb4_Frame%201171280131.png",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/3c2bc405d0b93dc0.png",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb112dd15c70d1860836_ee4e1d2628004fdd3fa05ce3cfacfdb4_Frame%201171280131.png"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "3b6fbdd591614477",
+      "kind": "image",
+      "name": "6a50cb11f8dc9bd6d894b70b_32646e38172599d705d461d760c24fbe_Frame%201171280132.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/3b6fbdd591614477.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb11f8dc9bd6d894b70b_32646e38172599d705d461d760c24fbe_Frame%201171280132.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "32a9201116f49df2",
+      "kind": "image",
+      "name": "6a50cb115e1240f3d257f84b_3348cbd99d403a1c72c8cbc60dca1305_Frame%201171280136.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/32a9201116f49df2.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb115e1240f3d257f84b_3348cbd99d403a1c72c8cbc60dca1305_Frame%201171280136.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "9b6afbab2280ca0b",
+      "kind": "image",
+      "name": "6a50cb115840e0a456bc0585_feb11ca417d753006dc7d42ee9318870_Frame%201171280125.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/9b6afbab2280ca0b.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb115840e0a456bc0585_feb11ca417d753006dc7d42ee9318870_Frame%201171280125.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "bb914e2c4e3a800c",
+      "kind": "image",
+      "name": "6a50cb115840e0a456bc0580_c0dbb93828d225013217535c8d8cc21e_Frame%201171280128.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/bb914e2c4e3a800c.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb115840e0a456bc0580_c0dbb93828d225013217535c8d8cc21e_Frame%201171280128.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "048d576375549d8d",
+      "kind": "image",
+      "name": "6a50cb1183ddf2489b3d7bc7_eb46a89d20bcb0ee031b78603fb13fcf_Frame%201171280130.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/048d576375549d8d.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb1183ddf2489b3d7bc7_eb46a89d20bcb0ee031b78603fb13fcf_Frame%201171280130.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "9df1a465fbb9e6a5",
+      "kind": "image",
+      "name": "6a50cb11dd8c37dcbb6096e9_05124003ce29eb0bf8befdc97f0f1022_Frame%201171280129.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/9df1a465fbb9e6a5.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb11dd8c37dcbb6096e9_05124003ce29eb0bf8befdc97f0f1022_Frame%201171280129.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "14d29643662cb045",
+      "kind": "image",
+      "name": "6a50cb11f6ced96c53b657a3_75682d69f3a3d4e3e22f88e05d5f8d56_Frame%201171280124.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/14d29643662cb045.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb11f6ced96c53b657a3_75682d69f3a3d4e3e22f88e05d5f8d56_Frame%201171280124.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "19ab41d8e683f7fb",
+      "kind": "image",
+      "name": "6a50cb11ed08fd2374bab01a_e9cd5a7ed19bdca4330eb67fde5539c6_Frame%201171280126.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/19ab41d8e683f7fb.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb11ed08fd2374bab01a_e9cd5a7ed19bdca4330eb67fde5539c6_Frame%201171280126.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "83f1caed6ffccae8",
+      "kind": "image",
+      "name": "6a50cb112fd9144b363a0127_867efbcb282ef55777e85f117637cfcb_Frame%201171280135.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/83f1caed6ffccae8.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb112fd9144b363a0127_867efbcb282ef55777e85f117637cfcb_Frame%201171280135.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "89c983543df25036",
+      "kind": "image",
+      "name": "6a50cb1152b12491ba980add_7c4f21fea80a1e9bcff4b3226dee3e7d_Frame%201171280127.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/89c983543df25036.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50cb1152b12491ba980add_7c4f21fea80a1e9bcff4b3226dee3e7d_Frame%201171280127.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "7e3c7b051f82363c",
+      "kind": "image",
+      "name": "6a50d22a42b609298bb7780d_Frame%201171280059.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/7e3c7b051f82363c.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50d22a42b609298bb7780d_Frame%201171280059.avif"
+    },
+    {
+      "contentType": "image/avif",
+      "id": "819262f2bbc3d2d0",
+      "kind": "image",
+      "name": "6a50d22a6627c349e8613fca_Frame%201171280142.avif",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/819262f2bbc3d2d0.avif",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a50d22a6627c349e8613fca_Frame%201171280142.avif"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "aacfe29fbe11d4d9",
+      "kind": "image",
+      "name": "6a43872a2a8b82ac75205bce_39437e68455fc81757f9cb88f670ec55_arrow-up-right.svg",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/aacfe29fbe11d4d9.svg",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a43872a2a8b82ac75205bce_39437e68455fc81757f9cb88f670ec55_arrow-up-right.svg"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "4fbfcdc899695fc0",
+      "kind": "image",
+      "name": "6a217a8a46d15d5baed4d236_bc7fff0a93b61f29d5c683ca52cfdfbf_Frame%2027449.svg",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/4fbfcdc899695fc0.svg",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a217a8a46d15d5baed4d236_bc7fff0a93b61f29d5c683ca52cfdfbf_Frame%2027449.svg"
+    },
+    {
+      "contentType": "image/jpeg",
+      "id": "529d6439ccd27689",
+      "kind": "image",
+      "name": "6a70666d7c6dd0cbdb045cb7_Cover.jpg",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/529d6439ccd27689.jpg",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc5/6a70666d7c6dd0cbdb045cb7_Cover.jpg"
+    },
+    {
+      "contentType": "image/jpeg",
+      "id": "4fa18857fd89b512",
+      "kind": "image",
+      "name": "6a762b5fe385e282344f3222_Cover.jpg",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/4fa18857fd89b512.jpg",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc5/6a762b5fe385e282344f3222_Cover.jpg"
+    },
+    {
+      "contentType": "image/jpeg",
+      "id": "c464b0acbf083931",
+      "kind": "image",
+      "name": "6a70da7907699e1e8cfb0392_Cover.jpg",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/c464b0acbf083931.jpg",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc5/6a70da7907699e1e8cfb0392_Cover.jpg"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "312fc5645afcdd39",
+      "kind": "image",
+      "name": "6a4f4fe67db139e22e8ee0fe_logo_black.svg",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/312fc5645afcdd39.svg",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a4f4fe67db139e22e8ee0fe_logo_black.svg"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "489c1e2bee4d0e97",
+      "kind": "image",
+      "name": "svg-1",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/489c1e2bee4d0e97.svg",
+      "url": "inline-svg:489c1e2bee4d0e97"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "1657b3e25f0386bf",
+      "kind": "image",
+      "name": "svg-2",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/1657b3e25f0386bf.svg",
+      "url": "inline-svg:1657b3e25f0386bf"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "ae509f3a47c9218f",
+      "kind": "image",
+      "name": "svg-3",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/ae509f3a47c9218f.svg",
+      "url": "inline-svg:ae509f3a47c9218f"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "989bf1a133c40cbb",
+      "kind": "image",
+      "name": "svg-4",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/989bf1a133c40cbb.svg",
+      "url": "inline-svg:989bf1a133c40cbb"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "0d72a5c9cb0cccda",
+      "kind": "image",
+      "name": "svg-5",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/0d72a5c9cb0cccda.svg",
+      "url": "inline-svg:0d72a5c9cb0cccda"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "a340085e5a7f2925",
+      "kind": "image",
+      "name": "svg-6",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/a340085e5a7f2925.svg",
+      "url": "inline-svg:a340085e5a7f2925"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "1a8e99c0b8ea2b5a",
+      "kind": "image",
+      "name": "svg-7",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/1a8e99c0b8ea2b5a.svg",
+      "url": "inline-svg:1a8e99c0b8ea2b5a"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "0db6ee871149c9ca",
+      "kind": "image",
+      "name": "svg-8",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/0db6ee871149c9ca.svg",
+      "url": "inline-svg:0db6ee871149c9ca"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "bf31410ea8197992",
+      "kind": "image",
+      "name": "svg-9",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/bf31410ea8197992.svg",
+      "url": "inline-svg:bf31410ea8197992"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "4a92409a73c66366",
+      "kind": "image",
+      "name": "svg-10",
+      "path": "/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/browser-use/assets/a5c71983-73c4-461b-937d-f8a3a3f8c2ad/4a92409a73c66366.svg",
+      "url": "inline-svg:4a92409a73c66366"
+    }
+  ],
+  "failures": [
+    {
+      "contentType": null,
+      "id": "cc748d63726361f4",
+      "name": "taste-ai.webflow.shared.7bc8c0818.css",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/css/taste-ai.webflow.shared.7bc8c0818.css"
+    },
+    {
+      "contentType": null,
+      "id": "721c189958ddffdc",
+      "name": "home_hero_loop_desktop.webm",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/website_home/home_hero_loop_desktop.webm"
+    },
+    {
+      "contentType": null,
+      "id": "375299afa6394e8d",
+      "name": "home_hero_loader_desktop.webm",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/website_home/home_hero_loader_desktop.webm"
+    },
+    {
+      "contentType": null,
+      "id": "c154a62d9faa2e70",
+      "name": "home_hero_loop_mobile.webm",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/website_home/home_hero_loop_mobile.webm"
+    },
+    {
+      "contentType": null,
+      "id": "2a5bf31656327155",
+      "name": "home_hero_loader_mobile.webm",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/website_home/home_hero_loader_mobile.webm"
+    },
+    {
+      "contentType": null,
+      "id": "7e5fc834b4f64f17",
+      "name": "6a4f6a21aa897632c57a74e0_AzeretSemiMono-Regular.otf",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a4f6a21aa897632c57a74e0_AzeretSemiMono-Regular.otf"
+    },
+    {
+      "contentType": null,
+      "id": "90888da6fcec6f45",
+      "name": "6a4f6a21a42841314ba887ca_AzeretSemiMono-Light.otf",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a4f6a21a42841314ba887ca_AzeretSemiMono-Light.otf"
+    },
+    {
+      "contentType": null,
+      "id": "7ebe38b4179baeaa",
+      "name": "6a3399d331c914b2ca49e186_Matter-Regular.woff2",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a3399d331c914b2ca49e186_Matter-Regular.woff2"
+    },
+    {
+      "contentType": null,
+      "id": "f7c93bbde3688cc1",
+      "name": "6a3399d3a1498acb0b40edc7_Matter-Light.woff2",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a3399d3a1498acb0b40edc7_Matter-Light.woff2"
+    },
+    {
+      "contentType": null,
+      "id": "6ad897a8d4f65ae5",
+      "name": "6a3399d3bda9fc380e8ea8b7_Matter-Medium.woff2",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a3399d3bda9fc380e8ea8b7_Matter-Medium.woff2"
+    },
+    {
+      "contentType": null,
+      "id": "acaea79e98d523c4",
+      "name": "Matter-TRIAL-Medium.ttf",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/Matter-TRIAL-Medium.ttf"
+    },
+    {
+      "contentType": null,
+      "id": "82a2a4736f4ee780",
+      "name": "6527e06483138d050995ea1f8dd6b650bf0a050a.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/6527e06483138d050995ea1f8dd6b650bf0a050a.png"
+    },
+    {
+      "contentType": null,
+      "id": "445df70bb9cd4f32",
+      "name": "9175aae4c60d5fc222f38e920c8b161328f8e783.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/9175aae4c60d5fc222f38e920c8b161328f8e783.png"
+    },
+    {
+      "contentType": null,
+      "id": "7ed8a4224f862709",
+      "name": "card.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/card.png"
+    },
+    {
+      "contentType": null,
+      "id": "7cf0aa521fc9bb99",
+      "name": "b5622cf06fd2d9fe0956236543d2b51ad84b9e7b.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/b5622cf06fd2d9fe0956236543d2b51ad84b9e7b.png"
+    },
+    {
+      "contentType": null,
+      "id": "4fa7e07abba10feb",
+      "name": "422bd6299cb4ef1494c2813aa0acdd6739346d10.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/422bd6299cb4ef1494c2813aa0acdd6739346d10.png"
+    },
+    {
+      "contentType": null,
+      "id": "c9c5f02a135e8817",
+      "name": "751c027fd08529f057e201c04de5822dda5c92bb.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/751c027fd08529f057e201c04de5822dda5c92bb.png"
+    },
+    {
+      "contentType": null,
+      "id": "c0c17df8e9b79476",
+      "name": "c9df02c959c4a3ee89043502e08cd0b4babaa3af.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/c9df02c959c4a3ee89043502e08cd0b4babaa3af.png"
+    },
+    {
+      "contentType": null,
+      "id": "53f454f79965eaf7",
+      "name": "46fc3bf6d901c97c2566930f4ee9621a73c483d7.jpg",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/46fc3bf6d901c97c2566930f4ee9621a73c483d7.jpg"
+    },
+    {
+      "contentType": null,
+      "id": "95a6c5e61d2ee4b0",
+      "name": "8311afc81230a9d65b0cd7dcbd5d9f649861ed2d.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/8311afc81230a9d65b0cd7dcbd5d9f649861ed2d.png"
+    },
+    {
+      "contentType": null,
+      "id": "94a9cedd37ece62b",
+      "name": "4ccd30439df99379dcfe655af0bd1e8d3d2940ff.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/4ccd30439df99379dcfe655af0bd1e8d3d2940ff.png"
+    },
+    {
+      "contentType": null,
+      "id": "682b92a276942e2d",
+      "name": "2d0dfffdec136b2454ff060456a207b80e19d863.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/2d0dfffdec136b2454ff060456a207b80e19d863.png"
+    },
+    {
+      "contentType": null,
+      "id": "a2577183a0a3bd07",
+      "name": "8cc19372e068a84dbc660c56778201b9646afa7f.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/8cc19372e068a84dbc660c56778201b9646afa7f.png"
+    },
+    {
+      "contentType": null,
+      "id": "4f7602c7abe13ed5",
+      "name": "cb1d6f92c66a748b997f01ad87e70ed4fb39eee0.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/cb1d6f92c66a748b997f01ad87e70ed4fb39eee0.png"
+    },
+    {
+      "contentType": null,
+      "id": "efea44e2a8ff14a7",
+      "name": "638fd8e8773dcc799b28de7c623e8f7662556840.jpg",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/638fd8e8773dcc799b28de7c623e8f7662556840.jpg"
+    },
+    {
+      "contentType": null,
+      "id": "34a557a594847740",
+      "name": "796831b1c25e300e973962986dccbb03decabb8a.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/796831b1c25e300e973962986dccbb03decabb8a.png"
+    },
+    {
+      "contentType": null,
+      "id": "53dec74df399fda1",
+      "name": "7a37d9dca630dc330008d2467353d459551f8bd1.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/7a37d9dca630dc330008d2467353d459551f8bd1.png"
+    },
+    {
+      "contentType": null,
+      "id": "ee6f3516e12a812f",
+      "name": "276c135b4254309c274010e0361414d09395c2ee.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/276c135b4254309c274010e0361414d09395c2ee.png"
+    },
+    {
+      "contentType": null,
+      "id": "81f5d08b1a2319d3",
+      "name": "8f357800c97c101f8b9b9d26aa1df60fefc28374.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/8f357800c97c101f8b9b9d26aa1df60fefc28374.png"
+    },
+    {
+      "contentType": null,
+      "id": "b5ca507e6f028c9e",
+      "name": "435ef17f31a8b8818eca668ef21c807aed729aa2.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/435ef17f31a8b8818eca668ef21c807aed729aa2.png"
+    },
+    {
+      "contentType": null,
+      "id": "1264b715d62a47af",
+      "name": "0f76a459fdec8ae13af949e3fb865c57137a4f85.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/0f76a459fdec8ae13af949e3fb865c57137a4f85.png"
+    },
+    {
+      "contentType": null,
+      "id": "94662d46fa80a6fb",
+      "name": "7d80dd3bf92ab1e247f578f5d8f876df0160736c.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/7d80dd3bf92ab1e247f578f5d8f876df0160736c.png"
+    },
+    {
+      "contentType": null,
+      "id": "bb2b653d24a39642",
+      "name": "521baef0b44c6a08d64244dc9bc16c9e55e63f71.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/521baef0b44c6a08d64244dc9bc16c9e55e63f71.png"
+    },
+    {
+      "contentType": null,
+      "id": "708bbd6a7d123b28",
+      "name": "7a043ae6831181b88e10c9c202fcc62f26654d4a.png",
+      "reason": "Loaded resource fetch failed: Asset bundling failed; page fetch failed: Browser Use encountered an error interacting with this webpage: TypeError: Failed to fetch\n    at wK (<anonymous>:1:41)\n    at <anonymous>:1:354",
+      "url": "https://footertaste.b-cdn.net/7a043ae6831181b88e10c9c202fcc62f26654d4a.png"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+HTTP/2 200 
+accept-ranges: bytes
+access-control-allow-origin: *
+age: 676214
+cache-control: public,max-age=31536000,immutable
+content-disposition: inline; filename="14-b4sc4actn0.js"
+content-type: application/javascript; charset=utf-8
+date: Wed, 19 Aug 2026 23:06:15 GMT
+etag: "_next/static/immutable/chunks/14-b4sc4actn0.js"
+last-modified: Wed, 12 Aug 2026 03:16:00 GMT
+permissions-policy: camera=(), microphone=(), geolocation=()
+referrer-policy: strict-origin-when-cross-origin
+server: Vercel
+strict-transport-security: max-age=63072000
+x-content-type-options: nosniff
+x-matched-path: /_next/static/immutable/chunks/14-b4sc4actn0.js
+x-vercel-cache: HIT
+x-vercel-id: hkg1::582c7-1787180775278-053c2b0e474d
+content-length: 608
+

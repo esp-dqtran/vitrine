@@ -1,0 +1,20 @@
+HTTP/2 200 
+accept-ranges: bytes
+access-control-allow-origin: *
+age: 149581
+cache-control: public,max-age=31536000,immutable
+content-disposition: inline; filename="1dxb-dyj08pik.js"
+content-type: application/javascript; charset=utf-8
+date: Wed, 19 Aug 2026 20:19:01 GMT
+etag: "_next/static/immutable/chunks/1dxb-dyj08pik.js"
+last-modified: Tue, 18 Aug 2026 02:45:59 GMT
+permissions-policy: camera=(), microphone=(), geolocation=()
+referrer-policy: strict-origin-when-cross-origin
+server: Vercel
+strict-transport-security: max-age=63072000
+x-content-type-options: nosniff
+x-matched-path: /_next/static/immutable/chunks/1dxb-dyj08pik.js
+x-vercel-cache: HIT
+x-vercel-id: hkg1::m2tld-1787170741206-13998917f8cf
+content-length: 59987
+

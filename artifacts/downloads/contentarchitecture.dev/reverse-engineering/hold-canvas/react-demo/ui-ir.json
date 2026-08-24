@@ -1,0 +1,52 @@
+{
+  "name": "SpiralScene",
+  "source": {
+    "url": "https://www.contentarchitecture.dev/",
+    "selector": "div.relative.size-full.cursor-pointer.select-none.overflow-hidden",
+    "visualEvidence": [
+      "../evidence/source-desktop-idle.png",
+      "../evidence/source-mobile-idle.png"
+    ],
+    "implementationEvidence": "../../../2026-08-18T09-36-04-737Z/network-assets/de8015bd8f312ec441e2a8ec.js"
+  },
+  "componentBoundary": {
+    "reason": "One container owns the WebGL renderer, generated glyph atlas, pointer state machine, responsive fit, lifecycle observers, and cursor label.",
+    "internalSystems": [
+      "glyph atlas",
+      "ring instance generator",
+      "WebGL shaders",
+      "pointer state machine",
+      "animation lifecycle"
+    ]
+  },
+  "props": {
+    "className": "string",
+    "onStateChange": "(state: idle | holding | charged) => void",
+    "pixelRatio": "number | undefined",
+    "style": "React.CSSProperties | undefined"
+  },
+  "state": {
+    "interaction": {
+      "values": ["idle", "holding", "charged"],
+      "transitions": [
+        "pointer down: idle to holding",
+        "hold for 0.9 seconds: holding to charged",
+        "pointer up: charged to idle with release ripple",
+        "pointer leave or cancel: any to idle"
+      ]
+    },
+    "hovering": "Controls the cursor-follow label and pointer dissolution strength",
+    "visibility": "Pauses rendering outside the viewport or in a hidden tab",
+    "reducedMotion": "Renders a stable post-entrance frame"
+  },
+  "renderModel": {
+    "renderer": "WebGL 2 through OGL",
+    "rings": 30,
+    "message": "THE CONTENT ARCHITECTURE.",
+    "glyphAtlas": "512 px wide, 8 columns, generated with the source GeistMono font",
+    "devicePixelRatioCap": 2,
+    "releaseRippleSeconds": 1.8,
+    "chargeSeconds": 0.9,
+    "pointerRadius": 0.35
+  }
+}

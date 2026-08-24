@@ -1,0 +1,125 @@
+{
+  "bodyStyle": {
+    "backgroundColor": "rgb(241, 238, 231)",
+    "color": "rgb(35, 35, 35)",
+    "fontFamily": "GeistSans, \"GeistSans Fallback\", ui-sans-serif, system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+    "fontSize": "21.9102px",
+    "lineHeight": "27.3878px"
+  },
+  "page": {
+    "scrollHeight": 12693,
+    "scrollWidth": 1280
+  },
+  "sections": [
+    {
+      "heading": "The Sanity setup agents don't reinvent.",
+      "id": null,
+      "rect": {
+        "height": 720,
+        "width": 1280,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "heading": "The page builder alone costs you days. Every single time.",
+      "id": null,
+      "rect": {
+        "height": 662,
+        "width": 1280,
+        "x": 0,
+        "y": 720
+      }
+    },
+    {
+      "heading": "Every decision already made. So you can skip to the actual work.",
+      "id": "features",
+      "rect": {
+        "height": 2937,
+        "width": 1280,
+        "x": 0,
+        "y": 1382
+      }
+    },
+    {
+      "id": "the-repo",
+      "rect": {
+        "height": 720,
+        "width": 1280,
+        "x": 0,
+        "y": 4319
+      }
+    },
+    {
+      "heading": "The work that gets remembered.",
+      "id": "showcase",
+      "rect": {
+        "height": 2885,
+        "width": 1280,
+        "x": 0,
+        "y": 5039
+      }
+    },
+    {
+      "id": "reviews",
+      "rect": {
+        "height": 982,
+        "width": 1280,
+        "x": 0,
+        "y": 7924
+      }
+    },
+    {
+      "heading": "Two editions. One architecture. Lifetime updates.",
+      "id": "pricing",
+      "rect": {
+        "height": 1184,
+        "width": 1280,
+        "x": 0,
+        "y": 8906
+      }
+    },
+    {
+      "heading": "Before you buy",
+      "id": "faq",
+      "rect": {
+        "height": 1670,
+        "width": 1280,
+        "x": 0,
+        "y": 10090
+      }
+    },
+    {
+      "id": null,
+      "rect": {
+        "height": 519,
+        "width": 1280,
+        "x": 0,
+        "y": 11759
+      }
+    },
+    {
+      "id": null,
+      "rect": {
+        "height": 54,
+        "width": 96,
+        "x": 1168,
+        "y": 16
+      }
+    },
+    {
+      "id": null,
+      "rect": {
+        "height": 80,
+        "width": 97,
+        "x": 1167,
+        "y": 624
+      }
+    }
+  ],
+  "viewport": {
+    "dpr": 2,
+    "height": 720,
+    "width": 1280
+  }
+}

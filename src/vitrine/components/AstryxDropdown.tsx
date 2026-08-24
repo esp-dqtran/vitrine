@@ -17,6 +17,7 @@ import {
 } from '@astryxdesign/core';
 
 const PANEL_BREAKPOINT_QUERY = '(max-width: 720px)';
+const PANEL_EXIT_DURATION_MS = 180;
 
 // Anchors a portaled panel under its trigger. Skipped below the 720px
 // breakpoint, where CSS takes over and renders the panel as a fixed
@@ -115,7 +116,24 @@ export function AstryxDropdown({
   const panelId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const wasOpenRef = useRef(open);
-  const portalPosition = usePortalPanelPosition(panelPortal && open, triggerRef);
+  const [panelMounted, setPanelMounted] = useState(open);
+  const portalPosition = usePortalPanelPosition(
+    panelPortal && (open || panelMounted),
+    triggerRef,
+  );
+
+  useEffect(() => {
+    if (open) {
+      setPanelMounted(true);
+      return;
+    }
+    if (!panelMounted) return;
+    const timeout = window.setTimeout(
+      () => setPanelMounted(false),
+      PANEL_EXIT_DURATION_MS,
+    );
+    return () => window.clearTimeout(timeout);
+  }, [open, panelMounted]);
 
   useEffect(() => {
     if (mode === 'panel' && wasOpenRef.current && !open) {
@@ -143,12 +161,13 @@ export function AstryxDropdown({
             <Icon icon="chevronDown" size="sm" />
           ) : undefined)}
         />
-        {open ? (
+        {panelMounted ? (
           <AstryxDropdownPanel
             id={panelId}
             ariaLabel={panelAriaLabel ?? ariaLabel}
             portal={panelPortal}
             style={portalPosition}
+            state={open ? 'open' : 'closing'}
           >
             {children}
           </AstryxDropdownPanel>
@@ -272,6 +291,7 @@ export function AstryxDropdownPanel({
   className = '',
   portal = false,
   style,
+  state = 'open',
 }: {
   id?: string;
   ariaLabel: string;
@@ -279,6 +299,7 @@ export function AstryxDropdownPanel({
   className?: string;
   portal?: boolean;
   style?: CSSProperties;
+  state?: 'open' | 'closing';
 }) {
   const panel = (
     <div
@@ -290,6 +311,8 @@ export function AstryxDropdownPanel({
       className={`${portal ? 'astryx-dropdown ' : ''}astryx-dropdown-panel ${className}`.trim()}
       role="dialog"
       aria-label={ariaLabel}
+      aria-hidden={state === 'closing' ? true : undefined}
+      data-state={state}
       style={style}
     >
       {children}

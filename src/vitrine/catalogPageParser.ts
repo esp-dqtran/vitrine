@@ -67,6 +67,25 @@ function optionalMatchedFacets(
       }));
 }
 
+function optionalUiElements(item: Record<string, unknown>): boolean {
+  return item.uiElements === undefined
+    || (Array.isArray(item.uiElements)
+      && item.uiElements.every((raw) => {
+        const element = record(raw);
+        return element
+          && typeof element.type === "string"
+          && typeof element.group === "string"
+          && ["whole-screen", "outer-presentation", "embedded-ui"].includes(
+            String(element.layer),
+          )
+          && typeof element.confidence === "number"
+          && Number.isFinite(element.confidence)
+          && element.confidence >= 0
+          && element.confidence <= 1
+          && (element.reviewStatus === "pending" || element.reviewStatus === "accepted");
+      }));
+}
+
 function categories(value: unknown, prefix: string): Category[] {
   if (!Array.isArray(value)) return invalid(prefix, "categories");
   return value.map((raw) => {
@@ -99,6 +118,12 @@ function screen(
     || (item.platform !== "web" && item.platform !== "ios" && item.platform !== "android")
     || !(item.description === null || typeof item.description === "string")
     || !optionalNullableString(item, "purpose")
+    || !optionalNullableString(item, "embeddedPageType")
+    || !(item.sourcePresentation === undefined
+      || item.sourcePresentation === "direct-screen"
+      || item.sourcePresentation === "device-mockup"
+      || item.sourcePresentation === "marketing-composite"
+      || item.sourcePresentation === "unknown")
     || !(typeof item.url === "string" || (allowNullUrl && item.url === null))
     || !optionalNullableString(item, "thumbnailUrl")
     || !optionalNullableString(item, "sourceUrl")
@@ -116,6 +141,7 @@ function screen(
       || item.responsiveViewport === "mobile"
       || item.responsiveViewport === "unknown")
     || !optionalMatchedFacets(item)
+    || !optionalUiElements(item)
     || !optionalNullableString(item, "capturedAt")
     || !optionalNullableString(item, "stateContext")
     || !(item.confidence === undefined
@@ -156,6 +182,7 @@ function appBase(
     return invalid(prefix, "analyzedScreens");
   }
   for (const field of [
+    "createdAt",
     "lastCapturedAt",
     "websiteUrl",
     "iconUrl",

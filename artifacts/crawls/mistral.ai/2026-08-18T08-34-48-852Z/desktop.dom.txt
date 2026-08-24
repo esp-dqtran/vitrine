@@ -1,0 +1,549 @@
+- banner:
+  - link "Go to homepage":
+    - /url: /
+  - button "Products":
+    - paragraph: Products
+  - button "Solutions":
+    - paragraph: Solutions
+  - button "Research":
+    - paragraph: Research
+  - button "Developers":
+    - paragraph: Developers
+  - button "Blog":
+    - paragraph: Blog
+  - button "Customers":
+    - paragraph: Customers
+  - button "Company":
+    - paragraph: Company
+  - link "Contact sales":
+    - /url: /contact
+    - paragraph: Contact sales
+  - link "Start building":
+    - /url: https://console.mistral.ai
+    - paragraph: Start building
+  - link "Studio Build, test, and run AI agents and apps.":
+    - /url: /products/studio/
+    - paragraph: Studio
+    - paragraph: Build, test, and run AI agents and apps.
+  - link "Forge Train, align, and evaluate custom AI models.":
+    - /url: /products/forge/
+    - paragraph: Forge
+    - paragraph: Train, align, and evaluate custom AI models.
+  - link "Vibe AI agent for long-horizon work.":
+    - /url: /products/vibe/
+    - paragraph: Vibe
+    - paragraph: AI agent for long-horizon work.
+  - link "Vibe for code Coding agents in the terminal, IDE, and background.":
+    - /url: /products/vibe/code/
+    - paragraph: Vibe for code
+    - paragraph: Coding agents in the terminal, IDE, and background.
+  - link "AI Cloud Frontier-scale infrastructure for training and inference.":
+    - /url: /products/aicloud/
+    - paragraph: AI Cloud
+    - paragraph: Frontier-scale infrastructure for training and inference.
+  - generic: Pricing
+  - link "Plans":
+    - /url: /pricing/
+    - paragraph:
+      - text: Plans
+  - link "API pricing":
+    - /url: /pricing/api/
+    - paragraph:
+      - text: API pricing
+  - link "For enterprises":
+    - /url: /pricing/enterprise-deployments/
+    - paragraph:
+      - text: For enterprises
+  - link "Overview":
+    - /url: /solutions/
+    - paragraph: Overview
+  - link "Delivery methodology":
+    - /url: /services/
+    - paragraph: Delivery methodology
+  - link "Model customization":
+    - /url: /solutions/custom-model-training/
+    - paragraph: Model customization
+  - generic: Industries
+  - link "Financial services":
+    - /url: /industry/finance/
+    - paragraph:
+      - text: Financial services
+  - link "Public sector & government":
+    - /url: /industry/public-sector/
+    - paragraph:
+      - text: Public sector & government
+  - link "Manufacturing":
+    - /url: /industry/manufacturing/
+    - paragraph:
+      - text: Manufacturing
+  - link "Energy & utilities":
+    - /url: /industry/energy/
+    - paragraph:
+      - text: Energy & utilities
+  - generic: Use cases
+  - link "Coding":
+    - /url: /solutions/coding/
+    - paragraph:
+      - text: Coding
+  - link "Document intelligence":
+    - /url: /solutions/document-ai/
+    - paragraph:
+      - text: Document intelligence
+  - link "Speech":
+    - /url: /solutions/speech/
+    - paragraph:
+      - text: Speech
+  - generic: Latest models
+  - link "Mistral OCR 4":
+    - /url: /news/ocr-4/
+    - paragraph: Mistral OCR 4
+  - link "2a1ffaf3-f171-460b-be1b-fc734aa776aa Mistral Medium 3.5":
+    - /url: /news/vibe-remote-agents-mistral-medium-3-5/
+    - img "2a1ffaf3-f171-460b-be1b-fc734aa776aa"
+    - paragraph: Mistral Medium 3.5
+  - link "Mistral Small 4":
+    - /url: /news/mistral-small-4/
+    - paragraph: Mistral Small 4
+  - link "Voxtral TTS":
+    - /url: /news/voxtral-tts/
+    - paragraph: Voxtral TTS
+  - link "See all models":
+    - /url: https://docs.mistral.ai/models/overview
+    - paragraph: See all models
+  - link "Docs":
+    - /url: https://docs.mistral.ai
+    - paragraph: Docs
+  - link "API Reference":
+    - /url: https://docs.mistral.ai/api/
+    - paragraph: API Reference
+  - link "Cookbooks":
+    - /url: https://docs.mistral.ai/resources/cookbooks
+    - paragraph: Cookbooks
+  - paragraph: Latest posts
+  - link "In-region inference, open models, and new European infrastructure for sovereign AI.":
+    - /url: /news/regional-inference-open-models-new-compute
+    - paragraph: In-region inference, open models, and new European infrastructure for sovereign AI.
+  - link "Introducing Shieldstral.":
+    - /url: /news/shieldstral
+    - paragraph: Introducing Shieldstral.
+  - link "Your Prompts and Skills need a system of record.":
+    - /url: /news/manage-prompts-and-skills-in-studio
+    - paragraph: Your Prompts and Skills need a system of record.
+  - contentinfo:
+    - link "Read all news":
+      - /url: /news
+      - paragraph: Read all news
+  - generic: Categories
+  - link "Product":
+    - /url: /news?categories=product
+    - paragraph:
+      - text: Product
+  - link "Research":
+    - /url: /news?categories=research
+    - paragraph:
+      - text: Research
+  - link "Engineering":
+    - /url: /news?categories=engineering
+    - paragraph:
+      - text: Engineering
+  - link "Solutions":
+    - /url: /news?categories=solutions
+    - paragraph:
+      - text: Solutions
+  - link "Company":
+    - /url: /news?categories=company
+    - paragraph:
+      - text: Company
+  - generic: Featured stories
+  - link "ASML":
+    - /url: /customers/asml/
+    - paragraph: ASML
+  - link "CMA CGM":
+    - /url: /customers/cma-cgm/
+    - paragraph: CMA CGM
+  - link "HSBC":
+    - /url: /customers/hsbc/
+    - paragraph: HSBC
+  - link "BMW":
+    - /url: /customers/bmw/
+    - paragraph: BMW
+  - link "See all":
+    - /url: /customers/
+    - paragraph: See all
+  - generic: Who we are
+  - link "About us":
+    - /url: /about/
+    - paragraph: About us
+  - link "Careers":
+    - /url: /careers/
+    - paragraph: Careers
+  - link "Brand":
+    - /url: /brand/
+    - paragraph: Brand
+  - generic: Connect
+  - link "Community":
+    - /url: https://discord.com/invite/mistralai
+    - paragraph:
+      - text: Community
+  - link "Partners":
+    - /url: /partners/
+    - paragraph:
+      - text: Partners
+  - link "Help center":
+    - /url: https://help.mistral.ai/
+    - paragraph:
+      - text: Help center
+  - navigation:
+    - button "Products"
+    - link "Solutions":
+      - /url: /solutions/
+    - link "Research":
+      - /url: /models/
+    - button "Developers"
+    - link "Blog":
+      - /url: /news/
+    - link "Customers":
+      - /url: /customers/
+    - button "Company"
+  - button "Start building Studio Vibe Vibe for Code":
+    - paragraph: Start building
+    - link "Studio":
+      - /url: https://console.mistral.ai/
+      - paragraph: Studio
+    - link "Vibe":
+      - /url: https://chat.mistral.ai/
+      - paragraph: Vibe
+    - link "Vibe for Code":
+      - /url: https://chat.mistral.ai/code/extensions
+      - paragraph: Vibe for Code
+  - link "Contact sales":
+    - /url: /contact/
+    - paragraph: Contact sales
+- main:
+  - paragraph: Frontier AI. In your hands.
+  - paragraph: We help organizations build
+  - paragraph: tailored AI systems to solve the
+  - paragraph: world’s hardest problems.
+  - paragraph: Featured news
+  - link "In-region inference, open models, and new European infrastructure for sovereign AI.":
+    - /url: /news/regional-inference-open-models-new-compute
+    - paragraph: In-region inference, open models, and new European infrastructure for sovereign AI.
+  - link "Introducing Shieldstral.":
+    - /url: /news/shieldstral
+    - paragraph: Introducing Shieldstral.
+  - link "Introducing Robostral Navigate":
+    - /url: /news/robostral-navigate
+    - paragraph: Introducing Robostral Navigate
+  - link "Introducing Mistral OCR 4":
+    - /url: /news/ocr-4
+    - paragraph: Introducing Mistral OCR 4
+  - button "Next slide":
+  - button "Previous slide":
+  - img "AXA Logo (white)"
+  - img "Orange (white)"
+  - img "IBM (white)"
+  - img "ASML (white)"
+  - img "French Ministry of Defense logo (white)"
+  - img "Cisco logo (white)"
+  - img "Total Energies logo (white)"
+  - img "SAP (white)"
+  - img "CMA CGM (white)"
+  - img "AXA Logo (white)"
+  - img "Orange (white)"
+  - img "IBM (white)"
+  - img "ASML (white)"
+  - img "French Ministry of Defense logo (white)"
+  - img "Cisco logo (white)"
+  - img "Total Energies logo (white)"
+  - img "SAP (white)"
+  - img "CMA CGM (white)"
+  - img "AXA Logo (white)"
+  - img "Orange (white)"
+  - img "IBM (white)"
+  - img "ASML (white)"
+  - img "French Ministry of Defense logo (white)"
+  - img "Cisco logo (white)"
+  - img "Total Energies logo (white)"
+  - img "SAP (white)"
+  - img "CMA CGM (white)"
+  - link "Financial services HSBC boosts productivity with Mistral. Learn more":
+    - /url: /customers/hsbc
+    - paragraph: Financial services
+    - paragraph: HSBC boosts productivity with Mistral.
+    - button "Learn more":
+      - paragraph: Learn more
+  - link "Technology and Software ASML accelerates advanced semiconductor lithography with Mistral. Learn more ASML showcase chip":
+    - /url: /customers/asml
+    - paragraph: Technology and Software
+    - paragraph: ASML accelerates advanced semiconductor lithography with Mistral.
+    - button "Learn more":
+      - paragraph: Learn more
+    - img "ASML showcase chip"
+  - link "Transportation and Logistics CMA CGM streamlines global maritime operations with Mistral. Learn more CMA CGM showcase ship":
+    - /url: /customers/cma-cgm
+    - paragraph: Transportation and Logistics
+    - paragraph: CMA CGM streamlines global maritime operations with Mistral.
+    - button "Learn more":
+      - paragraph: Learn more
+    - img "CMA CGM showcase ship"
+  - link "Austrian Academy of Sciences logo white Public sector Austrian Academy of Sciences unlocks Ancient Greek with Mistral. Learn more Austrian Academy of Sciences showcase wreath":
+    - /url: /customers/austrian-academy-of-sciences
+    - img "Austrian Academy of Sciences logo white"
+    - paragraph: Public sector
+    - paragraph: Austrian Academy of Sciences unlocks Ancient Greek with Mistral.
+    - button "Learn more":
+      - paragraph: Learn more
+    - img "Austrian Academy of Sciences showcase wreath"
+  - link "Public sector The European Patent Office accelerates innovation with Mistral. Learn more European Patent Office showcase lightbulb":
+    - /url: /customers/epo
+    - paragraph: Public sector
+    - paragraph: The European Patent Office accelerates innovation with Mistral.
+    - button "Learn more":
+      - paragraph: Learn more
+    - img "European Patent Office showcase lightbulb"
+  - link "Manufacturing Stellantis accelerates automotive innovation with Mistral. Learn more Stellantis showcase road":
+    - /url: /customers/stellantis
+    - paragraph: Manufacturing
+    - paragraph: Stellantis accelerates automotive innovation with Mistral.
+    - button "Learn more":
+      - paragraph: Learn more
+    - img "Stellantis showcase road"
+  - button "Previous slide" [disabled]:
+  - button "Next slide":
+  - paragraph: Do it all with Mistral.
+  - link "Vibe AI agent for long-horizon work.":
+    - /url: /products/vibe
+    - paragraph: Vibe
+    - paragraph: AI agent for long-horizon work.
+  - link "Studio Build, test, and run AI agents and apps.":
+    - /url: /products/studio
+    - paragraph: Studio
+    - paragraph: Build, test, and run AI agents and apps.
+  - link "Forge Train, align, and evaluate custom AI models.":
+    - /url: /products/forge
+    - paragraph: Forge
+    - paragraph: Train, align, and evaluate custom AI models.
+  - link "Applied AI services":
+    - /url: /solutions
+    - paragraph: Applied AI services
+  - link "Frontier models":
+    - /url: /models
+    - paragraph: Frontier models
+  - link "AI Cloud Frontier-scale infrastructure for training and inference.":
+    - /url: /products/aicloud
+    - paragraph: AI Cloud
+    - paragraph: Frontier-scale infrastructure for training and inference.
+  - list:
+    - link "69f0d5c04a1c5e416b03f29e":
+      - /url: "#69f0d5c04a1c5e416b03f29e"
+    - link "69f0db834a1c5e416b03f2af":
+      - /url: "#69f0db834a1c5e416b03f2af"
+    - link "69f0dc334a1c5e416b03f2b0":
+      - /url: "#69f0dc334a1c5e416b03f2b0"
+    - link "69f3da5888c5033bfa0090fe":
+      - /url: "#69f3da5888c5033bfa0090fe"
+    - link "6a1752412b2b9241d2860884":
+      - /url: "#6a1752412b2b9241d2860884"
+    - link "69f3dec488c5033bfa0090ff":
+      - /url: "#69f3dec488c5033bfa0090ff"
+  - paragraph: Autonomous work.
+  - paragraph
+  - link "Discover Vibe":
+    - /url: /products/vibe/
+    - paragraph: Discover Vibe
+  - paragraph: AI agent for long-horizon tasks, fluent in your knowledge and tools.
+  - paragraph: Enterprise knowledge search
+  - paragraph: Structured data analysis
+  - paragraph: Document and report synthesis
+  - paragraph: Multi-step task scheduling
+  - paragraph: Persistent memory and reusable skills
+  - paragraph: Autonomous coding.
+  - paragraph
+  - link "Discover Vibe for code":
+    - /url: /products/vibe/code/
+    - paragraph: Discover Vibe for code
+  - paragraph: Ship faster with a stack that meets devs where they work.
+  - paragraph: Async code generation
+  - paragraph: Architecture-aware reasoning
+  - paragraph: Legacy code translation
+  - paragraph: Automated CI/CD and code reviews
+  - paragraph: Test and documentation authoring
+  - paragraph: AI application development.
+  - paragraph
+  - link "Discover Studio":
+    - /url: /products/studio/
+    - paragraph: Discover Studio
+  - paragraph: "Build and deploy AI apps with complete control: build custom agents, and run production AI anywhere—from edge to cloud—with enterprise-grade tooling."
+  - paragraph: Agent orchestration
+  - paragraph: End-to-end observability
+  - paragraph: Unified AI registry
+  - paragraph: Evals, judges, and guardrails
+  - paragraph: Full deployment portability
+  - paragraph: Custom model development.
+  - paragraph
+  - link "Discover Forge":
+    - /url: /products/forge/
+    - paragraph: Discover Forge
+  - paragraph: Turn proprietary knowledge into model intelligence by training and aligning your own models.
+  - paragraph: Enterprise domain adaptation
+  - paragraph: End-to-end model training
+  - paragraph: Reinforcement learning and distillation
+  - paragraph: Synthetic data generation
+  - paragraph: Evaluation and lifecycle management
+  - paragraph: Infrastructure for training and inference.
+  - link "Discover Compute":
+    - /url: /products/aicloud/
+    - paragraph: Discover Compute
+  - paragraph: The frontier-grade infrastructure and orchestration platform behind Mistral's own models is now yours to build on.
+  - paragraph: Dedicated GPU clusters
+  - paragraph: Advanced R&D
+  - paragraph
+  - link "Discover applied AI":
+    - /url: /solutions/custom-model-training/
+    - paragraph: Discover applied AI
+  - paragraph: "Tailored, domain-specialized AI: from custom pre-training with your data to scaled deployment—with expert guidance throughout."
+  - paragraph: Model customization
+  - paragraph: Value realization
+  - paragraph: Deployment services
+  - paragraph: Use case acceleration
+  - paragraph: Enterprise activation
+  - paragraph: Supported by expert partnership.
+  - paragraph: Work with world-class AI scientists to enable transformation that drives impact.
+  - link "Our services":
+    - /url: /services/
+    - paragraph: Our services
+  - paragraph: Use case acceleration.
+  - paragraph: Prioritize high-value use cases and take them to production fast.
+  - paragraph: Elite AI expertise.
+  - paragraph: A cross-functional team that takes initiatives from kickoff to production at scale.
+  - paragraph: Deep customization.
+  - paragraph: Customize and optimize models for your domain.
+  - paragraph: Enterprise activation.
+  - paragraph: Deploy AI in your environment with full control.
+  - paragraph: AI deployments designed for privacy.
+  - paragraph: Deploy frontier AI in your environment, or consume as a service or from one of our cloud partners.
+  - paragraph: Self-hosted.
+  - paragraph: Deploy Studio on virtual cloud, edge, or on-premises. Self-hosted deployments offer more advanced levels of customization and control. Your data stays within your walls.
+  - paragraph: Mistral cloud.
+  - paragraph: Get started with Studio hosted on Mistral’s infrastructure and build your own applications and services with our APIs. Our servers are hosted in the EU.
+  - paragraph: Cloud providers.
+  - paragraph: Access the power of Studio via your preferred cloud provider (Google Cloud, AWS, Azure, SAP, IBM, Snowflake, NVIDIA, Outscale) using your cloud credits.
+  - paragraph: Own your own AI future.
+  - paragraph: Build, customize, and deploy tailored AI solutions with complete control.
+  - link "Start building":
+    - /url: https://console.mistral.ai/
+    - paragraph: Start building
+  - link "Contact sales":
+    - /url: /contact/
+    - paragraph: Contact sales
+- contentinfo:
+  - heading "Products" [level=3]
+  - list:
+    - link "Vibe":
+      - /url: /products/vibe/
+      - paragraph: Vibe
+    - link "Vibe Code":
+      - /url: /products/vibe/code/
+      - paragraph: Vibe Code
+    - link "Studio":
+      - /url: /products/studio/
+      - paragraph: Studio
+    - link "Forge":
+      - /url: /products/forge/
+      - paragraph: Forge
+    - link "Compute":
+      - /url: /products/aicloud/
+      - paragraph: Compute
+    - link "Pricing":
+      - /url: /pricing
+      - paragraph: Pricing
+  - heading "Solutions" [level=3]
+  - list:
+    - link "Delivery methodology":
+      - /url: /solutions/
+      - paragraph: Delivery methodology
+    - link "Model customization":
+      - /url: /solutions/custom-model-training/
+      - paragraph: Model customization
+    - link "Coding":
+      - /url: /solutions/coding/
+      - paragraph: Coding
+    - link "Document intelligence":
+      - /url: /solutions/document-ai/
+      - paragraph: Document intelligence
+    - link "Speech":
+      - /url: /solutions/speech/
+      - paragraph: Speech
+    - link "Mistral for finance":
+      - /url: /industry/finance/
+      - paragraph: Mistral for finance
+    - link "Mistral for public institutions":
+      - /url: /industry/public-sector/
+      - paragraph: Mistral for public institutions
+    - link "Mistral for manufacturing":
+      - /url: /industry/manufacturing/
+      - paragraph: Mistral for manufacturing
+    - link "Mistral for energy & utilities":
+      - /url: /industry/energy/
+      - paragraph: Mistral for energy & utilities
+  - heading "Why Mistral" [level=3]
+  - list:
+    - link "About us":
+      - /url: /about/
+      - paragraph: About us
+    - link "Careers":
+      - /url: /careers/
+      - paragraph: Careers
+    - link "Partners":
+      - /url: /partners/
+      - paragraph: Partners
+    - link "Our customers":
+      - /url: /customers
+      - paragraph: Our customers
+    - link "Our models":
+      - /url: /models/
+      - paragraph: Our models
+    - link "Brand":
+      - /url: /brand
+      - paragraph: Brand
+  - heading "Legal" [level=3]
+  - list:
+    - link "Terms of Service":
+      - /url: https://legal.mistral.ai/terms
+      - paragraph: Terms of Service
+    - link "Privacy Policy":
+      - /url: https://legal.mistral.ai/terms/privacy-policy?language=en-US
+      - paragraph: Privacy Policy
+    - link "Privacy choices":
+      - /url: javascript:openAxeptioCookies()
+      - paragraph: Privacy choices
+    - link "Data processing agreement":
+      - /url: https://legal.mistral.ai/terms/data-processing-addendum
+      - paragraph: Data processing agreement
+    - link "Legal notice":
+      - /url: /legal/
+      - paragraph: Legal notice
+  - navigation:
+    - link "LinkedIn":
+      - /url: https://www.linkedin.com/company/mistralai/
+    - link "X":
+      - /url: https://x.com/mistralai
+    - link "YouTube":
+      - /url: https://www.youtube.com/@MistralAIOfficial
+    - link "Discord":
+      - /url: https://discord.gg/mistralai
+    - link "Reddit":
+      - /url: https://www.reddit.com/r/MistralAI/
+  - navigation:
+    - paragraph: Get Mistral Vibe
+    - link "Download on the App Store":
+      - /url: https://apps.apple.com/us/app/le-chat-by-mistral-ai/id6740410176
+    - link "Get it on Google Play":
+      - /url: https://play.google.com/store/apps/details?id=ai.mistral.chat
+  - paragraph: Mistral AI © 2026
+  - paragraph: Select language
+  - paragraph: English
+  - combobox "Language switcher":
+    - option "English" [selected]
+    - option "Français"
+    - option "Italiano"

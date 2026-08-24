@@ -1,0 +1,46 @@
+{
+  "work": {
+    "buttons": [
+      {
+        "aria": "Previous slides",
+        "disabled": false
+      },
+      {
+        "aria": "Next slides",
+        "disabled": false
+      },
+      {
+        "aria": "Previous slides",
+        "disabled": true
+      },
+      {
+        "aria": "Next slides",
+        "disabled": false
+      }
+    ],
+    "scrollX": [
+      null,
+      null
+    ]
+  },
+  "labs": {
+    "buttons": [
+      {
+        "aria": "Previous slides",
+        "disabled": true
+      },
+      {
+        "aria": "Next slides",
+        "disabled": false
+      },
+      {
+        "aria": "Previous slides",
+        "disabled": false
+      },
+      {
+        "aria": "Next slides",
+        "disabled": false
+      }
+    ]
+  }
+}

@@ -13,6 +13,7 @@ import type { PublishedCatalogPageRecord } from "../../../src/publicCatalogStore
 
 const PLATFORMS = ["web", "ios", "android"] as const;
 const MAX_INLINE_SCREENSHOT_BYTES = 1_000_000;
+const MAX_AUTHORIZATION_PAGES = 10;
 
 export interface FlowMcpInlineImage {
   data: string;
@@ -35,6 +36,7 @@ export interface FlowMcpDependencies {
   }): Promise<FlowCatalogPage>;
   publishedCatalogPage(input: {
     platform?: Platform;
+    cursor?: string;
     limit: number;
     query: string;
     sort: "latest";
@@ -141,27 +143,40 @@ export async function searchAccessibleApps(
   deps: Pick<FlowMcpDependencies, "appUrl" | "canAccessApp" | "publishedCatalogPage">,
   input: { query: string; platform?: Platform; limit: number },
 ): Promise<FlowMcpAppSearchResult[]> {
-  const page = await deps.publishedCatalogPage({
-    query: input.query,
-    limit: 24,
-    sort: "latest",
-    includeFacets: false,
-    ...(input.platform ? { platform: input.platform } : {}),
-  });
-  const apps = buildPublishedCatalogPage(page).apps;
-  const allowedApps = await accessibleAppSlugs(user, apps.map(({ id }) => id), deps.canAccessApp);
-  return apps
-    .filter(({ id }) => allowedApps.has(id))
-    .slice(0, input.limit)
-    .map((app) => ({
-      app: app.id,
-      title: app.app,
-      description: app.description,
-      categories: app.categories.map(({ name }) => name),
-      platforms: app.platforms,
-      totalScreens: app.totalScreens,
-      url: absoluteUrl(deps.appUrl, `/apps/${encodeURIComponent(app.id)}`),
-    }));
+  const results: FlowMcpAppSearchResult[] = [];
+  const seenApps = new Set<string>();
+  const seenCursors = new Set<string>();
+  let cursor: string | undefined;
+  for (let pageNumber = 0; pageNumber < MAX_AUTHORIZATION_PAGES; pageNumber++) {
+    const page = await deps.publishedCatalogPage({
+      query: input.query,
+      limit: 24,
+      sort: "latest",
+      includeFacets: false,
+      ...(input.platform ? { platform: input.platform } : {}),
+      ...(cursor ? { cursor } : {}),
+    });
+    const apps = buildPublishedCatalogPage(page).apps.filter(({ id }) => !seenApps.has(id));
+    apps.forEach(({ id }) => seenApps.add(id));
+    const allowedApps = await accessibleAppSlugs(user, apps.map(({ id }) => id), deps.canAccessApp);
+    for (const app of apps) {
+      if (!allowedApps.has(app.id)) continue;
+      results.push({
+        app: app.id,
+        title: app.app,
+        description: app.description,
+        categories: app.categories.map(({ name }) => name),
+        platforms: app.platforms,
+        totalScreens: app.totalScreens,
+        url: absoluteUrl(deps.appUrl, `/apps/${encodeURIComponent(app.id)}`),
+      });
+      if (results.length >= input.limit) return results;
+    }
+    if (!page.nextCursor || seenCursors.has(page.nextCursor)) break;
+    seenCursors.add(page.nextCursor);
+    cursor = page.nextCursor;
+  }
+  return results;
 }
 
 export async function searchAccessibleFlows(
@@ -170,41 +185,58 @@ export async function searchAccessibleFlows(
   input: { query: string; platform?: Platform; limit: number },
 ): Promise<FlowMcpSearchResult[]> {
   const platforms = input.platform ? [input.platform] : PLATFORMS;
-  const pages = await Promise.all(platforms.map((platform) => deps.publishedFlowCatalogPage({
-    platform,
-    query: input.query,
-    limit: input.limit,
-    sort: "grouped",
-    flowGroups: [],
-    cursorSecret: deps.flowCatalogSecret,
-    includeFacets: false,
-  })));
-  const matched = pages.flatMap((page, index) => page.items.map((item) => ({
-    app: item.preview.appId,
-    platform: platforms[index]!,
-    flow: item.preview.flow,
-  })));
-  const allowedApps = await accessibleApps(user, matched, deps.canAccessApp);
-  return matched
-    .filter(({ app }) => allowedApps.has(app))
-    .slice(0, input.limit)
-    .map((entry) => {
-      const preview = entry.flow.steps.flatMap((step) => step.evidence)[0];
-      const previewUrl = preview?.imageUrl ?? "";
-      return {
-        app: entry.app,
-        platform: entry.platform,
-        flowId: entry.flow.id,
-        title: entry.flow.title,
-        ...(entry.flow.category ? { category: entry.flow.category } : {}),
-        description: entry.flow.description,
-        tags: entry.flow.tags,
-        stepCount: entry.flow.steps.length,
-        url: flowUrl(deps.appUrl, entry),
-        ...(preview?.imageId ? { previewScreenshotId: preview.imageId } : {}),
-        ...(previewUrl ? { previewScreenshotUrl: absoluteUrl(deps.appUrl, previewUrl) } : {}),
-      };
-    });
+  const results: FlowMcpSearchResult[] = [];
+  const seenFlows = new Set<string>();
+  for (const platform of platforms) {
+    const seenCursors = new Set<string>();
+    let cursor: string | undefined;
+    for (let pageNumber = 0; pageNumber < MAX_AUTHORIZATION_PAGES; pageNumber++) {
+      const page = await deps.publishedFlowCatalogPage({
+        platform,
+        query: input.query,
+        limit: input.limit,
+        sort: "grouped",
+        flowGroups: [],
+        cursorSecret: deps.flowCatalogSecret,
+        includeFacets: false,
+        ...(cursor ? { cursor } : {}),
+      });
+      const matched = page.items.map((item) => ({
+        app: item.preview.appId,
+        platform,
+        flow: item.preview.flow,
+      })).filter((entry) => {
+        const key = `${entry.app}\0${entry.platform}\0${entry.flow.id}`;
+        if (seenFlows.has(key)) return false;
+        seenFlows.add(key);
+        return true;
+      });
+      const allowedApps = await accessibleApps(user, matched, deps.canAccessApp);
+      for (const entry of matched) {
+        if (!allowedApps.has(entry.app)) continue;
+        const preview = entry.flow.steps.flatMap((step) => step.evidence)[0];
+        const previewUrl = preview?.imageUrl ?? "";
+        results.push({
+          app: entry.app,
+          platform: entry.platform,
+          flowId: entry.flow.id,
+          title: entry.flow.title,
+          ...(entry.flow.category ? { category: entry.flow.category } : {}),
+          description: entry.flow.description,
+          tags: entry.flow.tags,
+          stepCount: entry.flow.steps.length,
+          url: flowUrl(deps.appUrl, entry),
+          ...(preview?.imageId ? { previewScreenshotId: preview.imageId } : {}),
+          ...(previewUrl ? { previewScreenshotUrl: absoluteUrl(deps.appUrl, previewUrl) } : {}),
+        });
+        if (results.length >= input.limit) return results;
+      }
+      if (!page.nextCursor || seenCursors.has(page.nextCursor)) break;
+      seenCursors.add(page.nextCursor);
+      cursor = page.nextCursor;
+    }
+  }
+  return results;
 }
 
 interface AccessibleFlow {
@@ -463,12 +495,33 @@ export function mountFlowMcpRoute(app: express.Express, deps: FlowMcpDependencie
       res.status(405).json({ error: "MCP accepts POST requests" });
       return;
     }
+    const origin = req.header("origin");
+    if (origin) {
+      let trusted = false;
+      try {
+        trusted = new URL(origin).origin === new URL(deps.appUrl).origin;
+      } catch {
+        trusted = false;
+      }
+      if (!trusted) {
+        res.status(403).json({ error: "Untrusted MCP origin" });
+        return;
+      }
+    }
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     const server = createFlowMcpServer(res.locals.user as AuthUser, deps);
+    let closed = false;
+    const close = async () => {
+      if (closed) return;
+      closed = true;
+      await server.close();
+    };
+    res.once("close", () => { void close().catch(() => undefined); });
     try {
       await server.connect(transport);
       await transport.handleRequest(req, res, req.body);
     } catch (error) {
+      await close().catch(() => undefined);
       next(error);
     }
   });

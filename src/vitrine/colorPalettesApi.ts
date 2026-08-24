@@ -6,6 +6,7 @@ import type {
   ColorPaletteGradient,
   ColorPaletteKind,
   ColorPaletteRole,
+  ColorPaletteSource,
 } from '../colorPalettes.ts';
 import { isRetiredColorPaletteId } from '../colorPalettes.ts';
 import { apiFetch } from './apiFetch.ts';
@@ -51,6 +52,25 @@ function parseCard(value: unknown): ColorPaletteCard | undefined {
   };
 }
 
+function parseSource(value: unknown): ColorPaletteSource | undefined {
+  if (value === undefined) return undefined;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('Color palette source is invalid');
+  }
+  const source = value as Record<string, unknown>;
+  if ((source.type !== 'app' && source.type !== 'site')
+    || typeof source.name !== 'string'
+    || !source.name.trim()
+    || (source.iconUrl !== undefined && typeof source.iconUrl !== 'string')) {
+    throw new Error('Color palette source is invalid');
+  }
+  return {
+    type: source.type,
+    name: source.name,
+    ...(typeof source.iconUrl === 'string' && source.iconUrl ? { iconUrl: source.iconUrl } : {}),
+  };
+}
+
 export function parseColorPalettes(value: unknown): ColorPalette[] {
   const items = value && typeof value === 'object' && !Array.isArray(value)
     ? (value as { items?: unknown }).items
@@ -64,6 +84,7 @@ export function parseColorPalettes(value: unknown): ColorPalette[] {
       : palette.kind === 'gradient'
         ? 'gradient'
         : (() => { throw new Error('Color palette is invalid'); })();
+    const source = parseSource(palette.source);
     const cards = Array.isArray(palette.cards) ? palette.cards.map(parseCard) : [];
     if (typeof palette.id !== 'string' || typeof palette.name !== 'string' || typeof palette.mood !== 'string'
       || cards.length !== 3 || cards.some((card) => !card)
@@ -71,7 +92,14 @@ export function parseColorPalettes(value: unknown): ColorPalette[] {
       || (kind === 'solid' && cards.some((card) => card?.gradient))) {
       throw new Error('Color palette is invalid');
     }
-    return { id: palette.id, name: palette.name, mood: palette.mood, kind, cards: cards as ColorPaletteCard[] };
+    return {
+      id: palette.id,
+      name: palette.name,
+      mood: palette.mood,
+      kind,
+      ...(source ? { source } : {}),
+      cards: cards as ColorPaletteCard[],
+    };
   });
 }
 

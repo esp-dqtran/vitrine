@@ -28,14 +28,19 @@ export interface DerivedUiElementCrop extends DerivedComponentCrop {
 const EDGE_REFINABLE_TYPES = new Set([
   "Avatar",
   "Badge",
+  "Banner",
+  "Button",
   "Checkbox",
   "Icon",
+  "Link",
   "Loading Indicator",
   "Logo",
   "Map Pin",
   "Radio Button",
+  "Segmented Control",
   "Status Dot",
   "Switch",
+  "Tab",
 ]);
 
 const MAX_EDGE_EXPANSIONS = 4;
@@ -169,14 +174,23 @@ function compactGeometryIsPlausible(type: string, bounds: PixelRegion): boolean 
 }
 
 function semanticTypeIsPlausible(candidate: UiElementCandidate): boolean {
-  if (candidate.type !== "Status Dot") return true;
   const evidence = [
     candidate.variant,
     candidate.purpose,
     ...candidate.anatomy,
     ...candidate.observedProperties,
   ].join(" ").toLowerCase();
-  return !/\bcheck(?:mark)?\b/.test(evidence);
+  if (candidate.type === "Status Dot") {
+    return !/\bcheck(?:mark)?\b/.test(evidence);
+  }
+  if (
+    candidate.layer === "outer-presentation"
+    && ["Hero Image", "Illustration", "Photo", "Product Image"].includes(candidate.type)
+    && /\b(device|device frame|mockup|phone|smartphone|tablet)\b/.test(evidence)
+  ) {
+    return false;
+  }
+  return true;
 }
 
 function menuGeometryIsPlausible(input: {
@@ -250,7 +264,12 @@ export async function deriveUiElementCrop(input: {
   }
 
   const issues: UiElementCropQualityIssue[] = [];
-  if (cropRegion.width < 24 || cropRegion.height < 24) issues.push("too-small");
+  if (
+    cropRegion.width < 24
+    || cropRegion.height < 24
+    || bounds.width < 8
+    || bounds.height < 8
+  ) issues.push("too-small");
   if (edgeRefinable && anyTouched(touched)) issues.push("content-clipped");
   // Symmetric edge-touching (e.g. a genuinely full-width filter row) is fine and left to
   // the check above; this catches the asymmetric case content-clipped never covered — one

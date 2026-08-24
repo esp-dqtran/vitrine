@@ -16,7 +16,7 @@ import { InspirationPrompts } from './InspirationPrompts';
 import { InspirationResults } from './InspirationResults';
 import { PlaceholderImage } from './PlaceholderImage';
 import { AppIcon } from './AppIcon';
-import { AstryxModal } from './AstryxModal.tsx';
+import { CommandPaletteFrame } from './CommandPaletteFrame.tsx';
 
 export type CommandPaletteNav =
   'trending' | 'categories' | 'screens' | 'elements' | 'flows';
@@ -536,24 +536,16 @@ export function CommandPalette({
   ) : null;
 
   return (
-    <AstryxModal
+    <CommandPaletteFrame
       isOpen
-      className="command-palette-dialog"
       data-closing={closing ? 'true' : undefined}
       onAnimationEnd={(event) => { if (closing && event.animationName === 'vitrine-command-palette-out') finishClose(); }}
       onOpenChange={(open) => { if (!open) requestClose(); }}
-      purpose="info"
-      width="min(816px, calc(100vw - 40px))"
-      maxHeight="min(594px, calc(100dvh - 48px))"
-      padding={0}
+      dataNav={nav}
+      dataQuerying={nav === 'flows' && Boolean(flowQuery.trim()) ? 'true' : undefined}
+      onMouseDown={(event) => event.stopPropagation()}
+      onKeyDownCapture={onPaletteKeyDown}
     >
-      <div
-        className="command-palette-shell"
-        data-nav={nav}
-        data-querying={nav === 'flows' && Boolean(flowQuery.trim()) ? 'true' : undefined}
-        onMouseDown={(event) => event.stopPropagation()}
-        onKeyDownCapture={onPaletteKeyDown}
-      >
         <div className="command-palette-header">
           <div className="command-palette-search">
             <TextInput
@@ -714,7 +706,6 @@ export function CommandPalette({
             ) : browseContent}
           </div>
         </div>
-      </div>
-    </AstryxModal>
+    </CommandPaletteFrame>
   );
 }

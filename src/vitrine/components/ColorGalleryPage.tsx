@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Button } from '@astryxdesign/core';
+import { Button, Icon, IconButton, TextInput } from '@astryxdesign/core';
 import {
   defaultColorCollections,
   defaultColorPalettes,
@@ -18,6 +18,7 @@ import {
 import { ColorPackStack } from './ColorPackStack.tsx';
 import { CopyButton } from './CopyButton.tsx';
 import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
+import { CommandPaletteFrame } from './CommandPaletteFrame.tsx';
 import { navigate } from '../router.ts';
 import { trackAnalyticsEvent } from '../analytics.ts';
 import { analyticsEvent, paletteAnalyticsProperties } from '../analyticsEvents.ts';
@@ -25,6 +26,11 @@ import { analyticsEvent, paletteAnalyticsProperties } from '../analyticsEvents.t
 export const colorPalettes = defaultColorPalettes;
 export const colorCollections = defaultColorCollections;
 export const COLOR_PALETTE_BATCH_SIZE = 12;
+
+export type RelatedColor = {
+  role: 'Lead' | 'Companion' | 'Accent';
+  hex: string;
+};
 
 export function nextColorPaletteRenderCount(
   currentCount: number,
@@ -42,6 +48,64 @@ function relativeLuminance(hex: string) {
     return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
   });
   return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+}
+
+function normalizeColorHex(value: string) {
+  const match = value.trim().match(/^#?([\da-f]{3}|[\da-f]{6})$/i);
+  if (!match) return null;
+  const hex = match[1].toUpperCase();
+  return `#${hex.length === 3 ? hex.split('').map((channel) => `${channel}${channel}`).join('') : hex}`;
+}
+
+function hexToHsl(hex: string) {
+  const normalized = hex.replace('#', '');
+  const [red, green, blue] = [0, 2, 4].map((offset) => Number.parseInt(
+    normalized.slice(offset, offset + 2),
+    16,
+  ) / 255);
+  const high = Math.max(red, green, blue);
+  const low = Math.min(red, green, blue);
+  const lightness = (high + low) / 2;
+  const delta = high - low;
+  if (!delta) return { hue: 0, saturation: 0, lightness: lightness * 100 };
+  const saturation = delta / (1 - Math.abs(2 * lightness - 1));
+  let hue = high === red
+    ? ((green - blue) / delta) % 6
+    : high === green
+      ? (blue - red) / delta + 2
+      : (red - green) / delta + 4;
+  hue = (hue * 60 + 360) % 360;
+  return { hue, saturation: saturation * 100, lightness: lightness * 100 };
+}
+
+function hslToHex(hue: number, saturation: number, lightness: number) {
+  const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
+  const section = hue / 60;
+  const secondary = chroma * (1 - Math.abs(section % 2 - 1));
+  const match = hue < 60 ? [chroma, secondary, 0]
+    : hue < 120 ? [secondary, chroma, 0]
+      : hue < 180 ? [0, chroma, secondary]
+        : hue < 240 ? [0, secondary, chroma]
+          : hue < 300 ? [secondary, 0, chroma]
+            : [chroma, 0, secondary];
+  const offset = lightness - chroma / 2;
+  return `#${match.map((channel) => Math.round((channel + offset) * 255)
+    .toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+}
+
+export function getRelatedColors(hex: string): readonly RelatedColor[] | null {
+  const anchor = normalizeColorHex(hex);
+  if (!anchor) return null;
+  const { hue, saturation, lightness } = hexToHsl(anchor);
+  const companionLightness = lightness < 55 ? 92 : 16;
+  const accentHue = (hue + (saturation < 22 ? 35 : 180)) % 360;
+  const accentSaturation = Math.min(82, Math.max(58, saturation));
+  const accentLightness = lightness < 42 ? 56 : lightness > 72 ? 36 : 48;
+  return [
+    { role: 'Lead', hex: anchor },
+    { role: 'Companion', hex: hslToHex(hue, Math.max(12, saturation * 0.35) / 100, companionLightness / 100) },
+    { role: 'Accent', hex: hslToHex(accentHue, accentSaturation / 100, accentLightness / 100) },
+  ];
 }
 
 export function getCollectionCardForeground(hex: string) {
@@ -87,6 +151,143 @@ interface ColorGalleryPageProps {
   searchActive?: boolean;
   onQueryChange?: (query: string) => void;
   onSearchClose?: () => void;
+}
+
+function ColorPaletteSearchModal({
+  isOpen,
+  query,
+  resultCount,
+  paletteCount,
+  colorCount,
+  palettes,
+  relatedColors,
+  onQueryChange,
+  onClose,
+}: {
+  isOpen: boolean;
+  query: string;
+  resultCount: number;
+  paletteCount: number;
+  colorCount: number;
+  palettes: readonly ColorPalette[];
+  relatedColors: readonly RelatedColor[] | null;
+  onQueryChange: (query: string) => void;
+  onClose: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [draftQuery, setDraftQuery] = useState(query);
+  const draftHex = normalizeColorHex(draftQuery);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setDraftQuery(query);
+    inputRef.current?.focus();
+  }, [isOpen, query]);
+
+  return (
+    <CommandPaletteFrame
+      isOpen={isOpen}
+      onOpenChange={(open) => { if (!open) onClose(); }}
+      dataNav="colors"
+      onMouseDown={(event) => event.stopPropagation()}
+    >
+      <header className="command-palette-header">
+        <div className="command-palette-search">
+          <TextInput
+            ref={inputRef}
+            className={draftHex ? 'color-palette-search-input--with-pill' : undefined}
+            label="Search the palette library"
+            isLabelHidden
+            value={draftQuery}
+            onChange={setDraftQuery}
+            onEnter={() => onQueryChange(draftQuery)}
+            placeholder="Search palette, color, or hex…"
+            hasClear={Boolean(draftQuery)}
+            startIcon={draftHex ? (
+              <span
+                aria-hidden="true"
+                className="color-palette-search-input-pill"
+                style={{
+                  backgroundColor: draftHex,
+                  color: getCollectionCardForeground(draftHex),
+                }}
+              >
+                {draftHex}
+              </span>
+            ) : undefined}
+            width="100%"
+          />
+        </div>
+        <span className="command-palette-close">
+          <IconButton
+            label="Close palette search"
+            icon={<Icon icon="close" size="sm" />}
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+          />
+        </span>
+      </header>
+      <div className="command-palette-body color-palette-search-body">
+        <aside className="command-palette-sidebar" aria-label="Color search help">
+          <div className="command-palette-sidebar-spacer" />
+          <div className="command-palette-promo">
+            <span>COLOR SEARCH</span>
+            <strong>Find palettes<br />by color.</strong>
+            <p>Search palette names, individual colors, and hex values.</p>
+          </div>
+        </aside>
+        <div className="inspiration-modal-content command-palette-content color-palette-search-content">
+          <p className="color-palette-search-meta" role="status">
+            {query.trim()
+              ? `${resultCount} of ${paletteCount} palettes`
+              : `${paletteCount} palettes · ${colorCount} colors`}
+          </p>
+          {relatedColors ? (
+            <section className="color-palette-related" aria-label={`Related colors for ${relatedColors[0].hex}`}>
+              <div className="color-palette-related__heading">
+                <span>FROM HEX</span>
+                <strong>Related palette</strong>
+              </div>
+              <div className="color-palette-related__colors">
+                {relatedColors.map((color) => (
+                  <div
+                    className="color-palette-related__color"
+                    key={color.role}
+                    style={{
+                      backgroundColor: color.hex,
+                      color: getCollectionCardForeground(color.hex),
+                    }}
+                  >
+                    <span>{color.role}</span>
+                    <strong>{color.hex}</strong>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+          <div className="color-palette-search-results" role="list">
+            {palettes.slice(0, 18).map((palette) => (
+              <article className="color-palette-search-result" key={palette.id} role="listitem">
+                <strong>{palette.name}</strong>
+                <span className="color-palette-search-colors">
+                  {palette.cards.map((card) => (
+                    <span className="color-palette-search-color" key={card.hex}>
+                      <i aria-hidden="true" style={{ backgroundColor: card.hex }} />
+                      <span>{card.hex}</span>
+                    </span>
+                  ))}
+                </span>
+              </article>
+            ))}
+          </div>
+          {query.trim() && !palettes.length ? (
+            <p className="color-palette-search-empty">No saved palette matches this search.</p>
+          ) : null}
+        </div>
+      </div>
+    </CommandPaletteFrame>
+  );
 }
 
 export function filterPalettesByCollectionIds(
@@ -179,6 +380,15 @@ export function getPaletteCopyText(palette: ColorPalette) {
     : palette.cards.map((card) => card.hex).join(', ');
 }
 
+export function getPaletteVibe(palette: ColorPalette) {
+  if (!palette.source) return palette.mood;
+  const sourceType = palette.source.type === 'app' ? 'Apps' : 'Sites';
+  const sourcePrefix = `From ${sourceType} · ${palette.source.name} — `;
+  return palette.mood.startsWith(sourcePrefix)
+    ? palette.mood.slice(sourcePrefix.length)
+    : palette.mood;
+}
+
 function GradientRecipeLayers({ palette }: { palette: ColorPalette }) {
   const recipe = palette.gradientRecipe;
   if (!recipe) return null;
@@ -200,7 +410,7 @@ function GradientRecipeLayers({ palette }: { palette: ColorPalette }) {
   ));
 }
 
-function PaletteHeader({
+export function PaletteHeader({
   copyText,
   palette,
   successMessage,
@@ -215,7 +425,29 @@ function PaletteHeader({
         <div className="color-gallery__palette-title-row">
           <h3 className="color-gallery__palette-title">{palette.name}</h3>
         </div>
-        <span className="color-gallery__palette-mood">{palette.mood}</span>
+        {palette.source ? (
+          <span className="color-gallery__palette-source">
+            <span
+              className="color-gallery__palette-source-icon"
+              role="img"
+              aria-label={`${palette.source.name} ${palette.source.type}`}
+            >
+              <span aria-hidden="true">{palette.source.name.slice(0, 1).toUpperCase()}</span>
+              {palette.source.iconUrl ? (
+                <img
+                  alt=""
+                  src={palette.source.iconUrl}
+                  onError={(event) => { event.currentTarget.hidden = true; }}
+                />
+              ) : null}
+            </span>
+            <strong className="color-gallery__palette-source-name">{palette.source.name}</strong>
+            <span aria-hidden="true">—</span>
+            <span className="color-gallery__palette-source-description">{getPaletteVibe(palette)}</span>
+          </span>
+        ) : (
+          <span className="color-gallery__palette-mood">{getPaletteVibe(palette)}</span>
+        )}
       </div>
       <CopyButton
         action={async () => {
@@ -316,7 +548,6 @@ export function ColorGalleryPage({
   onQueryChange = () => undefined,
   onSearchClose = () => undefined,
 }: ColorGalleryPageProps) {
-  const searchInput = useRef<HTMLInputElement>(null);
   const [palettes, setPalettes] = useState<readonly ColorPalette[]>(colorPalettes);
   const [collections, setCollections] = useState<readonly ColorCollection[]>(colorCollections);
   const [selectedCollectionIds, setSelectedCollectionIds] = useState<readonly string[]>([]);
@@ -324,6 +555,7 @@ export function ColorGalleryPage({
   const [renderedPaletteCount, setRenderedPaletteCount] = useState(COLOR_PALETTE_BATCH_SIZE);
   const paletteSentinelRef = useRef<HTMLDivElement>(null);
   const normalizedQuery = query.trim().toLowerCase();
+  const relatedColors = useMemo(() => getRelatedColors(query), [query]);
   const selectedCollectionIdSet = useMemo(
     () => new Set(selectedCollectionIds),
     [selectedCollectionIds],
@@ -426,10 +658,6 @@ export function ColorGalleryPage({
   }, [hasMorePalettes, renderedPaletteCount, visiblePalettes.length]);
 
   useEffect(() => {
-    if (searchActive) searchInput.current?.focus();
-  }, [searchActive]);
-
-  useEffect(() => {
     const controller = new AbortController();
     void fetchColorLibrary(controller.signal)
       .then((library) => {
@@ -467,6 +695,7 @@ export function ColorGalleryPage({
   ) : null;
 
   return (
+    <>
     <DiscoveryPageLayout
       kind="colors"
       header={null}
@@ -515,14 +744,21 @@ export function ColorGalleryPage({
             }
           }}
           actions={(
-            <Button
-              label="Create post"
-              variant="primary"
-              onClick={() => navigate({
-                name: 'color-create',
-                ...(visiblePalettes[0] ? { paletteId: visiblePalettes[0].id } : {}),
-              })}
-            />
+            <div className="color-gallery__actions">
+              <Button
+                label="Build palette"
+                variant="secondary"
+                onClick={() => navigate({ name: 'color-compose' })}
+              />
+              <Button
+                label="Create post"
+                variant="primary"
+                onClick={() => navigate({
+                  name: 'color-create',
+                  ...(visiblePalettes[0] ? { paletteId: visiblePalettes[0].id } : {}),
+                })}
+              />
+            </div>
           )}
         />
       )}
@@ -542,34 +778,7 @@ export function ColorGalleryPage({
         setSelectedCollectionIds([]);
         onQueryChange('');
       }}
-      beforeResults={(
-        <>
-          {searchActive ? (
-            <section className="color-gallery__search-panel" aria-label="Palette search">
-              <p className="color-gallery__count">
-                {normalizedQuery
-                  ? `${visiblePalettes.length} of ${typedPalettes.length} palettes`
-                  : `${typedPalettes.length} palettes · ${typedPalettes.reduce((total, palette) => total + palette.cards.length, 0)} colors`}
-              </p>
-              <div className="color-gallery__search" role="search">
-                <label htmlFor="color-gallery-search">Search the palette library</label>
-                <div>
-                  <input
-                    id="color-gallery-search"
-                    ref={searchInput}
-                    type="search"
-                    value={query}
-                    onChange={(event) => onQueryChange(event.currentTarget.value)}
-                    placeholder="Search palette, color, or hex…"
-                  />
-                  <Button label="Done" variant="secondary" onClick={onSearchClose} />
-                </div>
-              </div>
-            </section>
-          ) : null}
-          {selectedCollectionCards}
-        </>
-      )}
+      beforeResults={selectedCollectionCards}
     >
       <div
         className="reference-discovery__grid colors-discovery__grid"
@@ -610,5 +819,17 @@ export function ColorGalleryPage({
         ))}
       </div>
     </DiscoveryPageLayout>
+    <ColorPaletteSearchModal
+      isOpen={searchActive}
+      query={query}
+      resultCount={visiblePalettes.length}
+      paletteCount={typedPalettes.length}
+      colorCount={typedPalettes.reduce((total, palette) => total + palette.cards.length, 0)}
+      palettes={visiblePalettes}
+      relatedColors={relatedColors}
+      onQueryChange={onQueryChange}
+      onClose={onSearchClose}
+    />
+    </>
   );
 }

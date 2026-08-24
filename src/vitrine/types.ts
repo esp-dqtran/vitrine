@@ -11,6 +11,8 @@ export interface Screen {
   platform: string;
   description: string | null;
   purpose?: string | null;
+  sourcePresentation?: 'direct-screen' | 'device-mockup' | 'marketing-composite' | 'unknown';
+  embeddedPageType?: string | null;
   url: string;
   /** Resized grid-tile preview; use for dense grids, fall back to `url` for lightbox/full view. */
   thumbnailUrl?: string | null;
@@ -26,6 +28,13 @@ export interface Screen {
   capturedAt?: string | null;
   stateContext?: string | null;
   confidence?: number | null;
+  uiElements?: Array<{
+    type: string;
+    group: string;
+    layer: 'whole-screen' | 'outer-presentation' | 'embedded-ui';
+    confidence: number;
+    reviewStatus: 'pending' | 'accepted';
+  }>;
   matchedFacets?: Array<{ group: string; value: string }>;
   sourceScreen?: {
     id: number;
@@ -48,12 +57,14 @@ export interface AppSummary {
   totalScreens: number;
   platforms?: Platform[];
   analyzedScreens?: number;
+  /** When the App's latest published capture entered the catalog. */
+  createdAt?: string | null;
   lastCapturedAt?: string | null;
   websiteUrl?: string | null;
   iconUrl?: string | null;
   /** Thumbnail served straight from R2 by the Worker. */
   previewUrl?: string | null;
-  /** True once the App has been re-captured; drives the New/Updated badge. */
+  /** Legacy compatibility flag; Apps use createdAt to determine the New badge. */
   isUpdated?: boolean;
   description?: string | null;
   previewVideoUrl?: string | null;

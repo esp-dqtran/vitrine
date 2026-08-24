@@ -1,0 +1,9 @@
+# Search and citation are welcome. Training is not.
+
+User-agent: *
+Content-Signal: search=yes,ai-train=no,use=reference
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+Disallow: /studio
+Disallow: /sanity-studio

@@ -128,7 +128,8 @@ test('renders a first-class searchable Flow catalog beside Apps and Sites', () =
 
   assert.match(html, /data-flows-discovery="true"/);
   assert.doesNotMatch(html, /reference-discovery-nav/);
-  assert.match(html, /Browse by category/);
+  assert.match(html, />Categories</);
+  assert.doesNotMatch(html, /Browse by category/);
   assert.match(html, /data-flows-filterbar="true"/);
   assert.match(html, /aria-label="Flow discovery controls"/);
   assert.match(html, /aria-label="Flow platform: Web"/);
@@ -232,6 +233,8 @@ test('keeps the controlled 13-category Flow taxonomy independent from response f
   assert.equal((taxonomy.match(/data-flow-taxonomy-option="true"/g) ?? []).length, 13);
   assert.match(taxonomy, />Authentication</);
   assert.match(taxonomy, />System, Privacy &amp; Support</);
+  assert.match(taxonomy, /aria-label="Content &amp; Detail, 45233 flows"/);
+  assert.match(taxonomy, /data-taxonomy-count="4"/);
   assert.doesNotMatch(taxonomy, /Flow group 0000/);
 });
 

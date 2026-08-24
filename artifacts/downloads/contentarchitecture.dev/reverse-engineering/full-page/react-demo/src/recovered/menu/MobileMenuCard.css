@@ -1,0 +1,200 @@
+.dither-frame {
+  width: fit-content;
+  padding: 6px;
+  border-radius: 8px;
+  background-color: #1b1b1b;
+  background-image: repeating-conic-gradient(
+    rgb(255 255 255 / 22%) 0% 25%,
+    transparent 0% 50%
+  );
+  background-size: 4px 4px;
+  box-shadow:
+    0 0 0 1px #161616,
+    0 8px 20px rgb(0 0 0 / 16%);
+}
+
+.mobile-menu-card {
+  display: flex;
+  width: 160px;
+  min-width: 160px;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 4px;
+  border-radius: 4px;
+  background: #232323;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 10%);
+  color: white;
+  font-family: GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
+  font-size: clamp(12px, calc(12px + (14 - 12) * ((100vw - 375px) / (1600 - 375))), 14px);
+  font-weight: 400;
+  line-height: 1.25;
+  font-synthesis: none;
+  text-transform: uppercase;
+}
+
+.mobile-menu-card__header {
+  display: flex;
+  height: 24px;
+  align-items: center;
+}
+
+.mobile-menu-card__home,
+.mobile-menu-card__logo {
+  display: block;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+}
+
+.mobile-menu-card__home { color: #fff; }
+
+.mobile-menu-card__toggle {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  height: 24px;
+  padding: 0 0 0 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-transform: none;
+  cursor: pointer;
+}
+
+.mobile-menu-card__toggle-icon {
+  position: relative;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  place-items: center;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 10%);
+  transition: background-color 300ms;
+}
+
+.mobile-menu-card__toggle:hover .mobile-menu-card__toggle-icon {
+  background: rgb(255 255 255 / 20%);
+}
+
+.mobile-menu-card__toggle:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px #ff9100;
+}
+
+.mobile-menu-card__toggle-horizontal,
+.mobile-menu-card__toggle-vertical {
+  position: absolute;
+  display: block;
+  background: currentColor;
+}
+
+.mobile-menu-card__toggle-horizontal { width: 10px; height: 1px; }
+.mobile-menu-card__toggle-vertical { width: 1px; height: 10px; }
+
+.mobile-menu-card__collapsible {
+  overflow: hidden;
+}
+
+.mobile-menu-card__links {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0 0;
+  margin: 4px 0 0;
+  border-top: 1px solid rgb(255 255 255 / 10%);
+  list-style: none;
+}
+
+.mobile-menu-card__link {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  padding-block: 6px;
+  color: rgb(255 255 255 / 55%);
+  text-decoration: none;
+  transition: color 300ms;
+}
+
+.mobile-menu-card__link:hover,
+.mobile-menu-card__link:focus-visible,
+.mobile-menu-card__link[aria-current="page"] {
+  color: white;
+}
+
+.mobile-menu-card__link:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 2px;
+}
+
+.mobile-menu-card__pulse {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #ff9100;
+}
+
+.mobile-menu-card__pulse::before {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  content: "";
+  animation: menu-pulse 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  opacity: .5;
+}
+
+.announcement-marquee {
+  position: relative;
+  width: 152px;
+  height: 18px;
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #dedede;
+  color: #242424;
+  font-size: 12px;
+  line-height: 15px;
+  white-space: nowrap;
+}
+
+.announcement-marquee__track {
+  position: absolute;
+  inset: 0 auto auto 0;
+  display: flex;
+  width: max-content;
+  height: 18px;
+  align-items: center;
+  animation: announcement-marquee 4.9199s linear infinite;
+}
+
+.announcement-marquee__track span {
+  padding-inline: 12px;
+}
+
+@keyframes announcement-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes menu-pulse {
+  75%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .announcement-marquee__track,
+  .mobile-menu-card__pulse::before {
+    animation: none;
+  }
+}

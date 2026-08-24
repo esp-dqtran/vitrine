@@ -1,0 +1,34 @@
+:root {
+  --font-mono: GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: #232323;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+@font-face {
+  font-family: GeistMono;
+  src: url("/assets/geist-mono.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+.demo-shell {
+  width: 100%;
+  min-height: 100svh;
+  background: #232323;
+}
+
+.demo-spiral {
+  height: 100svh;
+  min-height: 560px;
+}

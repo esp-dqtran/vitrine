@@ -16,11 +16,12 @@ export async function listMcpAccessTokens(): Promise<McpAccessToken[]> {
   return body.tokens as McpAccessToken[];
 }
 
-export async function createMcpAccessToken(): Promise<{ token: string; accessToken: McpAccessToken }> {
+export async function createMcpAccessToken(label?: string): Promise<{ token: string; accessToken: McpAccessToken }> {
+  const normalizedLabel = label?.trim();
   const response = await apiFetch('/api/auth/mcp-tokens', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({}),
+    body: JSON.stringify(normalizedLabel ? { label: normalizedLabel } : {}),
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.error ?? `Could not create Flow access token (${response.status})`);

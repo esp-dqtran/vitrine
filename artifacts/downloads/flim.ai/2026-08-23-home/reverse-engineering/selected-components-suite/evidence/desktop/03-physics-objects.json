@@ -1,0 +1,514 @@
+[
+  {
+    "child": [
+      {
+        "background": "rgb(233, 233, 233) none repeat scroll 0% 0% / auto padding-box border-box",
+        "className": "eye",
+        "color": "rgb(20, 20, 20)",
+        "tag": "DIV",
+        "text": ""
+      }
+    ],
+    "className": "physics-shape",
+    "dataset": {
+      "shape": "circle",
+      "startX": "-0.4",
+      "startY": "0.7"
+    },
+    "html": "<div data-rotation=\"\" data-animate=\"eye\" data-wf--eye--variant=\"alt\" class=\"eye\"><div data-rotation=\"\" class=\"eye-inner-scale\" style=\"clip-path: ellipse(3.25rem 3.25rem at 50% 50%);\"><div class=\"eye-inner-translate\"><div class=\"eye-inner\" style=\"translate: none; rotate: none; scale: none; transform: rotate(16560deg);\"><div class=\"eye-iris w-variant-b4b10ebe-4fd1-b016-b8a6-e16a8e0d932a\" style=\"translate: none; rotate: none; scale: none; transform: translate(39.0354%, 10.2867%) scale(0.8762, 0.8762);\"><div class=\"eye-pupil\"></div><div class=\"eye-cross\"></div></div></div></div></div></div>",
+    "index": 0,
+    "rect": {
+      "height": 66.67730712890625,
+      "width": 66.67726135253906,
+      "x": -95.85115051269533,
+      "y": 803.4512329101562
+    },
+    "text": "",
+    "transform": "matrix(0.939382, 0.342873, -0.342873, 0.939382, -527.479, 0.102383)"
+  },
+  {
+    "child": [
+      {
+        "background": "linear-gradient(0deg, rgba(20, 20, 20, 0.1) 1px, rgba(0, 0, 0, 0) 1px) repeat-y scroll 0px 12.8px / 100% 32px padding-box border-box, rgb(33, 147, 91) linear-gradient(90deg, rgba(20, 20, 20, 0.1) 1px, rgba(0, 0, 0, 0) 1px) repeat-x scroll 0px 0px / 32px 100% padding-box border-box",
+        "className": "shape-square bg-pattern bg-brand-1",
+        "color": "rgb(20, 20, 20)",
+        "tag": "DIV",
+        "text": ""
+      }
+    ],
+    "className": "physics-shape square-m",
+    "dataset": {
+      "shape": "square",
+      "startX": "-0.35",
+      "startY": "0.75"
+    },
+    "html": "<div class=\"shape-square bg-pattern bg-brand-1\"></div>",
+    "index": 1,
+    "rect": {
+      "height": 84.57830810546875,
+      "width": 84.57830047607422,
+      "x": 30.0843505859375,
+      "y": 777.9937744140625
+    },
+    "text": "",
+    "transform": "matrix(1, 0.00027927, -0.00027927, 1, -408.871, -0.127243)"
+  },
+  {
+    "child": [
+      {
+        "background": "linear-gradient(0deg, rgba(20, 20, 20, 0.1) 1px, rgba(0, 0, 0, 0) 1px) repeat-y scroll 0px 12.8px / 100% 32px padding-box border-box, rgb(245, 245, 245) linear-gradient(90deg, rgba(20, 20, 20, 0.1) 1px, rgba(0, 0, 0, 0) 1px) repeat-x scroll 0px 0px / 32px 100% padding-box border-box",
+        "className": "shape-circle bg-pattern",
+        "color": "rgb(20, 20, 20)",
+        "tag": "DIV",
+        "text": ""
+      }
+    ],
+    "className": "physics-shape circle-m",
+    "dataset": {
+      "shape": "circle",
+      "startX": "-0.35",
+      "startY": "0.85"
+    },
+    "html": "<div class=\"shape-circle bg-pattern\"></div>",
+    "index": 2,
+    "rect": {
+      "height": 74.70611572265625,
+      "width": 74.70608520507812,
+      "x": -42.1935920715332,
+      "y": 744.6864013671875
+    },
+    "text": "",
+    "transform": "matrix(0.688111, -0.725605, 0.725605, 0.688111, -470.229, -54.2262)"
+  },
+  {
+    "child": [
+      {
+        "background": "rgb(20, 20, 20) none repeat scroll 0% 0% / auto padding-box border-box",
+        "className": "shape-pill",
+        "color": "rgb(255, 255, 255)",
+        "tag": "DIV",
+        "text": "400K videos"
+      }
+    ],
+    "className": "physics-shape pill",
+    "dataset": {
+      "shape": "pill",
+      "startX": "-0.25",
+      "startY": "0.85"
+    },
+    "html": "<div data-wf--pill-shape--variant=\"m\" class=\"shape-pill\"><div data-skip-build-on=\"true\" class=\"text-body-s\">400K videos</div></div>",
+    "index": 3,
+    "rect": {
+      "height": 163.12164306640625,
+      "width": 129.0133056640625,
+      "x": 107.47222137451172,
+      "y": 711.539306640625
+    },
+    "text": "400K videos",
+    "transform": "matrix(0.463499, -0.886097, 0.886097, 0.463499, -341.281, -35.6499)"
+  },
+  {
+    "child": [
+      {
+        "background": "rgb(20, 20, 20) none repeat scroll 0% 0% / auto padding-box border-box",
+        "className": "shape-pill",
+        "color": "rgb(255, 255, 255)",
+        "tag": "DIV",
+        "text": "5.8K movies"
+      }
+    ],
+    "className": "physics-shape pill",
+    "dataset": {
+      "shape": "pill",
+      "startX": "-0.25",
+      "startY": "0.9"
+    },
+    "html": "<div data-wf--pill-shape--variant=\"m\" class=\"shape-pill\"><div data-skip-build-on=\"true\" class=\"text-body-s\">5.8K movies</div></div>",
+    "index": 4,
+    "rect": {
+      "height": 158.6348876953125,
+      "width": 103.95497131347656,
+      "x": -94.02571105957033,
+      "y": 525.4901733398438
+    },
+    "text": "5.8K movies",
+    "transform": "matrix(0.263771, -0.964585, 0.964585, 0.263771, -553.964, -223.942)"
+  },
+  {
+    "child": [
+      {
+        "background": "linear-gradient(0deg, rgba(20, 20, 20, 0.1) 1px, rgba(0, 0, 0, 0) 1px) repeat-y scroll 0px 12.8px / 100% 32px padding-box border-box, rgb(245, 245, 245) linear-gradient(90deg, rgba(20, 20, 20, 0.1) 1px, rgba(0, 0, 0, 0) 1px) repeat-x scroll 0px 0px / 32px 100% padding-box border-box",
+        "className": "shape-triangle bg-pattern",
+        "color": "rgb(20, 20, 20)",
+        "tag": "DIV",
+        "text": ""
+      }
+    ],
+    "className": "physics-shape triangle",
+    "dataset": {
+      "shape": "triangle",
+      "startX": "-0.2",
+      "startY": "0.7"
+    },
+    "html": "<div class=\"shape-triangle bg-pattern\"></div>",
+    "index": 5,
+    "rect": {
+      "height": 129.04302978515625,
+      "width": 148.258544921875,
+      "x": 173.66268920898438,
+      "y": 733.8583374023438
+    },
+    "text": "",
+    "transform": "matrix(0.999998, -0.00219351, 0.00219351, 0.999998, -265.163, 0.0517349)"
+  },
+  {
+    "child": [
+      {
+        "background": "rgb(233, 233, 233) none repeat scroll 0% 0% / auto padding-box border-box",
+        "className": "eye",
+        "color": "rgb(20, 20, 20)",
+        "tag": "DIV",
+        "text": ""
+      }
+    ],
+    "className": "physics-shape",
+    "dataset": {
+      "shape": "circle",
+      "startX": "-0.15",
+      "startY": "0.8"
+    },
+    "html": "<div data-rotation=\"\" data-animate=\"eye\" data-wf--eye--variant=\"base\" class=\"eye\"><div data-rotation=\"\" class=\"eye-inner-scale\" style=\"clip-path: ellipse(3.25rem 3.25rem at 50% 50%);\"><div class=\"eye-inner-translate\"><div class=\"eye-inner\" style=\"translate: none; rotate: none; scale: none; transform: rotate(17262.1deg);\"><div class=\"eye-iris\" style=\"translate: none; rotate: none; scale: none; transform: translate(-49.5315%, -37.1879%) scale(0.9715, 0.9715);\"><div class=\"eye-pupil\"></div><div class=\"eye-cross\"></div></div></div></div></div></div>",
+    "index": 6,
+    "rect": {
+      "height": 61.21466064453125,
+      "width": 61.214630126953125,
+      "x": 307.0310974121094,
+      "y": 806.180908203125
+    },
+    "text": "",
+    "transform": "matrix(-0.980453, -0.196751, 0.196751, -0.980453, -127.328, 0.100735)"
+  },
+  {
+    "child": [
+      {
+        "background": "rgb(20, 20, 20) none repeat scroll 0% 0% / auto padding-box border-box",
+        "className": "shape-pill",
+        "color": "rgb(255, 255, 255)",
+        "tag": "DIV",
+        "text": "150K animations"
+      }
+    ],
+    "className": "physics-shape pill",
+    "dataset": {
+      "shape": "pill",
+      "startX": "-0.05",
+      "startY": "0.9"
+    },
+    "html": "<div data-wf--pill-shape--variant=\"m\" class=\"shape-pill\"><div data-skip-build-on=\"true\" class=\"text-body-s\">150K animations</div></div>",
+    "index": 7,
+    "rect": {
+      "height": 194.18603515625,
+      "width": 127.03060913085938,
+      "x": 255.41387939453125,
+      "y": 605.3536376953125
+    },
+    "text": "150K animations",
+    "transform": "matrix(0.348536, -0.937296, 0.937296, 0.348536, -211.006, -126.303)"
+  },
+  {
+    "child": [
+      {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "className": "w-embed",
+        "color": "rgb(48, 168, 29)",
+        "tag": "DIV",
+        "text": ""
+      }
+    ],
+    "className": "physics-shape hexagon",
+    "dataset": {
+      "shape": "hexagon",
+      "startX": "0",
+      "startY": "0.6"
+    },
+    "html": "<div class=\"w-embed\"><svg viewBox=\"0 0 374 324\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M374 161.947L280.5 323.894H93.5L0 161.947L93.5 0L280.5 7.98702e-06L374 161.947Z\" fill=\"currentColor\"></path>\n</svg></div>",
+    "index": 8,
+    "rect": {
+      "height": 185.81890869140625,
+      "width": 211.561767578125,
+      "x": 329.4661865234375,
+      "y": 676.9205932617188
+    },
+    "text": "",
+    "transform": "matrix(1, -0.000880499, 0.000880499, 1, -109.419, -0.0410461)"
+  },
+  {
+    "child": [
+      {
+        "background": "rgb(255, 132, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "className": "shape-pill w-variant-1f5f8f8d-3efe-1b4f-29b9-2f4118c71769",
+        "color": "rgb(255, 255, 255)",
+        "tag": "DIV",
+        "text": "1.5M stills"
+      }
+    ],
+    "className": "physics-shape pill",
+    "dataset": {
+      "shape": "pill",
+      "startX": "0.05"
+    },
+    "html": "<div data-wf--pill-shape--variant=\"l\" class=\"shape-pill w-variant-1f5f8f8d-3efe-1b4f-29b9-2f4118c71769\"><div data-skip-build-on=\"true\" class=\"text-body-l\">1.5M stills</div></div>",
+    "index": 9,
+    "rect": {
+      "height": 130.89239501953125,
+      "width": 257.5928955078125,
+      "x": 528.3538208007812,
+      "y": 517.747314453125
+    },
+    "text": "1.5M stills",
+    "transform": "matrix(-0.994913, -0.100738, 0.100738, -0.994913, 94.1171, -226.275)"
+  },
+  {
+    "child": [
+      {
+        "background": "linear-gradient(0deg, rgba(20, 20, 20, 0.1) 1px, rgba(0, 0, 0, 0) 1px) repeat-y scroll 0px 12.8px / 100% 32px padding-box border-box, rgb(245, 245, 245) linear-gradient(90deg, rgba(20, 20, 20, 0.1) 1px, rgba(0, 0, 0, 0) 1px) repeat-x scroll 0px 0px / 32px 100% padding-box border-box",
+        "className": "shape-circle bg-pattern",
+        "color": "rgb(20, 20, 20)",
+        "tag": "DIV",
+        "text": ""
+      }
+    ],
+    "className": "physics-shape circle-l",
+    "dataset": {
+      "shape": "circle",
+      "startX": "0.15",
+      "startY": "0.7"
+    },
+    "html": "<div class=\"shape-circle bg-pattern\"></div>",
+    "index": 10,
+    "rect": {
+      "height": 101.55035400390624,
+      "width": 101.55035400390624,
+      "x": 526.4677734375,
+      "y": 769.5687255859375
+    },
+    "text": "",
+    "transform": "matrix(0.973862, -0.22714, 0.22714, 0.973862, 95.9988, -0.0662575)"
+  },
+  {
+    "child": [
+      {
+        "background": "rgb(20, 20, 20) none repeat scroll 0% 0% / auto padding-box border-box",
+        "className": "shape-pill",
+        "color": "rgb(255, 255, 255)",
+        "tag": "DIV",
+        "text": "5.5K music videos"
+      }
+    ],
+    "className": "physics-shape pill",
+    "dataset": {
+      "shape": "pill",
+      "startX": "0.2",
+      "startY": "0.8"
+    },
+    "html": "<div data-wf--pill-shape--variant=\"m\" class=\"shape-pill\"><div data-skip-build-on=\"true\" class=\"text-body-s\">5.5K music videos</div></div>",
+    "index": 11,
+    "rect": {
+      "height": 95.54547119140624,
+      "width": 200.94873046875,
+      "x": 535.740234375,
+      "y": 704.2174682617188
+    },
+    "text": "5.5K music videos",
+    "transform": "matrix(0.989114, 0.147151, -0.147151, 0.989114, 100.717, -76.7598)"
+  },
+  {
+    "child": [
+      {
+        "background": "linear-gradient(0deg, rgba(20, 20, 20, 0.1) 1px, rgba(0, 0, 0, 0) 1px) repeat-y scroll 0px 12.8px / 100% 32px padding-box border-box, rgb(245, 245, 245) linear-gradient(90deg, rgba(20, 20, 20, 0.1) 1px, rgba(0, 0, 0, 0) 1px) repeat-x scroll 0px 0px / 32px 100% padding-box border-box",
+        "className": "shape-circle bg-pattern",
+        "color": "rgb(20, 20, 20)",
+        "tag": "DIV",
+        "text": ""
+      }
+    ],
+    "className": "physics-shape circle-l",
+    "dataset": {
+      "shape": "circle",
+      "startX": "0.2",
+      "startY": "0.9"
+    },
+    "html": "<div class=\"shape-circle bg-pattern\"></div>",
+    "index": 12,
+    "rect": {
+      "height": 109.6585693359375,
+      "width": 109.6585693359375,
+      "x": 621.3763427734375,
+      "y": 626.0967407226562
+    },
+    "text": "",
+    "transform": "matrix(0.930433, 0.366463, -0.366463, 0.930433, 194.961, -139.484)"
+  },
+  {
+    "child": [
+      {
+        "background": "rgb(20, 20, 20) none repeat scroll 0% 0% / auto padding-box border-box",
+        "className": "shape-pill",
+        "color": "rgb(255, 255, 255)",
+        "tag": "DIV",
+        "text": "2K TV series"
+      }
+    ],
+    "className": "physics-shape pill",
+    "dataset": {
+      "shape": "pill",
+      "startX": "0.25",
+      "startY": "0.7"
+    },
+    "html": "<div data-wf--pill-shape--variant=\"m\" class=\"shape-pill\"><div data-skip-build-on=\"true\" class=\"text-body-s\">2K TV series</div></div>",
+    "index": 13,
+    "rect": {
+      "height": 68.20355224609375,
+      "width": 149.2586669921875,
+      "x": 625.4713745117188,
+      "y": 794.84716796875
+    },
+    "text": "2K TV series",
+    "transform": "matrix(0.999998, -0.00220458, 0.00220458, 0.999998, 186.579, 0.198936)"
+  },
+  {
+    "child": [
+      {
+        "background": "rgb(233, 233, 233) none repeat scroll 0% 0% / auto padding-box border-box",
+        "className": "eye",
+        "color": "rgb(20, 20, 20)",
+        "tag": "DIV",
+        "text": ""
+      }
+    ],
+    "className": "physics-shape",
+    "dataset": {
+      "shape": "circle",
+      "startX": "0.3",
+      "startY": "0.9"
+    },
+    "html": "<div data-rotation=\"\" data-animate=\"eye\" data-wf--eye--variant=\"base\" class=\"eye\"><div data-rotation=\"\" class=\"eye-inner-scale\" style=\"clip-path: ellipse(3.25rem 3.25rem at 50% 50%);\"><div class=\"eye-inner-translate\"><div class=\"eye-inner\" style=\"translate: none; rotate: none; scale: none; transform: rotate(13320deg);\"><div class=\"eye-iris\" style=\"translate: none; rotate: none; scale: none; transform: translate(-27.9809%, 12.0385%) translate3d(0px, 0px, 0px) scale(0.9099, 0.9099);\"><div class=\"eye-pupil\"></div><div class=\"eye-cross\"></div></div></div></div></div></div>",
+    "index": 14,
+    "rect": {
+      "height": 62.23150634765625,
+      "width": 62.23150634765625,
+      "x": 728.4097900390625,
+      "y": 740.867431640625
+    },
+    "text": "",
+    "transform": "matrix(0.221629, 0.975131, -0.975131, 0.221629, 294.559, -64.7043)"
+  },
+  {
+    "child": [
+      {
+        "background": "rgb(233, 233, 233) none repeat scroll 0% 0% / auto padding-box border-box",
+        "className": "eye",
+        "color": "rgb(20, 20, 20)",
+        "tag": "DIV",
+        "text": ""
+      }
+    ],
+    "className": "physics-shape",
+    "dataset": {
+      "shape": "circle",
+      "startX": "0.35",
+      "startY": "0.9"
+    },
+    "html": "<div data-rotation=\"\" data-animate=\"eye\" data-wf--eye--variant=\"base\" class=\"eye\"><div data-rotation=\"\" class=\"eye-inner-scale\" style=\"clip-path: ellipse(3.25rem 3.25rem at 50% 50%);\"><div class=\"eye-inner-translate\"><div class=\"eye-inner\" style=\"translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px) rotate(17299.4deg);\"><div class=\"eye-iris\" style=\"translate: none; rotate: none; scale: none; transform: translate(-16.9479%, -43.0274%) scale(0.9462, 0.9462);\"><div class=\"eye-pupil\"></div><div class=\"eye-cross\"></div></div></div></div></div></div>",
+    "index": 15,
+    "rect": {
+      "height": 62.77252197265625,
+      "width": 62.7724609375,
+      "x": 819.3993530273438,
+      "y": 731.5006103515625
+    },
+    "text": "",
+    "transform": "matrix(-0.235222, 0.971942, -0.971942, -0.235222, 385.819, -73.8006)"
+  },
+  {
+    "child": [
+      {
+        "background": "linear-gradient(0deg, rgba(20, 20, 20, 0.1) 1px, rgba(0, 0, 0, 0) 1px) repeat-y scroll 0px 12.8px / 100% 32px padding-box border-box, rgb(254, 204, 51) linear-gradient(90deg, rgba(20, 20, 20, 0.1) 1px, rgba(0, 0, 0, 0) 1px) repeat-x scroll 0px 0px / 32px 100% padding-box border-box",
+        "className": "shape-square bg-pattern bg-brand-4",
+        "color": "rgb(20, 20, 20)",
+        "tag": "DIV",
+        "text": ""
+      }
+    ],
+    "className": "physics-shape square-s",
+    "dataset": {
+      "shape": "square",
+      "startX": "0.35",
+      "startY": "0.8"
+    },
+    "html": "<div class=\"shape-square bg-pattern bg-brand-4\"></div>",
+    "index": 16,
+    "rect": {
+      "height": 74.0263671875,
+      "width": 74.0263671875,
+      "x": 779.2127075195312,
+      "y": 788.7800903320312
+    },
+    "text": "",
+    "transform": "matrix(1, -0.000568248, 0.000568248, 1, 340.267, 0.0979614)"
+  },
+  {
+    "child": [
+      {
+        "background": "linear-gradient(0deg, rgba(20, 20, 20, 0.1) 1px, rgba(0, 0, 0, 0) 1px) repeat-y scroll 0px 12.8px / 100% 32px padding-box border-box, rgb(245, 245, 245) linear-gradient(90deg, rgba(20, 20, 20, 0.1) 1px, rgba(0, 0, 0, 0) 1px) repeat-x scroll 0px 0px / 32px 100% padding-box border-box",
+        "className": "shape-circle bg-pattern",
+        "color": "rgb(20, 20, 20)",
+        "tag": "DIV",
+        "text": ""
+      }
+    ],
+    "className": "physics-shape circle-s",
+    "dataset": {
+      "shape": "circle",
+      "startX": "0.4",
+      "startY": "0.7"
+    },
+    "html": "<div class=\"shape-circle bg-pattern\"></div>",
+    "index": 17,
+    "rect": {
+      "height": 57.288818359375,
+      "width": 57.288818359375,
+      "x": 910.2916259765624,
+      "y": 813.2474975585938
+    },
+    "text": "",
+    "transform": "matrix(0.879738, -0.475458, 0.475458, 0.879738, 478.833, 0.341127)"
+  },
+  {
+    "child": [
+      {
+        "background": "rgb(20, 20, 20) none repeat scroll 0% 0% / auto padding-box border-box",
+        "className": "shape-pill",
+        "color": "rgb(255, 255, 255)",
+        "tag": "DIV",
+        "text": "15K ads"
+      }
+    ],
+    "className": "physics-shape pill",
+    "dataset": {
+      "shape": "pill",
+      "startX": "0.4",
+      "startY": "1"
+    },
+    "html": "<div data-wf--pill-shape--variant=\"m\" class=\"shape-pill\"><div data-skip-build-on=\"true\" class=\"text-body-s\">15K ads</div></div>",
+    "index": 18,
+    "rect": {
+      "height": 131.111572265625,
+      "width": 122.69744873046876,
+      "x": 846.7601928710938,
+      "y": 726.6048583984375
+    },
+    "text": "15K ads",
+    "transform": "matrix(-0.608086, 0.793871, -0.793871, -0.608086, 412.56, -36.5894)"
+  }
+]

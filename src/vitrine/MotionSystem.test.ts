@@ -70,6 +70,23 @@ test('defines direct, local, and reduced-motion interaction behavior', async () 
   assert.match(styles, /\.excalidraw \*/);
 });
 
+test('transitions Apps and Screens result modes without ignoring reduced motion', async () => {
+  const styles = await read('./productMotion.css');
+
+  assert.match(styles, /@keyframes apps-discovery-results-enter/);
+  assert.match(styles, /\.apps-discovery__results-transition,[\s\S]*animation:\s*apps-discovery-results-enter\s+var\(--vitrine-motion-medium\)/);
+  assert.match(styles, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.apps-discovery__results-transition,[\s\S]*animation:\s*none\s*!important/);
+});
+
+test('gives selected discovery filters a medium active-state transition', async () => {
+  const css = await readFile(new URL('./productMotion.css', import.meta.url), 'utf8');
+
+  assert.match(
+    css,
+    /\.apps-discovery \.apps-filterbar__filter\s*\{[^}]*transition-property:\s*border-color, background-color, box-shadow;[^}]*transition-duration:\s*var\(--vitrine-motion-medium\)\s*!important;/,
+  );
+});
+
 test('uses the slow token for standard drawers and dialogs but not Flow previews', async () => {
   const styles = await read('./productMotion.css');
 

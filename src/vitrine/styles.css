@@ -10286,8 +10286,8 @@ body {
 }
 
 .project-free-line-object-toolbar__weight > img {
-  width: 22px;
-  height: 22px;
+  width: 19px;
+  height: 19px;
   display: block;
   object-fit: contain;
   filter: brightness(0) invert(1);
@@ -16428,7 +16428,7 @@ body {
 }
 
 .flow-strip-card__meta p {
-  margin: 7px 0 0;
+  margin: 3px 0 0;
   color: var(--color-text-secondary);
   font-size: 14px;
   font-weight: 600;
@@ -17525,21 +17525,6 @@ body {
   place-items: center;
 }
 
-.app-card-skeleton {
-  cursor: default;
-  pointer-events: none;
-}
-
-.app-card-skeleton__media {
-  overflow: hidden;
-}
-
-.app-card-skeleton__title,
-.app-card-skeleton__description,
-.app-card-skeleton__metadata {
-  display: block;
-}
-
 .apps-discovery__search-error {
   margin: 12px 0;
   color: var(--color-text-danger);
@@ -17568,15 +17553,6 @@ body {
   clip: rect(0, 0, 0, 0) !important;
   white-space: nowrap !important;
   border: 0 !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .app-card-skeleton *,
-  .app-card-skeleton *::before,
-  .app-card-skeleton *::after {
-    animation: none !important;
-    transition: none !important;
-  }
 }
 
 @media (max-width: 1080px) {
@@ -17709,7 +17685,11 @@ body {
 
 .flows-discovery__taxonomy {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.flows-discovery__facet {
+  grid-column: 1 / -1;
 }
 
 .flows-discovery__facet h2 {
@@ -17721,8 +17701,10 @@ body {
 
 .flows-discovery__facet > div {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0 28px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(5, 32px);
+  grid-auto-flow: column;
+  column-gap: 28px;
 }
 
 .flows-discovery__facet button {
@@ -17759,10 +17741,31 @@ body {
   padding-top: 32px;
 }
 
+@media (max-width: 1080px) {
+  .flows-discovery__taxonomy {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .flows-discovery__facet > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(7, 32px);
+    column-gap: 20px;
+  }
+}
+
 @media (max-width: 720px) {
+  .flows-discovery__taxonomy {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .flows-discovery__facet {
+    grid-column: auto;
+  }
+
   .flows-discovery__facet > div {
     grid-template-columns: minmax(0, 1fr);
-    column-gap: 20px;
+    grid-template-rows: none;
+    grid-auto-flow: row;
   }
 
   .flows-discovery__facet button {

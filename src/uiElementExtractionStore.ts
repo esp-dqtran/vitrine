@@ -26,6 +26,7 @@ export interface PersistedUiElementCrop {
 export interface UiElementExtractionOccurrence {
   id: number;
   type: string;
+  layer: UiElementCandidate["layer"];
   croppedImageId: number;
   screenImageId: number;
   confidence: number;
@@ -88,6 +89,7 @@ export async function listUiElementExtractionSources(input: {
   providerModel: string;
   promptVersion: number;
   reprocess?: boolean;
+  sourceImageId?: number;
 }): Promise<UiElementExtractionSource[]> {
   const result = await query(
     `WITH selected_version AS (
@@ -98,41 +100,26 @@ export async function listUiElementExtractionSources(input: {
          AND av.platform = $2
          AND av.version_number = $3
        LIMIT 1
-     ),
-     screen_objects AS (
-       SELECT screen.id, screen.platform_id, object.sha256
-       FROM selected_version selected
-       JOIN version_images membership ON membership.version_id = selected.id
-       JOIN images screen ON screen.id = membership.image_id AND screen.kind = 'screen'
-       JOIN stored_objects object ON object.object_key = screen.object_key
      )
-     SELECT selected.id AS version_id, a.name AS app, source.platform_id,
-       selected.platform, source.id AS source_image_id,
-       matching_screen.id AS screen_image_id,
+     SELECT selected.id AS version_id, a.name AS app, screen.platform_id,
+       selected.platform, screen.id AS source_image_id,
+       screen.id AS screen_image_id,
        object.object_key, object.sha256, object.byte_size,
        object.content_type, object.access_class
      FROM selected_version selected
      JOIN apps a ON a.id = selected.app_id
      JOIN version_images membership ON membership.version_id = selected.id
-     JOIN images source ON source.id = membership.image_id
-       AND source.kind = 'ui_element'
-       AND source.image_url LIKE 'mobbin-bulk:ui_element:%'
-     JOIN stored_objects object ON object.object_key = source.object_key
-     JOIN LATERAL (
-       SELECT screen.id
-       FROM screen_objects screen
-       WHERE screen.sha256 = object.sha256
-         AND screen.platform_id = source.platform_id
-       ORDER BY screen.id
-       LIMIT 1
-     ) matching_screen ON true
+     JOIN images screen ON screen.id = membership.image_id
+       AND screen.kind = 'screen'
+     JOIN stored_objects object ON object.object_key = screen.object_key
      LEFT JOIN ui_element_extractions extraction
        ON extraction.version_id = selected.id
-      AND extraction.source_image_id = source.id
+      AND extraction.source_image_id = screen.id
       AND extraction.provider_model = $5
       AND extraction.prompt_version = $6
      WHERE ($7::boolean OR extraction.status IS DISTINCT FROM 'complete')
-     ORDER BY source.id
+       AND ($8::integer IS NULL OR screen.id = $8)
+     ORDER BY screen.id
      LIMIT $4`,
     [
       input.app,
@@ -142,6 +129,7 @@ export async function listUiElementExtractionSources(input: {
       input.providerModel,
       input.promptVersion,
       input.reprocess ?? false,
+      input.sourceImageId ?? null,
     ],
   );
   return result.rows.map((row) => ({
@@ -218,13 +206,12 @@ export async function completeUiElementExtraction(input: {
     await client.query(
       `UPDATE screen_ui_elements
        SET review_status = 'rejected', updated_at = now()
-       WHERE version_id = $1 AND source_image_id = $2
-         AND provider_model = $3 AND prompt_version = $4`,
+       WHERE version_id = $1 AND screen_image_id = $2
+         AND provider_model = $3 AND review_status <> 'rejected'`,
       [
         input.source.versionId,
-        input.source.sourceImageId,
+        input.source.screenImageId,
         input.providerModel,
-        input.promptVersion,
       ],
     );
     const analyzedScreen = await client.query(
@@ -253,41 +240,43 @@ export async function completeUiElementExtraction(input: {
     if (versionScreen.rowCount !== 1) {
       throw new Error("UI element source screen is not in the selected version");
     }
-    await client.query(
-      `DELETE FROM screen_pattern_assignments
-       WHERE image_id = $1 AND source = 'analysis'`,
-      [input.source.screenImageId],
-    );
-    for (const pattern of input.analysis.screenPatterns) {
-      const assigned = await client.query(
-        `INSERT INTO screen_pattern_assignments
-           (image_id, screen_pattern_id, source, confidence)
-         SELECT $1, pattern.id, 'analysis', $3
-         FROM screen_patterns pattern
-         WHERE pattern.slug = $2
-         ON CONFLICT (image_id, screen_pattern_id) DO UPDATE SET
-           source = CASE
-             WHEN screen_pattern_assignments.source = 'manual'
-               THEN screen_pattern_assignments.source
-             ELSE EXCLUDED.source
-           END,
-           confidence = CASE
-             WHEN screen_pattern_assignments.source = 'manual'
-               THEN screen_pattern_assignments.confidence
-             ELSE EXCLUDED.confidence
-           END,
-           updated_at = now()
-         RETURNING screen_pattern_id`,
-        [input.source.screenImageId, pattern.slug, pattern.confidence],
+    if (input.analysis.screenPatterns.length > 0) {
+      await client.query(
+        `DELETE FROM screen_pattern_assignments
+         WHERE image_id = $1 AND source = 'analysis'`,
+        [input.source.screenImageId],
       );
-      if (assigned.rowCount !== 1) {
-        throw new Error(`Screen pattern does not exist: ${pattern.slug}`);
+      for (const pattern of input.analysis.screenPatterns) {
+        const assigned = await client.query(
+          `INSERT INTO screen_pattern_assignments
+             (image_id, screen_pattern_id, source, confidence)
+           SELECT $1, pattern.id, 'analysis', $3
+           FROM screen_patterns pattern
+           WHERE pattern.slug = $2
+           ON CONFLICT (image_id, screen_pattern_id) DO UPDATE SET
+             source = CASE
+               WHEN screen_pattern_assignments.source = 'manual'
+                 THEN screen_pattern_assignments.source
+               ELSE EXCLUDED.source
+             END,
+             confidence = CASE
+               WHEN screen_pattern_assignments.source = 'manual'
+                 THEN screen_pattern_assignments.confidence
+               ELSE EXCLUDED.confidence
+             END,
+             updated_at = now()
+           RETURNING screen_pattern_id`,
+          [input.source.screenImageId, pattern.slug, pattern.confidence],
+        );
+        if (assigned.rowCount !== 1) {
+          throw new Error(`Screen pattern does not exist: ${pattern.slug}`);
+        }
       }
+      await client.query(
+        "SELECT refresh_screen_pattern_previews($1)",
+        [input.source.versionId],
+      );
     }
-    await client.query(
-      "SELECT refresh_screen_pattern_previews($1)",
-      [input.source.versionId],
-    );
     const persisted: UiElementExtractionOccurrence[] = [];
     for (const crop of input.crops) {
       const stored = await client.query(
@@ -358,12 +347,12 @@ export async function completeUiElementExtraction(input: {
       const occurrence = await client.query(
         `INSERT INTO screen_ui_elements
            (version_id, screen_image_id, source_image_id, ui_element_type_id,
-           cropped_image_id, variant, purpose, anatomy,
+           cropped_image_id, layer, variant, purpose, anatomy,
             observed_properties, region_x, region_y, region_width, region_height,
             confidence, provider_model, prompt_version, review_status, crop_quality)
          VALUES (
-           $1, $2, $3, $4, $5, $6, $7, $8, $9,
-           $10, $11, $12, $13, $14, $15, $16, $17, $18::jsonb
+           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+           $11, $12, $13, $14, $15, $16, $17, $18, $19::jsonb
          )
          ON CONFLICT (
            version_id, screen_image_id, ui_element_type_id,
@@ -372,6 +361,7 @@ export async function completeUiElementExtraction(input: {
          ) DO UPDATE SET
            source_image_id = EXCLUDED.source_image_id,
            cropped_image_id = EXCLUDED.cropped_image_id,
+           layer = EXCLUDED.layer,
            variant = EXCLUDED.variant,
            purpose = EXCLUDED.purpose,
            anatomy = EXCLUDED.anatomy,
@@ -387,6 +377,7 @@ export async function completeUiElementExtraction(input: {
           input.source.sourceImageId,
           typeId,
           croppedImageId,
+          crop.candidate.layer,
           crop.candidate.variant,
           crop.candidate.purpose,
           crop.candidate.anatomy,
@@ -405,6 +396,7 @@ export async function completeUiElementExtraction(input: {
       persisted.push({
         id: positiveInteger(occurrence.rows[0]?.id, "UI element occurrence"),
         type: crop.candidate.type,
+        layer: crop.candidate.layer,
         croppedImageId,
         screenImageId: input.source.screenImageId,
         confidence: crop.candidate.confidence,
@@ -425,7 +417,7 @@ export async function completeUiElementExtraction(input: {
         input.source.screenImageId,
         input.providerModel,
         input.promptVersion,
-        persisted.length,
+        input.analysis.components.length,
         JSON.stringify(input.analysis),
       ],
     );

@@ -1,0 +1,10 @@
+{
+  "assets": [
+    {
+      "kind": "image",
+      "sourceUrl": "https://mistral.ai/images/noise/noise-rectangle.png",
+      "path": "supplemental-assets/noise-rectangle.png",
+      "reason": "Browser asset inventory omitted response type; fetched directly after a successful HEAD check."
+    }
+  ]
+}

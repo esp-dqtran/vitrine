@@ -36,10 +36,21 @@ test("round-trips the first-class Flows catalog route", () => {
   assert.equal(routeToPath({ name: "flows" }), "/flows");
 });
 
+test("round-trips the top-level Components route", () => {
+  assert.deepEqual(parseRoutePath("/components"), { name: "components" });
+  assert.equal(routeToPath({ name: "components" }), "/components");
+});
+
 test("round-trips the Color palette gallery route", () => {
   assert.deepEqual(parseRoutePath("/colors"), { name: "color" });
   assert.deepEqual(parseRoutePath("/color"), { name: "color" });
   assert.equal(routeToPath({ name: "color" }), "/colors");
+});
+
+test("round-trips the dedicated Color composer subpage", () => {
+  assert.deepEqual(parseRoutePath("/colors/compose"), { name: "color-compose" });
+  assert.deepEqual(parseRoutePath("/color/compose"), { name: "color-compose" });
+  assert.equal(routeToPath({ name: "color-compose" }), "/colors/compose");
 });
 
 test("round-trips the Color post studio with a bounded palette selection", () => {

@@ -5,7 +5,7 @@ import type { Platform } from '../../platformFromUrl';
 import type { AdvancedSearchResult, SearchFacets, SearchResultItem } from '../../searchTypes';
 import type { App, Screen } from '../../vitrine/types';
 import { AppCard } from '../../vitrine/components/AppCard';
-import { AppCardSkeleton } from '../../vitrine/components/AppCardSkeleton';
+import { Spinner } from '../../vitrine/components/Spinner';
 import {
   DiscoveryFilterBar,
   type DiscoveryFilterGroup,
@@ -262,8 +262,8 @@ function SearchFilteringReview() {
   const renderResults = () => {
     if (resultState === 'loading') {
       return (
-        <div className="reference-discovery__grid apps-discovery__grid search-review__results" role="status" aria-label="Loading apps">
-          {Array.from({ length: 3 }, (_, index) => <AppCardSkeleton key={index} index={index} />)}
+        <div className="discovery-page-layout__state search-review__results" role="status" aria-label="Loading apps">
+          <Spinner size="md" shade="subtle" aria-hidden="true" />
         </div>
       );
     }

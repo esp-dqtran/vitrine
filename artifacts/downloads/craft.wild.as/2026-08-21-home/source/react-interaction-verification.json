@@ -1,0 +1,25 @@
+{
+  "carousel": [
+    {
+      "aria": "Previous slides",
+      "disabled": false
+    },
+    {
+      "aria": "Next slides",
+      "disabled": false
+    },
+    {
+      "aria": "Previous slides",
+      "disabled": true
+    },
+    {
+      "aria": "Next slides",
+      "disabled": false
+    }
+  ],
+  "tetris": {
+    "bodyOverflow": "hidden auto",
+    "closeVisible": true,
+    "playing": true
+  }
+}

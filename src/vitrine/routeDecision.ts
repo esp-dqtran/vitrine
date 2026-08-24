@@ -79,11 +79,13 @@ export function decideRootRoute(
     case "browse":
     case "browse-app":
     case "browse-flows":
+    case "components":
     case "browse-sites":
     case "browse-site":
     case "browse-search":
     case "sites":
     case "color":
+    case "color-compose":
     case "color-create":
     case "sites-motion":
     case "flows":

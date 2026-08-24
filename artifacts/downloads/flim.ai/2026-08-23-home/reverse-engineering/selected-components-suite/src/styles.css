@@ -1,0 +1,752 @@
+.flim-component,
+.flim-component * {
+  box-sizing: border-box;
+}
+
+.flim-component {
+  --flim-black: #141414;
+  --flim-green: #21935b;
+  --flim-light-green: #30a81d;
+  --flim-orange: #ff8400;
+  --flim-yellow: #fecc33;
+  --flim-white: #f5f5f5;
+  color: var(--flim-black);
+  font-family: "Flim Swizzy", Arial, sans-serif;
+  font-synthesis: none;
+}
+
+.flim-component button,
+.flim-component input {
+  font: inherit;
+}
+
+.flim-component img {
+  display: block;
+  max-width: 100%;
+}
+
+.flim-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.flim-kicker {
+  font-family: "Flim Mono", monospace;
+  font-size: 12px;
+  letter-spacing: .06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.flim-search-bar {
+  display: flex;
+  width: min(656px, calc(100% - 48px));
+  height: 72px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 999px;
+  background: linear-gradient(100deg, rgba(172, 174, 176, .72), rgba(241, 242, 243, .93));
+  box-shadow: 0 4px 20px rgb(20 20 20 / 6%);
+  backdrop-filter: blur(14px);
+}
+
+.flim-search-bar__field {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex: 1;
+  align-items: center;
+  padding-inline: 24px 12px;
+}
+
+.flim-search-bar input {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--flim-black);
+  font-family: "Flim Mono", monospace;
+  font-size: 14px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.flim-search-bar input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.flim-search-bar input::placeholder {
+  color: rgb(20 20 20 / 42%);
+}
+
+.flim-search-bar__cycle {
+  position: absolute;
+  inset-inline: 24px 12px;
+  display: flex;
+  overflow: hidden;
+  font-family: "Flim Mono", monospace;
+  font-size: 14px;
+  letter-spacing: .06em;
+  pointer-events: none;
+}
+
+.flim-search-bar__cycle > span {
+  animation: flim-character-in 500ms cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: var(--flim-character-delay);
+}
+
+.flim-search-bar button {
+  height: 56px;
+  flex: none;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--flim-white);
+  color: var(--flim-black);
+  cursor: pointer;
+  font-family: "Flim Mono", monospace;
+  font-size: 14px;
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+
+.flim-search-bar button:hover,
+.flim-search-bar button:focus-visible {
+  background: var(--flim-black);
+  color: var(--flim-white);
+  outline: none;
+}
+
+@keyframes flim-character-in {
+  from { opacity: 0; transform: translateY(90%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hero search */
+.flim-hero-search {
+  position: relative;
+  width: 100%;
+  height: 700px;
+  overflow: hidden;
+  background-color: #eef1f4;
+  background-image:
+    linear-gradient(rgb(20 20 20 / 9%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(20 20 20 / 9%) 1px, transparent 1px);
+  background-position: -1px -1px;
+  background-size: 32px 32px;
+}
+
+.flim-hero-search__images,
+.flim-hero-search__image-group {
+  position: absolute;
+  inset: 0;
+}
+
+.flim-hero-search__image-group {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 500ms ease;
+}
+
+.flim-hero-search__images.is-visible .flim-hero-search__image-group.is-active {
+  opacity: 1;
+}
+
+.flim-hero-search__image {
+  position: absolute;
+  top: var(--flim-image-y);
+  left: var(--flim-image-x);
+  width: var(--flim-image-width);
+  aspect-ratio: var(--flim-image-ratio);
+  border-radius: 18px;
+  object-fit: cover;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.75);
+}
+
+.flim-hero-search__images.is-visible .is-active .flim-hero-search__image {
+  animation: flim-image-in 700ms cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: var(--flim-image-delay);
+}
+
+.flim-hero-search .flim-search-bar {
+  position: absolute;
+  z-index: 4;
+  top: 54%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes flim-image-in {
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* What is Flim */
+.flim-what-is-flim {
+  position: relative;
+  width: calc(100% - 24px);
+  min-height: 1913px;
+  margin-inline: 12px;
+  overflow: visible;
+  background: var(--flim-white);
+}
+
+.flim-what-is-flim__intro {
+  position: relative;
+  display: block;
+  height: 711.63px;
+  padding-top: 561.2px;
+}
+
+.flim-what-is-flim__copy {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  width: 100%;
+  height: 150.44px;
+  flex-direction: column;
+  gap: 64px;
+  text-align: center;
+}
+
+.flim-what-is-flim__copy .flim-kicker {
+  display: block;
+  margin: 0;
+  line-height: 12px;
+}
+
+.flim-what-is-flim__copy h2 {
+  margin: 0;
+  font-size: 40.45px;
+  font-weight: 500;
+  letter-spacing: -.045em;
+  line-height: .92;
+}
+
+.flim-inline-mark {
+  display: inline-grid;
+  width: .7em;
+  height: .7em;
+  align-items: center;
+  justify-content: center;
+  vertical-align: .04em;
+}
+
+.flim-inline-mark--circle { color: var(--flim-yellow); }
+.flim-inline-mark svg { display: block; width: 100%; height: 100%; }
+
+.flim-inline-mark--arrows {
+  width: .94em;
+  color: var(--flim-light-green);
+  transform: translateY(.04em);
+}
+
+.flim-what-is-flim__floating-images {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.flim-what-is-flim__floating-image {
+  position: absolute;
+  border-radius: 16px;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(0);
+  transform-origin: center;
+  transition:
+    top 1s cubic-bezier(.65, 0, .35, 1),
+    left 1s cubic-bezier(.65, 0, .35, 1),
+    width 1s cubic-bezier(.65, 0, .35, 1),
+    border-radius 1s cubic-bezier(.65, 0, .35, 1),
+    opacity 1s cubic-bezier(.22, 1, .36, 1),
+    transform 1s cubic-bezier(.22, 1, .36, 1);
+}
+
+.flim-what-is-flim__floating-image--1 { top: 5.93%; left: 35%; width: 30%; }
+.flim-what-is-flim__floating-image--2 { top: 0; left: 10%; width: 20%; }
+.flim-what-is-flim__floating-image--3 { top: 16.63%; left: 0; width: 35%; }
+.flim-what-is-flim__floating-image--4 { top: 12.64%; left: 75%; width: 25%; }
+.flim-what-is-flim__floating-image--1 { aspect-ratio: 195 / 125.5; }
+.flim-what-is-flim__floating-image--2,
+.flim-what-is-flim__floating-image--3 { aspect-ratio: 92 / 56; }
+.flim-what-is-flim__floating-image--4 { aspect-ratio: 183 / 136; }
+.flim-what-is-flim.is-enter .flim-what-is-flim__floating-image {
+  opacity: 1;
+  transform: scale(1);
+}
+.flim-what-is-flim.is-merge .flim-what-is-flim__floating-image {
+  opacity: 1;
+  border-radius: 0;
+  transform: scale(1);
+}
+
+.flim-what-is-flim.is-merge .flim-what-is-flim__floating-image--1 { top: 62.4%; left: 0; width: 52.35%; }
+.flim-what-is-flim.is-merge .flim-what-is-flim__floating-image--2 { top: 62.4%; left: 52.35%; width: 24.55%; }
+.flim-what-is-flim.is-merge .flim-what-is-flim__floating-image--3 { top: 62.4%; left: 76.9%; width: 24.55%; }
+.flim-what-is-flim.is-merge .flim-what-is-flim__floating-image--4 { top: 68.6%; left: 52.35%; width: 49.1%; }
+
+.flim-what-is-flim__platform {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: calc(100% + 12px);
+  height: 1081.11px;
+  min-height: 0;
+  flex-direction: column;
+  margin: 120px -12px 0 0;
+  overflow: hidden;
+  border-radius: 16px 0 0 16px;
+  background: #e5e7e8;
+}
+
+.flim-component img.flim-what-is-flim__platform-header {
+  width: 223.25%;
+  max-width: none;
+  height: 361.84px;
+  flex: none;
+  margin-left: 5%;
+  object-fit: contain;
+}
+
+.flim-what-is-flim__platform-screen {
+  display: none;
+}
+
+.flim-component img.flim-what-is-flim__platform-screen { display: none; }
+
+.flim-component img.flim-what-is-flim__platform-mobile {
+  display: block;
+  width: 100%;
+  height: 719.27px;
+  flex: none;
+  object-fit: cover;
+}
+
+.flim-what-is-flim__platform-icon {
+  position: absolute;
+  z-index: 4;
+  bottom: 58.45px;
+  left: 15.84px;
+  width: 43.24px;
+}
+
+.flim-what-is-flim__merged-images {
+  display: none;
+}
+
+/* Pinned database and platform sequence */
+.flim-database-scroll {
+  position: relative;
+  width: 100%;
+  height: 2200px;
+  background: #eef1f4;
+}
+
+.flim-database-scroll.is-card {
+  height: 900px;
+}
+
+.flim-database-scroll.is-overview {
+  height: 900px;
+}
+
+.flim-database-scroll.is-overview .flim-database-scroll__sticky {
+  position: relative;
+}
+
+.flim-database-scroll.is-overview .flim-database-scroll__track {
+  width: 100%;
+  transform: none;
+}
+
+.flim-database-scroll.is-overview .flim-database-panel,
+.flim-database-scroll.is-overview .flim-platform-panel {
+  width: 50%;
+}
+
+.flim-database-scroll__sticky {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 900px;
+  overflow: hidden;
+}
+
+.flim-database-scroll__track {
+  display: flex;
+  width: 200%;
+  height: 100%;
+  transform: translateX(calc(var(--flim-scroll-progress) * -50%));
+  will-change: transform;
+}
+
+.flim-database-panel,
+.flim-platform-panel {
+  position: relative;
+  width: 50%;
+  height: 900px;
+  flex: none;
+  overflow: hidden;
+  padding: 36px 28px 32px;
+  background: #eef1f4;
+}
+
+.flim-database-panel h2,
+.flim-platform-panel h2 {
+  margin: 46px 0 0;
+  font-size: 125px;
+  font-weight: 500;
+  letter-spacing: -.055em;
+  line-height: .78;
+}
+
+.flim-database-panel > p {
+  position: absolute;
+  z-index: 5;
+  top: 332px;
+  bottom: auto;
+  left: 28px;
+  width: 260px;
+  margin: 0;
+  font-size: 21px;
+  font-weight: 500;
+  letter-spacing: -.025em;
+  line-height: 1.03;
+}
+
+.flim-database-panel a,
+.flim-platform-panel a {
+  color: inherit;
+}
+
+.flim-physics-stage {
+  position: absolute;
+  z-index: 3;
+  inset: 20% 0 0;
+}
+
+.flim-physics-item {
+  position: absolute;
+  top: var(--flim-item-y);
+  left: var(--flim-item-x);
+  opacity: 0;
+  transform: translate(-50%, -750px) rotate(calc(var(--flim-item-rotate) * -2));
+}
+
+.is-entered .flim-physics-item {
+  animation: flim-object-drop 1.2s cubic-bezier(.18, .8, .25, 1.18) both;
+  animation-delay: var(--flim-drop-delay);
+}
+
+.flim-physics-pill {
+  display: grid;
+  min-width: 190px;
+  min-height: 88px;
+  padding: 18px 30px;
+  border-radius: 999px;
+  background: var(--flim-black);
+  color: var(--flim-white);
+  font-family: "Flim Mono", monospace;
+  font-size: 14px;
+  letter-spacing: .03em;
+  place-items: center;
+  white-space: nowrap;
+}
+
+.flim-physics-pill.is-orange {
+  min-width: 260px;
+  min-height: 120px;
+  background: var(--flim-orange);
+  color: var(--flim-white);
+  font-size: 19px;
+}
+
+.flim-physics-shape,
+.flim-physics-item.is-eye {
+  width: var(--flim-item-size);
+  height: var(--flim-item-size);
+}
+
+.flim-physics-shape {
+  background-color: var(--flim-white);
+}
+
+.flim-physics-shape.is-grid {
+  border: 1px solid rgb(20 20 20 / 9%);
+  background-image:
+    linear-gradient(rgb(20 20 20 / 16%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(20 20 20 / 16%) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+
+.flim-physics-shape.is-circle { border-radius: 50%; }
+.flim-physics-shape.is-square.is-green { background: var(--flim-green); }
+.flim-physics-shape.is-square.is-yellow { background: var(--flim-yellow); }
+.flim-physics-shape.is-triangle { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.flim-physics-shape.is-hexagon { background: transparent; color: var(--flim-green); }
+.flim-physics-shape.is-hexagon svg { width: 100%; height: 100%; }
+
+.flim-physics-eye {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 2px solid var(--flim-black);
+  border-radius: 70% 18% 70% 18%;
+  background: #e9e9e9;
+  place-items: center;
+  transform: rotate(45deg);
+}
+
+.flim-physics-eye__inner {
+  display: grid;
+  width: 64%;
+  height: 64%;
+  border-radius: 50%;
+  background: var(--flim-yellow);
+  place-items: center;
+  transition: transform 120ms ease-out;
+  transform: rotate(-45deg);
+}
+
+.flim-physics-eye__iris {
+  position: relative;
+  display: grid;
+  width: 58%;
+  height: 58%;
+  border-radius: 50%;
+  background: var(--flim-black);
+  color: var(--flim-white);
+  place-items: center;
+}
+
+.flim-physics-eye__pupil {
+  width: 22%;
+  height: 22%;
+  border-radius: 50%;
+  background: var(--flim-white);
+}
+
+.flim-physics-eye__cross {
+  position: absolute;
+  top: 8%;
+  right: 10%;
+  font-family: "Flim Mono", monospace;
+  font-size: 11px;
+}
+
+.flim-database-search {
+  position: absolute;
+  z-index: 10;
+  right: 29%;
+  bottom: 28px;
+}
+
+.flim-platform-panel {
+  display: grid;
+  grid-template-columns: .86fr 1.14fr;
+  gap: 60px;
+  align-items: center;
+  background: var(--flim-white);
+  color: var(--flim-black);
+}
+
+.flim-platform-panel__copy {
+  padding-left: 44px;
+}
+
+.flim-platform-panel h2 {
+  margin: 62px 0 38px;
+  font-size: 102px;
+  line-height: .86;
+}
+
+.flim-platform-panel p {
+  width: 80%;
+  margin: 0 0 52px;
+  font-size: 23px;
+  letter-spacing: -.025em;
+  line-height: 1.04;
+}
+
+.flim-platform-panel__copy > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 28px;
+  font-family: "Flim Mono", monospace;
+  font-size: 13px;
+  letter-spacing: .06em;
+  text-decoration: none;
+}
+
+.flim-platform-panel__media {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px 0 0 24px;
+}
+
+.flim-platform-panel__header,
+.flim-platform-panel__screen {
+  width: 100%;
+}
+
+.flim-platform-panel__image {
+  position: absolute;
+  top: 28%;
+  right: 4%;
+  width: 43%;
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgb(0 0 0 / 28%);
+}
+
+.flim-component img.flim-platform-panel__mobile {
+  display: none;
+}
+
+@keyframes flim-object-drop {
+  0% { opacity: 0; transform: translate(-50%, -750px) rotate(calc(var(--flim-item-rotate) * -2)); }
+  76% { opacity: 1; transform: translate(-50%, 10px) rotate(calc(var(--flim-item-rotate) + 5deg)); }
+  88% { transform: translate(-50%, -5px) rotate(calc(var(--flim-item-rotate) - 2deg)); }
+  100% { opacity: 1; transform: translate(-50%, 0) rotate(var(--flim-item-rotate)); }
+}
+
+@media (max-width: 700px) {
+  .flim-kicker { font-size: 10px; }
+
+  .flim-search-bar {
+    width: calc(100% - 24px);
+    height: 58px;
+    padding: 6px;
+  }
+
+  .flim-search-bar__field { padding-inline: 14px 8px; }
+  .flim-search-bar__cycle { inset-inline: 14px 8px; font-size: 10px; }
+  .flim-search-bar input { font-size: 10px; }
+  .flim-search-bar button { height: 46px; padding-inline: 15px; font-size: 10px; }
+
+  .flim-hero-search { height: 520px; background-size: 24px 24px; }
+  .flim-hero-search .flim-search-bar { top: 56%; }
+  .flim-hero-search__image { width: calc(var(--flim-image-width) * .64); border-radius: 12px; }
+
+  .flim-what-is-flim {
+    min-height: 1077px;
+    padding: 58px 12px 24px;
+  }
+
+  .flim-what-is-flim__intro {
+    min-height: 570px;
+    align-items: center;
+  }
+
+  .flim-what-is-flim__copy {
+    width: 100%;
+  }
+
+  .flim-what-is-flim__copy .flim-kicker { margin-bottom: 28px; }
+  .flim-what-is-flim__copy h2 { font-size: 42px; line-height: .94; }
+  .flim-what-is-flim__floating-image { width: 96px; border-radius: 12px; }
+  .flim-what-is-flim__floating-image--1 { top: 7%; left: -2%; }
+  .flim-what-is-flim__floating-image--2 { top: 5%; right: -2%; left: auto; }
+  .flim-what-is-flim__floating-image--3 { top: auto; bottom: 39%; left: 2%; }
+  .flim-what-is-flim__floating-image--4 { top: auto; right: 1%; bottom: 38%; left: auto; }
+
+  .flim-what-is-flim__platform {
+    width: 100%;
+    min-height: 420px;
+    margin-top: 26px;
+    border-radius: 16px;
+  }
+
+  .flim-component img.flim-what-is-flim__platform-screen { display: none; }
+  .flim-component img.flim-what-is-flim__platform-mobile { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+  .flim-what-is-flim.is-merge .flim-what-is-flim__floating-image--1 { top: 61%; left: 0; width: 50%; }
+  .flim-what-is-flim.is-merge .flim-what-is-flim__floating-image--2 { top: 61%; left: 50%; width: 25%; }
+  .flim-what-is-flim.is-merge .flim-what-is-flim__floating-image--3 { top: 61%; left: 75%; width: 25%; }
+  .flim-what-is-flim.is-merge .flim-what-is-flim__floating-image--4 { top: 72.5%; left: 50%; width: 50%; }
+
+  .flim-database-scroll,
+  .flim-database-scroll.is-card {
+    height: 1800px;
+  }
+
+  .flim-database-scroll__sticky {
+    position: relative;
+    height: 1800px;
+  }
+
+  .flim-database-scroll__track {
+    display: block;
+    width: 100%;
+    transform: none;
+  }
+
+  .flim-database-panel,
+  .flim-platform-panel {
+    width: 100%;
+    height: 900px;
+    padding: 48px 18px 24px;
+  }
+
+  .flim-database-panel h2 {
+    margin-top: 64px;
+    font-size: 70px;
+  }
+
+  .flim-database-panel > p {
+    bottom: 104px;
+    left: 18px;
+    width: 180px;
+    font-size: 16px;
+  }
+
+  .flim-physics-stage { inset: 34% 0 9%; }
+  .flim-physics-item { transform: translate(-50%, -500px) scale(.68); }
+  .is-entered .flim-physics-item { animation-name: flim-object-drop-mobile; }
+  .flim-database-search { right: 12px; bottom: 24px; }
+
+  .flim-platform-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    align-items: stretch;
+  }
+
+  .flim-platform-panel__copy { padding: 0; }
+  .flim-platform-panel h2 { margin: 42px 0 28px; font-size: 56px; }
+  .flim-platform-panel p { width: 90%; margin-bottom: 34px; font-size: 18px; }
+  .flim-platform-panel__media { flex: 1; border-radius: 18px 18px 0 0; }
+  .flim-component img.flim-platform-panel__screen,
+  .flim-component img.flim-platform-panel__image { display: none; }
+  .flim-component img.flim-platform-panel__mobile { display: block; width: 100%; height: 100%; object-fit: cover; }
+}
+
+@keyframes flim-object-drop-mobile {
+  0% { opacity: 0; transform: translate(-50%, -500px) rotate(calc(var(--flim-item-rotate) * -2)) scale(.68); }
+  80% { opacity: 1; transform: translate(-50%, 8px) rotate(calc(var(--flim-item-rotate) + 4deg)) scale(.68); }
+  100% { opacity: 1; transform: translate(-50%, 0) rotate(var(--flim-item-rotate)) scale(.68); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flim-component *,
+  .flim-component *::before,
+  .flim-component *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}

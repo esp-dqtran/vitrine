@@ -207,5 +207,3 @@ export function CatalogFlowsPage({
     </CatalogShell>
   );
 }
-
-

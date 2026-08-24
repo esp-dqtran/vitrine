@@ -31,7 +31,7 @@ function toIndexDocument(card: App, platform: Platform): AppCatalogIndexDocument
     title: card.app,
     searchText: [card.app, card.description, ...card.categories.map(({ name }) => name)].filter(Boolean).join(" "),
     categories: card.categories.map(({ name }) => name),
-    latestAt: asTimestamp(card.lastCapturedAt),
+    latestAt: asTimestamp(card.createdAt ?? card.lastCapturedAt),
     // Popularity is not a durable App-level signal in the current catalog source.
     // Keep this field for the future ranker while PostgreSQL remains the fallback
     // for the existing Trending view.

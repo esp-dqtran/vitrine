@@ -19,8 +19,10 @@ test("app detail queries are explicit and evidence pagination stays in SQL", () 
   assert.match(evidenceBody, /WHERE \(\$6::integer IS NULL OR id < \$6\)/);
   assert.match(evidenceBody, /ORDER BY id DESC/);
   assert.match(evidenceBody, /FROM screen_ui_elements occurrence/);
-  assert.match(evidenceBody, /occurrence\.review_status IN \('accepted', 'pending'\)/);
+  assert.match(evidenceBody, /occurrence\.review_status = 'accepted'/);
   assert.match(evidenceBody, /occurrence\.version_id = sv\.id/);
+  assert.match(evidenceBody, /'layer', element\.layer/);
+  assert.match(evidenceBody, /AS ui_elements/);
   assert.match(evidenceBody, /occurrence\.cropped_image_id = i\.id/);
   assert.doesNotMatch(evidenceBody, /occurrence\.source_image_id = i\.id/);
   assert.match(evidenceBody, /'pageType', reference\.component_type/);
@@ -48,7 +50,7 @@ test("UI element summaries group reviewed crop occurrences in SQL", () => {
 
   assert.ok(start >= 0, "appUiElementSummary source was not found");
   assert.match(body, /FROM screen_ui_elements occurrence/);
-  assert.match(body, /occurrence\.review_status IN \('accepted', 'pending'\)/);
+  assert.match(body, /occurrence\.review_status = 'accepted'/);
   assert.match(body, /JOIN images crop ON crop\.id = occurrence\.cropped_image_id/);
   assert.match(body, /COUNT\(\*\) OVER \(PARTITION BY component_type_id\)/);
   assert.match(body, /representative_rank = 1/);

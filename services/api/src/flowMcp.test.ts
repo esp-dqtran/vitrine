@@ -196,6 +196,80 @@ test("Flow MCP searches the published catalog and filters inaccessible apps", as
   assert.deepEqual(unavailable, []);
 });
 
+test("Flow MCP continues catalog pagination until it finds accessible results", async () => {
+  const deps = dependencies();
+  const firstAppPage = await deps.publishedCatalogPage({
+    query: "workspace",
+    limit: 24,
+    sort: "latest",
+    includeFacets: false,
+  });
+  const firstFlowPage = await deps.publishedFlowCatalogPage({
+    platform: "web",
+    query: "workspace",
+    limit: 1,
+    sort: "grouped",
+    flowGroups: [],
+    cursorSecret: deps.flowCatalogSecret,
+    includeFacets: false,
+  });
+  const appCursors: Array<string | undefined> = [];
+  const flowCursors: Array<string | undefined> = [];
+  const notionApp = {
+    ...firstAppPage.apps[0]!,
+    app_id: 2,
+    app: "notion",
+    display_name: "Notion",
+  };
+  const notionFlow = {
+    ...firstFlowPage.items[0]!,
+    preview: {
+      ...firstFlowPage.items[0]!.preview,
+      appId: "notion",
+      appName: "Notion",
+      flow: {
+        ...firstFlowPage.items[0]!.preview.flow,
+        id: "notion-workspace",
+      },
+    },
+  };
+  const pagedDeps: FlowMcpDependencies = {
+    ...deps,
+    publishedCatalogPage: async (input) => {
+      const cursor = (input as typeof input & { cursor?: string }).cursor;
+      appCursors.push(cursor);
+      return cursor
+        ? { ...firstAppPage, apps: [notionApp], nextCursor: null }
+        : { ...firstAppPage, nextCursor: "apps-next" };
+    },
+    publishedFlowCatalogPage: async (input) => {
+      flowCursors.push(input.cursor);
+      return input.cursor
+        ? { ...firstFlowPage, items: [notionFlow], nextCursor: null }
+        : { ...firstFlowPage, nextCursor: "flows-next" };
+    },
+  };
+
+  const apps = await searchAccessibleApps(freeUser, pagedDeps, {
+    query: "workspace",
+    platform: "web",
+    limit: 1,
+  });
+  assert.deepEqual(apps.map(({ app }) => app), ["notion"]);
+  assert.deepEqual(appCursors, [undefined, "apps-next"]);
+
+  const flows = await searchAccessibleFlows(freeUser, pagedDeps, {
+    query: "workspace",
+    platform: "web",
+    limit: 1,
+  });
+  assert.deepEqual(flows.map(({ app, flowId }) => ({ app, flowId })), [{
+    app: "notion",
+    flowId: "notion-workspace",
+  }]);
+  assert.deepEqual(flowCursors, [undefined, "flows-next"]);
+});
+
 test("Flow MCP returns ordered steps with screenshot URLs only for accessible published flows", async () => {
   const result = await getAccessibleFlow(proUser, dependencies(), {
     app: "linear",
@@ -450,6 +524,74 @@ test("Flow MCP rate limits admin access tokens", async (t) => {
   });
   assert.equal((await request(1)).status, 200);
   assert.equal((await request(2)).status, 429);
+});
+
+test("Flow MCP rate limits each authenticated user independently behind one proxy", async (t) => {
+  const users = new Map([
+    ["vtr_mcp_first-token", { id: 71, email: "first@example.com", role: "user" as const }],
+    ["vtr_mcp_second-token", { id: 72, email: "second@example.com", role: "user" as const }],
+  ]);
+  const { base, server } = await serve(createApiApp({
+    generalRateLimit: 1,
+    verifyMcpAccessToken: async (token: string) => users.get(token),
+    recordAccessEvent: async () => undefined,
+    ...dependencies(),
+  } as never));
+  t.after(() => server.close());
+  const request = (token: string, id: number, origin?: string) => fetch(`${base}/mcp`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${token}`,
+      accept: "application/json, text/event-stream",
+      "content-type": "application/json",
+      ...(origin ? { origin } : {}),
+    },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id,
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-03-26",
+        capabilities: {},
+        clientInfo: { name: "test-client", version: "1.0.0" },
+      },
+    }),
+  });
+
+  assert.equal((await request("vtr_mcp_first-token", 1)).status, 200);
+  assert.equal((await request("vtr_mcp_second-token", 2)).status, 200);
+  assert.equal((await request("vtr_mcp_first-token", 3)).status, 429);
+});
+
+test("Flow MCP rejects browser requests from untrusted origins", async (t) => {
+  const { base, server } = await serve(createApiApp({
+    verifyMcpAccessToken: async (token: string) => token === "vtr_mcp_test-token" ? proUser : undefined,
+    recordAccessEvent: async () => undefined,
+    ...dependencies(),
+  } as never));
+  t.after(() => server.close());
+  const response = await fetch(`${base}/mcp`, {
+    method: "POST",
+    headers: {
+      authorization: "Bearer vtr_mcp_test-token",
+      accept: "application/json, text/event-stream",
+      "content-type": "application/json",
+      origin: "https://evil.example",
+    },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-03-26",
+        capabilities: {},
+        clientInfo: { name: "test-client", version: "1.0.0" },
+      },
+    }),
+  });
+
+  assert.equal(response.status, 403);
+  assert.deepEqual(await response.json(), { error: "Untrusted MCP origin" });
 });
 
 test("Flow MCP omits thumbnails above the inline screenshot limit", async (t) => {

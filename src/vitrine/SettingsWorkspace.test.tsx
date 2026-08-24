@@ -71,6 +71,8 @@ test('renders the Lumin-style full Settings workspace with Profile as its defaul
   assert.match(source, /title="Revoke this access token\?"/);
   assert.match(source, /actionVariant="destructive"/);
   assert.match(source, /label="Create token" size="sm" variant="primary"/);
+  assert.match(source, /label="Token name"/);
+  assert.match(source, /createMcpAccessToken\(mcpTokenLabel\.trim\(\)\)/);
   assert.match(source, /settings-workspace__integration-copy-url/);
   assert.match(source, /role="table" aria-label="Active Flow MCP access tokens"/);
   assert.doesNotMatch(source, /Token active/);

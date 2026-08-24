@@ -1,0 +1,24 @@
+HTTP/2 200 
+content-type: image/jpeg
+content-length: 1975
+sanity-inflight-limit: 200
+sanity-inflight-current: 0
+vary: origin
+x-sanity-asset-storage: gcs-default
+content-security-policy: script-src 'none'
+x-content-type-options: nosniff
+last-modified: Sun, 07 Jun 2026 08:44:15 GMT
+xkey: dataset-szlvuc1t-production
+xkey: dataset-szlvuc1t-production-asset-db451abc27a16f698305dcb56ec920d5a9dc08c8
+xkey: project-szlvuc1t-production
+cache-tag: dataset-szlvuc1t-production,dataset-szlvuc1t-production-asset-db451abc27a16f698305dcb56ec920d5a9dc08c8,project-szlvuc1t-production
+cache-control: public, max-age=31536000, s-maxage=2592000
+date: Wed, 19 Aug 2026 22:00:02 GMT
+traceparent: 00-0d6cd4e99bd3ee7c8eff4903b5c1e8d3-9aec4c4e0c5b26ec-01
+sanity-gateway: k8s-gcp-as-s1-prod-ing-01
+strict-transport-security: max-age=63072000; includeSubDomains; preload
+x-varnish-age: 0
+accept-ranges: bytes
+via: 1.1 google
+alt-svc: h3=":443"; ma=2592000
+

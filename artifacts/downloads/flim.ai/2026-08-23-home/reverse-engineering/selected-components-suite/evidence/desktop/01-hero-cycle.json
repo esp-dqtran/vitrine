@@ -1,0 +1,120 @@
+{
+  "cycle": [
+    {
+      "dummy": "   \n   \nBLACK AND WHITE FILM\n ",
+      "groups": [
+        {
+          "term": "Knight on a Horse",
+          "visible": false
+        },
+        {
+          "term": "Reflections on the Water",
+          "visible": false
+        },
+        {
+          "term": "Black and white film",
+          "visible": true
+        },
+        {
+          "term": "Quiet moments",
+          "visible": false
+        }
+      ],
+      "input": ""
+    },
+    {
+      "dummy": "   \n   \n   \nQUIET MOMENTS",
+      "groups": [
+        {
+          "term": "Knight on a Horse",
+          "visible": false
+        },
+        {
+          "term": "Reflections on the Water",
+          "visible": false
+        },
+        {
+          "term": "Black and white film",
+          "visible": true
+        },
+        {
+          "term": "Quiet moments",
+          "visible": true
+        }
+      ],
+      "input": ""
+    },
+    {
+      "dummy": "   \n   \n   \nQUIET MOMENTS",
+      "groups": [
+        {
+          "term": "Knight on a Horse",
+          "visible": false
+        },
+        {
+          "term": "Reflections on the Water",
+          "visible": false
+        },
+        {
+          "term": "Black and white film",
+          "visible": false
+        },
+        {
+          "term": "Quiet moments",
+          "visible": true
+        }
+      ],
+      "input": ""
+    },
+    {
+      "dummy": "KNIGHT ON A HORSE\n   \n   \n ",
+      "groups": [
+        {
+          "term": "Knight on a Horse",
+          "visible": true
+        },
+        {
+          "term": "Reflections on the Water",
+          "visible": false
+        },
+        {
+          "term": "Black and white film",
+          "visible": false
+        },
+        {
+          "term": "Quiet moments",
+          "visible": false
+        }
+      ],
+      "input": ""
+    },
+    {
+      "dummy": "KNIGHT ON A HORSE\n   \n   \n ",
+      "groups": [
+        {
+          "term": "Knight on a Horse",
+          "visible": true
+        },
+        {
+          "term": "Reflections on the Water",
+          "visible": false
+        },
+        {
+          "term": "Black and white film",
+          "visible": false
+        },
+        {
+          "term": "Quiet moments",
+          "visible": false
+        }
+      ],
+      "input": ""
+    }
+  ],
+  "typedState": {
+    "activeClass": "text-input text-ui-mono-m",
+    "activeTag": "INPUT",
+    "dummy": "   \n   \n   \n ",
+    "value": "cinematic shadows"
+  }
+}

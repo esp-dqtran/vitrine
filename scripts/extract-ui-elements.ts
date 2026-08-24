@@ -50,6 +50,8 @@ interface Options {
   provider: "chatgpt" | "kiro";
   concurrency: number;
   allowEmpty: boolean;
+  cropUiElements: boolean;
+  sourceImageId?: number;
 }
 
 interface PilotResult {
@@ -61,6 +63,7 @@ interface PilotResult {
   components?: Array<{
     occurrenceId: number;
     type: string;
+    layer: "whole-screen" | "outer-presentation" | "embedded-ui";
     croppedImageId: number;
     confidence: number;
     reviewStatus: "pending" | "accepted";
@@ -74,7 +77,8 @@ function usage(): never {
     "Usage: npm run ui-elements:extract -- "
     + "--app <name> --platform <ios|android|web> --version <number> "
     + "[--provider kiro|chatgpt] [--concurrency 1] [--limit 10] "
-    + "[--output <path>] [--reprocess] [--allow-empty]",
+    + "[--source-image-id <id>] [--output <path>] [--reprocess] [--allow-empty] "
+    + "[--crop-ui-elements]",
   );
 }
 
@@ -88,6 +92,7 @@ function options(args: string[]): Options {
   const values = new Map<string, string>();
   let reprocess = false;
   let allowEmpty = false;
+  let cropUiElements = false;
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
     if (argument === "--reprocess") {
@@ -96,6 +101,10 @@ function options(args: string[]): Options {
     }
     if (argument === "--allow-empty") {
       allowEmpty = true;
+      continue;
+    }
+    if (argument === "--crop-ui-elements") {
+      cropUiElements = true;
       continue;
     }
     if (!argument.startsWith("--") || !args[index + 1]) usage();
@@ -128,6 +137,10 @@ function options(args: string[]): Options {
     provider,
     concurrency,
     allowEmpty,
+    cropUiElements,
+    ...(values.has("--source-image-id")
+      ? { sourceImageId: positive(values.get("--source-image-id"), "source image id") }
+      : {}),
   };
 }
 
@@ -160,7 +173,7 @@ function attachment(source: UiElementExtractionSource, body: Buffer): ChatAttach
     ? "jpg"
     : source.object.contentType.split("/")[1];
   return {
-    name: `ui-element-source-${source.sourceImageId}.${extension}`,
+    name: `screen-source-${source.sourceImageId}.${extension}`,
     mimeType: source.object.contentType as ChatAttachment["mimeType"],
     buffer: body,
   };
@@ -248,6 +261,7 @@ async function run(): Promise<void> {
     providerModel,
     promptVersion: UI_ELEMENT_PROMPT_VERSION,
     reprocess: selected.reprocess,
+    sourceImageId: selected.sourceImageId,
   });
   if (sources.length === 0) {
     if (selected.allowEmpty) {
@@ -310,7 +324,9 @@ async function run(): Promise<void> {
             return result;
           },
         });
-      const crops = await prepareCrops(source, body, analysis, store);
+      const crops = selected.cropUiElements
+        ? await prepareCrops(source, body, analysis, store)
+        : [];
       const occurrences = await completeUiElementExtraction({
         source,
         providerModel,
@@ -325,20 +341,20 @@ async function run(): Promise<void> {
         status: "complete",
         summary: analysis.summary,
         screenPatterns: analysis.screenPatterns.map(({ slug }) => slug),
-        components: occurrences.map((occurrence) => ({
+        components: occurrences.map((occurrence, index) => ({
           occurrenceId: occurrence.id,
           type: occurrence.type,
+          layer: occurrence.layer,
           croppedImageId: occurrence.croppedImageId,
           confidence: occurrence.confidence,
           reviewStatus: occurrence.reviewStatus,
-          objectKey: crops.find(({ candidate }) =>
-            candidate.type === occurrence.type
-            && candidate.confidence === occurrence.confidence)?.object.key ?? "",
+          objectKey: crops[index]?.object.key ?? "",
         })),
       };
       console.log(
         `[${index + 1}/${sources.length}] source ${source.sourceImageId}: `
-        + `${occurrences.length} crop(s), `
+        + `${analysis.components.length} detected component(s), `
+        + `${occurrences.length} persisted crop(s), `
         + `${analysis.screenPatterns.map(({ slug }) => slug).join(", ")}`,
       );
     } catch (error) {

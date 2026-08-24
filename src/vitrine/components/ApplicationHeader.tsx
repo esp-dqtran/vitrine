@@ -36,6 +36,8 @@ export function ApplicationHeader({
         ? { name: 'color' } as const
       : active === 'flows'
         ? { name: 'flows' } as const
+        : active === 'components'
+          ? { name: 'components' } as const
         : { name: 'projects' } as const;
   const activeLabel = active === 'apps'
     ? 'Apps'
@@ -43,7 +45,9 @@ export function ApplicationHeader({
       ? 'Sites'
       : active === 'color'
         ? 'Colors'
-      : active === 'flows' ? 'Flows' : 'Projects';
+      : active === 'flows'
+        ? 'Flows'
+        : active === 'components' ? 'Components' : 'Projects';
   return (
     <header
       data-reference-component="top-nav"

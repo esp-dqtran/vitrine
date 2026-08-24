@@ -1,0 +1,72 @@
+[
+  {
+    "ok": true,
+    "readyState": 0,
+    "src": "http://127.0.0.1:4191/assets/wild-logo.svg"
+  },
+  {
+    "ok": true,
+    "readyState": 4,
+    "src": "http://127.0.0.1:4191/assets/work/replit-agent-3.mp4"
+  },
+  {
+    "ok": true,
+    "readyState": 4,
+    "src": "http://127.0.0.1:4191/assets/work/serve-robotics.mp4"
+  },
+  {
+    "ok": true,
+    "readyState": 4,
+    "src": "http://127.0.0.1:4191/assets/work/unstructured.mp4"
+  },
+  {
+    "ok": true,
+    "readyState": 0,
+    "src": "http://127.0.0.1:4191/assets/work/ouster.avif"
+  },
+  {
+    "ok": true,
+    "readyState": 4,
+    "src": "http://127.0.0.1:4191/assets/work/ibm.mp4"
+  },
+  {
+    "ok": true,
+    "readyState": 4,
+    "src": "http://127.0.0.1:4191/assets/work/ordinary.mp4"
+  },
+  {
+    "ok": true,
+    "readyState": 4,
+    "src": "http://127.0.0.1:4191/assets/work/montefiore.mp4"
+  },
+  {
+    "ok": true,
+    "readyState": 4,
+    "src": "http://127.0.0.1:4191/assets/work/tersa.mp4"
+  },
+  {
+    "ok": false,
+    "readyState": 0,
+    "src": "http://127.0.0.1:4191/assets/work/nutrafol.avif"
+  },
+  {
+    "ok": true,
+    "readyState": 4,
+    "src": "http://127.0.0.1:4191/assets/experiments/wild-week-athens.mp4"
+  },
+  {
+    "ok": true,
+    "readyState": 4,
+    "src": "http://127.0.0.1:4191/assets/experiments/very-fluffy.mp4"
+  },
+  {
+    "ok": true,
+    "readyState": 4,
+    "src": "http://127.0.0.1:4191/assets/experiments/active-heads.mp4"
+  },
+  {
+    "ok": true,
+    "readyState": 0,
+    "src": "http://127.0.0.1:4191/assets/experiments/asset-pipeline.avif"
+  }
+]

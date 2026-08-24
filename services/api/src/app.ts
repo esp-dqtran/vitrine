@@ -1833,10 +1833,16 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       next();
       return;
     }
-    const limiter = req.path === "/mcp" ? mcpLimiter : generalLimiter;
+    const isMcpRequest = req.path === "/mcp";
+    const limiter = isMcpRequest ? mcpLimiter : generalLimiter;
     const byUser = limiter.check(`user:${res.locals.user.id}`);
-    const byIp = limiter.check(`ip:${req.ip}`);
-    const blocked = byUser.allowed ? byIp : byUser;
+    // MCP tokens are already authenticated and revocable. The API sits behind a local Caddy
+    // reverse proxy, so req.ip is the shared proxy address unless a separately validated
+    // client-IP boundary is introduced. Keep the strict MCP budget per user to avoid one
+    // account consuming a global proxy-IP bucket for every other MCP user.
+    const blocked = byUser.allowed && !isMcpRequest
+      ? limiter.check(`ip:${req.ip}`)
+      : byUser;
     if (!blocked.allowed) {
       res.setHeader("Retry-After", String(blocked.retryAfterSeconds));
       await deps.recordAccessEvent({

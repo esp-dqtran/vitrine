@@ -44,7 +44,6 @@ export type CatalogSidebarSection =
   | 'apps'
   | 'flows'
   | 'sites'
-  | 'elements'
   | 'collections'
   | 'projects';
 
@@ -81,7 +80,6 @@ const SECTION_ICONS: Record<CatalogSidebarSection, ReactNode> = {
   apps: <GridIcon aria-hidden="true" />,
   flows: <SparkleIcon aria-hidden="true" />,
   sites: <BookIcon aria-hidden="true" />,
-  elements: <CategoryIcon aria-hidden="true" />,
   collections: <BookmarkHollowIcon aria-hidden="true" />,
   projects: <FolderIcon aria-hidden="true" />,
 };
@@ -90,17 +88,10 @@ const SECTION_LABELS: Record<CatalogSidebarSection, string> = {
   apps: 'Apps',
   flows: 'Flows',
   sites: 'Sites',
-  elements: 'UI Elements',
   collections: 'Collections',
   projects: 'Projects',
 };
 
-/*
- * `elements` is deliberately absent. The catalog exposes no element facets or
- * per-screen element data to a signed-out visitor, and there is no rebuilt
- * surface behind it yet — a nav row that goes nowhere is worse than one that
- * is not offered. Add it back with the page, not before.
- */
 const BROWSE: CatalogSidebarSection[] = ['apps', 'flows', 'sites'];
 
 /* A row without a glyph reads as a different kind of thing to its neighbours,
@@ -386,4 +377,3 @@ export function CatalogSidebar({
     </aside>
   );
 }
-

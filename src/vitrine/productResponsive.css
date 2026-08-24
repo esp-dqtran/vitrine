@@ -140,6 +140,13 @@
     align-self: center !important;
     min-width: 0;
     gap: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .apps-top-nav .reference-discovery-nav__types::-webkit-scrollbar {
+    display: none;
   }
 
   .apps-top-nav .reference-discovery-nav__types button {

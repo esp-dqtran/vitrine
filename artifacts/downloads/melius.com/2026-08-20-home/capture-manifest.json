@@ -1,0 +1,1394 @@
+{
+  "sourcePage": "https://www.melius.com/",
+  "capturedAt": "2026-08-20T07:40:32.416Z",
+  "rawHtml": "raw.html",
+  "assets": [
+    {
+      "url": "https://www.melius.com/_next/static/chunks/36xbliaxexmbc.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/763377b35bf5ddf5f7cf.js",
+      "bytes": 646,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "46879eab08f22f55292340255bd937cb5ea8dbd08bde7b28b4a8c228bd39bbd6"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/16cq4ti-62638.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/919ea63111234168a322.js",
+      "bytes": 723547,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "34a8b481aea5c90a51854e1dda2ba072e651acb8899a27159e907355d02b1607"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/887e1f1beb6796879995.woff2",
+      "bytes": 23108,
+      "contentType": "font/woff2",
+      "sha256": "5f3d6ad60f29d6cb708414ec6887163d63bf197377ef5417d2483ff31ace6c3b"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/media/ease_standard_regular-s.p.1edy1timsxsj8.woff2?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/9d8bb9ce2e47c0afc606.woff2",
+      "bytes": 11916,
+      "contentType": "font/woff2",
+      "sha256": "0f1f24e33d2611e07d70c5c11aa79ea031e45f8709dc1ac299519fa6dba3a22e"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/media/fg_futurist_regular-s.p.3v58uqp-pi5_h.woff2?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/97186eb32c0ce53d53e6.woff2",
+      "bytes": 38432,
+      "contentType": "font/woff2",
+      "sha256": "08c10acaebe9db7df8f4e8639c80c82690c42638c989441251d068188c9293c4"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/media/reckless_standard_regular-s.p.0st47nbna72mo.woff2?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/a662ed7b7683e32ac542.woff2",
+      "bytes": 104312,
+      "contentType": "font/woff2",
+      "sha256": "3a61155f004987bc0696140dfd2b1f69f173835121e2e7938bc9f6923faf640a"
+    },
+    {
+      "url": "https://www.melius.com/media/shared/melius-coin-silver.webp",
+      "path": "network-assets/1b4e42070f482e4b80d6.webp",
+      "bytes": 61914,
+      "contentType": "image/webp",
+      "sha256": "51ac39ff92ac44dfbd8e7d5bae7c2c5bfcf321dddbab6cb413599567d5129cb4"
+    },
+    {
+      "url": "https://www.melius.com/media/shared/melius-coin-tilted.webp",
+      "path": "network-assets/782641dca23238877693.webp",
+      "bytes": 77046,
+      "contentType": "image/webp",
+      "sha256": "44be83e7a93b499e903f690948a4bcd98e89686fc33f6bc84f79824b93e3661d"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/1ar_-5stfr8iv.css?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/e83a134a7f89e055f532.css",
+      "bytes": 3979,
+      "contentType": "text/css; charset=utf-8",
+      "sha256": "0520cd6193c2ca579d4a5f49df229aa4777e9b70cfc206a2e9c2e249ebe0c597"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/0chnn_w_ymwfq.css?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/33937522490f8ff3aa27.css",
+      "bytes": 212207,
+      "contentType": "text/css; charset=utf-8",
+      "sha256": "8a6fd66b326611c649b37908db9d017cca3fe03422a1af671c5f8cf31b6bdf26"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/2r_ak9dtfitsq.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/13dc22c9d64a1ffd6f38.js",
+      "bytes": 5583,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "e7eff4a00a4f1bd6d472cd573493659522948db3b16722ed13440e7f48f017ce"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/0hm9z7trn3lml.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/6744e1fe66d75394ac51.js",
+      "bytes": 30973,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "22114976855913259b4cad5eb6b2512e7ff5f4b957f45ef02114cd0c18f1e21d"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/2qx7x9on8a7vw.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/b6bc8bfd20e8942a8847.js",
+      "bytes": 227314,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "9e1de26cd62d6b38f73d796fc5a35faf887b89485a95b5fe1ecb0b6872aaebec"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/07fp4wvsn3-cu.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/236f4ef1b50e6f266995.js",
+      "bytes": 138252,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "1ec8026ca323ca8a358402aa8537e63a4d9d94b48cb11fa19272db4a2e671432"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/0-0s5lr83i50t.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/5116435060d4e56483e3.js",
+      "bytes": 44415,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "e78eaea1c0b5330f3d14661d1e18c92e387de3f0b28ea1df966575362c52b549"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/turbopack-44h2eu5r8qdai.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/82fcf5956a1330c68e99.js",
+      "bytes": 11052,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "d66c119b754b5c01e6be6fde31dc79c96a4217ae0b80688c6dbb0793ed140229"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/23qo78mhjrp10.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/2fc1cbfdf25a8f94c04c.js",
+      "bytes": 3779,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "552d97fe36286adcefceaf498b6641ee0f37b93e8246ae2b6bc5730085c591d2"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/0r5dk4jwb32pv.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/b27a7632d75d2456c6b1.js",
+      "bytes": 54642,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "77e718ed33f4fe24cbdb8efa0d381a58db3b5a750e255683e9643d52a96bdff4"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/2f1h6m3_cdude.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/5daf1accf809fa83e8a5.js",
+      "bytes": 93077,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "58d03bb451cf7e7b5fe6ad6cf45d0564ae669b24265707f69dcb51d90ed7c863"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/31kp4cm4vliaq.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/4318562d0de3211941a6.js",
+      "bytes": 78690,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "1d6bf2104dfc28270a608cf9ddf8cd20908e03a08265c21d039a8c8fb05f09ff"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/20mt47pll2h03.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/88f8f2a90aab69dd5a02.js",
+      "bytes": 881,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "996328a04a2cc01e6d42da5249851c6ffa1b8e50b94914e5a4d28efc08d958f5"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/2mdt8ebobi1ly.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/a0b121c89ff6c7fe83d5.js",
+      "bytes": 54212,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "a12784a11b2564193a256b3f9e56da8221893c219bc41f6d195441aa5c532efd"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/31r57506o5r3z.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/e6722f252625ab14ea40.js",
+      "bytes": 33085,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "5605b8c1bf74753f13432dc299d21d5a0459264c7b10f2131b76afcba532d311"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/1y7klbyi2sd3w.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/d31bfbd7d0fce6b17a4e.js",
+      "bytes": 168929,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "da05bced1efe5851fdd06b89dae10f1b11f11d79feb1b94d7e4606a0edef7ed0"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/3-tky7zpt8m1y.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/61ebd0c2d27b94d0e5bf.js",
+      "bytes": 115396,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "35041a069a1a16fa640f5fef45ae29fb7c5445b367f328e57628347cfd1fc514"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/1yj__q-6uio3q.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/a67a770457a7d747fa4b.js",
+      "bytes": 70179,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "2a77aebec4664ecc4ee4ad61735b34a0d3e09ad9ff0cae9095c3213120077deb"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/2-zic9332npwc.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/5259a845d49009de7331.js",
+      "bytes": 45121,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "42ee0111377e7b923e3a0a645db5f46a91d9feb1a69cf8ab94e0e2a295cfdd7f"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/0uo2-mz7y_p98.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/b5f76875c678406b775b.js",
+      "bytes": 59836,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "ab844d469b851ef351ad6149f5f14532937c44e8c68da0e2b9cca447fba17795"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/41z26-ea_httd.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/18496ddd88e776d5853e.js",
+      "bytes": 168929,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "4dc1d1a2d34ba85caf510811a2c21515497a539bd0ee2d0e0182bc457f9de3aa"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/1f3ei545d9s0q.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/15b7eed0c1a30207272b.js",
+      "bytes": 115396,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "406a1dbda281f1cb2de4392f3d1ea5bc0417338c3841c970e861107e08ee0daa"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/0a8qbms43ag68.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/9aa9e990ef106d45ccfc.js",
+      "bytes": 336201,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "9dbce3cb1aff1f0abb50f349d4fb44658f566700dc09f55248c6c6fc0222b592"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/0cz1d0mv5g_q7.js?dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/74b2e784800a5cfaac0c.js",
+      "bytes": 112594,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Fadvertising%2Fbackground.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/a91e4d004923e6ab60b4.jpg",
+      "bytes": 200248,
+      "contentType": "image/jpeg",
+      "sha256": "6035069197cb9df3a94bf58f853754a1877fbd084f55adc77c62034e5092d7dc"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Fadvertising%2Fnode-1.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/b7176887d1b8da798f6e.jpg",
+      "bytes": 38458,
+      "contentType": "image/jpeg",
+      "sha256": "54315b5283881e9fc44a987621a8c52053a932a6c55b77dbaf8ebd49a12a81e3"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Fadvertising%2Fnode-2.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/a93f6ab40731e18a7f8d.jpg",
+      "bytes": 84014,
+      "contentType": "image/jpeg",
+      "sha256": "74b166eeef9c08b287af679ce6b17b16ecd590b4132545cf4e2423f82abb5eb0"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/advertising/node-2-video.webm",
+      "path": "network-assets/0b35cf63739d10344eb0.webm",
+      "bytes": 669611,
+      "contentType": "video/webm",
+      "sha256": "8e8cdf6dcbdbf944454d1fe295cb6a0202798dbe3c82b85dc4d1acd2ffa47b23"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Fe-commerce%2Fnode-1-1.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/df91bd371c9f461bfda7.jpg",
+      "bytes": 35395,
+      "contentType": "image/jpeg",
+      "sha256": "c793dd8b12a2022a1fe3ca462371783e3816a69ca975f683f866899bfc2d5ab9"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Fe-commerce%2Fnode-1-2.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/2946f1bc946bb9d375ec.jpg",
+      "bytes": 21625,
+      "contentType": "image/jpeg",
+      "sha256": "e4aff31dd2f1300a66d64b39795cc958b7235f8702fa7375b98c3da6b6f3a96d"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Fe-commerce%2Fnode-2.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/714730aa8a77d25dac79.jpg",
+      "bytes": 46244,
+      "contentType": "image/jpeg",
+      "sha256": "a8611999c881c0507956b8333993c06b8af6ccb47c540697dd5e6ea05ba690c2"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/e-commerce/node-3.webm",
+      "path": "network-assets/ee59325a84147e4f85ba.webm",
+      "bytes": 2030294,
+      "contentType": "video/webm",
+      "sha256": "f6f12af5ff76d50bede8cd046db8e6ad660b7f34e3b25bb51754471970030114"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Ffilmmaking%2Fnode-1.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/473e8c247d58c93a0e49.jpg",
+      "bytes": 53772,
+      "contentType": "image/jpeg",
+      "sha256": "224ccbf11b4b68ee65e37f8b17178cccadb860891ff71285ad363963a7f1642f"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Ffilmmaking%2Fnode-2.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/299ff500863218188338.jpg",
+      "bytes": 54977,
+      "contentType": "image/jpeg",
+      "sha256": "7368df41dacf62a9393edf535ad41d932655319edab68091a1d6ce20c7275339"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/filmmaking/node-3.webm",
+      "path": "network-assets/ca5fdf49f591c096e51a.webm",
+      "bytes": 864737,
+      "contentType": "video/webm",
+      "sha256": "79dba99c8bfa0f83aa8dab42cf8bceef61a9749f7cdf86a6706701290c11cd38"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/filmmaking/node-4.webm",
+      "path": "network-assets/b602c016faa4f4f54810.webm",
+      "bytes": 937590,
+      "contentType": "video/webm",
+      "sha256": "56392bc20b9e952673c100b02b768abfc9b30054d6cd71278aeec30c9faf6bfa"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Ffashion%2Fnode-1-1.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/450aa5d86db5286b12a0.jpg",
+      "bytes": 33936,
+      "contentType": "image/jpeg",
+      "sha256": "03b2a9fef48e8a4e2f984634cfd1b642c6a9260dd1410c3dd762ee39514dca29"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Ffashion%2Fnode-1-2.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/808c6afcb1f7b89bab79.jpg",
+      "bytes": 69112,
+      "contentType": "image/jpeg",
+      "sha256": "0690ebe166e3d692f0ef42bf94dcbeb4b6f5e71e735b63a10a46c321aafc0cdf"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Ffashion%2Fnode-2.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/b553fa741b5f6b5eb1d9.jpg",
+      "bytes": 39942,
+      "contentType": "image/jpeg",
+      "sha256": "6b3693f64f3b7ffeb0fd7a4eaec80328c56ce4d6e41b80ce067b42a8274a2a7c"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Ffashion%2Fnode-3.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/196bb6f822ca082851e7.jpg",
+      "bytes": 151400,
+      "contentType": "image/jpeg",
+      "sha256": "5d14401cb59821d3fa80ea556675c6226b8db0067a475ac754980f3079497d1c"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Fbranding%2Fnode-1-1.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/8bbb3b69eebabfb6b8ad.webp",
+      "bytes": 4374,
+      "contentType": "image/webp",
+      "sha256": "0f65dd94842b6ca932815ff7c9f01b1815a880bc3abda280320e5790fbbd4f1c"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Fbranding%2Fnode-1-2.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/d7d497719d1099ebde40.webp",
+      "bytes": 3122,
+      "contentType": "image/webp",
+      "sha256": "e3e7db8697709870703fb348a56489ab3dac14bfe17651561a708c06150d418d"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Fbranding%2Fnode-1-3.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/e4f46311f0956a59d157.webp",
+      "bytes": 4250,
+      "contentType": "image/webp",
+      "sha256": "6bbf1beeb442205329c1c7518db8ba735dff289583faa1d8fd7b9b58676cc098"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Fbranding%2Fnode-1-4.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/a284b37bfb6c4734230a.webp",
+      "bytes": 3432,
+      "contentType": "image/webp",
+      "sha256": "b58b79bd9eb0e83c88c3b551e3d42959462efb651cabb5c75f81ff176328eb89"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Fbranding%2Fnode-2-1.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/09841cc1011bfc6cfc78.webp",
+      "bytes": 8100,
+      "contentType": "image/webp",
+      "sha256": "3c8d7c2750cfa228f09d66221f3f8f196a52204c068d18cee4a05aeb21528a64"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Fbranding%2Fnode-2-2.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/2607bb811599391d4a64.jpg",
+      "bytes": 108882,
+      "contentType": "image/jpeg",
+      "sha256": "4703ec4184a3c0c1a16c9264e50663ec8b108250880fb0bcb1afd27d7ba1784d"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fpages%2Fhome%2Fcanvas-showcase%2Fbranding%2Fnode-3.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/49db70ab26aa5eca75e0.jpg",
+      "bytes": 206562,
+      "contentType": "image/jpeg",
+      "sha256": "9329de870a196675edb9e89bc3a028491ebac4e4018a86ce2d112aab1d994277"
+    },
+    {
+      "url": "https://www.melius.com/images/personas/agencies.webm",
+      "path": "network-assets/86ceab3c1a8e6d7c8eb3.webm",
+      "bytes": 1015227,
+      "contentType": "video/webm",
+      "sha256": "3e11090f8be1645b257eb55f0799930e70c0325ed5fc42b5306d3b271595318a"
+    },
+    {
+      "url": "https://www.melius.com/images/personas/cd-filmmakers.webm",
+      "path": "network-assets/f089a69a71176a8ae33d.webm",
+      "bytes": 3390738,
+      "contentType": "video/webm",
+      "sha256": "6a70ce91250926eb3d517add788fddad8301648410b690e0149651d765933017"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fimages%2Fpersonas%2Fmarketers.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/ebba7bc075465a53f58b.jpg",
+      "bytes": 176662,
+      "contentType": "image/jpeg",
+      "sha256": "f2d0914ff2affaf90acb5fe483698b575121058f9511aa880d9ed6480ee89773"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fimages%2Fpersonas%2Fecommerce.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/6f8045229511102cb225.webp",
+      "bytes": 161864,
+      "contentType": "image/webp",
+      "sha256": "6539046d0762ba8d2c9e2a58f939b6d9b6524110e18e64df9996a1529f0c9b8e"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fimages%2Fpersonas%2Fgtm-growth.webp&w=3840&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/c847b38fefc6219ec3c2.webp",
+      "bytes": 91886,
+      "contentType": "image/webp",
+      "sha256": "678302cda8ca70ca26812e2cb166f1cdb672d15c4e89a46d286c3ae9adcbbe1b"
+    },
+    {
+      "url": "https://www.melius.com/_next/image?url=%2Fmedia%2Fshared%2Fmelius-coin-silver.webp&w=384&q=75&dpl=dpl_688kRX99Hye46uKj7LvVoFkdwNWj",
+      "path": "network-assets/e7ddd712d9e5777f3953.jpg",
+      "bytes": 24088,
+      "contentType": "image/jpeg",
+      "sha256": "ed2fce16da92bd7ae5b860ff33cdb46322861404d3ee897efc587073b100624c"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/advertising/background.webp",
+      "path": "network-assets/31e3db1c5e47daa7d22d.webp",
+      "bytes": 298764,
+      "contentType": "image/webp",
+      "sha256": "04e70f6d93164c918bc16272f234662a868f957794e8471bc484586b0c8339f7"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/advertising/node-1.webp",
+      "path": "network-assets/95caea352ed126fa508d.webp",
+      "bytes": 44368,
+      "contentType": "image/webp",
+      "sha256": "d4d9127704fd9917acb4e1aa327bc4837c6380f3ee061fcb758fc8806226bbd1"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/advertising/node-2.webp",
+      "path": "network-assets/88872a5492cfd32bb64e.webp",
+      "bytes": 103326,
+      "contentType": "image/webp",
+      "sha256": "0ba81e9a76d4c8392276ae8e2f7e49ad6e6027875ed9f5f6d65f3a42b8a99e9f"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/e-commerce/node-1-1.webp",
+      "path": "network-assets/3819d63fe9fcb6c7ebbc.webp",
+      "bytes": 42918,
+      "contentType": "image/webp",
+      "sha256": "26b5c57689de2273a35edf36143b563bb8e2bbe1fab51632cfa7c4e608c8d2e8"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/e-commerce/node-1-2.webp",
+      "path": "network-assets/26ff88bb49305d60c8c6.webp",
+      "bytes": 22834,
+      "contentType": "image/webp",
+      "sha256": "55861360475864a4556039e78a28c9aa8fc23a7610fd65a053b3dfdd60b93b29"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/e-commerce/node-2.webp",
+      "path": "network-assets/2aeda84b43e0d0c9d2f1.webp",
+      "bytes": 62970,
+      "contentType": "image/webp",
+      "sha256": "a54f465602635fc62a6455f3f9583a3379400779935ecda16e0b7c454a49eebf"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/filmmaking/node-1.webp",
+      "path": "network-assets/d519f0f0f4dffe267e6b.webp",
+      "bytes": 76218,
+      "contentType": "image/webp",
+      "sha256": "88505e3094a541610e86e8b5b2a48d2acda033eb4d5b199ed453bd625e0de10f"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/filmmaking/node-2.webp",
+      "path": "network-assets/8cf4de374884d268ea40.webp",
+      "bytes": 73762,
+      "contentType": "image/webp",
+      "sha256": "84f541d532dedb6ebc1f500298ea57435c4d4a4ff3f60f0eb4cfcbc2ce5ca2f5"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/fashion/node-1-1.webp",
+      "path": "network-assets/f2effb7d3c9b4909f3b8.webp",
+      "bytes": 48596,
+      "contentType": "image/webp",
+      "sha256": "f69434747cc67a7561d8935c4c0c4750d5d798fbffc4d2283f64818490349633"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/fashion/node-1-2.webp",
+      "path": "network-assets/770764d8ebceca5147f9.webp",
+      "bytes": 141674,
+      "contentType": "image/webp",
+      "sha256": "98c330480e6e548bbcddbe2f36217346af747e02c5d17003434db8259cf64bf6"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/fashion/node-2.webp",
+      "path": "network-assets/1df271b14f106572138e.webp",
+      "bytes": 44508,
+      "contentType": "image/webp",
+      "sha256": "c776b86209052e7137fcedde154c3c7eaee53b027fc5c17b3e2ecff722d55981"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/fashion/node-3.webp",
+      "path": "network-assets/4e86fccb23b6aefa65e6.webp",
+      "bytes": 243898,
+      "contentType": "image/webp",
+      "sha256": "4794b6bb8b86e69e1a5a519030713d276b95ba4a342b759da6a572e036658745"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/branding/node-1-1.webp",
+      "path": "network-assets/02c53d2f2e584516de4f.webp",
+      "bytes": 4374,
+      "contentType": "image/webp",
+      "sha256": "0f65dd94842b6ca932815ff7c9f01b1815a880bc3abda280320e5790fbbd4f1c"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/branding/node-1-2.webp",
+      "path": "network-assets/7b62a071d0398b376f98.webp",
+      "bytes": 3122,
+      "contentType": "image/webp",
+      "sha256": "e3e7db8697709870703fb348a56489ab3dac14bfe17651561a708c06150d418d"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/branding/node-1-3.webp",
+      "path": "network-assets/49ae8909c0fc469b4a21.webp",
+      "bytes": 4250,
+      "contentType": "image/webp",
+      "sha256": "6bbf1beeb442205329c1c7518db8ba735dff289583faa1d8fd7b9b58676cc098"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/branding/node-1-4.webp",
+      "path": "network-assets/84419ad9f8e99cfa5a20.webp",
+      "bytes": 3432,
+      "contentType": "image/webp",
+      "sha256": "b58b79bd9eb0e83c88c3b551e3d42959462efb651cabb5c75f81ff176328eb89"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/branding/node-2-1.webp",
+      "path": "network-assets/92751b5b588b5cf8dcf3.webp",
+      "bytes": 8100,
+      "contentType": "image/webp",
+      "sha256": "3c8d7c2750cfa228f09d66221f3f8f196a52204c068d18cee4a05aeb21528a64"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/branding/node-2-2.webp",
+      "path": "network-assets/ba77c2f656172fcb4f95.webp",
+      "bytes": 113852,
+      "contentType": "image/webp",
+      "sha256": "e32c50672c31490d0034734fb2c95dd934a3f1d89cea518c3915042989d8f5b5"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/branding/node-3.webp",
+      "path": "network-assets/2652bedf10ca87e3ef5c.webp",
+      "bytes": 272934,
+      "contentType": "image/webp",
+      "sha256": "74aad7bdcbff6b02a1cc04780461963f4a74c0f961234fb49d583695be3ec9f4"
+    },
+    {
+      "url": "https://www.melius.com/images/personas/marketers.webp",
+      "path": "network-assets/c4cc64e83773df97deab.webp",
+      "bytes": 185472,
+      "contentType": "image/webp",
+      "sha256": "fd4193d39245082625129d2a22178426268840ffd29cc07d1a20969c36fb1d19"
+    },
+    {
+      "url": "https://www.melius.com/images/personas/ecommerce.webp",
+      "path": "network-assets/f2758066c19787742055.webp",
+      "bytes": 161864,
+      "contentType": "image/webp",
+      "sha256": "6539046d0762ba8d2c9e2a58f939b6d9b6524110e18e64df9996a1529f0c9b8e"
+    },
+    {
+      "url": "https://www.melius.com/images/personas/gtm-growth.webp",
+      "path": "network-assets/91ccac182a31c629b5be.webp",
+      "bytes": 91886,
+      "contentType": "image/webp",
+      "sha256": "678302cda8ca70ca26812e2cb166f1cdb672d15c4e89a46d286c3ae9adcbbe1b"
+    },
+    {
+      "url": "https://www.melius.com/media/shared/noise.webp",
+      "path": "network-assets/38461a15166fd4e3da61.webp",
+      "bytes": 164092,
+      "contentType": "image/webp",
+      "sha256": "3e8b39564eba38fe2aea24a266e4240947475a26a00bcdaa9e3fae4e23639795"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/brand/logo/melius-horizontal-lockup.svg",
+      "path": "network-assets/a668d8cdad59095d755f.svg",
+      "bytes": 3830,
+      "contentType": "image/svg+xml",
+      "sha256": "3d78cace1a69a8c9a32a48c0171c97e50bc99b0b83eb10c1fd2e155f1378a175"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-1.webp",
+      "path": "network-assets/c744197fe7a316ffb1a7.webp",
+      "bytes": 35182,
+      "contentType": "image/webp",
+      "sha256": "c11b693a5ab2d29c77a9a20e390186df2947663f28ee013e9e6ffc2d1577e72c"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-2.webp",
+      "path": "network-assets/a70e8a1fa357d7d8b4e9.webp",
+      "bytes": 5974,
+      "contentType": "image/webp",
+      "sha256": "c95d1a55eb2d8aea2aefe845e87da473cd2ed9686ea0974f83ec90117dfb1757"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-3.webp",
+      "path": "network-assets/f7bc251e57e3f9034df4.webp",
+      "bytes": 5360,
+      "contentType": "image/webp",
+      "sha256": "b8363db592090e8077880080ab156fb686151b7ee4e03c499c87bfdbe492104e"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-4.webp",
+      "path": "network-assets/1c2f50a2c5c464e40073.webp",
+      "bytes": 8634,
+      "contentType": "image/webp",
+      "sha256": "5459402f6f795b8b96c61b52b63e48ae3436931fd3d35d973a0b3a4ce3cfbaac"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-5.webp",
+      "path": "network-assets/37852bcf5c6bfaaab8ff.webp",
+      "bytes": 29892,
+      "contentType": "image/webp",
+      "sha256": "cce0384db028d7dfa7455e8d8b6aac6b3e6426cbe9780565d5ef52686e0de857"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-6.webp",
+      "path": "network-assets/1a6e7add8a1fd085a80e.webp",
+      "bytes": 17006,
+      "contentType": "image/webp",
+      "sha256": "cdc5b6e6d84985ef541786873e4e99d75173089b965e457c10f997f6c9923f58"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-7.webp",
+      "path": "network-assets/9bbdd5eccadaf549fe64.webp",
+      "bytes": 35082,
+      "contentType": "image/webp",
+      "sha256": "fbe036c9a13cf4fa609ba80a7ea0c86dafcce8a6f4fda2865dd8c1f3f82b96d2"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-8.webp",
+      "path": "network-assets/653bd6e4a73cbea877d0.webp",
+      "bytes": 9016,
+      "contentType": "image/webp",
+      "sha256": "c614558c7f0b213b2e72dec470125abb5aed8ff3b8dc8fa752024a422f5abf3f"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-9.webp",
+      "path": "network-assets/70f8984d420f980d8880.webp",
+      "bytes": 8568,
+      "contentType": "image/webp",
+      "sha256": "e9fa43bd36363de7e1aad0249e20a672513cb8a729648fbd4c29a2f27452ea09"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-10.webp",
+      "path": "network-assets/a2a1c53543141a5a1d56.webp",
+      "bytes": 15984,
+      "contentType": "image/webp",
+      "sha256": "8318289036d15aa6eafbd5544ce56b41086a0c4e762e6957ed72381716d108b5"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-11.webp",
+      "path": "network-assets/d27bff07ce3bbfe5cfaa.webp",
+      "bytes": 12282,
+      "contentType": "image/webp",
+      "sha256": "76cd332c539f7490df9e0f74191d83be444dbf7952a7b8f9b3807dde2fa617ce"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-12.webp",
+      "path": "network-assets/df6486e27575c6b99135.webp",
+      "bytes": 16800,
+      "contentType": "image/webp",
+      "sha256": "7966fa19164631f93cc0c8e7d9a4cbb14457da098f4703b4460020bdaae315dc"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-13.webp",
+      "path": "network-assets/170c66740407a99b8e6e.webp",
+      "bytes": 26650,
+      "contentType": "image/webp",
+      "sha256": "52e1c6f170aaf060b1e1fb5592b80561543cbf039c2d1ae13a7c7a652b52d836"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-14.webp",
+      "path": "network-assets/1bc32a267dd98ac82483.webp",
+      "bytes": 58802,
+      "contentType": "image/webp",
+      "sha256": "84e3405a3e9c917f1a87251827f4667de4a4fc9491e92d1820a49d31d5d5d32b"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-15.webp",
+      "path": "network-assets/892c27896e0502d9e70e.webp",
+      "bytes": 16858,
+      "contentType": "image/webp",
+      "sha256": "06c8abd7bf6e2a0b295ee67ff35a14be1de700b2b9c635578ba2815cbde9ba26"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-16.webp",
+      "path": "network-assets/2604c2624531e684227c.webp",
+      "bytes": 19750,
+      "contentType": "image/webp",
+      "sha256": "1a5199caafe7d381991c3d5c56385bb149403edff6068543deb5006e30359fe4"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-17.webp",
+      "path": "network-assets/16432f13146141542883.webp",
+      "bytes": 5108,
+      "contentType": "image/webp",
+      "sha256": "87a0ee98cf4e52b7dd17eea0dc226724f08ad776ce297c637ca3d4c9efb1f838"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-18.webp",
+      "path": "network-assets/247724fee58885732724.webp",
+      "bytes": 18366,
+      "contentType": "image/webp",
+      "sha256": "df43185cf289421bf81975c42f5cc5f22b58ef9d511ee788eda34e2daffebc4b"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-19.webp",
+      "path": "network-assets/afe73f171d27fc3dd0f8.webp",
+      "bytes": 23040,
+      "contentType": "image/webp",
+      "sha256": "7a27f98fa5ca067988ce82a61cab524e8ef63e71d7315cf9b72496803bf468da"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-20.webp",
+      "path": "network-assets/a480c428f5c7816cb9c1.webp",
+      "bytes": 8640,
+      "contentType": "image/webp",
+      "sha256": "02a956721891cfa71a5c0be1d44cc24754005ffb33cfc45b81d196f6f145c0ee"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-21.webp",
+      "path": "network-assets/3d2daf349971830b0927.webp",
+      "bytes": 5908,
+      "contentType": "image/webp",
+      "sha256": "d5decbdb0482937c4d8f430db642c761761a82f342e8f833aea7ecbc698932e5"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-22.webp",
+      "path": "network-assets/f88f24a8612b295ee20b.webp",
+      "bytes": 17536,
+      "contentType": "image/webp",
+      "sha256": "a34715cdc65aad952bd5997c95d68c8ba2b64ae0f1e110d7238c9c9bde8fe804"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-23.webp",
+      "path": "network-assets/0345cc7b45c4ceb43c1f.webp",
+      "bytes": 19548,
+      "contentType": "image/webp",
+      "sha256": "f379647263362533b895d24525efbb567dc22bc0e3b6c5fc166c142125f5916d"
+    },
+    {
+      "url": "https://www.melius.com/images/hero/hero-24.webp",
+      "path": "network-assets/2da0635abbe3be67d2b6.webp",
+      "bytes": 20888,
+      "contentType": "image/webp",
+      "sha256": "79c536cf8ff9fcd6857d7c54dda86f7c8ebffdebf345aca5fcc1cd0a1f945ffe"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/concept-boards.webp",
+      "path": "network-assets/9ab1791c82e8b5118a0f.webp",
+      "bytes": 104856,
+      "contentType": "image/webp",
+      "sha256": "f168d1a37d357d8f565fd6f1af314e26b7e4a976d8493253efcdc788fb601871"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/campaign-variants.webm",
+      "path": "network-assets/524ef669e285a2d12913.webm",
+      "bytes": 936711,
+      "contentType": "video/webm",
+      "sha256": "f081062e4509c4747f6237a64c0edeb9096758d5f49649f6888217d268389a81"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/treatment-decks.webp",
+      "path": "network-assets/15fb23f585d138088f26.webp",
+      "bytes": 81402,
+      "contentType": "image/webp",
+      "sha256": "5259ef1095a2fb2340165cd2b70f127558e90d9d71d340e59461821e0a1233f2"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/spec-ads.webp",
+      "path": "network-assets/8adfd178303a7f7c2468.webp",
+      "bytes": 176406,
+      "contentType": "image/webp",
+      "sha256": "440d9338bcb9fe9293c5555f263e1a3e0091953fd0c98ab7e0b27614c1b9a3cb"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/storyboards.webp",
+      "path": "network-assets/663495bd745ae82b2459.webp",
+      "bytes": 270810,
+      "contentType": "image/webp",
+      "sha256": "63668397409960fc96baf3f93090150345096c1a5b0f3ef6833c42a1bb3f360c"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/ai-shorts.webm",
+      "path": "network-assets/e148028004057326eea5.webm",
+      "bytes": 1136662,
+      "contentType": "video/webm",
+      "sha256": "f4be654caf3e4e7a0e319be9cb1adb2c6710a90dd537d558889675dc7bd139f5"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/lookbooks.webm",
+      "path": "network-assets/65d5ca138e9a26878d9d.webm",
+      "bytes": 2292619,
+      "contentType": "video/webm",
+      "sha256": "b75d9fb593db11546c678d8765a4c4c8c97933ead0a68c7f4f44097fd0513920"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/reference-boards.webp",
+      "path": "network-assets/9e338c301274ba16a325.webp",
+      "bytes": 93918,
+      "contentType": "image/webp",
+      "sha256": "9b5e4107505fd66a6e8a8b92686b169d967ae1dda4f7720ffcad9f2f191ac3a2"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/lcm-creatives.webp",
+      "path": "network-assets/b84374cbfe666051c7c6.webp",
+      "bytes": 292836,
+      "contentType": "image/webp",
+      "sha256": "7ed697c5aabf978ddcd1e93d882ce3dd0cbe7c63a0e9d55c0a6efbfe5030d191"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/ad-variants.webp",
+      "path": "network-assets/ef84a1bf379c21a8a55f.webp",
+      "bytes": 163952,
+      "contentType": "image/webp",
+      "sha256": "258f4e5b77b91819553984ceff580cba43dcbe6deca9f2df2f9ddc877782142c"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/animated-statics.webm",
+      "path": "network-assets/a3775b876db6d172f73d.webm",
+      "bytes": 1999767,
+      "contentType": "video/webm",
+      "sha256": "e139ced8e1bcf6f52addd803ce86e11032631cafb079d7dafff83180015509cc"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/localized-copy.webp",
+      "path": "network-assets/f573361c3b27b554b3b6.webp",
+      "bytes": 78438,
+      "contentType": "image/webp",
+      "sha256": "aef5505618c7ad0ad27c0ac4e30bb102249371153ccec1b15688a8cbd4bfc76d"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/pack-shots.webp",
+      "path": "network-assets/e3b6d7b3a631d4536d18.webp",
+      "bytes": 121804,
+      "contentType": "image/webp",
+      "sha256": "c57d574b9e1aba38b9e438667faa61c9c23578869ce487d33c3adbd990c9a963"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/on-model-imagery.webp",
+      "path": "network-assets/992d3ce395238214f636.webp",
+      "bytes": 178534,
+      "contentType": "image/webp",
+      "sha256": "0d9e132f35f49d801aeb1942992d877cba142d2c62a18140f5a085fa072dc594"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/lifestyle-heroes.webp",
+      "path": "network-assets/21dd0ec66133c95165e3.webp",
+      "bytes": 141148,
+      "contentType": "image/webp",
+      "sha256": "ca0efef38a93188e08d035292c4caf75a507e23edcde92c796a89f161c23c6d9"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/pdp-variants.webp",
+      "path": "network-assets/82f54587b8e77b891593.webp",
+      "bytes": 145154,
+      "contentType": "image/webp",
+      "sha256": "286b709b9ee75009dba7d9e5c9133b5a0c5a0c6785cab863541d736b32da7790"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/event-graphics.webp",
+      "path": "network-assets/b3fa3398fa27f421f93d.webp",
+      "bytes": 121092,
+      "contentType": "image/webp",
+      "sha256": "0e8d0e3d4bdea8f95c627e0136d6bfa0a06c35f43516323741449a9c4f99848d"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/conference-posters.webp",
+      "path": "network-assets/d1ca3e696ce88b797a36.webp",
+      "bytes": 69028,
+      "contentType": "image/webp",
+      "sha256": "80b2a8cd20c4fd47924a7f0a44190fbcb29d1d83b8db02220726c70f7de79835"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/sales-decks.webp",
+      "path": "network-assets/6c31cf6fb9422880db84.webp",
+      "bytes": 99926,
+      "contentType": "image/webp",
+      "sha256": "813a1e1629ac8e12f1385b7d0e3e3504f4c93ae9400f32824159448b7298abff"
+    },
+    {
+      "url": "https://www.melius.com/images/use-cases/blog-heroes.webp",
+      "path": "network-assets/c9965e43bc84ae57be8a.webp",
+      "bytes": 105994,
+      "contentType": "image/webp",
+      "sha256": "e84d566dd406114bdfd1c1cbee3484d8c765a52585b585c61724bae4866e3a22"
+    },
+    {
+      "url": "https://www.melius.com/images/models/google.webp",
+      "path": "network-assets/d8a16ed11aa3a2fb404c.webp",
+      "bytes": 10892,
+      "contentType": "image/webp",
+      "sha256": "f0d0712712c4e0592ee759d5055afecbc5120fd13c8e0dfef3970134bfc4699e"
+    },
+    {
+      "url": "https://www.melius.com/images/models/openai.webp",
+      "path": "network-assets/3c5835ba0efc3539bbd4.webp",
+      "bytes": 13414,
+      "contentType": "image/webp",
+      "sha256": "a13bc20f45ccbb8efbb29513dc792d730440587b3259ffe2ba2b85d425c1b7bb"
+    },
+    {
+      "url": "https://www.melius.com/images/models/elevenlabs.webp",
+      "path": "network-assets/f11f5118fbe0f269f736.webp",
+      "bytes": 12558,
+      "contentType": "image/webp",
+      "sha256": "4130e4b6ff907ba551dae14b7485614229c5ee3f2c96cb9b1c55ed325c49ae37"
+    },
+    {
+      "url": "https://www.melius.com/images/models/synclabs.webp",
+      "path": "network-assets/96906e71bcecf1f9148c.webp",
+      "bytes": 12770,
+      "contentType": "image/webp",
+      "sha256": "b2ad618f3013b7d1d8e14de1ea1e41b745354918322552f038275ea1cb259e59"
+    },
+    {
+      "url": "https://www.melius.com/images/models/mistral.webp",
+      "path": "network-assets/28d25b4b131f75ab8cdc.webp",
+      "bytes": 11288,
+      "contentType": "image/webp",
+      "sha256": "da8a11752c3fe330e23d7e0a5ade07594e226abec15700732afc43e10ad1707c"
+    },
+    {
+      "url": "https://www.melius.com/images/models/deepseek.webp",
+      "path": "network-assets/bdc48656e02c57768270.webp",
+      "bytes": 12516,
+      "contentType": "image/webp",
+      "sha256": "2ee4f66b235a2297522e5d3f239d04c635f412bf9a7c5260f9d6f696b643f486"
+    },
+    {
+      "url": "https://www.melius.com/images/models/pixverse.webp",
+      "path": "network-assets/50c956f451f3c0e63e52.webp",
+      "bytes": 21256,
+      "contentType": "image/webp",
+      "sha256": "2867598946a9e21639a9d56a346712cdcea29384c1816435869dd4d805e9a288"
+    },
+    {
+      "url": "https://www.melius.com/images/models/bytedance.webp",
+      "path": "network-assets/3053ee7bd66a498928e9.webp",
+      "bytes": 19194,
+      "contentType": "image/webp",
+      "sha256": "740f9d73eedbf4547af248f04f8925927b29d71761f2e97e9bcb0be97c7416b5"
+    },
+    {
+      "url": "https://www.melius.com/images/models/klingai.webp",
+      "path": "network-assets/6a2523e389e31cddbeea.webp",
+      "bytes": 17054,
+      "contentType": "image/webp",
+      "sha256": "34f0e4172845956391d46fc823f4ae91f8fd46c8d87a4bd9e1b2c9587e361bb2"
+    },
+    {
+      "url": "https://www.melius.com/images/models/bfl.webp",
+      "path": "network-assets/be9d3f1f828c5bcaf77c.webp",
+      "bytes": 39532,
+      "contentType": "image/webp",
+      "sha256": "a3eb8c2d59028058cc8b42dadab226222eef080aef61f0df1efe81b1c2dde0af"
+    },
+    {
+      "url": "https://www.melius.com/images/models/topazlabs.webp",
+      "path": "network-assets/b053db6f6fceeddc7baa.webp",
+      "bytes": 30024,
+      "contentType": "image/webp",
+      "sha256": "eea8b882367cf62eca4ec7cf17de94577bc3074a28ad231a37d9fcd2ea1f5dbe"
+    },
+    {
+      "url": "https://www.melius.com/images/models/multitalk.webp",
+      "path": "network-assets/a3bf3502a6ebbf691085.webp",
+      "bytes": 31754,
+      "contentType": "image/webp",
+      "sha256": "b2a420f73845c49d5de698d5404cd239b71dd36e8700111cee36de38f47c41d4"
+    },
+    {
+      "url": "https://www.melius.com/images/models/heygen.webp",
+      "path": "network-assets/c2bef62c899cfb98dcce.webp",
+      "bytes": 35702,
+      "contentType": "image/webp",
+      "sha256": "89b88c04543bd9b8382f7357c2286d7870d5dc7c456c7257b2601b543c940d73"
+    },
+    {
+      "url": "https://www.melius.com/images/models/vidu.webp",
+      "path": "network-assets/e0fed2aed80704e798bc.webp",
+      "bytes": 31146,
+      "contentType": "image/webp",
+      "sha256": "45c59aa1f94f4ba920c373549df32a7e7fceb6d0a7577337712f8f0f184422e8"
+    },
+    {
+      "url": "https://www.melius.com/images/models/meta.webp",
+      "path": "network-assets/af3050fb7d311b286ce3.webp",
+      "bytes": 38420,
+      "contentType": "image/webp",
+      "sha256": "af9932ba0fb333b5213906ed49b51c9abebd78c12e5ab6ae35fcbb08e26eec33"
+    },
+    {
+      "url": "https://www.melius.com/images/models/xai.webp",
+      "path": "network-assets/d71fd7fb5ace372115c1.webp",
+      "bytes": 21018,
+      "contentType": "image/webp",
+      "sha256": "8d67912fbb4a2dd77ff20d0427ce70f1a4c6cf8e2b19691706395f5ec33beb82"
+    },
+    {
+      "url": "https://www.melius.com/images/models/lightricks.webp",
+      "path": "network-assets/ec355877de633fbb52ef.webp",
+      "bytes": 9102,
+      "contentType": "image/webp",
+      "sha256": "508fd3dfd601c90a8fca77dd377ece3989e85bd73d956c6f5f868f630b1f28c2"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/e-commerce/background.webp",
+      "path": "network-assets/43a22d7ff031ad3d8798.webp",
+      "bytes": 123516,
+      "contentType": "image/webp",
+      "sha256": "297cd25ec0d67e2de57f5b098bf112acae8e7378c85091a4a500ae4c6673cd7d"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/filmmaking/background.webp",
+      "path": "network-assets/a78fee5757a232636c5c.webp",
+      "bytes": 400590,
+      "contentType": "image/webp",
+      "sha256": "f8d63ea9b61414986386a3ba4c07560bcd3949a1bf31a6632a94b344b544fd6a"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/fashion/background.webp",
+      "path": "network-assets/72b4130962ae4ae5c15b.webp",
+      "bytes": 490172,
+      "contentType": "image/webp",
+      "sha256": "126a309f73b7086a9f97ca88cd6afa657a5cdfe88a1fec8606fb1c6f9e3b9beb"
+    },
+    {
+      "url": "https://www.melius.com/media/pages/home/canvas-showcase/branding/background.webm",
+      "path": "network-assets/341dd0e93efae794a628.webm",
+      "bytes": 4752876,
+      "contentType": "video/webm",
+      "sha256": "f7fc2f2d0e3bd0557f52c6496f13b0da83048f3873850f3a4c859fe6230961aa"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-01.webp",
+      "path": "network-assets/ae48bdfd69c1883a4433.webp",
+      "bytes": 18354,
+      "contentType": "image/webp",
+      "sha256": "1a95b4d49ea9df5a7d004bae6f75e97fa43a2923c4f4e60761fecd091d5f66a9"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-02.webp",
+      "path": "network-assets/466149df6c01a85e5604.webp",
+      "bytes": 31832,
+      "contentType": "image/webp",
+      "sha256": "0f0701020ca5f996e414b41d160f383fc79de611c5aed6b6d27b59066839dd1e"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-03.webp",
+      "path": "network-assets/06ba3a8dc5a52baa94ba.webp",
+      "bytes": 28794,
+      "contentType": "image/webp",
+      "sha256": "d9d13ec36e61187435d418f8c8a6e05be053600d709a52a92af457546cb74b33"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-04.webp",
+      "path": "network-assets/b4740dccd1d1d48740d5.webp",
+      "bytes": 101700,
+      "contentType": "image/webp",
+      "sha256": "4fc8f53783226629f6ca49080dc24750c3ab3e8caa0bc4aa33d9d9adc222a711"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-05.webp",
+      "path": "network-assets/2bb9d3943bbb252f6026.webp",
+      "bytes": 58526,
+      "contentType": "image/webp",
+      "sha256": "257b552f363d82127212742da8aa7e57c90b269de465bc6e530368c6e0aa16d9"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-06.webp",
+      "path": "network-assets/8e5f0a5f882b9d276657.webp",
+      "bytes": 52230,
+      "contentType": "image/webp",
+      "sha256": "622ea8bfb939941b3a02b6b540454b5f489c62bd01cf6cacf47973f337501458"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-07.webp",
+      "path": "network-assets/d76d1c9b9c07acf2ea99.webp",
+      "bytes": 770748,
+      "contentType": "image/webp",
+      "sha256": "585eb81f4b59d9f2b7948c6951ad43d3007430a2eee4ac846f94b2fb89cf8d41"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-08.webp",
+      "path": "network-assets/c5bc4ee4b5de35dcaf68.webp",
+      "bytes": 735576,
+      "contentType": "image/webp",
+      "sha256": "254be903978f01d9ea38d9cc7d5a2a36fce5e68a519a1e6d6259c4060a094f89"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-09.webp",
+      "path": "network-assets/f4c9cac8090ea2240921.webp",
+      "bytes": 443458,
+      "contentType": "image/webp",
+      "sha256": "3da3b4d7c1ea1104d3472e1cd463557da7a004588a78dd6f4d5b50a0ff07d79e"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-10.webp",
+      "path": "network-assets/b465e2aa9564d3d4e1ce.webp",
+      "bytes": 378922,
+      "contentType": "image/webp",
+      "sha256": "0d9979d9df6d3448e1dbd46be5c45c6c0f890deb7ab3478554123987942d3426"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-11.webp",
+      "path": "network-assets/e316bee8f3d841ef6c30.webp",
+      "bytes": 359440,
+      "contentType": "image/webp",
+      "sha256": "5ab3303e85a9df7f5143a1b5089e044fb88e405553f2ca167c090ffd866268d5"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-12.webp",
+      "path": "network-assets/d8fa6af08d0b45a4a870.webp",
+      "bytes": 689870,
+      "contentType": "image/webp",
+      "sha256": "615cf2939981947f50a72dd33aad31f3fda517366f2257263f961fb8ef2ed15c"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-13.webp",
+      "path": "network-assets/5c4b261baebc788b0ef6.webp",
+      "bytes": 222958,
+      "contentType": "image/webp",
+      "sha256": "a5ba6d2c1fe8518132629c5eda11cd88bd9c8acc7e9ca915b559d73a1e0aa045"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-14.webp",
+      "path": "network-assets/8b975817df73aa945f36.webp",
+      "bytes": 521200,
+      "contentType": "image/webp",
+      "sha256": "50b3d56a30356369f0715c32242a16bd39fae4f9750233b37c74813f0be12b6f"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-15.webp",
+      "path": "network-assets/f70a8baec3ff9d04734a.webp",
+      "bytes": 217350,
+      "contentType": "image/webp",
+      "sha256": "a8b0b8a6ac9e0b9a9a2b8fcc797938c3cf55402f60902bd81d9145aec1d68ca3"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-16.webp",
+      "path": "network-assets/b313a4a7ef11284435ac.webp",
+      "bytes": 349292,
+      "contentType": "image/webp",
+      "sha256": "be3ceb6b2cd22df6f238da3089edddecab36e7f52704c2c766e3c7d01ecdffba"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-17.webp",
+      "path": "network-assets/f838a2038fe3d980140d.webp",
+      "bytes": 603498,
+      "contentType": "image/webp",
+      "sha256": "e429bc96de678f29750ca2b93ebdd0252b43c99d97906f26be14d0895cb20039"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-18.webp",
+      "path": "network-assets/5195dbca6eabde50092b.webp",
+      "bytes": 341598,
+      "contentType": "image/webp",
+      "sha256": "0f9f0e550757b944365e4723bc3340cd2bb8f6daf5d6532a0ee42fb0532e3b52"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-19.webp",
+      "path": "network-assets/437333e7a5749f5be859.webp",
+      "bytes": 501424,
+      "contentType": "image/webp",
+      "sha256": "87c1e62ea254fd56b349caf6fa0f135b7274cb8524ec4bfeb317e7feb481c19c"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-20.webp",
+      "path": "network-assets/7d330bb66a079121048e.webp",
+      "bytes": 503238,
+      "contentType": "image/webp",
+      "sha256": "8e4f642da0828471633da7d54247d8df66a531472626e96e09955ba766737c4b"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-21.webp",
+      "path": "network-assets/6e5a1892b13e3496734a.webp",
+      "bytes": 436306,
+      "contentType": "image/webp",
+      "sha256": "927581e34968d6ccc4c7664e067c210570fb3a736511d3cfc40cc20e246e473a"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-22.webp",
+      "path": "network-assets/1599fa08a6c8bbd4a9d2.webp",
+      "bytes": 570148,
+      "contentType": "image/webp",
+      "sha256": "541f4cebd82ac15a7fc46ade0db64b4939532f97bb19d5b8c8be6fbe4badb4d9"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-23.webp",
+      "path": "network-assets/70957fdf8a8486da43d5.webp",
+      "bytes": 414920,
+      "contentType": "image/webp",
+      "sha256": "97489a26a7d5320c330e2c935dcf288a5264d5c1c99e8e1339ff0633e2611979"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-24.webp",
+      "path": "network-assets/b8991244adb7e412f55e.webp",
+      "bytes": 434256,
+      "contentType": "image/webp",
+      "sha256": "b1b35f70328176ac28538e8c18c2cc8a1fb1d4693dd55a91a88fb5824d2a6836"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-25.webp",
+      "path": "network-assets/11ffa7a4f26ba7f601a7.webp",
+      "bytes": 292510,
+      "contentType": "image/webp",
+      "sha256": "6b49fb09d02efbd57ba2cb56f826b1fab34f2fa21778cb03345fe88d52f1152b"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-26.webp",
+      "path": "network-assets/f4a6ee528437462c23d4.webp",
+      "bytes": 130628,
+      "contentType": "image/webp",
+      "sha256": "0baea2ea7bd942dd3dbe4753c3b62faafe833f7a389196fe50252f8d73ade84d"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-27.webp",
+      "path": "network-assets/b1c3bce78eb8b4f84c83.webp",
+      "bytes": 105134,
+      "contentType": "image/webp",
+      "sha256": "42f3be16e00c06d2c6eed317990be8031605bbbdff57c274f6bac1c66c0f701d"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-28.webp",
+      "path": "network-assets/eff2e46764ade37d90a6.webp",
+      "bytes": 82002,
+      "contentType": "image/webp",
+      "sha256": "83b488ad847988bafadbc730cd898c24bb35f3789d31d031554df63d1dad9879"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-29.webp",
+      "path": "network-assets/39e1603232116909191f.webp",
+      "bytes": 42070,
+      "contentType": "image/webp",
+      "sha256": "c8331f0b88a4a410507c953442bfbca05f24effdd28214c51fdaf2731e4d2d85"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-30.webp",
+      "path": "network-assets/e7b31f05ad13923e6358.webp",
+      "bytes": 194316,
+      "contentType": "image/webp",
+      "sha256": "a9b205b1c662c02e52855e072f056bd1c43d3ee402ce68244c28352194516c45"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-31.webp",
+      "path": "network-assets/7014c8812fab9e661c3d.webp",
+      "bytes": 62572,
+      "contentType": "image/webp",
+      "sha256": "5f90aac98f908dc2c982addc8e61c45fb5bfc01783adc35898ca094ae53d6900"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-32.webp",
+      "path": "network-assets/7db19f3aca33d1e79c79.webp",
+      "bytes": 193880,
+      "contentType": "image/webp",
+      "sha256": "00cece58a7e7408d10be65662907a9e915faf2d5727547f2fa825289f26ef679"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-33.webp",
+      "path": "network-assets/9ab5e171aa3456cf1c68.webp",
+      "bytes": 391532,
+      "contentType": "image/webp",
+      "sha256": "6ada03505533e228eb342803287c95320e92c4563fe9148f4175f0b98f0b712f"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-34.webp",
+      "path": "network-assets/9525dffef5e1992bd507.webp",
+      "bytes": 229998,
+      "contentType": "image/webp",
+      "sha256": "9dc8ee9091c23e438449a1637aac4ae24cfa17a71166a5692fc8ea42ecc57c24"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-35.webp",
+      "path": "network-assets/bc030f7741cbb3b91043.webp",
+      "bytes": 210296,
+      "contentType": "image/webp",
+      "sha256": "671c4ffed0988422a73bf1daf51690cfcd73d2acb16b595460b60dd547d0b0b3"
+    },
+    {
+      "url": "https://www.melius.com/media/layout/footer/easter-egg-36.webp",
+      "path": "network-assets/c091d7aa1b666d8a8d2c.webp",
+      "bytes": 274812,
+      "contentType": "image/webp",
+      "sha256": "a523315f9ea27a4e42542c48b76028fc3f81e5b79612fbcb8199480d98437650"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/3os3k7ga5zvn7.js",
+      "path": "network-assets/86405d50814918370045.js",
+      "bytes": 148335,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "335455bc3d44c4450b47f56734b24af7331c907fc75ee67397647387286c6b55"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/29xoh96ojg-1k.js",
+      "path": "network-assets/b5548a3017266ef0662b.js",
+      "bytes": 144221,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "decae0bb47eb83d0c85ae8fd7e63ca45d3eb9d2438d6fbf7c8bd585573817ddf"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/2r_ak9dtfitsq.js",
+      "path": "network-assets/0da3a5a2f48ed5d6dfd7.js",
+      "bytes": 5583,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "e7eff4a00a4f1bd6d472cd573493659522948db3b16722ed13440e7f48f017ce"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/0hm9z7trn3lml.js",
+      "path": "network-assets/3b6775cb998ea0c19ee7.js",
+      "bytes": 30973,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "22114976855913259b4cad5eb6b2512e7ff5f4b957f45ef02114cd0c18f1e21d"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/2qx7x9on8a7vw.js",
+      "path": "network-assets/7a5c89ca6d66b89ce08b.js",
+      "bytes": 227314,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "9e1de26cd62d6b38f73d796fc5a35faf887b89485a95b5fe1ecb0b6872aaebec"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/07fp4wvsn3-cu.js",
+      "path": "network-assets/fa6dbaf8ff4a8e6281b4.js",
+      "bytes": 138252,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "1ec8026ca323ca8a358402aa8537e63a4d9d94b48cb11fa19272db4a2e671432"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/0-0s5lr83i50t.js",
+      "path": "network-assets/c31810ecba87fc2c12ab.js",
+      "bytes": 44415,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "e78eaea1c0b5330f3d14661d1e18c92e387de3f0b28ea1df966575362c52b549"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/36xbliaxexmbc.js",
+      "path": "network-assets/6cbf99259cc8ab364068.js",
+      "bytes": 646,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "46879eab08f22f55292340255bd937cb5ea8dbd08bde7b28b4a8c228bd39bbd6"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/16cq4ti-62638.js",
+      "path": "network-assets/9e36518d4eb10ea0255a.js",
+      "bytes": 723547,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "34a8b481aea5c90a51854e1dda2ba072e651acb8899a27159e907355d02b1607"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/1r18i7nlhsryk.js",
+      "path": "network-assets/5dd6a9490ab4200512b4.js",
+      "bytes": 122047,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "abb65d7aa2793c5ad521dbfceb4a2fd5abb532d7b9b6196b5d980323ad48ef98"
+    },
+    {
+      "url": "https://www.melius.com/_next/static/chunks/1qs17hl42onyq.js",
+      "path": "network-assets/67a2191c0de11f432605.js",
+      "bytes": 712,
+      "contentType": "application/javascript; charset=utf-8",
+      "sha256": "739be66efc6fbbf6ab61b75a56480261199cbd5a77f802ca59122873ce15fb54"
+    },
+    {
+      "url": "https://www.melius.com/svg/pricing-card-indent.svg",
+      "path": "network-assets/pricing-card-indent.svg",
+      "bytes": 267,
+      "contentType": "image/svg+xml",
+      "sha256": "174e01ae7293920a5550a32e9d494ef770ead0e2c68e3dee5b7311662701a1c9"
+    }
+  ],
+  "failures": []
+}

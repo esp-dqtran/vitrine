@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "sourceUrl": "https://mistral.ai/",
+  "capturedAt": "2026-08-18T08:34:48.858Z",
+  "policy": {
+    "robotsUrl": "https://mistral.ai/robots.txt",
+    "userAgent": "*",
+    "allowed": true
+  },
+  "desktop": {
+    "counts": {
+      "buttons": 35,
+      "elements": 3591,
+      "images": 127,
+      "links": 178,
+      "scripts": 6,
+      "sections": 6,
+      "stylesheets": 5,
+      "svgs": 280,
+      "videos": 0
+    },
+    "description": "The most powerful AI platform for enterprises. Customize, fine-tune, and deploy AI assistants, autonomous agents, and multimodal AI with open models.",
+    "generators": [],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "Frontier AI. In your hands."
+      },
+      {
+        "tag": "H3",
+        "text": "Products"
+      },
+      {
+        "tag": "H3",
+        "text": "Solutions"
+      },
+      {
+        "tag": "H3",
+        "text": "Why Mistral"
+      },
+      {
+        "tag": "H3",
+        "text": "Legal"
+      }
+    ],
+    "lang": "en",
+    "readyState": "complete",
+    "scripts": [
+      "https://www.googletagmanager.com/gtm.js?id=GTM-TX82W9W8",
+      "https://mistral.ai/_astro/ClientRouter.astro_astro_type_script_index_0_lang.gsQRVjdk.js?dpl=6a836a524a4d4d00080c5200",
+      "https://mistral.ai/_astro/layout.astro_astro_type_script_index_1_lang.DnP0PH_d.js?dpl=6a836a524a4d4d00080c5200",
+      "https://mistral.ai/.netlify/scripts/rum"
+    ],
+    "stylesheetHrefs": [
+      "https://mistral.ai/_astro/layout.ph6PzY6m.css",
+      "https://mistral.ai/_astro/astro.DmvKaGb6.css",
+      "https://mistral.ai/_astro/hero-post-robostral.Cg5FRTVX.css"
+    ],
+    "title": "Frontier AI LLMs, assistants, agents, services | Mistral",
+    "url": "https://mistral.ai/",
+    "viewport": {
+      "dpr": 1,
+      "height": 900,
+      "width": 1440
+    }
+  },
+  "mobile": {
+    "counts": {
+      "buttons": 35,
+      "elements": 3595,
+      "images": 127,
+      "links": 178,
+      "scripts": 6,
+      "sections": 6,
+      "stylesheets": 5,
+      "svgs": 280,
+      "videos": 0
+    },
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "Frontier AI. In your hands."
+      },
+      {
+        "tag": "H3",
+        "text": "Products"
+      },
+      {
+        "tag": "H3",
+        "text": "Solutions"
+      },
+      {
+        "tag": "H3",
+        "text": "Why Mistral"
+      },
+      {
+        "tag": "H3",
+        "text": "Legal"
+      }
+    ],
+    "readyState": "complete",
+    "scripts": [
+      "https://www.googletagmanager.com/gtm.js?id=GTM-TX82W9W8",
+      "https://mistral.ai/_astro/ClientRouter.astro_astro_type_script_index_0_lang.gsQRVjdk.js?dpl=6a836a524a4d4d00080c5200",
+      "https://mistral.ai/_astro/layout.astro_astro_type_script_index_1_lang.DnP0PH_d.js?dpl=6a836a524a4d4d00080c5200",
+      "https://mistral.ai/.netlify/scripts/rum"
+    ],
+    "stylesheetHrefs": [
+      "https://mistral.ai/_astro/layout.ph6PzY6m.css",
+      "https://mistral.ai/_astro/astro.DmvKaGb6.css",
+      "https://mistral.ai/_astro/hero-post-robostral.Cg5FRTVX.css"
+    ],
+    "title": "Frontier AI LLMs, assistants, agents, services | Mistral",
+    "url": "https://mistral.ai/",
+    "viewport": {
+      "dpr": 1,
+      "height": 844,
+      "width": 390
+    }
+  },
+  "files": {
+    "rawHtml": "raw.html",
+    "renderedHtml": "rendered.html",
+    "desktopDom": "desktop.dom.txt",
+    "mobileDom": "mobile.dom.txt",
+    "desktopScreenshot": "desktop-1440x900.png",
+    "mobileScreenshot": "mobile-390x844.png",
+    "desktopInventory": "desktop-assets.json",
+    "mobileInventory": "mobile-assets.json",
+    "desktopAssets": "assets-desktop",
+    "mobileAssets": "assets-mobile",
+    "firstPartyScripts": "scripts-first-party",
+    "supplementalAssets": "supplemental-assets.json"
+  },
+  "bundleSummary": {
+    "desktop": {
+      "downloadedCount": 326,
+      "elapsedMs": 292.3178750000079,
+      "failedCount": 1,
+      "requestedCount": 327
+    },
+    "mobile": {
+      "downloadedCount": 339,
+      "elapsedMs": 630.1430830000318,
+      "failedCount": 1,
+      "requestedCount": 340
+    }
+  }
+}

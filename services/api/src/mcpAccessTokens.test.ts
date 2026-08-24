@@ -60,7 +60,14 @@ test("members can list, create, and revoke only their Flow access tokens", async
   });
   assert.equal(create.status, 201);
   assert.deepEqual(await create.json(), { token: "vtr_mcp_secret-value", accessToken });
-  assert.deepEqual(created, [{ userId: 7, label: undefined }]);
+  const namedCreate = await fetch(`${base}/auth/mcp-tokens`, {
+    method: "POST", headers, body: JSON.stringify({ label: "Kai's Codex" }),
+  });
+  assert.equal(namedCreate.status, 201);
+  assert.deepEqual(created, [
+    { userId: 7, label: undefined },
+    { userId: 7, label: "Kai's Codex" },
+  ]);
 
   const revoke = await fetch(`${base}/auth/mcp-tokens/4`, { method: "DELETE", headers });
   assert.equal(revoke.status, 204);

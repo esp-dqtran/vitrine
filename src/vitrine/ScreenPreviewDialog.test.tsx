@@ -13,6 +13,8 @@ const screen: Screen = {
   platform: 'ios',
   description: 'An observed Amazon Shopping order detail screen.',
   purpose: 'Review a completed order and its delivery details.',
+  sourcePresentation: 'marketing-composite',
+  embeddedPageType: 'Order tracking',
   url: '/media/order-detail.png',
   sourceUrl: 'https://www.amazon.com/orders/42',
   capturedAt: '2026-08-01T12:00:00.000Z',
@@ -25,6 +27,22 @@ const screen: Screen = {
   contentPatterns: ['Metadata row'],
   interactionPatterns: ['Disclosure'],
   responsiveViewport: 'mobile',
+  uiElements: [
+    {
+      type: 'Button',
+      group: 'Control',
+      layer: 'embedded-ui',
+      confidence: 0.91,
+      reviewStatus: 'accepted',
+    },
+    {
+      type: 'Top Navigation Bar',
+      group: 'View',
+      layer: 'embedded-ui',
+      confidence: 0.86,
+      reviewStatus: 'accepted',
+    },
+  ],
 };
 
 test('renders a Mobbin-style app screen viewer with identity, navigation, actions, and metadata', () => {
@@ -57,6 +75,12 @@ test('renders a Mobbin-style app screen viewer with identity, navigation, action
   assert.match(html, /aria-label="Screen analysis"/);
   assert.match(html, /Review a completed order and its delivery details/);
   assert.match(html, />Visual description</);
+  assert.match(html, />Page Types</);
+  assert.match(html, />Order detail</);
+  assert.match(html, />Order tracking</);
+  assert.match(html, />UI Elements</);
+  assert.match(html, />Button</);
+  assert.match(html, />Top Navigation Bar</);
   assert.match(html, />Mobile viewport</);
   assert.match(html, />Status timeline</);
   assert.match(html, />Stacked detail sections</);

@@ -1,0 +1,484 @@
+{
+  "assets": [
+    {
+      "id": "0f57793b5414febc",
+      "kind": "script",
+      "name": "array.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 1406,
+          "property": "src"
+        }
+      ],
+      "url": "https://eu-assets.i.posthog.com/static/array.js"
+    },
+    {
+      "id": "ff6649b9deaa5915",
+      "kind": "image",
+      "name": "wild-logo.svg",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 1468,
+          "property": "src"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/wild-logo.svg"
+    },
+    {
+      "id": "1d9aea23626e54a1",
+      "kind": "image",
+      "name": "asset-pipeline.avif",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 2680,
+          "property": "src"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/experiments/asset-pipeline.avif"
+    },
+    {
+      "id": "ee514b4a4fdab3c9",
+      "kind": "font",
+      "name": "Sneak-Regular.woff2",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "css"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/fonts/Sneak-Regular.woff2"
+    },
+    {
+      "id": "5f555ae71bfe3177",
+      "kind": "font",
+      "name": "Sneak-Medium.woff2",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "css"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/fonts/Sneak-Medium.woff2"
+    },
+    {
+      "id": "cf5ab70563c49aa7",
+      "kind": "image",
+      "name": "ouster.avif",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "img"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 1736,
+          "property": "src"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/work/ouster.avif"
+    },
+    {
+      "id": "4969248baac0416f",
+      "kind": "video",
+      "name": "replit-agent-3.mp4",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 121,
+          "property": "src"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/work/replit-agent-3.mp4"
+    },
+    {
+      "id": "7129c8807032318d",
+      "kind": "video",
+      "name": "serve-robotics.mp4",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 122,
+          "property": "src"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/work/serve-robotics.mp4"
+    },
+    {
+      "id": "2676c2886968290b",
+      "kind": "video",
+      "name": "unstructured.mp4",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 123,
+          "property": "src"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/work/unstructured.mp4"
+    },
+    {
+      "id": "322d18ffe3f6b59b",
+      "kind": "video",
+      "name": "ibm.mp4",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 124,
+          "property": "src"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/work/ibm.mp4"
+    },
+    {
+      "id": "9f05a5c32910e0b1",
+      "kind": "video",
+      "name": "ordinary.mp4",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 125,
+          "property": "src"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/work/ordinary.mp4"
+    },
+    {
+      "id": "9ed42486876fac0d",
+      "kind": "video",
+      "name": "montefiore.mp4",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 126,
+          "property": "src"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/work/montefiore.mp4"
+    },
+    {
+      "id": "9472bbd6f0de4517",
+      "kind": "video",
+      "name": "tersa.mp4",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 127,
+          "property": "src"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/work/tersa.mp4"
+    },
+    {
+      "id": "1e3f17a177ed160e",
+      "kind": "video",
+      "name": "wild-week-athens.mp4",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 128,
+          "property": "src"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/experiments/wild-week-athens.mp4"
+    },
+    {
+      "id": "a6f450977e986209",
+      "kind": "video",
+      "name": "very-fluffy.mp4",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 129,
+          "property": "src"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/experiments/very-fluffy.mp4"
+    },
+    {
+      "id": "73adac17104c0127",
+      "kind": "video",
+      "name": "active-heads.mp4",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "resource",
+          "property": "video"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 130,
+          "property": "src"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/experiments/active-heads.mp4"
+    },
+    {
+      "id": "8c2b39b413469291",
+      "kind": "other",
+      "name": "https://ipwho.is/",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "fetch"
+        }
+      ],
+      "url": "https://ipwho.is/"
+    },
+    {
+      "id": "4ad40b5ee43ec506",
+      "kind": "script",
+      "name": "footer-tetris.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 3804,
+          "property": "src"
+        }
+      ],
+      "url": "https://craft.wild.as/assets/footer-tetris.js"
+    },
+    {
+      "id": "b6e1552e93209cb3",
+      "kind": "script",
+      "name": "config.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 4394,
+          "property": "src"
+        }
+      ],
+      "url": "https://eu-assets.i.posthog.com/array/phc_m9qwJX5U94wAu8h5jZNNVs9d9viWAsyei6km5SeGR5Po/config.js"
+    },
+    {
+      "id": "dbc264458d1c63f2",
+      "kind": "other",
+      "name": "e",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "fetch"
+        }
+      ],
+      "url": "https://eu.i.posthog.com/e/"
+    },
+    {
+      "id": "659e848aedf7d53b",
+      "kind": "script",
+      "name": "web-vitals.js",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "script"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 4395,
+          "property": "src"
+        }
+      ],
+      "url": "https://eu-assets.i.posthog.com/static/1.418.6/web-vitals.js"
+    },
+    {
+      "id": "1a1fe3c87a55b5d9",
+      "kind": "image",
+      "name": "favicon.svg",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "other"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 1412,
+          "property": "href"
+        },
+        {
+          "kind": "attribute",
+          "nodeId": 1413,
+          "property": "href"
+        }
+      ],
+      "url": "https://craft.wild.as/favicon.svg"
+    },
+    {
+      "id": "10df4c394e7763c5",
+      "kind": "other",
+      "name": "e",
+      "sources": [
+        {
+          "kind": "resource",
+          "property": "fetch"
+        }
+      ],
+      "url": "https://eu.i.posthog.com/i/v0/e/"
+    }
+  ],
+  "id": "d4f5cc62-a9eb-4356-bf0a-3a93e5396b0c",
+  "inlineSvgs": [
+    {
+      "id": "a33ab41e05b05717",
+      "markup": "<svg width=\"0\" height=\"0\" style=\"position:absolute\" aria-hidden=\"true\">\n  <symbol id=\"wild-mark\" viewBox=\"0 0 280 107.49\">\n    <polygon points=\"85.15 78.09 68.18 34.92 53.04 34.92 36.21 78.09 20.37 34.92 0 34.92 28.71 105.65 42.86 105.65 60.68 63.63 78.36 105.65 92.51 105.65 121.22 34.92 100.86 34.92 85.15 78.09\" fill=\"currentColor\"></polygon>\n    <rect x=\"134.41\" y=\"34.92\" width=\"18.67\" height=\"70.73\" fill=\"currentColor\"></rect><rect x=\"172.69\" y=\"6.63\" width=\"18.81\" height=\"99.02\" fill=\"currentColor\"></rect>\n    <path d=\"M143.69,0a11.18,11.18,0,0,0-11.37,11.5,11.43,11.43,0,0,0,22.87,0A11.38,11.38,0,0,0,143.69,0Z\" fill=\"currentColor\"></path>\n    <path d=\"M261.33,6.63V43.07a32.25,32.25,0,0,0-23.36-10h-.49l-1.45,0h-.14a22.57,22.57,0,0,0-2.34.21,30.61,30.61,0,0,0-8.29,2.22,29.54,29.54,0,0,0-10.18,7.21,34.45,34.45,0,0,0-6.93,11.67,45.8,45.8,0,0,0-2.54,15.84,45.79,45.79,0,0,0,2.54,15.84,33.82,33.82,0,0,0,7,11.67A30.26,30.26,0,0,0,225.4,105a31.38,31.38,0,0,0,12.45,2.48h.78q.87,0,1.72-.08l.2,0a32.29,32.29,0,0,0,20.77-9.87v8.15H280v-99Zm-4.7,78.15A19.18,19.18,0,0,1,242.8,90.1a20.67,20.67,0,0,1-7.69-1.41,17.83,17.83,0,0,1-6.14-4,18.38,18.38,0,0,1-4.07-6.29,23.12,23.12,0,0,1,0-16.27A18.43,18.43,0,0,1,229,55.86a17.9,17.9,0,0,1,6.14-4,20.71,20.71,0,0,1,7.69-1.41,19.34,19.34,0,0,1,13.83,5.25q5.55,5.25,5.55,14.57T256.63,84.78Z\" fill=\"currentColor\"></path>\n  </symbol>\n</svg>",
+      "name": "svg-1"
+    },
+    {
+      "id": "69682c0330d48ced",
+      "markup": "<svg class=\"ar\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M7 17 17 7\"></path><path d=\"M8 7h9v9\"></path></svg>",
+      "name": "svg-2"
+    },
+    {
+      "id": "b84786790e99b22a",
+      "markup": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M19 12H5\"></path><path d=\"m11 18-6-6 6-6\"></path></svg>",
+      "name": "svg-3"
+    },
+    {
+      "id": "598974e9a8d86aaf",
+      "markup": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"></path><path d=\"m13 6 6 6-6 6\"></path></svg>",
+      "name": "svg-4"
+    },
+    {
+      "id": "4bd34190585004e3",
+      "markup": "<svg class=\"smiley\" viewBox=\"0 0 156 156\" data-mood=\"happy\" data-base=\"#d8ff00\" aria-hidden=\"true\"><g transform=\"translate(-0.26,-5.49)\"><rect x=\"48\" y=\"60\" width=\"12\" height=\"12\" fill=\"#0a0a0a\"></rect><rect x=\"96\" y=\"60\" width=\"12\" height=\"12\" fill=\"#0a0a0a\"></rect><rect x=\"48\" y=\"84\" width=\"12\" height=\"12\" fill=\"#0a0a0a\"></rect><rect x=\"96\" y=\"84\" width=\"12\" height=\"12\" fill=\"#0a0a0a\"></rect><rect x=\"60\" y=\"96\" width=\"12\" height=\"12\" fill=\"#0a0a0a\"></rect><rect x=\"72\" y=\"96\" width=\"12\" height=\"12\" fill=\"#0a0a0a\"></rect><rect x=\"84\" y=\"96\" width=\"12\" height=\"12\" fill=\"#0a0a0a\"></rect></g></svg>",
+      "name": "svg-5"
+    },
+    {
+      "id": "8728d02866b3ba79",
+      "markup": "<svg class=\"smiley\" viewBox=\"0 0 156 156\" data-mood=\"sad\" data-base=\"#3b5bd9\" aria-hidden=\"true\"><g transform=\"translate(-1.12,-5.38)\"><rect x=\"48\" y=\"60\" width=\"12\" height=\"12\" fill=\"#0a0a0a\"></rect><rect x=\"96\" y=\"60\" width=\"12\" height=\"12\" fill=\"#0a0a0a\"></rect><rect x=\"60\" y=\"84\" width=\"12\" height=\"12\" fill=\"#0a0a0a\"></rect><rect x=\"72\" y=\"84\" width=\"12\" height=\"12\" fill=\"#0a0a0a\"></rect><rect x=\"84\" y=\"84\" width=\"12\" height=\"12\" fill=\"#0a0a0a\"></rect><rect x=\"48\" y=\"96\" width=\"12\" height=\"12\" fill=\"#0a0a0a\"></rect><rect x=\"96\" y=\"96\" width=\"12\" height=\"12\" fill=\"#0a0a0a\"></rect><rect x=\"36\" y=\"84\" width=\"12\" height=\"12\" fill=\"#e0492a\" fill-opacity=\"0\"></rect><rect x=\"108\" y=\"84\" width=\"12\" height=\"12\" fill=\"#e0492a\" fill-opacity=\"0\"></rect></g></svg>",
+      "name": "svg-6"
+    },
+    {
+      "id": "0a44218b879568ac",
+      "markup": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M19 12H5\"></path><path d=\"m11 18-6-6 6-6\"></path></svg>",
+      "name": "svg-7"
+    },
+    {
+      "id": "46608309ebf845c3",
+      "markup": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"></path><path d=\"m13 6 6 6-6 6\"></path></svg>",
+      "name": "svg-8"
+    },
+    {
+      "id": "55cdd0feae6b03a6",
+      "markup": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 12H5\"></path><path d=\"m12 19-7-7 7-7\"></path></svg>",
+      "name": "svg-9"
+    },
+    {
+      "id": "fa2ec40f6d8055f0",
+      "markup": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"></path><path d=\"m12 5 7 7-7 7\"></path></svg>",
+      "name": "svg-10"
+    },
+    {
+      "id": "69f9efa56bf23418",
+      "markup": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"23 4 23 10 17 10\"></polyline><path d=\"M20.49 15a9 9 0 1 1-2.12-9.36L23 10\"></path></svg>",
+      "name": "svg-11"
+    },
+    {
+      "id": "b953119013c77f05",
+      "markup": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m7 6 5 5 5-5\"></path><path d=\"m7 13 5 5 5-5\"></path></svg>",
+      "name": "svg-12"
+    },
+    {
+      "id": "48ec63380bda7ee9",
+      "markup": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 6 6 18\"></path><path d=\"M6 6l12 12\"></path></svg>",
+      "name": "svg-13"
+    }
+  ],
+  "pageUrl": "https://craft.wild.as/",
+  "summary": {
+    "byKind": {
+      "font": 2,
+      "image": 4,
+      "other": 3,
+      "script": 4,
+      "stylesheet": 0,
+      "video": 10
+    },
+    "inlineSvgCount": 13,
+    "totalCount": 23
+  }
+}

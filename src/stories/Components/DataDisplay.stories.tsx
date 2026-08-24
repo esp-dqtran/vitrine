@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { EmptyState } from '@astryxdesign/core';
 import type { App, RowStatus, Screen } from '../../vitrine/types';
 import { AppCard } from '../../vitrine/components/AppCard';
-import { AppCardSkeleton } from '../../vitrine/components/AppCardSkeleton';
+import { Spinner } from '../../vitrine/components/Spinner';
 import '../../vitrine/styles.css';
 import '../../vitrine/referenceDiscovery.css';
 import '../../vitrine/productTypography.css';
@@ -216,7 +216,9 @@ function DataDisplayReview() {
           <div className="data-display-review__state-example">
             <span>Loading</span>
             <div className="data-display-review__card-slot">
-              <AppCardSkeleton index={3} />
+              <div className="data-display-review__loading-card" role="status" aria-label="Loading card preview">
+                <Spinner size="lg" shade="subtle" aria-hidden="true" />
+              </div>
             </div>
           </div>
         </div>

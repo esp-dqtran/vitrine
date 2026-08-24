@@ -10,3 +10,4 @@ storybook-static/
 !.dev.vars.example
 backups/
 .playwright-mcp/
+.mcp.json

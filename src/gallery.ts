@@ -20,6 +20,8 @@ export interface CatalogScreen {
   platform: string;
   description: string | null;
   purpose: string | null;
+  sourcePresentation: "direct-screen" | "device-mockup" | "marketing-composite" | "unknown";
+  embeddedPageType: string | null;
   url: string | null;
   /** Resized grid-tile preview; falls back to the full image server-side if none was generated. */
   thumbnailUrl: string | null;
@@ -35,6 +37,13 @@ export interface CatalogScreen {
   capturedAt: string | null;
   stateContext: string | null;
   confidence: number | null;
+  uiElements: Array<{
+    type: string;
+    group: string;
+    layer: "whole-screen" | "outer-presentation" | "embedded-ui";
+    confidence: number;
+    reviewStatus: "pending" | "accepted";
+  }>;
   matchedFacets?: Array<{ group: string; value: string }>;
   sourceScreen?: {
     id: number;
@@ -52,6 +61,7 @@ export interface CatalogApp {
   totalScreens: number;
   analyzedScreens?: number;
   platforms: string[];
+  createdAt?: string | null;
   lastCapturedAt?: string | null;
   previewScreens: CatalogScreen[];
   websiteUrl: string | null;
@@ -146,6 +156,8 @@ function screen(
     platform: image.platform,
     description: image.description,
     purpose: image.analysis?.purpose ?? null,
+    sourcePresentation: image.analysis?.sourcePresentation ?? "unknown",
+    embeddedPageType: image.analysis?.embeddedPageType ?? null,
     sourceUrl: image.capture_url ?? null,
     layoutPatterns: image.analysis?.layoutPatterns ?? [],
     componentNames: image.analysis?.componentNames ?? [],
@@ -158,6 +170,7 @@ function screen(
     capturedAt: image.captured_at ?? null,
     stateContext: image.state_context ?? null,
     confidence: image.analysis?.confidence ?? null,
+    uiElements: image.ui_elements ?? [],
     ...(image.matched_facets?.length
       ? { matchedFacets: image.matched_facets }
       : {}),
@@ -297,6 +310,7 @@ export function buildPublishedCatalogPage(
           ? {}
           : { analyzedScreens: row.analyzed_screens }),
         platforms: row.available_platforms,
+        createdAt: row.created_at ?? row.last_captured_at,
         lastCapturedAt: row.last_captured_at,
         previewScreens: buildPublishedPreviewScreens(
           row.app,

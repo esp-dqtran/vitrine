@@ -12,9 +12,12 @@ const SCREEN_PATTERNS = [
   { slug: "verification", name: "Verification", section: "New User Experience" },
 ];
 
-test("Mobbin UI element taxonomy contains 60 internal types", () => {
-  assert.equal(UI_ELEMENT_TYPES.length, 60);
-  assert.equal(new Set(UI_ELEMENT_TYPES.map(({ name }) => name)).size, 60);
+test("Vitrines UI element taxonomy contains 63 internal types", () => {
+  assert.equal(UI_ELEMENT_TYPES.length, 63);
+  assert.equal(new Set(UI_ELEMENT_TYPES.map(({ name }) => name)).size, 63);
+  assert.ok(UI_ELEMENT_TYPES.some(({ name }) => name === "Logo Wall"));
+  assert.ok(UI_ELEMENT_TYPES.some(({ name }) => name === "Hero Image"));
+  assert.ok(UI_ELEMENT_TYPES.some(({ name }) => name === "Product Image"));
 });
 
 test("parses and orders valid UI element occurrences", () => {
@@ -22,6 +25,7 @@ test("parses and orders valid UI element occurrences", () => {
     summary: "Authentication screen",
     components: [{
       type: "Button",
+      layer: "whole-screen",
       variant: "Primary",
       purpose: "Continue authentication",
       anatomy: ["Label"],
@@ -31,6 +35,7 @@ test("parses and orders valid UI element occurrences", () => {
       confidence: 0.94,
     }, {
       type: "Logo",
+      layer: "whole-screen",
       variant: "Brand mark",
       purpose: "Identify the app",
       anatomy: [],
@@ -41,6 +46,7 @@ test("parses and orders valid UI element occurrences", () => {
     }],
   });
   assert.deepEqual(result.components.map(({ type }) => type), ["Logo", "Button"]);
+  assert.ok(result.components.every(({ layer }) => layer === "whole-screen"));
 });
 
 test("rejects unsupported taxonomy values and out-of-bounds regions", () => {
@@ -103,6 +109,58 @@ test("canonicalizes a taxonomy group prefix returned by the model", () => {
     }],
   });
   assert.equal(result.components[0].type, "Illustration");
+});
+
+test("canonicalizes reference-style UI element aliases", () => {
+  const base = {
+    variant: "Default",
+    purpose: "Visible control",
+    anatomy: [],
+    observedProperties: [],
+    confidence: 0.9,
+  };
+  const result = parseUiElementExtraction({
+    summary: "Controls",
+    components: [
+      { ...base, type: "Accordion & Collapse", region: { x: 0.1, y: 0.1, width: 0.3, height: 0.1 } },
+      { ...base, type: "Switch & Toggle", region: { x: 0.1, y: 0.3, width: 0.2, height: 0.1 } },
+      { ...base, type: "Navigation Bar", region: { x: 0, y: 0.5, width: 1, height: 0.1 } },
+    ],
+  });
+  assert.deepEqual(result.components.map(({ type }) => type), [
+    "Accordion",
+    "Switch",
+    "Top Navigation Bar",
+  ]);
+});
+
+test("keeps nested candidates from different presentation layers", () => {
+  const result = parseUiElementExtraction({
+    summary: "Marketing composite",
+    components: [{
+      type: "Card",
+      layer: "outer-presentation",
+      variant: "Device frame",
+      purpose: "Frame the promotion",
+      anatomy: [],
+      observedProperties: [],
+      region: { x: 0.1, y: 0.1, width: 0.8, height: 0.8 },
+      confidence: 0.9,
+    }, {
+      type: "Button",
+      layer: "embedded-ui",
+      variant: "Play",
+      purpose: "Play an episode",
+      anatomy: ["Label"],
+      observedProperties: [],
+      region: { x: 0.3, y: 0.6, width: 0.4, height: 0.08 },
+      confidence: 0.9,
+    }],
+  });
+  assert.deepEqual(result.components.map(({ layer }) => layer), [
+    "outer-presentation",
+    "embedded-ui",
+  ]);
 });
 
 test("canonicalizes a check-in-circle misclassified as Status Dot to Icon", () => {
@@ -229,8 +287,14 @@ test("collapses a repeated vertical button series but keeps a separated primary 
 test("prompt requires exact taxonomy and normalized tight crops", () => {
   const prompt = buildUiElementExtractionPrompt("iOS", SCREEN_PATTERNS);
   assert.match(prompt, /screenAnalysis/);
-  assert.match(prompt, /screenPatterns/);
-  assert.match(prompt, /login: Login/);
+  assert.match(prompt, /sourcePresentation/);
+  assert.match(prompt, /marketing composite/);
+  assert.match(prompt, /pixel-grounded visible affordances/);
+  assert.match(prompt, /confidence at 0\.90/);
+  assert.match(prompt, /outer-presentation/);
+  assert.match(prompt, /embedded-ui/);
+  assert.doesNotMatch(prompt, /screenPatterns/);
+  assert.doesNotMatch(prompt, /login: Login/);
   assert.match(prompt, /Control\n[\s\S]*- Button/);
   assert.match(prompt, /Overlay\n[\s\S]*- Dialog/);
   assert.match(prompt, /normalized/);
@@ -238,6 +302,16 @@ test("prompt requires exact taxonomy and normalized tight crops", () => {
   assert.match(prompt, /parent-wins hierarchy/);
   assert.match(prompt, /repeated keypad keys remain one representative Keyboard Key/);
   assert.match(prompt, /Do not relabel repeated primitives/);
+  assert.match(prompt, /exactly one supported Vitrines screen category/);
+  assert.match(prompt, /Shop & Storefront/);
+  assert.match(prompt, /isolated arrow[\s\S]*is an Icon, not a Button/);
+  assert.match(prompt, /device frames are never Logos/);
+  assert.match(prompt, /Settings & Preferences whenever the primary surface changes configuration/);
+  assert.match(prompt, /Internal Tool only as a last-resort operational workspace/);
+  assert.match(prompt, /Other Content is a last resort and must not replace Post Detail/);
+  assert.match(prompt, /generation prompt[\s\S]*are Add & Create, not Media Editor/);
+  assert.match(prompt, /freeform spatial workspace[\s\S]*is not a Canvas/);
+  assert.match(prompt, /Keep pageType consistent across near-identical screens/);
 });
 
 test("parses screen analysis and exact screen-pattern assignments from the same response", () => {
@@ -247,6 +321,7 @@ test("parses screen analysis and exact screen-pattern assignments from the same 
       description: "A login form with a primary action.",
       purpose: "Authenticate the user.",
       pageType: "Login",
+      sourcePresentation: "direct-screen",
       productArea: "Account Management",
       theme: "light",
       visibleStates: ["Default"],
@@ -263,6 +338,7 @@ test("parses screen analysis and exact screen-pattern assignments from the same 
     screenPatterns: [{ slug: "login", confidence: 0.97 }],
     components: [{
       type: "Button",
+      layer: "whole-screen",
       variant: "Primary",
       purpose: "Submit login",
       anatomy: ["Label"],
@@ -276,6 +352,135 @@ test("parses screen analysis and exact screen-pattern assignments from the same 
   assert.equal(result.screenAnalysis.pageType, "Login");
   assert.deepEqual(result.screenPatterns, [{ slug: "login", confidence: 0.97 }]);
   assert.equal(result.components[0].type, "Button");
+  assert.equal(result.components[0].layer, "whole-screen");
+});
+
+test("parses screen analysis and UI elements without UX patterns", () => {
+  const result = parseUiElementScreenExtraction({
+    summary: "Authentication screen",
+    screenAnalysis: {
+      description: "A login form with a primary action.",
+      purpose: "Authenticate the user.",
+      pageType: "Login",
+      sourcePresentation: "direct-screen",
+      productArea: "Account Management",
+      theme: "light",
+      visibleStates: ["Default"],
+      componentNames: ["Button"],
+      confidence: 0.95,
+    },
+    components: [{
+      type: "Button",
+      layer: "whole-screen",
+      variant: "Primary",
+      purpose: "Submit login",
+      anatomy: ["Label"],
+      observedProperties: [],
+      region: { x: 0.1, y: 0.7, width: 0.8, height: 0.1 },
+      confidence: 0.97,
+    }],
+  }, SCREEN_PATTERNS);
+
+  assert.deepEqual(result.screenPatterns, []);
+  assert.equal(result.screenAnalysis.pageType, "Login");
+  assert.equal(result.components[0].type, "Button");
+});
+
+test("rejects invented screen categories and canonicalizes supported category casing", () => {
+  const value = {
+    summary: "Marketplace",
+    screenAnalysis: {
+      description: "A marketplace home screen.",
+      purpose: "Browse products.",
+      pageType: "Marketplace Home",
+      sourcePresentation: "direct-screen",
+      productArea: "Commerce",
+      theme: "light",
+      visibleStates: [],
+      componentNames: [],
+      confidence: 0.9,
+    },
+    components: [],
+  };
+  assert.throws(
+    () => parseUiElementScreenExtraction(value, SCREEN_PATTERNS),
+    /Unsupported Vitrines screen category: Marketplace Home/,
+  );
+  const result = parseUiElementScreenExtraction({
+    ...value,
+    screenAnalysis: { ...value.screenAnalysis, pageType: "shop & storefront" },
+  }, SCREEN_PATTERNS);
+  assert.equal(result.screenAnalysis.pageType, "Shop & Storefront");
+});
+
+test("enforces marketing-composite category, embedded category, and confidence", () => {
+  const value = {
+    summary: "Feature promotion",
+    screenAnalysis: {
+      description: "Promotional copy around a phone.",
+      purpose: "Promote a feature.",
+      pageType: "Feature Info",
+      sourcePresentation: "marketing-composite",
+      productArea: "News",
+      theme: "mixed",
+      visibleStates: [],
+      componentNames: [],
+      confidence: 0.88,
+    },
+    components: [],
+  };
+  assert.throws(
+    () => parseUiElementScreenExtraction(value, SCREEN_PATTERNS),
+    /require embeddedPageType/,
+  );
+  assert.throws(
+    () => parseUiElementScreenExtraction({
+      ...value,
+      screenAnalysis: {
+        ...value.screenAnalysis,
+        embeddedPageType: "News Feed",
+        confidence: 0.96,
+      },
+    }, SCREEN_PATTERNS),
+    /confidence at or below 0.90/,
+  );
+});
+
+test("requires explicit component layers for marketing composites", () => {
+  const value = {
+    summary: "Feature promotion",
+    screenAnalysis: {
+      description: "Promotional copy around a phone",
+      purpose: "Promote a feature",
+      pageType: "Feature Info",
+      sourcePresentation: "marketing-composite",
+      embeddedPageType: "News Feed",
+      productArea: "News",
+      theme: "mixed",
+      visibleStates: [],
+      componentNames: ["Button"],
+      confidence: 0.88,
+    },
+    screenPatterns: [{ slug: "login", confidence: 0.8 }],
+    components: [{
+      type: "Button",
+      variant: "Play",
+      purpose: "Play content",
+      anatomy: ["Label"],
+      observedProperties: [],
+      region: { x: 0.3, y: 0.7, width: 0.4, height: 0.08 },
+      confidence: 0.9,
+    }],
+  };
+  assert.throws(
+    () => parseUiElementScreenExtraction(value, SCREEN_PATTERNS),
+    /must identify their visual layer/,
+  );
+  const result = parseUiElementScreenExtraction({
+    ...value,
+    components: [{ ...value.components[0], layer: "embedded-ui" }],
+  }, SCREEN_PATTERNS);
+  assert.equal(result.components[0].layer, "embedded-ui");
 });
 
 test("rejects screen-pattern slugs outside the configured taxonomy", () => {

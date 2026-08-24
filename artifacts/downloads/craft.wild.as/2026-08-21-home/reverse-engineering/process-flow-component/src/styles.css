@@ -1,0 +1,229 @@
+@font-face {
+  font-family: "Sneak";
+  src: url("/assets/fonts/Sneak-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sneak";
+  src: url("/assets/fonts/Sneak-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
+:root {
+  --paper: #fff;
+  --ink: #0a0a0a;
+  --body-ink: #2a2a2a;
+  --step-ink: #1c2541;
+  --cell: 14px;
+  --gutter: 56px;
+  --max-width: 1176px;
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  font-family: "Sneak", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  font-synthesis: none;
+}
+
+@media (max-width: 680px) {
+  :root {
+    --gutter: 28px;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow-x: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss06" 1;
+}
+
+.prototype-shell {
+  min-height: 100vh;
+}
+
+.process-flow {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: calc(var(--cell) * 7) var(--gutter);
+  background: var(--paper);
+}
+
+.process-flow__grid {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.process-flow__wrap {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.process-flow__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--cell) * 2);
+  margin-bottom: calc(var(--cell) * 3);
+}
+
+.process-flow__title {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(26px, 3.4vw, 46px);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.04;
+}
+
+.process-flow__description {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--body-ink);
+  font-size: clamp(15px, 1.15vw, 18px);
+  line-height: 1.62;
+}
+
+.process-flow__visual {
+  width: 100%;
+  aspect-ratio: 3 / 1;
+  margin-bottom: clamp(14px, 2.4vh, 26px);
+}
+
+.process-flow__visual canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.process-flow__steps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (min-width: 840px) {
+  .process-flow__steps {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.process-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  min-width: 0;
+  transition: opacity 300ms ease;
+}
+
+.process-step__label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 2px;
+  line-height: 1.25;
+}
+
+.process-step__number {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, calc(100% - 6px) 3px, calc(100% - 3px) 3px, calc(100% - 3px) 6px, 100% 6px, 100% calc(100% - 6px), calc(100% - 3px) calc(100% - 6px), calc(100% - 3px) calc(100% - 3px), calc(100% - 6px) calc(100% - 3px), calc(100% - 6px) 100%, 6px 100%, 6px calc(100% - 3px), 3px calc(100% - 3px), 3px calc(100% - 6px), 0 calc(100% - 6px), 0 6px, 3px 6px, 3px 3px, 6px 3px, 6px 0);
+  background: var(--step-ink);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+
+.process-step__title {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.process-step__description {
+  margin: 0;
+  color: var(--body-ink);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.process-step__pixel-line {
+  display: none;
+}
+
+@media (hover: hover) {
+  .process-flow__steps:hover .process-step {
+    opacity: 0.45;
+  }
+
+  .process-flow__steps .process-step:hover {
+    opacity: 1;
+  }
+
+  .process-step {
+    padding-bottom: 17px;
+    cursor: none;
+  }
+
+  .process-step__pixel-line {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 8px;
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 250ms steps(3);
+  }
+
+  .process-step:hover .process-step__pixel-line {
+    opacity: 1;
+  }
+
+  .process-step__pixel-line::before {
+    position: absolute;
+    inset: 0;
+    content: "";
+    background: repeating-linear-gradient(90deg, rgb(10 10 10 / 12%) 0 8px, transparent 8px 9px);
+  }
+
+  .process-step__pixel-line i {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 62px;
+    height: 8px;
+    background: repeating-linear-gradient(90deg, var(--ink) 0 8px, transparent 8px 9px);
+    transform: translateX(var(--line-x, 0));
+  }
+}

@@ -37,6 +37,8 @@ export interface PublishedCatalogAppRecord {
   total_screens: number;
   analyzed_screens?: number;
   available_platforms: string[];
+  /** Timestamp of the latest published capture; this is when the App entered the catalog. */
+  created_at?: string;
   last_captured_at: string;
 }
 
@@ -866,6 +868,10 @@ async function catalogPage(
     if (!app) return [];
     return [{
       ...app,
+      // Apps do not have their own created_at column. The newest published
+      // version's captured_at is the durable moment the App entered the
+      // catalog, and is already the key used by the latest sort above.
+      created_at: new Date(identity.updated_at).toISOString(),
       last_captured_at: new Date(identity.updated_at).toISOString(),
     }];
   });

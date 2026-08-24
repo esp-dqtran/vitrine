@@ -1,0 +1,35 @@
+{
+  "name": "ShowcaseCard",
+  "source": {
+    "url": "https://www.contentarchitecture.dev/",
+    "selector": "div#showcase > div.grid.grid-cols-1:nth-of-type(3) > a.group.block:nth-of-type(1)",
+    "visualEvidence": [
+      "../evidence/source-desktop-idle.png",
+      "../evidence/source-tablet-idle.png",
+      "../evidence/source-tablet-hover.png"
+    ]
+  },
+  "componentBoundary": {
+    "root": "external link",
+    "children": ["ASCII canvas media", "hover image", "masked uppercase title"]
+  },
+  "props": {
+    "className": "string",
+    "href": "string",
+    "imageAlt": "string",
+    "imageSrc": "string",
+    "title": "string"
+  },
+  "states": {
+    "idle": "ASCII canvas visible and source image hidden",
+    "hover": "500 ms crossfade from ASCII canvas to source image",
+    "touchActive": "The image is revealed as the card crosses the viewport center line"
+  },
+  "renderModel": {
+    "asciiColumns": 120,
+    "asciiRows": 37,
+    "levels": 64,
+    "aspectRatio": "16:9",
+    "devicePixelRatioCap": 2
+  }
+}

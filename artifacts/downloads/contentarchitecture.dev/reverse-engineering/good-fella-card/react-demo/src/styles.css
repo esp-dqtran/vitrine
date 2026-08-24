@@ -1,0 +1,45 @@
+:root {
+  --font-mono: GeistMono, ui-monospace, SFMono-Regular, "Roboto Mono", Menlo, Monaco,
+    "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace;
+  background: #232323;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #232323;
+  -webkit-font-smoothing: antialiased;
+}
+
+@font-face {
+  font-family: GeistMono;
+  src: url("/assets/geist-mono.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+.demo-shell {
+  min-height: 100svh;
+  padding: 16px;
+  background: #232323;
+}
+
+.demo-card {
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .demo-shell {
+    padding: 80px;
+  }
+
+  .demo-card {
+    width: min(calc((100vw - 184px) / 2), 708px);
+  }
+}

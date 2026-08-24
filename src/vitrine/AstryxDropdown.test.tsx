@@ -145,6 +145,7 @@ test('renders the shared searchable dropdown panel surface', () => {
   assert.match(html, /class="astryx-dropdown-panel"/);
   assert.match(html, /role="dialog"/);
   assert.match(html, /aria-label="Categories filters"/);
+  assert.match(html, /data-state="open"/);
 });
 
 test('uses the shared dropdown trigger for searchable panels', () => {
@@ -200,8 +201,17 @@ test('uses Astryx semantic tokens for the shared dropdown appearance', async () 
     /\.astryx-dropdown\s*\{[^}]*animation:\s*astryx-dropdown-in 180ms/s,
   );
   assert.match(css, /@keyframes astryx-dropdown-in\s*\{/);
+  assert.match(css, /@keyframes astryx-dropdown-out\s*\{/);
+  assert.match(
+    css,
+    /\.astryx-dropdown-panel\[data-state='closing'\]\s*\{[^}]*pointer-events:\s*none[^}]*animation-name:\s*astryx-dropdown-out/s,
+  );
   assert.match(
     css,
     /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.astryx-dropdown-panel\s*\{[^}]*animation:\s*none/s,
+  );
+  assert.match(
+    css,
+    /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.astryx-dropdown-panel\[data-state='closing'\]\s*\{[^}]*visibility:\s*hidden/s,
   );
 });

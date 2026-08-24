@@ -7,6 +7,7 @@ import type { UiElementCandidate } from "./uiElementExtraction.ts";
 function candidate(type: string, region: UiElementCandidate["region"]): UiElementCandidate {
   return {
     type,
+    layer: "whole-screen",
     variant: "Default",
     purpose: "Test component",
     anatomy: [],
@@ -123,7 +124,7 @@ test("keeps a large success-check icon out of Status Dot", async () => {
   assert.ok(crop.quality.issues.includes("semantic-type-mismatch"));
 });
 
-test("flags a Button crop with a wide blank margin on one side as excess-padding", async () => {
+test("tightens a Button crop with a wide blank margin instead of storing the loose region", async () => {
   // Mirrors a real doji extraction defect: the crop region started too high, leaving a
   // large blank gap above the button while its bottom edge sits flush against the crop
   // boundary. content-clipped never caught this (Button isn't edge-refinable), and it
@@ -146,8 +147,52 @@ test("flags a Button crop with a wide blank margin on one side as excess-padding
     platform: "ios",
   });
 
+  assert.equal(crop.quality.passed, true);
+  assert.equal(crop.quality.refined, true);
+  assert.ok(crop.sourceRegionPixels.top > 30);
+  assert.ok(crop.sourceRegionPixels.height < 150);
+});
+
+test("expands a text banner until its complete visible content is enclosed", async () => {
+  const source = await sharp({
+    create: { width: 500, height: 300, channels: 4, background: "white" },
+  })
+    .composite([{
+      input: Buffer.from(
+        `<svg width="320" height="90"><rect width="320" height="90" fill="#111"/></svg>`,
+      ),
+      left: 80,
+      top: 100,
+    }])
+    .png()
+    .toBuffer();
+  const crop = await deriveUiElementCrop({
+    source,
+    candidate: candidate("Banner", { x: 0.22, y: 0.36, width: 0.50, height: 0.22 }),
+    platform: "web",
+  });
+
+  assert.equal(crop.quality.passed, true);
+  assert.equal(crop.quality.refined, true);
+  assert.ok(crop.sourceRegionPixels.left <= 80);
+  assert.ok(crop.sourceRegionPixels.left + crop.sourceRegionPixels.width >= 400);
+});
+
+test("rejects a whole device mockup mislabeled as outer hero imagery", async () => {
+  const hero = candidate("Hero Image", { x: 0.1, y: 0.2, width: 0.8, height: 0.7 });
+  hero.layer = "outer-presentation";
+  hero.variant = "Smartphone Mockup";
+  hero.purpose = "Demonstrates the app inside a phone device";
+  const crop = await deriveUiElementCrop({
+    source: await sharp({
+      create: { width: 500, height: 800, channels: 4, background: "white" },
+    }).png().toBuffer(),
+    candidate: hero,
+    platform: "ios",
+  });
+
   assert.equal(crop.quality.passed, false);
-  assert.ok(crop.quality.issues.includes("excess-padding"));
+  assert.ok(crop.quality.issues.includes("semantic-type-mismatch"));
 });
 
 test("does not flag a genuinely full-width Toolbar as excess-padding", async () => {
@@ -181,7 +226,7 @@ test("outputs full-colour lossless PNG without resizing ordinary components", as
   }).png().toBuffer();
   const crop = await deriveUiElementCrop({
     source,
-    candidate: candidate("Button", { x: 0.25, y: 0.25, width: 0.5, height: 0.5 }),
+    candidate: candidate("Card", { x: 0.25, y: 0.25, width: 0.5, height: 0.5 }),
     platform: "web",
   });
 

@@ -32,6 +32,7 @@ import './motionPrompts.css';
 import './projectsWorkspace.css';
 import './collectionsWorkspace.css';
 import './catalogSidebar.css';
+import './componentLibrary.css';
 import './settingsWorkspace.css';
 import './components/AstryxDropdown.css';
 import './components/AstryxModal.css';
@@ -203,7 +204,7 @@ function RouteStatusPage({ title, onBack }: { title: string; onBack: () => void 
 
 function PublicLegalFooter() {
   const route = useRoute();
-  if (route.name === 'terms' || route.name === 'privacy' || route.name === 'refunds') return null;
+  if (route.name === 'terms' || route.name === 'privacy' || route.name === 'refunds' || route.name === 'color-compose') return null;
   return (
     <footer className="site-legal-footer">
       <nav aria-label="Legal information">

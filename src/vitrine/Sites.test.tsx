@@ -215,6 +215,8 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.doesNotMatch(taxonomyHtml, /Open Sections filters/);
   assert.match(html, /Styles/);
   assert.match(html, /Business/);
+  assert.match(html, /aria-label="Business, 209 sites"/);
+  assert.match(html, /data-taxonomy-count="0"/);
   assert.doesNotMatch(taxonomyHtml, /Pricing/);
   assert.match(html, /Minimal/);
   assert.match(html, /data-sites-filterbar="true"/);

@@ -1,0 +1,202 @@
+[
+  {
+    "before": {
+      "className": "eye-inner-translate",
+      "i": 0,
+      "left": "auto",
+      "top": "auto",
+      "transform": "none"
+    },
+    "right": {
+      "className": "eye-inner-translate",
+      "i": 0,
+      "left": "auto",
+      "top": "auto",
+      "transform": "none"
+    },
+    "left": {
+      "className": "eye-inner-translate",
+      "i": 0,
+      "left": "auto",
+      "top": "auto",
+      "transform": "none"
+    },
+    "rightChanged": false,
+    "leftChanged": false
+  },
+  {
+    "before": {
+      "className": "eye-iris w-variant-b4b10ebe-4fd1-b016-b8a6-e16a8e0d932a",
+      "i": 1,
+      "left": "26px",
+      "top": "26px",
+      "transform": "matrix(0.9017, 0, 0, 0.9017, -6.93304, 6.34216)"
+    },
+    "right": {
+      "className": "eye-iris w-variant-b4b10ebe-4fd1-b016-b8a6-e16a8e0d932a",
+      "i": 1,
+      "left": "26px",
+      "top": "26px",
+      "transform": "matrix(0.9017, 0, 0, 0.9017, -6.93304, 6.34216)"
+    },
+    "left": {
+      "className": "eye-iris w-variant-b4b10ebe-4fd1-b016-b8a6-e16a8e0d932a",
+      "i": 1,
+      "left": "26px",
+      "top": "26px",
+      "transform": "matrix(0.9267, 0, 0, 0.9267, 2.92172, -6.74706)"
+    },
+    "rightChanged": false,
+    "leftChanged": true
+  },
+  {
+    "before": {
+      "className": "eye-inner-translate",
+      "i": 2,
+      "left": "auto",
+      "top": "auto",
+      "transform": "none"
+    },
+    "right": {
+      "className": "eye-inner-translate",
+      "i": 2,
+      "left": "auto",
+      "top": "auto",
+      "transform": "none"
+    },
+    "left": {
+      "className": "eye-inner-translate",
+      "i": 2,
+      "left": "auto",
+      "top": "auto",
+      "transform": "none"
+    },
+    "rightChanged": false,
+    "leftChanged": false
+  },
+  {
+    "before": {
+      "className": "eye-iris",
+      "i": 3,
+      "left": "26px",
+      "top": "26px",
+      "transform": "matrix(0.9291, 0, 0, 0.9291, -1.12662, -7.44539)"
+    },
+    "right": {
+      "className": "eye-iris",
+      "i": 3,
+      "left": "26px",
+      "top": "26px",
+      "transform": "matrix(0.8624, 0, 0, 0.8624, 17.0641, -18.3924)"
+    },
+    "left": {
+      "className": "eye-iris",
+      "i": 3,
+      "left": "26px",
+      "top": "26px",
+      "transform": "matrix(0.8515, 0, 0, 0.8515, -14.5093, -10.7573)"
+    },
+    "rightChanged": true,
+    "leftChanged": true
+  },
+  {
+    "before": {
+      "className": "eye-inner-translate",
+      "i": 4,
+      "left": "auto",
+      "top": "auto",
+      "transform": "none"
+    },
+    "right": {
+      "className": "eye-inner-translate",
+      "i": 4,
+      "left": "auto",
+      "top": "auto",
+      "transform": "none"
+    },
+    "left": {
+      "className": "eye-inner-translate",
+      "i": 4,
+      "left": "auto",
+      "top": "auto",
+      "transform": "none"
+    },
+    "rightChanged": false,
+    "leftChanged": false
+  },
+  {
+    "before": {
+      "className": "eye-iris",
+      "i": 5,
+      "left": "26px",
+      "top": "26px",
+      "transform": "matrix(0.8527, 0, 0, 0.8527, -4.21352, 19.4742)"
+    },
+    "right": {
+      "className": "eye-iris",
+      "i": 5,
+      "left": "26px",
+      "top": "26px",
+      "transform": "matrix(0.8514, 0, 0, 0.8514, 12.4592, -13.9066)"
+    },
+    "left": {
+      "className": "eye-iris",
+      "i": 5,
+      "left": "26px",
+      "top": "26px",
+      "transform": "matrix(0.8514, 0, 0, 0.8514, -14.9948, -6.4241)"
+    },
+    "rightChanged": true,
+    "leftChanged": true
+  },
+  {
+    "before": {
+      "className": "eye-inner-translate",
+      "i": 6,
+      "left": "auto",
+      "top": "auto",
+      "transform": "none"
+    },
+    "right": {
+      "className": "eye-inner-translate",
+      "i": 6,
+      "left": "auto",
+      "top": "auto",
+      "transform": "none"
+    },
+    "left": {
+      "className": "eye-inner-translate",
+      "i": 6,
+      "left": "auto",
+      "top": "auto",
+      "transform": "none"
+    },
+    "rightChanged": false,
+    "leftChanged": false
+  },
+  {
+    "before": {
+      "className": "eye-iris",
+      "i": 7,
+      "left": "26px",
+      "top": "26px",
+      "transform": "matrix(0.8588, 0, 0, 0.8588, 16.3177, 18.0043)"
+    },
+    "right": {
+      "className": "eye-iris",
+      "i": 7,
+      "left": "26px",
+      "top": "26px",
+      "transform": "matrix(0.851, 0, 0, 0.851, 12.5192, -17.067)"
+    },
+    "left": {
+      "className": "eye-iris",
+      "i": 7,
+      "left": "26px",
+      "top": "26px",
+      "transform": "matrix(0.851, 0, 0, 0.851, -17.541, -5.44316)"
+    },
+    "rightChanged": true,
+    "leftChanged": true
+  }
+]

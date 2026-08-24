@@ -76,6 +76,29 @@ const DISCOVERY_FACETS: Array<{
   },
 ];
 
+const SITE_DISCOVERY_COUNTS: Readonly<Record<SiteFacet['group'], Readonly<Record<string, number>>>> = {
+  categories: {
+    Portfolio: 31,
+    Lifestyle: 19,
+    Finance: 47,
+    Business: 209,
+    Shopping: 50,
+  },
+  sections: {
+    'How It Works': 136,
+    About: 333,
+    FAQ: 288,
+    Hero: 0,
+  },
+  styles: {
+    Minimal: 80,
+    Dark: 59,
+    Photography: 48,
+    Motion: 290,
+    Colorful: 30,
+  },
+};
+
 const siteFacetKey = (facet: SiteFacet) => `${facet.group}:${facet.value.toLowerCase()}`;
 const siteFacetPreviewUrl = (preview: FacetPreview) => (
   preview.kind === 'icon' ? preview.iconUrl : preview.media[0]
@@ -268,6 +291,7 @@ export function SitesPageView({
                   group: group.group,
                   value,
                 };
+                const count = SITE_DISCOVERY_COUNTS[group.group][value] ?? 0;
                 const selected = controller.state.filters.some(
                   (filter) => filter.group === group.group && filter.value === value,
                 );
@@ -276,9 +300,11 @@ export function SitesPageView({
                   <Button
                     key={value}
                     label={value}
+                    aria-label={`${value}, ${count} sites`}
                     variant="ghost"
                     size="sm"
                     aria-pressed={selected}
+                    data-taxonomy-count={count}
                     data-facet-preview={hoverFacet?.group}
                     onPointerEnter={hoverFacet ? (event) => {
                       const preview = siteFacetPreview(

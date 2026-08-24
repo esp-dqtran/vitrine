@@ -239,6 +239,7 @@ test('exports the exact Apps filter menu for reuse by detail pages', () => {
   );
 
   assert.match(html, /class="discovery-filter-control apps-filterbar__filter /);
+  assert.match(html, /data-filter-state="idle"/);
   assert.match(html, /class="[^"]*apps-filterbar__filter-button/);
   assert.match(html, /aria-label="Open Screens filters"/);
   assert.match(html, /role="dialog"[^>]*aria-label="Screens filters"/);
@@ -431,9 +432,20 @@ test('constrains long filter menus to the viewport and scrolls only their option
     /\.astryx-dropdown-panel\s*\{[^}]*width:\s*min\(288px,\s*calc\(100vw - 48px\)\)[^}]*animation:\s*astryx-dropdown-in 180ms/,
   );
   assert.match(componentCss, /@keyframes astryx-dropdown-in\s*\{/);
+  assert.match(componentCss, /@keyframes astryx-dropdown-out\s*\{/);
+  assert.match(
+    componentCss,
+    /\.astryx-dropdown-panel\[data-state='closing'\]\s*\{[^}]*animation-name:\s*astryx-dropdown-out/,
+  );
   assert.match(
     componentCss,
     /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.astryx-dropdown-panel\s*\{[^}]*animation:\s*none/,
+  );
+  assert.match(css, /@keyframes apps-filter-sheet-in\s*\{/);
+  assert.match(css, /@keyframes apps-filter-sheet-out\s*\{/);
+  assert.match(
+    css,
+    /\.astryx-dropdown-panel\[data-state='closing'\]:has\(\.apps-filterbar__menu\)\s*\{[^}]*animation:\s*apps-filter-sheet-out 180ms/,
   );
 });
 
@@ -492,6 +504,26 @@ test('keeps selected Apps filters checked only in their grouped taxonomy with th
   assert.match(
     css,
     /\.apps-filterbar__filter--selected\s*\{[^}]*border-color:\s*var\(--reference-chrome-text\);[^}]*box-shadow:\s*inset 0 0 0 1px var\(--reference-chrome-text\);/,
+  );
+  assert.match(source, /useDiscoveryFilterWidthMotion\(motionContainerRef, selectedKey\)/);
+  assert.match(source, /if \(containerRef\) containerRef\.current = node/);
+  assert.match(source, /container\.animate\(/);
+  assert.match(source, /window\.matchMedia\('\(prefers-reduced-motion: reduce\)'\)\.matches/);
+  assert.match(
+    css,
+    /\.apps-filterbar__filter\[data-width-motion='active'\]\s*\{[^}]*overflow:\s*clip;[^}]*will-change:\s*width;/,
+  );
+  assert.match(
+    source,
+    /useDiscoveryFilterSearchMotion\(open, query, searchResultKey\)/,
+  );
+  assert.match(source, /previousHeightRef\.current = node\.getBoundingClientRect\(\)\.height/);
+  assert.match(source, /height:\s*`\$\{previousHeight\}px`/);
+  assert.match(source, /menu\.querySelector<HTMLElement>\('\.apps-filterbar__options'\)/);
+  assert.match(source, /Promise\.allSettled\(animations\.map/);
+  assert.match(
+    css,
+    /\.apps-filterbar__menu\[data-search-motion='active'\]\s*\{[^}]*will-change:\s*height;/,
   );
   assert.match(
     css,

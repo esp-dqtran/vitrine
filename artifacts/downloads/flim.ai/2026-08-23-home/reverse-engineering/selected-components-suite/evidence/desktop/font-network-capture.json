@@ -1,0 +1,16 @@
+[
+  {
+    "url": "https://cdn.prod.website-files.com/695bc6699e9ebf7bc1099bbf/695bc6699e9ebf7bc1099bd3_Swizzy-Medium.woff2",
+    "name": "695bc6699e9ebf7bc1099bd3_Swizzy-Medium.woff2",
+    "bytes": 37452,
+    "status": 200,
+    "mime": "font/woff2"
+  },
+  {
+    "url": "https://cdn.prod.website-files.com/695bc6699e9ebf7bc1099bbf/695bc6699e9ebf7bc1099bd0_PPNeueMontrealMono-Book.woff2",
+    "name": "695bc6699e9ebf7bc1099bd0_PPNeueMontrealMono-Book.woff2",
+    "bytes": 69880,
+    "status": 200,
+    "mime": "font/woff2"
+  }
+]

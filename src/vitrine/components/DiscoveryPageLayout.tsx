@@ -1,11 +1,10 @@
 import { type ReactNode, type RefObject } from 'react';
 import { Button, EmptyState, Skeleton } from '@astryxdesign/core';
-import { AppCardSkeleton } from './AppCardSkeleton.tsx';
 import { ReferenceDiscoveryPageShell } from './ReferenceDiscoveryPageShell.tsx';
 import { Spinner } from './Spinner.tsx';
 
 export interface DiscoveryPageLayoutProps {
-  kind: 'apps' | 'sites' | 'flows' | 'colors';
+  kind: 'apps' | 'sites' | 'flows' | 'components' | 'colors';
   header: ReactNode;
   taxonomyLabel?: string;
   taxonomy?: ReactNode;
@@ -73,7 +72,12 @@ export function DiscoveryPageLayout({
         aria-label={`${resultLabel} results`}
       >
         {totalCount !== null ? (
-          <p className="reference-discovery__result-meta" aria-live="polite">
+          <p
+            key={countLabel}
+            className="reference-discovery__result-meta"
+            data-discovery-result-count={countLabel}
+            aria-live="polite"
+          >
             <small>Showing</small> <strong>{totalCount} {countLabel}</strong>
           </p>
         ) : null}
@@ -155,20 +159,14 @@ function DiscoveryResultsSkeleton({
   resultLabel,
 }: Pick<DiscoveryPageLayoutProps, 'kind' | 'resultLabel'>) {
   if (kind !== 'flows') {
-    const gridClassName = kind === 'apps'
-      ? 'apps-discovery__grid'
-      : kind === 'colors'
-        ? 'colors-discovery__grid'
-        : 'sites-discovery__grid';
     return (
       <div
-        className={`reference-discovery__grid ${gridClassName} discovery-page-layout__skeleton-grid`}
+        className="discovery-page-layout__state"
+        data-discovery-initial-loading={kind}
         role="status"
         aria-label={`Loading ${resultLabel}`}
       >
-        {Array.from({ length: 3 }, (_, index) => (
-          <AppCardSkeleton key={index} index={index} />
-        ))}
+        <Spinner size="md" shade="subtle" aria-hidden="true" />
       </div>
     );
   }

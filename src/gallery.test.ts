@@ -49,6 +49,32 @@ test("builds an evidence page without re-paginating it", () => {
       platform: "ios",
       image_url: "mobbin-bulk:0000000000000002",
       description: "Composer",
+      analysis: {
+        description: "A promotional composer overview",
+        purpose: "Explain the composer feature",
+        pageType: "Feature Info",
+        sourcePresentation: "marketing-composite" as const,
+        embeddedPageType: "Composer",
+        productArea: "Editor",
+        theme: "dark" as const,
+        visibleStates: [],
+        componentNames: [],
+        visibleText: [],
+        layoutPatterns: [],
+        icons: [],
+        imagery: [],
+        contentPatterns: [],
+        interactionPatterns: [],
+        responsiveViewport: "desktop" as const,
+        confidence: 0.86,
+      },
+      ui_elements: [{
+        type: "Button",
+        group: "Control",
+        layer: "embedded-ui" as const,
+        confidence: 0.88,
+        reviewStatus: "accepted" as const,
+      }],
       source_screen_id: 41,
       source_screen_image_url: "mobbin-bulk:0000000000000041",
       matched_facets: [{ group: "screens", value: "Preview" }],
@@ -63,6 +89,15 @@ test("builds an evidence page without re-paginating it", () => {
     thumbnailUrl: "/api/media/claude/0000000000000041?variant=thumb",
   });
   assert.deepEqual(page.screens[0].matchedFacets, [{ group: "screens", value: "Preview" }]);
+  assert.equal(page.screens[0].sourcePresentation, "marketing-composite");
+  assert.equal(page.screens[0].embeddedPageType, "Composer");
+  assert.deepEqual(page.screens[0].uiElements, [{
+    type: "Button",
+    group: "Control",
+    layer: "embedded-ui",
+    confidence: 0.88,
+    reviewStatus: "accepted",
+  }]);
   assert.equal(page.nextCursor, "Mg");
 });
 
@@ -286,6 +321,7 @@ test("builds the existing public catalog contract from bounded app records", () 
   assert.equal(page.apps[0]?.previewUrl, "/assets/thumbnails/linear/app-preview.webp");
   assert.equal(page.apps[0]?.description, "Plan and build products.");
   assert.equal(page.apps[0]?.lastCapturedAt, "2026-07-26T03:14:54.618Z");
+  assert.equal(page.apps[0]?.createdAt, "2026-07-26T03:14:54.618Z");
   assert.deepEqual(page.apps[0]?.categories, [productivity]);
   assert.equal("cat" in page.apps[0]!, false);
   assert.equal(page.nextCursor, "next");

@@ -1,9 +1,16 @@
 export type ScreenTheme = "light" | "dark" | "mixed";
+export type ScreenSourcePresentation =
+  | "direct-screen"
+  | "device-mockup"
+  | "marketing-composite"
+  | "unknown";
 
 export interface ScreenAnalysis {
   description: string;
   purpose: string;
   pageType: string;
+  sourcePresentation: ScreenSourcePresentation;
+  embeddedPageType?: string;
   productArea: string;
   theme: ScreenTheme;
   visibleStates: string[];
@@ -40,6 +47,15 @@ export function parseScreenAnalysisValue(value: unknown): ScreenAnalysis {
   const analysis = value as Record<string, unknown>;
   const theme = requiredText(analysis.theme, "theme") as ScreenTheme;
   if (!["light", "dark", "mixed"].includes(theme)) throw new Error(`Unsupported screen theme: ${theme}`);
+  const sourcePresentation = typeof analysis.sourcePresentation === "string"
+    ? analysis.sourcePresentation
+    : "unknown";
+  if (!["direct-screen", "device-mockup", "marketing-composite", "unknown"].includes(sourcePresentation)) {
+    throw new Error(`Unsupported source presentation: ${sourcePresentation}`);
+  }
+  const embeddedPageType = typeof analysis.embeddedPageType === "string" && analysis.embeddedPageType.trim()
+    ? analysis.embeddedPageType.trim()
+    : undefined;
   const viewport = typeof analysis.responsiveViewport === "string"
     ? analysis.responsiveViewport
     : "unknown";
@@ -50,6 +66,8 @@ export function parseScreenAnalysisValue(value: unknown): ScreenAnalysis {
     description: requiredText(analysis.description, "description"),
     purpose: requiredText(analysis.purpose, "purpose"),
     pageType: requiredText(analysis.pageType, "pageType"),
+    sourcePresentation: sourcePresentation as ScreenSourcePresentation,
+    ...(embeddedPageType ? { embeddedPageType } : {}),
     productArea: requiredText(analysis.productArea, "productArea"),
     theme,
     visibleStates: stringList(analysis.visibleStates),

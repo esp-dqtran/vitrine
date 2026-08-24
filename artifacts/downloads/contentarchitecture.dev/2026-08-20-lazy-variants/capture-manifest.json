@@ -1,0 +1,60 @@
+{
+  "sourcePage": "https://www.contentarchitecture.dev/",
+  "reason": "Deferred interaction assets omitted from the original interaction capture",
+  "trigger": "Activate the Astro repository variant and open the Learn more drawer's author section",
+  "loaderEvidence": "../2026-08-18T09-36-04-737Z/network-assets/f0f242b634222c280f79339e.js",
+  "assets": [
+    {
+      "bytes": 59987,
+      "contentType": "application/javascript; charset=utf-8",
+      "headersPath": "1dxb-dyj08pik.headers.txt",
+      "lastModified": "Tue, 18 Aug 2026 02:45:59 GMT",
+      "path": "network-assets/1dxb-dyj08pik.js",
+      "sha256": "424df3052a4a667c8cc9e1644aab8ecf7747f37c791c0e3638da3549eaf1e176",
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/1dxb-dyj08pik.js"
+    },
+    {
+      "bytes": 1628,
+      "contentType": "image/webp",
+      "headersPath": "author-video-poster.headers.txt",
+      "path": "network-assets/author-video-poster.webp",
+      "sha256": "3b8d9277cc85f71d2a345475ea8526c543d48467c0ff68d65053eb6fb115d9e3",
+      "url": "https://image.mux.com/GEAvJNkNURFGORLe01pSIREO7Egh7TtACZclFBXQ9LoE/thumbnail.webp?time=1&fit_mode=preserve&width=960&height=540"
+    },
+    {
+      "bytes": 1975,
+      "contentType": "image/jpeg",
+      "headersPath": "author-inline-portrait.headers.txt",
+      "lastModified": "Sun, 07 Jun 2026 08:44:15 GMT",
+      "path": "network-assets/author-inline-portrait.jpg",
+      "sha256": "c7d2fddb07a70b48e9173bfb2a5c73b412356a0d0d57a6b49e4b25340ae5013d",
+      "url": "https://cdn.sanity.io/images/szlvuc1t/production/db451abc27a16f698305dcb56ec920d5a9dc08c8-1566x1566.jpg?w=100&h=100&max-h=2048&max-w=2048&q=85&fit=crop"
+    },
+    {
+      "bytes": 24542133,
+      "contentType": "video/mp4",
+      "derivation": "Downloaded from the public Mux HLS master with ffmpeg, video-only 1920x1080 rendition, stream copy",
+      "path": "network-assets/author-video-1080p.mp4",
+      "sha256": "ea63c2d004848ea24532ca4f784c3c089995f2287ddbfe6aaf9095128142b8db",
+      "url": "https://stream.mux.com/GEAvJNkNURFGORLe01pSIREO7Egh7TtACZclFBXQ9LoE.m3u8?max_resolution=2160p&min_resolution=480p&redundant_streams=true"
+    },
+    {
+      "bytes": 80643,
+      "contentType": "application/javascript; charset=utf-8",
+      "headersPath": "1lnne3ygbafop.headers.txt",
+      "lastModified": "Wed, 19 Aug 2026 15:33:10 GMT",
+      "path": "network-assets/1lnne3ygbafop.js",
+      "sha256": "8d525f675d7e49def4dfd5e396c104e5ab897914d3a830f0afa83c7d75ece6d3",
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/1lnne3ygbafop.js"
+    },
+    {
+      "bytes": 218218,
+      "contentType": "application/javascript; charset=utf-8",
+      "headersPath": "1p6253sx6d7f8.headers.txt",
+      "lastModified": "Wed, 19 Aug 2026 22:34:11 GMT",
+      "path": "network-assets/1p6253sx6d7f8.js",
+      "sha256": "fda4cf7d3ab8fe37b9a43bf5e385f8c0e58b4d6fc4e9a30688b613ac48a54985",
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/1p6253sx6d7f8.js"
+    }
+  ]
+}

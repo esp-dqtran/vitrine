@@ -1,0 +1,10 @@
+export default {
+  async fetch(request, env) {
+    const response = await env.ASSETS.fetch(request);
+    if (response.status !== 404 || !request.headers.get("accept")?.includes("text/html") || !["GET", "HEAD"].includes(request.method)) return response;
+    const url = new URL(request.url);
+    url.pathname = "/index.html";
+    url.search = "";
+    return env.ASSETS.fetch(new Request(url, request));
+  },
+};

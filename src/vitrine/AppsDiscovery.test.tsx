@@ -121,6 +121,8 @@ test('renders the full Apps taxonomy alongside the compact filter bar', () => {
   assert.match(html, /aria-label="App discovery filters"/);
   assert.match(html, />Categories</);
   assert.match(html, />AI</);
+  assert.match(html, /aria-label="AI, 104 apps"/);
+  assert.match(html, /data-taxonomy-count="142"/);
   assert.match(html, />Screens</);
   assert.doesNotMatch(html, />UI Elements</);
   assert.doesNotMatch(html, />Navigation Menu</);
@@ -486,16 +488,16 @@ test('renders the Mobbin-style Apps filter bar, grid, and media-first card', () 
   assert.match(html, /<a[^>]+href="\/apps\/linear-web"[^>]+class="discovery-card__link app-discovery-card__link"/);
 });
 
-test('renders the approved shared skeleton while the initial App page loads', () => {
+test('uses quiet progress instead of card skeletons while the initial App page loads', () => {
   const html = renderAppsPage(pageController({
     items: [],
     totalCount: null,
     loading: true,
   }), { isAdmin: true });
 
-  assert.match(html, /discovery-page-layout__skeleton-grid/);
+  assert.match(html, /data-discovery-initial-loading="apps"/);
   assert.match(html, /aria-label="Loading apps"/);
-  assert.equal((html.match(/data-app-card-skeleton="true"/g) ?? []).length, 3);
+  assert.doesNotMatch(html, /data-app-card-skeleton="true"/);
 });
 
 test('keeps App cards stable and shows compact progress while loading another page', () => {
@@ -517,6 +519,8 @@ test('shows the server App total once and preserves screen content mode semantic
     items: [makeApp()],
   }));
   assert.equal((appsMode.match(/12 apps/g) ?? []).length, 1);
+  assert.match(appsMode, /data-apps-results-mode="apps"/);
+  assert.match(appsMode, /apps-discovery__results-transition/);
   assert.doesNotMatch(appsMode, /apps-filterbar__count/);
 
   const screenMode = renderAppsPage(pageController({
@@ -531,6 +535,8 @@ test('shows the server App total once and preserves screen content mode semantic
     items: [makeApp()],
   }));
   assert.match(screenMode, /data-apps-discovery-screen-grid="true"/);
+  assert.match(screenMode, /data-apps-results-mode="screens"/);
+  assert.match(screenMode, /data-discovery-result-count="screen"/);
   assert.match(screenMode, /data-apps-discovery-screen-card="true"/);
   assert.match(screenMode, /1 screen/);
   assert.doesNotMatch(screenMode, /12 apps/);
@@ -658,15 +664,29 @@ test('styles Apps as the three-column Mobbin results layout with a mobile fallba
   assert.match(discoveryCss, /@media \(max-width:\s*720px\)[\s\S]*\.apps-discovery__grid,[\s\S]*\.apps-discovery__screen-grid\s*\{[\s\S]*grid-template-columns:\s*1fr/);
 });
 
-test('renders App media directly through the shared discovery frame', async () => {
+test('renders App information below a self-contained media tile', async () => {
   const css = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
 
   assert.match(css, /\.discovery-card\s*\{[\s\S]*border:\s*1px solid var\(--color-border\)[\s\S]*border-radius:\s*24px[\s\S]*background:\s*var\(--color-background-surface\)/);
   assert.match(css, /\.discovery-card__media\s*\{[\s\S]*width:\s*min\(calc\(100% - 32px\),\s*384px\)[\s\S]*margin:\s*16px auto 0/);
-  assert.match(css, /\.app-discovery-card__media\s*\{[\s\S]*background:\s*transparent/);
+  assert.match(css, /\.app-discovery-card\.discovery-card\s*\{[\s\S]*border:\s*0[\s\S]*background:\s*transparent/);
+  assert.match(css, /\.app-discovery-card__link\s*\{[\s\S]*gap:\s*16px/);
+  assert.match(css, /\.app-discovery-card__media\s*\{[\s\S]*width:\s*100%[\s\S]*aspect-ratio:\s*1\s*\/\s*1[\s\S]*margin:\s*0[\s\S]*background:\s*var\(--color-background-surface\)/);
+  assert.match(css, /\.app-discovery-card__identity\s*\{[\s\S]*padding:\s*0 2px/);
+  assert.match(css, /\.app-discovery-card__desktop-preview\s*\{[\s\S]*width:\s*82%[\s\S]*aspect-ratio:\s*16\s*\/\s*10/);
+  assert.match(css, /\.app-discovery-card__slider-arrow\s*\{[\s\S]*top:\s*calc\(50%\s*-\s*30px\)[\s\S]*width:\s*32px[\s\S]*height:\s*32px[\s\S]*opacity:\s*0[\s\S]*pointer-events:\s*none[\s\S]*transition:/);
+  assert.match(css, /\.app-discovery-card__slider-arrow--previous\s*\{[\s\S]*left:\s*calc\(9%\s*\+\s*8px\)/);
+  assert.match(css, /\.app-discovery-card__slider-arrow--next\s*\{[\s\S]*right:\s*calc\(9%\s*\+\s*8px\)/);
+  assert.match(css, /\.app-discovery-card:hover \.app-discovery-card__slider-arrow,[\s\S]*\.app-discovery-card:focus-within \.app-discovery-card__slider-arrow,[\s\S]*opacity:\s*1[\s\S]*pointer-events:\s*auto/);
+  assert.match(css, /\.app-discovery-card__slider-status\s*\{[\s\S]*top:\s*calc\(75\.625%\s*\+\s*10px\)[\s\S]*opacity:\s*0[\s\S]*transform:\s*translate\(-50%,\s*4px\)[\s\S]*transition:/);
+  assert.match(css, /\.app-discovery-card:hover \.app-discovery-card__slider-status,[\s\S]*\.app-discovery-card:focus-within \.app-discovery-card__slider-status\s*\{[\s\S]*opacity:\s*1/);
+  assert.match(css, /\.app-discovery-card__slider-status i\s*\{[\s\S]*transform:\s*scale\(0\.82\)[\s\S]*transition:/);
+  assert.match(css, /\.app-discovery-card__slider-status i\[data-active='true'\]\s*\{[\s\S]*transform:\s*scale\(1\)/);
+  assert.match(css, /\.app-discovery-card\.discovery-card:hover \.app-discovery-card__media,[\s\S]*transform:\s*none/);
   // Portrait follows the rendered image, not the app's platform: an iOS app
   // showing a crawled website is a desktop page and keeps the standard frame.
   assert.match(css, /\.app-discovery-card\[data-preview-shape="phone"\] \.app-discovery-card__media[\s\S]*aspect-ratio:\s*3\s*\/\s*4/);
+  assert.match(css, /\.app-discovery-card\[data-preview-shape="phone"\] \.app-discovery-card__slider-status\s*\{[\s\S]*bottom:\s*16px/);
   assert.doesNotMatch(css, /data-preview-platform=['"](?:ios|android)['"]\] \.app-discovery-card__media/);
   assert.match(css, /\.app-discovery-card__phone-preview\s*\{[\s\S]*aspect-ratio:\s*6\s*\/\s*13[\s\S]*overflow:\s*hidden[\s\S]*border-radius:\s*12\.22%\s*\/\s*5\.65%/);
   assert.match(css, /\.discovery-card:hover \.discovery-card__media,[\s\S]*\.discovery-card:focus-within \.discovery-card__media\s*\{[\s\S]*transform:\s*scale\(1\.012\)/);

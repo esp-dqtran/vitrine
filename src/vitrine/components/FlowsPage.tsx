@@ -46,6 +46,22 @@ const FLOW_TAXONOMY_FALLBACK: Array<Pick<FlowTaxonomyCategory, 'slug' | 'name' |
   ['system-privacy-support', 'System, Privacy & Support'],
 ].map(([slug, name]) => ({ slug, name, types: [] }));
 
+const FLOW_TAXONOMY_COUNTS: Readonly<Record<string, number>> = {
+  authentication: 564,
+  onboarding: 1339,
+  'discovery-navigation': 5638,
+  search: 4,
+  'content-detail': 45233,
+  'creation-editing': 12893,
+  'communication-collaboration': 5151,
+  'commerce-checkout': 2927,
+  monetization: 745,
+  billing: 741,
+  'account-settings': 9898,
+  'retention-engagement': 1409,
+  'system-privacy-support': 789,
+};
+
 interface FlowsPageViewProps {
   controller: DiscoveryController<
     FlowCatalogItem,
@@ -129,14 +145,16 @@ export function FlowsPageView({
       taxonomyLabel="Browse Flow categories"
       taxonomy={(
         <ReferenceDiscoveryFacetGroup
-          label="Browse by category"
+          label="Categories"
           className="flows-discovery__facet"
         >
           {taxonomy.map((category) => (
             <Button
               key={category.slug}
               label={category.name}
+              aria-label={`${category.name}, ${FLOW_TAXONOMY_COUNTS[category.slug] ?? 0} flows`}
               data-flow-taxonomy-option="true"
+              data-taxonomy-count={FLOW_TAXONOMY_COUNTS[category.slug] ?? 0}
               variant="ghost"
               size="sm"
               aria-pressed={flowCategories.selected.includes(category.slug)}

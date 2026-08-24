@@ -166,11 +166,30 @@ export function createKiroCliScreenAnalyzer(
               typeof candidate.description === "string"
               && typeof candidate.purpose === "string"
               && typeof candidate.pageType === "string"
+              && typeof candidate.sourcePresentation === "string"
               && typeof candidate.productArea === "string"
             );
             const analysis = parseScreenAnalysisValue(parsed);
             if (!supportedScreenTypeKeys.has(analysis.pageType.toLocaleLowerCase())) {
               throw new Error(`Unsupported Vitrines screen category: ${analysis.pageType}`);
+            }
+            if (
+              analysis.embeddedPageType
+              && !supportedScreenTypeKeys.has(analysis.embeddedPageType.toLocaleLowerCase())
+            ) {
+              throw new Error(`Unsupported embedded Vitrines screen category: ${analysis.embeddedPageType}`);
+            }
+            if (analysis.sourcePresentation === "marketing-composite" && !analysis.embeddedPageType) {
+              throw new Error("Marketing composites require embeddedPageType");
+            }
+            if (
+              analysis.sourcePresentation === "marketing-composite"
+              && analysis.pageType.toLocaleLowerCase() !== "feature info"
+            ) {
+              throw new Error("Marketing composites require pageType Feature Info");
+            }
+            if (analysis.sourcePresentation !== "direct-screen" && (analysis.confidence ?? 0.5) > 0.9) {
+              throw new Error("Device mockups, marketing composites, and unknown presentations require confidence at or below 0.90");
             }
             return analysis;
           } catch (error) {

@@ -332,6 +332,13 @@ export interface CrawledImage {
   state_context?: string | null;
   captured_at?: string | null;
   matched_facets?: Array<{ group: string; value: string }> | null;
+  ui_elements?: Array<{
+    type: string;
+    group: string;
+    layer: "whole-screen" | "outer-presentation" | "embedded-ui";
+    confidence: number;
+    reviewStatus: "pending" | "accepted";
+  }> | null;
   source_screen_id?: number | null;
   source_screen_image_url?: string | null;
 }
@@ -808,6 +815,27 @@ export async function appEvidencePage(input: {
            JOIN screen_patterns pattern ON pattern.id = assignment.screen_pattern_id
            WHERE assignment.image_id = i.id
          ), '[]'::jsonb) AS matched_facets,
+         COALESCE((
+           SELECT jsonb_agg(jsonb_build_object(
+             'type', element.type,
+             'group', element.group_name,
+             'layer', element.layer,
+             'confidence', element.confidence,
+             'reviewStatus', element.review_status
+           ) ORDER BY lower(element.type), element.layer)
+           FROM (
+             SELECT DISTINCT ON (type.name, occurrence.layer)
+               type.name AS type, type.group_name, occurrence.layer,
+               occurrence.confidence, occurrence.review_status
+             FROM screen_ui_elements occurrence
+             JOIN ui_element_types type ON type.id = occurrence.ui_element_type_id
+             WHERE occurrence.screen_image_id = i.id
+               AND occurrence.review_status = 'accepted'
+             ORDER BY type.name, occurrence.layer,
+               (occurrence.review_status = 'accepted') DESC,
+               occurrence.confidence DESC, occurrence.id DESC
+           ) element
+         ), '[]'::jsonb) AS ui_elements,
          reference.screen_image_id AS source_screen_id,
          reference.screen_image_url AS source_screen_image_url
        FROM apps a JOIN platforms p ON p.app_id = a.id JOIN images i ON i.platform_id = p.id
@@ -821,7 +849,7 @@ export async function appEvidencePage(input: {
          FROM screen_ui_elements occurrence
          JOIN images screen ON screen.id = occurrence.screen_image_id
          JOIN ui_element_types type ON type.id = occurrence.ui_element_type_id
-         WHERE occurrence.review_status IN ('accepted', 'pending')
+         WHERE occurrence.review_status = 'accepted'
            AND occurrence.cropped_image_id = i.id
          ORDER BY (occurrence.review_status = 'accepted') DESC,
            occurrence.version_id DESC, occurrence.id
@@ -866,6 +894,28 @@ export async function appEvidencePage(input: {
            JOIN screen_patterns pattern ON pattern.id = assignment.screen_pattern_id
            WHERE assignment.image_id = i.id
          ), '[]'::jsonb) AS matched_facets,
+         COALESCE((
+           SELECT jsonb_agg(jsonb_build_object(
+             'type', element.type,
+             'group', element.group_name,
+             'layer', element.layer,
+             'confidence', element.confidence,
+             'reviewStatus', element.review_status
+           ) ORDER BY lower(element.type), element.layer)
+           FROM (
+             SELECT DISTINCT ON (type.name, occurrence.layer)
+               type.name AS type, type.group_name, occurrence.layer,
+               occurrence.confidence, occurrence.review_status
+             FROM screen_ui_elements occurrence
+             JOIN ui_element_types type ON type.id = occurrence.ui_element_type_id
+             WHERE occurrence.version_id = sv.id
+               AND occurrence.screen_image_id = i.id
+               AND occurrence.review_status = 'accepted'
+             ORDER BY type.name, occurrence.layer,
+               (occurrence.review_status = 'accepted') DESC,
+               occurrence.confidence DESC, occurrence.id DESC
+           ) element
+         ), '[]'::jsonb) AS ui_elements,
          reference.screen_image_id AS source_screen_id,
          reference.screen_image_url AS source_screen_image_url
        FROM selected_version sv JOIN version_images vi ON vi.version_id = sv.id
@@ -882,7 +932,7 @@ export async function appEvidencePage(input: {
          JOIN images screen ON screen.id = occurrence.screen_image_id
          JOIN ui_element_types type ON type.id = occurrence.ui_element_type_id
          WHERE occurrence.version_id = sv.id
-           AND occurrence.review_status IN ('accepted', 'pending')
+           AND occurrence.review_status = 'accepted'
            AND occurrence.cropped_image_id = i.id
          ORDER BY (occurrence.review_status = 'accepted') DESC, occurrence.id
          LIMIT 1
@@ -986,7 +1036,7 @@ export async function appUiElementSummary(input: {
        LEFT JOIN selected_version version ON true
        WHERE app.name = $1
          AND platform.name = $2
-         AND occurrence.review_status IN ('accepted', 'pending')
+         AND occurrence.review_status = 'accepted'
          AND (
            ($3::integer IS NULL AND $4::boolean = false)
            OR occurrence.version_id = version.id

@@ -44,6 +44,7 @@ import { AppsDiscoveryPage } from "./components/AppsDiscoveryPage.tsx";
 import { CatalogBrowsePage } from "./components/CatalogBrowsePage.tsx";
 import { CatalogAppPage } from "./components/CatalogAppPage.tsx";
 import { CatalogFlowsPage } from "./components/CatalogFlowsPage.tsx";
+import { ComponentsPage } from "./components/CatalogComponentsPage.tsx";
 import { CatalogSitesPage } from "./components/CatalogSitesPage.tsx";
 import { CatalogSearchPage } from "./components/CatalogSearchPage.tsx";
 import { CatalogSitePage } from "./components/CatalogSitePage.tsx";
@@ -56,6 +57,7 @@ import { SearchTrigger } from "./components/SearchTrigger.tsx";
 import { ScreenDetail } from "./components/ScreenDetail";
 import { SitesPage } from "./components/SitesPage.tsx";
 import { ColorGalleryPage } from "./components/ColorGalleryPage.tsx";
+import { ColorPaletteComposer } from "./components/ColorPaletteComposer.tsx";
 import { ColorPostStudioPage } from "./components/ColorPostStudioPage.tsx";
 import { MotionPromptsPage } from "./components/MotionPromptsPage.tsx";
 import { PublicSitePreviewModal } from "./components/PublicSitePreviewModal.tsx";
@@ -149,9 +151,11 @@ export function App() {
     route.name === "apps"
     || route.name === "sites"
     || route.name === "color"
+    || route.name === "color-compose"
     || route.name === "color-create"
     || route.name === "sites-motion"
-    || route.name === "flows";
+    || route.name === "flows"
+    || route.name === "components";
   const [stickyChromeMerged, setStickyChromeMerged] = useState(false);
   const [flowsDiscoveryAdapter] = useState(() => createFlowsDiscoveryAdapter());
   const flowDiscoveryState =
@@ -769,11 +773,13 @@ export function App() {
       : route.name === "sites-motion"
         ? "sites"
       : route.name === "color-create"
+        || route.name === "color-compose"
         ? "color"
       : route.name === "apps" ||
           route.name === "sites" ||
           route.name === "color" ||
-          route.name === "flows"
+          route.name === "flows" ||
+          route.name === "components"
         ? route.name
         : route.name === "projects" || route.name === "projects-workspace"
           ? "projects"
@@ -880,6 +886,17 @@ export function App() {
       break;
     case "color-create":
       page = <ColorPostStudioPage initialPaletteId={route.paletteId} />;
+      break;
+    case "color-compose":
+      page = (
+        <ColorPaletteComposer
+          onBack={() => navigate({ name: "color" })}
+          onCreate={(palette) => {
+            sessionStorage.setItem("vitrines:color-composer-palette", JSON.stringify(palette));
+            navigate({ name: "color-create" });
+          }}
+        />
+      );
       break;
     case "sites-motion":
       page = <MotionPromptsPage />;
@@ -1301,6 +1318,9 @@ export function App() {
         />
       );
       break;
+    case "components":
+      page = <ComponentsPage />;
+      break;
     case "browse-app":
       page = (
         <CatalogAppPage
@@ -1483,6 +1503,7 @@ export function App() {
 
   const hasPersistentDiscoveryHeader =
     discoveryRoute !== null &&
+    route.name !== "color-compose" &&
     route.name !== "projects" &&
     route.name !== "projects-workspace" &&
     route.name !== "project" &&
@@ -1521,6 +1542,8 @@ export function App() {
                     : "Search Sites…"
                   : discoveryRoute === "flows"
                     ? "Search Flows…"
+                    : discoveryRoute === "components"
+                      ? "Search Components…"
                     : discoveryRoute === "projects"
                       ? "Search references…"
                       : "Search on Web..."
@@ -1533,6 +1556,10 @@ export function App() {
                 : null
             }
             onOpen={() => {
+              if (discoveryRoute === "components") {
+                document.getElementById("components-search")?.focus();
+                return;
+              }
               if (discoveryRoute === "color") {
                 openColorSearch();
                 return;
@@ -1556,12 +1583,12 @@ export function App() {
               );
             }}
             mode={
-              discoveryRoute === "flows" || !canUseAdvancedSearch
+              discoveryRoute === "flows" || discoveryRoute === "components" || !canUseAdvancedSearch
                 ? "legacy"
                 : "advanced"
             }
             activeFilterCount={
-              discoveryRoute === "flows"
+              discoveryRoute === "flows" || discoveryRoute === "components"
                 ? 0
                 : activeFilterCount(searchSnapshot.state.filters)
             }

@@ -27,6 +27,18 @@
   }
 }
 
+@keyframes astryx-dropdown-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(.985);
+  }
+}
+
 .astryx-dropdown {
   min-width: 0;
   max-height: min(320px, calc(100dvh - 96px));
@@ -126,9 +138,19 @@
   animation: astryx-dropdown-in 180ms cubic-bezier(.16, 1, .3, 1) both;
 }
 
+.astryx-dropdown-panel[data-state='closing'] {
+  pointer-events: none;
+  animation-name: astryx-dropdown-out;
+  animation-timing-function: cubic-bezier(.4, 0, 1, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .astryx-dropdown,
   .astryx-dropdown-panel {
     animation: none;
+  }
+
+  .astryx-dropdown-panel[data-state='closing'] {
+    visibility: hidden;
   }
 }

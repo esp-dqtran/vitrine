@@ -15,12 +15,14 @@
 [data-application-surface="true"]
   :where(h1):not(
     .reference-detail__heading *,
+    .color-composer__intro *,
     .project-files__hero-heading *,
     .project-document__title,
     .project-document__editor *,
     .project-canvas-document-editor *,
     .document-flow *,
     .flow-preview-dialog *,
+    .component-preview-root *,
     .excalidraw *
   ) {
   font: var(--vitrine-type-title) !important;
@@ -38,6 +40,7 @@
     .project-canvas-document-editor *,
     .document-flow *,
     .flow-preview-dialog *,
+    .component-preview-root *,
     .excalidraw *
   ) {
   font: var(--vitrine-type-heading) !important;
@@ -51,6 +54,7 @@
     .project-canvas-document-editor *,
     .document-flow *,
     .flow-preview-dialog *,
+    .component-preview-root *,
     .excalidraw *
   ) {
   font: var(--vitrine-type-label) !important;
@@ -67,6 +71,7 @@
     .project-canvas-document-editor *,
     .document-flow *,
     .flow-preview-dialog *,
+    .component-preview-root *,
     .excalidraw *
   ) {
   font: var(--vitrine-type-body) !important;
@@ -87,6 +92,7 @@
     .project-canvas-document-editor *,
     .document-flow *,
     .flow-preview-dialog *,
+    .component-preview-root *,
     .excalidraw *
   ) {
   font: var(--vitrine-type-label) !important;
@@ -102,6 +108,7 @@
     .project-canvas-document-editor *,
     .document-flow *,
     .flow-preview-dialog *,
+    .component-preview-root *,
     .excalidraw *
   ) {
   font: var(--vitrine-type-action) !important;
@@ -123,6 +130,7 @@
     .project-canvas-document-editor *,
     .document-flow *,
     .flow-preview-dialog *,
+    .component-preview-root *,
     .excalidraw *
   ) {
   font: var(--vitrine-type-supporting) !important;
@@ -146,6 +154,7 @@
     .project-canvas-document-editor *,
     .document-flow *,
     .flow-preview-dialog *,
+    .component-preview-root *,
     .excalidraw *
   ) {
   font: var(--vitrine-type-detail) !important;
@@ -173,6 +182,7 @@
     .project-canvas-document-editor *,
     .document-flow *,
     .flow-preview-dialog *,
+    .component-preview-root *,
     .excalidraw *,
     .discovery-card__copy *
   ) {

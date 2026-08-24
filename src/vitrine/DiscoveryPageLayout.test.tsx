@@ -110,7 +110,9 @@ test('uses explicit renderedCount for initial loading, error, and empty state pr
   });
 
   assert.match(loading, /role="status"[^>]*aria-label="Loading sites"/);
-  assert.equal((loading.match(/data-app-card-skeleton="true"/g) ?? []).length, 3);
+  assert.match(loading, /data-discovery-initial-loading="sites"/);
+  assert.match(loading, /data-vitrine-spinner="comet"/);
+  assert.doesNotMatch(loading, /data-app-card-skeleton="true"/);
   assert.match(error, /role="alert"/);
   assert.match(error, /Could not load sites/);
   assert.match(error, /Network failed/);

@@ -27,7 +27,7 @@ test('groups ordered database colors into three-color palettes', async () => {
   const store = createColorPaletteStore(async (statement) => {
     sql = statement;
     return { rows: [
-      { palette_id: 'quiet-authority', palette_name: 'Quiet Authority', mood: 'Editorial', color_id: 'ink', color_name: 'Ink', hex: '#151311', foreground: '#EED3BA', role: 'lead', outlined: false },
+      { palette_id: 'quiet-authority', palette_name: 'Quiet Authority', mood: 'Editorial', color_id: 'ink', color_name: 'Ink', hex: '#151311', foreground: '#EED3BA', role: 'lead', outlined: false, source_type: 'app', source_name: 'Linear', source_icon_url: '/assets/icons/linear.webp' },
       { palette_id: 'quiet-authority', palette_name: 'Quiet Authority', mood: 'Editorial', color_id: 'velvet', color_name: 'Velvet', hex: '#4B262F', foreground: '#EED3BA', role: 'accent', outlined: false },
       { palette_id: 'quiet-authority', palette_name: 'Quiet Authority', mood: 'Editorial', color_id: 'almond', color_name: 'Almond', hex: '#EED3BA', foreground: '#151311', role: 'companion', outlined: true },
     ] } as never;
@@ -37,7 +37,13 @@ test('groups ordered database colors into three-color palettes', async () => {
   assert.equal(palettes.length, 1);
   assert.deepEqual(palettes[0]?.cards.map((card) => card.hex), ['#151311', '#4B262F', '#EED3BA']);
   assert.equal(palettes[0]?.cards[2]?.outlined, true);
+  assert.deepEqual(palettes[0]?.source, {
+    type: 'app',
+    name: 'Linear',
+    iconUrl: '/assets/icons/linear.webp',
+  });
   assert.match(sql, /WHERE p\.is_published = TRUE/);
+  assert.match(sql, /LEFT JOIN LATERAL/);
   assert.match(sql, /ORDER BY p\.position, c\.position/);
 });
 

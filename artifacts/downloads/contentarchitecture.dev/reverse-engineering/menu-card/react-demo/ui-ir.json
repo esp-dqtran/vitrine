@@ -1,0 +1,53 @@
+{
+  "name": "MobileMenuCard",
+  "source": {
+    "url": "https://www.contentarchitecture.dev/",
+    "selector": "header nav > div.rounded-8.p-6",
+    "evidence": [
+      "../evidence/source-closed-crop.jpg",
+      "../evidence/source-open-crop.jpg",
+      "../../../2026-08-18T09-36-04-737Z/network-assets/5c2d1f0fb0e0bed6fa3a757c.js"
+    ]
+  },
+  "componentBoundary": {
+    "reason": "The subtree owns a distinct visual frame, one open/closed interaction state, keyboard and outside-click behavior, and a data-driven link collection.",
+    "children": ["DitherFrame", "AnnouncementMarquee"],
+    "keptInternal": ["menu toggle icon", "navigation link row"]
+  },
+  "props": {
+    "links": "Array<{ key, label, href, highlighted? }>",
+    "announcement": "string",
+    "currentKey": "string | undefined",
+    "defaultOpen": "boolean",
+    "className": "string",
+    "onNavigate": "(link, event) => void"
+  },
+  "state": {
+    "open": {
+      "type": "boolean",
+      "initial": "defaultOpen",
+      "transitions": [
+        "toggle button: invert",
+        "Escape: false",
+        "outside pointer down: false",
+        "navigation click: false"
+      ]
+    }
+  },
+  "events": [
+    { "event": "click", "target": "toggle", "action": "toggle open" },
+    { "event": "keydown Escape", "target": "document", "action": "close" },
+    { "event": "pointerdown", "target": "outside component", "action": "close" },
+    { "event": "click", "target": "navigation link", "action": "close and call onNavigate" }
+  ],
+  "behavior": {
+    "menuTransition": { "durationSeconds": 0.32, "easing": "easeInOut" },
+    "itemTransition": {
+      "from": { "opacity": 0, "x": -8 },
+      "to": { "opacity": 1, "x": 0 },
+      "staggerSeconds": 0.05,
+      "delaySeconds": 0.08
+    },
+    "reducedMotion": true
+  }
+}

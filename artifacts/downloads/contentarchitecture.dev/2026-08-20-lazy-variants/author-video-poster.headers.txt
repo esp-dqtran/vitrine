@@ -1,0 +1,18 @@
+HTTP/2 200 
+access-control-allow-origin: *
+cache-control: max-age=604800
+content-type: image/webp
+accept-ranges: bytes
+age: 392822
+date: Wed, 19 Aug 2026 21:59:18 GMT
+via: 1.1 varnish
+x-served-by: cache-sin-wsss1830097-SIN
+x-cache: HIT
+x-cache-hits: 0
+x-cdn-version: 1785272864-232807-60b34cc9c1
+x-request-id: cafd61fd-e86f-47b3-bb45-83ddaa9398b8
+x-cdn: fastly
+x-robots-tag: noindex, nofollow
+access-control-expose-headers: X-Cache,X-Cache-Hits,X-Served-By,X-CDN,accept-ranges,content-length,x-request-id,x-cdn-version
+content-length: 1628
+

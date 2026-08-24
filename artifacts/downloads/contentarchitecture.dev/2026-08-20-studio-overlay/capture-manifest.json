@@ -1,0 +1,83 @@
+{
+  "capturedAt": "2026-08-20",
+  "sourceUrl": "https://www.contentarchitecture.dev/",
+  "trigger": "Inspect this page in Studio mode",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "assets": [
+    {
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/0haa4yyuazw_c.js",
+      "path": "network-assets/0haa4yyuazw_c.js",
+      "headers": "0haa4yyuazw_c.headers.txt",
+      "status": 200,
+      "bytes": 31869,
+      "sha256": "634141d04a1edc5a155d5e14a87b1deee863f29607878b7f93043ea112c700b1"
+    },
+    {
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/12ltxp8b9pgux.js",
+      "path": "network-assets/12ltxp8b9pgux.js",
+      "headers": "12ltxp8b9pgux.headers.txt",
+      "status": 200,
+      "bytes": 47115,
+      "sha256": "837b66f8145545c0f414c474e3a3706326dd216d27baefd319b16a1a76655f38"
+    },
+    {
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/14-b4sc4actn0.js",
+      "path": "network-assets/14-b4sc4actn0.js",
+      "headers": "14-b4sc4actn0.headers.txt",
+      "status": 200,
+      "bytes": 608,
+      "sha256": "1fe4110f8cbd26bce7a5536552121fdc3bff765c4b41a0fe48c8493ce44d9b6c"
+    },
+    {
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/1kco_5uswrxpn.js",
+      "path": "network-assets/1kco_5uswrxpn.js",
+      "headers": "1kco_5uswrxpn.headers.txt",
+      "status": 200,
+      "bytes": 62128,
+      "sha256": "0f8e56ae86724f48ee783e11d2980b1625859afb6657b71271155507dc72c5c9"
+    },
+    {
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/1oopub4xv3vtg.js",
+      "path": "network-assets/1oopub4xv3vtg.js",
+      "headers": "1oopub4xv3vtg.headers.txt",
+      "status": 200,
+      "bytes": 554093,
+      "sha256": "77d5996cbb1c4b734308cc56e33a775904e1c38ee1f26cacfb3f4a51be641883"
+    },
+    {
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/2_i-c-emqkkqu.js",
+      "path": "network-assets/2_i-c-emqkkqu.js",
+      "headers": "2_i-c-emqkkqu.headers.txt",
+      "status": 200,
+      "bytes": 16018,
+      "sha256": "c9df3665a7f6cc9d9eb23addc5d26ee5302e8c3904efdf9e0bdb8a039b3353cb"
+    },
+    {
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/3-k6jj64oijfz.js",
+      "path": "network-assets/3-k6jj64oijfz.js",
+      "headers": "3-k6jj64oijfz.headers.txt",
+      "status": 200,
+      "bytes": 38821,
+      "sha256": "2afde019e36a7fe52c416f8b2da50e63302aed3dee15e6fa3aa732ef7aa54441"
+    },
+    {
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/3fysw4nmzxnn-.js",
+      "path": "network-assets/3fysw4nmzxnn-.js",
+      "headers": "3fysw4nmzxnn-.headers.txt",
+      "status": 200,
+      "bytes": 15240,
+      "sha256": "88de93dcf58d9f2dc87f182b29c0aa6c6ba72e0d0e7623f037dbd6323d33c6ea"
+    },
+    {
+      "url": "https://www.contentarchitecture.dev/_next/static/immutable/chunks/458khwt14mztt.js",
+      "path": "network-assets/458khwt14mztt.js",
+      "headers": "458khwt14mztt.headers.txt",
+      "status": 200,
+      "bytes": 29450,
+      "sha256": "edff611c8f31a94aa03959ebb557d199b524d64fb0c62c88f24d5feafba1b00a"
+    }
+  ]
+}

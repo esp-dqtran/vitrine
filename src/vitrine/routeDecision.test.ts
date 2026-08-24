@@ -54,6 +54,7 @@ test('keeps catalogs and the bounded app preview public while sending private gu
   assert.deepEqual(decideRootRoute({ name: 'color' }, guest), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'sites-motion' }, guest), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'flows' }, guest), { kind: 'application' });
+  assert.deepEqual(decideRootRoute({ name: 'components' }, guest), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'app', appId: 'linear' }, guest), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'collections' }, guest), { kind: 'signin' });
   assert.deepEqual(
@@ -80,6 +81,7 @@ test('uses the same application renderer for members and admins on normal routes
     { name: 'color' },
     { name: 'sites-motion' },
     { name: 'flows' },
+    { name: 'components' },
     { name: 'app', appId: 'linear' },
     { name: 'site-version', siteSlug: 'v7' },
     { name: 'search' },
@@ -168,6 +170,7 @@ test('produces an explicit decision for every current route name', () => {
     { name: 'search' },
     { name: 'apps' },
     { name: 'flows' },
+    { name: 'components' },
     { name: 'app', appId: 'linear' },
     { name: 'sites' },
     { name: 'color' },
