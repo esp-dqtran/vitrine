@@ -2,6 +2,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
+test('uses the pre-built neutral theme without runtime style injection', async () => {
+  const source = await readFile(new URL('./main.tsx', import.meta.url), 'utf8');
+  assert.match(source, /@astryxdesign\/theme-neutral\/built/);
+  assert.match(source, /@astryxdesign\/theme-neutral\/theme\.css/);
+  assert.doesNotMatch(source, /defineTheme\(/);
+});
+
 test('keeps the Apps shell independent from job-list loading', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
 

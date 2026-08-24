@@ -100,10 +100,7 @@ test('uses the same application renderer for members and admins on normal routes
 
 test('renders an explicit unavailable state for disabled feature routes', () => {
   const disabled = { ...member, advancedSearchEnabled: false, researchProjectsEnabled: false };
-  assert.deepEqual(decideRootRoute({ name: 'search' }, disabled), {
-    kind: 'unavailable',
-    title: 'Search is unavailable',
-  });
+  assert.deepEqual(decideRootRoute({ name: 'search' }, disabled), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'projects' }, disabled), {
     kind: 'unavailable',
     title: 'Research projects are unavailable',

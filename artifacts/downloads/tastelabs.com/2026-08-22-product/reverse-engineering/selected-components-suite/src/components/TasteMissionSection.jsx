@@ -1,10 +1,18 @@
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
-export function TasteMissionSection({ animationUrl = '/assets/mission/mission-animation.lottie' }) {
+export function TasteMissionSection({
+  animationUrl = '/assets/mission/mission-animation.lottie',
+  animationData,
+}) {
   return (
     <section className="taste-mission" aria-label="Taste Labs mission">
       <div className="taste-mission__art">
-        <DotLottieReact src={animationUrl} autoplay loop aria-label="Three creative interfaces linked in a taste model" />
+        <DotLottieReact
+          {...(animationData ? { data: animationData } : { src: animationUrl })}
+          autoplay
+          loop
+          aria-label="Three creative interfaces linked in a taste model"
+        />
       </div>
       <div className="taste-mission__copy">
         <h2>Mission</h2>

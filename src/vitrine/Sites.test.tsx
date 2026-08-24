@@ -914,9 +914,13 @@ test('defers Site section assets and preserves complete image crops', () => {
 });
 
 test('contains image and video failures inside one media card', () => {
-  const source = readFileSync(new URL('./components/MediaGridCard.tsx', import.meta.url), 'utf8');
+  const source = [
+    readFileSync(new URL('./components/MediaGridCard.tsx', import.meta.url), 'utf8'),
+    readFileSync(new URL('./components/SiteSectionVideoCard.tsx', import.meta.url), 'utf8'),
+  ].join('\n');
   assert.match(source, /onError/);
   assert.match(source, /mediaFailed/);
+  assert.match(source, /mediaFailed && posterUrl && !posterFailed/);
   assert.match(source, /Preview unavailable/);
 });
 

@@ -28,6 +28,18 @@ function resolveTasteAsset(path: string): string {
   return `/tastelabs-component-assets${path}`;
 }
 
+const animationDataCache = new Map<string, Promise<ArrayBuffer | undefined>>();
+
+function loadAnimationData(url: string): Promise<ArrayBuffer | undefined> {
+  const cached = animationDataCache.get(url);
+  if (cached) return cached;
+  const pending = fetch(url)
+    .then((response) => response.ok ? response.arrayBuffer() : undefined)
+    .catch(() => undefined);
+  animationDataCache.set(url, pending);
+  return pending;
+}
+
 const challengeImageNames = [
   '6a50cb1142b609298bb2d75d_448c933e9deebbb2156d4ae1d58d188c_Frame%201171280140.avif',
   '6a50cb117f04b11c29aea486_ab1e2f502f4f5a9711ee55518b286ae9_Frame%201171280141.avif',
@@ -116,16 +128,29 @@ async function loadComponent(componentName: TasteLabsLiveComponentName): Promise
       });
     }
     case 'TasteMissionSection': {
-      const module = await import('../../../artifacts/downloads/tastelabs.com/2026-08-22-product/reverse-engineering/selected-components-suite/src/components/TasteMissionSection.jsx');
+      const animationUrl = resolveTasteAsset('/assets/mission/mission-animation.lottie');
+      const [module, animationData] = await Promise.all([
+        import('../../../artifacts/downloads/tastelabs.com/2026-08-22-product/reverse-engineering/selected-components-suite/src/components/TasteMissionSection.jsx'),
+        loadAnimationData(animationUrl),
+      ]);
       return createElement(module.TasteMissionSection, {
-        animationUrl: resolveTasteAsset('/assets/mission/mission-animation.lottie'),
+        animationUrl,
+        animationData,
       });
     }
     case 'TasteStackSection': {
-      const module = await import('../../../artifacts/downloads/tastelabs.com/2026-08-22-product/reverse-engineering/selected-components-suite/src/components/TasteStackSection.jsx');
+      const trainingAnimationUrl = resolveTasteAsset('/assets/stack/training-models.lottie');
+      const agentsAnimationUrl = resolveTasteAsset('/assets/stack/agents-apps.lottie');
+      const [module, trainingAnimationData, agentsAnimationData] = await Promise.all([
+        import('../../../artifacts/downloads/tastelabs.com/2026-08-22-product/reverse-engineering/selected-components-suite/src/components/TasteStackSection.jsx'),
+        loadAnimationData(trainingAnimationUrl),
+        loadAnimationData(agentsAnimationUrl),
+      ]);
       return createElement(module.TasteStackSection, {
-        trainingAnimationUrl: resolveTasteAsset('/assets/stack/training-models.lottie'),
-        agentsAnimationUrl: resolveTasteAsset('/assets/stack/agents-apps.lottie'),
+        trainingAnimationUrl,
+        trainingAnimationData,
+        agentsAnimationUrl,
+        agentsAnimationData,
       });
     }
     case 'TasteSwipeFooter': {

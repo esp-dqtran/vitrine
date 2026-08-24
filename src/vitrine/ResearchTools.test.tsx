@@ -58,6 +58,14 @@ test('keeps the collection modal interactive outside the screen card hover state
     css,
     /\.screen-grid-card__actions \.collection-picker__dialog\[open\] \{[\s\S]*?pointer-events: auto;/,
   );
+  assert.match(
+    css,
+    /\.flow-strip-card__actions \.collection-picker__dialog\[open\] \{[\s\S]*?pointer-events: auto;/,
+  );
+  assert.match(
+    css,
+    /\.collection-picker__destination-tabs \{[\s\S]*?grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/,
+  );
 });
 
 test('keeps the save confirmation visible when destination lists are long', () => {

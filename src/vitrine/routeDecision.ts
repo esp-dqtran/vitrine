@@ -97,9 +97,7 @@ export function decideRootRoute(
         : { kind: "public", page: "billing-success" };
     case "search":
       if (context.auth === "guest") return { kind: "signin" };
-      return context.advancedSearchEnabled
-        ? { kind: "application" }
-        : { kind: "unavailable", title: "Search is unavailable" };
+      return { kind: "application" };
     case "browse-collections":
       return context.auth === "guest"
         ? { kind: "signin" }

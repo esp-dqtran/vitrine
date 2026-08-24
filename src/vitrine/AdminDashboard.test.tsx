@@ -61,6 +61,12 @@ test('lazy-loads Users without importing normal application state', async () => 
   );
 });
 
+test('keeps Threads publishing actions disabled until the channel is configured', async () => {
+  const source = await readFile(new URL('./components/ThreadsMarketingPage.tsx', import.meta.url), 'utf8');
+  assert.match(source, /isDisabled=\{Boolean\(busy\) \|\| !dashboard\?\.configured\}/);
+  assert.match(source, /Publishing and metric refresh stay disabled until the connection is ready/);
+});
+
 test('keeps /admin navigable below the rail breakpoint', async () => {
   const css = await readFile(new URL('./projectsWorkspace.css', import.meta.url), 'utf8');
 

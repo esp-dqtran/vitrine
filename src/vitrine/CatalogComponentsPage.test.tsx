@@ -159,6 +159,17 @@ test('renders the component library categories and source links', () => {
   assert.doesNotMatch(html, /Needs review|data-component-status|component-library__status/i);
 });
 
+test('preloads Taste Labs animations before mounting their players', () => {
+  const preview = readFileSync(new URL('./components/TasteLabsLivePreview.tsx', import.meta.url), 'utf8');
+  const mission = readFileSync(
+    new URL('../../artifacts/downloads/tastelabs.com/2026-08-22-product/reverse-engineering/selected-components-suite/src/components/TasteMissionSection.jsx', import.meta.url),
+    'utf8',
+  );
+  assert.match(preview, /animationDataCache/);
+  assert.match(preview, /loadAnimationData\(animationUrl\)/);
+  assert.match(mission, /animationData \? \{ data: animationData \} : \{ src: animationUrl \}/);
+});
+
 test('keeps reconstructed component styles isolated from ComponentCard chrome', () => {
   const previewCss = readFileSync(new URL('./componentLibrary.css', import.meta.url), 'utf8');
   const productTypography = readFileSync(new URL('./productTypography.css', import.meta.url), 'utf8');

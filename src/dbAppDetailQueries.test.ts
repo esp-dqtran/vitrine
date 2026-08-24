@@ -14,6 +14,11 @@ test("app detail queries are explicit and evidence pagination stays in SQL", () 
   const evidenceEnd = source.indexOf("\nexport async function", evidenceStart + 1);
   const evidenceBody = source.slice(evidenceStart, evidenceEnd);
   assert.match(evidenceBody, /requestedLimit \+ 1/);
+  assert.match(evidenceBody, /paged_images AS MATERIALIZED/);
+  assert.ok(
+    evidenceBody.indexOf('LIMIT $7') < evidenceBody.indexOf('AS ui_elements'),
+    'the bounded page must be selected before per-screen metadata is aggregated',
+  );
   assert.match(evidenceBody, /i\.analysis->>'pageType' = ANY\(\$8\)/);
   assert.match(evidenceBody, /LIMIT \$\d/);
   assert.match(evidenceBody, /WHERE \(\$6::integer IS NULL OR id < \$6\)/);

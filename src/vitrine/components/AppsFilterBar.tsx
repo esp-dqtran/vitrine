@@ -565,7 +565,7 @@ export function DiscoveryFilterMenu({
     [group.selected, options, query],
   );
   const searchResultKey = useMemo(
-    () => visibleOptions.map(({ section, value }) => `${section}\0${value}`).join('\1'),
+    () => visibleOptions.map(({ section, value }) => `${section}\0${value}`).join('\x01'),
     [visibleOptions],
   );
   const groupedOptions = useMemo(() => {

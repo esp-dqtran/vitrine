@@ -53,6 +53,7 @@ export function SiteSectionVideoCard({
   const [focused, setFocused] = useState(false);
   const [mediaActive, setMediaActive] = useState(!deferMedia);
   const [mediaFailed, setMediaFailed] = useState(false);
+  const [posterFailed, setPosterFailed] = useState(false);
   const [naturalAspectRatio, setNaturalAspectRatio] = useState<number | null>(null);
   const actionVisible = hovered || focused;
 
@@ -60,6 +61,13 @@ export function SiteSectionVideoCard({
     const { videoWidth, videoHeight } = event.currentTarget;
     if (videoWidth > 0 && videoHeight > 0) {
       setNaturalAspectRatio(videoWidth / videoHeight);
+    }
+  };
+
+  const capturePosterAspectRatio = (event: SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth, naturalHeight } = event.currentTarget;
+    if (naturalWidth > 0 && naturalHeight > 0) {
+      setNaturalAspectRatio(naturalWidth / naturalHeight);
     }
   };
 
@@ -115,6 +123,21 @@ export function SiteSectionVideoCard({
       >
         {!mediaActive ? (
           <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'var(--color-background-muted)' }} />
+        ) : mediaFailed && posterUrl && !posterFailed ? (
+          <img
+            src={posterUrl}
+            alt={`${label} preview`}
+            onLoad={capturePosterAspectRatio}
+            onError={() => setPosterFailed(true)}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              background: 'var(--color-background-muted)',
+            }}
+          />
         ) : mediaFailed ? (
           <div
             role="img"

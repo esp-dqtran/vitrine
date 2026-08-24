@@ -517,6 +517,7 @@ test('keeps selected Apps filters checked only in their grouped taxonomy with th
     source,
     /useDiscoveryFilterSearchMotion\(open, query, searchResultKey\)/,
   );
+  assert.ok(source.includes(".join('\\x01')"));
   assert.match(source, /previousHeightRef\.current = node\.getBoundingClientRect\(\)\.height/);
   assert.match(source, /height:\s*`\$\{previousHeight\}px`/);
   assert.match(source, /menu\.querySelector<HTMLElement>\('\.apps-filterbar__options'\)/);

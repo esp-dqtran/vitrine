@@ -150,6 +150,6 @@ test("retains only a validated referral and a stable anonymous visitor", async (
 
 test("shows the no-card referral promise", () => {
   const html = renderToStaticMarkup(<ReferralInviteNotice />);
-  assert.match(html, /Your friend gave you 30 days of Astryx Pro/);
+  assert.match(html, /Your friend gave you 30 days of Vitrines Pro/);
   assert.match(html, /No card required/);
 });

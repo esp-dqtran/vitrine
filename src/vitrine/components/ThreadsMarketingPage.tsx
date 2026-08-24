@@ -55,8 +55,8 @@ export function ThreadsMarketingPage() {
           <Text color="secondary">A daily palette, rendered, captioned, published, and measured in one place.</Text>
         </div>
         <div className="threads-marketing__header-actions">
-          <Button label={busy === 'metrics' ? 'Refreshing…' : 'Refresh traction'} variant="secondary" isDisabled={Boolean(busy)} clickAction={() => void refresh()} />
-          <Button label={busy === 'publish' ? 'Publishing…' : 'Publish palette now'} isDisabled={Boolean(busy)} clickAction={() => void publish()} />
+          <Button label={busy === 'metrics' ? 'Refreshing…' : 'Refresh traction'} variant="secondary" isDisabled={Boolean(busy) || !dashboard?.configured} clickAction={() => void refresh()} />
+          <Button label={busy === 'publish' ? 'Publishing…' : 'Publish palette now'} isDisabled={Boolean(busy) || !dashboard?.configured} clickAction={() => void publish()} />
         </div>
       </header>
 
@@ -65,7 +65,7 @@ export function ThreadsMarketingPage() {
         <>
           <section className={`threads-marketing__connection${dashboard.configured ? ' is-ready' : ''}`}>
             <strong>{dashboard.configured ? 'Threads account connected' : 'Threads account needs connecting'}</strong>
-            <span>{dashboard.configured ? `Daily publishing at ${dashboard.dailyTime} (${dashboard.timeZone}).` : 'Set the Threads API credentials and public image URL in the API environment before publishing.'}</span>
+            <span>{dashboard.configured ? `Daily publishing at ${dashboard.dailyTime} (${dashboard.timeZone}).` : 'Set the Threads API credentials and public image URL in the API environment. Publishing and metric refresh stay disabled until the connection is ready.'}</span>
           </section>
 
           <section className="threads-marketing__metrics" aria-label="Threads channel traction">

@@ -1009,7 +1009,7 @@ export function App() {
           canvasId={route.canvasId}
           canvasInsertToken={route.insert}
           userId={user?.id ?? 0}
-          userName={user?.email ?? "Astryx member"}
+          userName={user?.email ?? "Vitrines member"}
         />
       ) : (
         <ApplicationStatusPage title="Research projects are unavailable" />
@@ -1020,7 +1020,7 @@ export function App() {
         <ProjectDocumentPage
           projectId={route.projectId}
           documentId={route.documentId}
-          userName={user?.email ?? "Astryx member"}
+          userName={user?.email ?? "Vitrines member"}
         />
       ) : (
         <ApplicationStatusPage title="Research projects are unavailable" />
@@ -1031,7 +1031,7 @@ export function App() {
         <ProjectPlayground
           projectId={route.projectId}
           userId={user?.id ?? 0}
-          userName={user?.email ?? "Astryx member"}
+          userName={user?.email ?? "Vitrines member"}
         />
       ) : (
         <ApplicationStatusPage title="Research projects are unavailable" />
@@ -1041,21 +1041,19 @@ export function App() {
       page = researchProjectsEnabled ? (
         <ProjectDocumentPage
           projectId={route.projectId}
-          userName={user?.email ?? "Astryx member"}
+          userName={user?.email ?? "Vitrines member"}
         />
       ) : (
         <ApplicationStatusPage title="Research projects are unavailable" />
       );
       break;
     case "search":
-      page = advancedSearchEnabled ? (
+      page = (
         <AdvancedSearchPage
           onPreview={setAdvancedPreview}
           comparison={comparison}
           onComparisonChange={setComparison}
         />
-      ) : (
-        <ApplicationStatusPage title="Search is unavailable" />
       );
       break;
     case "app":

@@ -22,6 +22,9 @@ test('renders the three pillars as an animated public pipeline', () => {
   assert.match(html, />137K\+</);
   assert.match(html, />647</);
   assert.match(html, /Browse the library/);
+  assert.match(html, /Vitrines runs on three engines/);
+  const visibleText = html.replace(/<[^>]*>/g, ' ');
+  assert.doesNotMatch(visibleText, /Astryx/i);
 });
 
 test('keeps pillar content typed, static, and independent from APIs', () => {

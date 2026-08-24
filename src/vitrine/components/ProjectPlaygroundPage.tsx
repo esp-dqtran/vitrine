@@ -2374,7 +2374,7 @@ function createCanvasDataCardElements(
   const height = isApp ? 250 : 320;
   const label = isApp
     ? [
-        "ASTRYX APP",
+        "VITRINES APP",
         "",
         reference.appName,
         `${reference.category || reference.platform} · ${reference.totalScreens} screens`,
@@ -2382,7 +2382,7 @@ function createCanvasDataCardElements(
         reference.description || "Open the source app to continue research.",
       ].join("\n")
     : [
-        "ASTRYX FLOW",
+        "VITRINES FLOW",
         "",
         reference.flowTitle,
         `${reference.appName} · ${reference.category}`,

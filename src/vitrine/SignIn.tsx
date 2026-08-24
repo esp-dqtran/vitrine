@@ -45,7 +45,7 @@ export async function resolveReferralInvite(input: {
 export function ReferralInviteNotice() {
   return (
     <div style={{ marginBottom: 20, padding: '12px 14px', borderRadius: 10, background: 'var(--color-background-accent-subtle)', color: 'var(--color-text-primary)', fontSize: 13 }}>
-      Your friend gave you 30 days of Astryx Pro. No card required.
+      Your friend gave you 30 days of Vitrines Pro. No card required.
     </div>
   );
 }

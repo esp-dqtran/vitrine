@@ -784,6 +784,34 @@ export async function appEvidencePage(input: {
            OR ($4::integer IS NULL AND av.status = 'published'))
          AND ($5::boolean = false OR av.status = 'published')
        ORDER BY av.version_number DESC LIMIT 1
+     ), eligible_ids AS (
+       SELECT i.id
+       FROM apps a JOIN platforms p ON p.app_id = a.id JOIN images i ON i.platform_id = p.id
+       WHERE a.name = $1 AND p.name = $3 AND i.kind = $2
+         AND $4::integer IS NULL AND $5::boolean = false
+         AND ($8::text[] IS NULL OR i.analysis->>'pageType' = ANY($8))
+         AND NOT (i.kind = 'ui_element' AND i.image_url LIKE 'mobbin-bulk:ui_element:%'
+           AND EXISTS (
+             SELECT 1 FROM ui_element_extractions e
+             WHERE e.source_image_id = i.id AND e.status = 'complete'
+           ))
+       UNION ALL
+       SELECT i.id
+       FROM selected_version sv JOIN version_images vi ON vi.version_id = sv.id
+       JOIN images i ON i.id = vi.image_id
+       WHERE i.kind = $2 AND ($4::integer IS NOT NULL OR $5::boolean = true)
+         AND ($8::text[] IS NULL OR i.analysis->>'pageType' = ANY($8))
+         AND NOT (i.kind = 'ui_element' AND i.image_url LIKE 'mobbin-bulk:ui_element:%'
+           AND EXISTS (
+             SELECT 1 FROM ui_element_extractions e
+             WHERE e.source_image_id = i.id AND e.status = 'complete'
+           ))
+     ), paged_images AS MATERIALIZED (
+       SELECT id
+       FROM eligible_ids
+       WHERE ($6::integer IS NULL OR id < $6)
+       ORDER BY id DESC
+       LIMIT $7
      ), eligible AS (
        SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description,
          CASE WHEN reference.component_type IS NOT NULL THEN jsonb_build_object(
@@ -838,7 +866,8 @@ export async function appEvidencePage(input: {
          ), '[]'::jsonb) AS ui_elements,
          reference.screen_image_id AS source_screen_id,
          reference.screen_image_url AS source_screen_image_url
-       FROM apps a JOIN platforms p ON p.app_id = a.id JOIN images i ON i.platform_id = p.id
+       FROM paged_images page JOIN images i ON i.id = page.id
+       JOIN platforms p ON p.id = i.platform_id JOIN apps a ON a.id = p.app_id
        LEFT JOIN LATERAL (
          SELECT occurrence.screen_image_id, screen.image_url AS screen_image_url,
            type.name AS component_type, type.group_name AS component_group,
@@ -918,9 +947,9 @@ export async function appEvidencePage(input: {
          ), '[]'::jsonb) AS ui_elements,
          reference.screen_image_id AS source_screen_id,
          reference.screen_image_url AS source_screen_image_url
-       FROM selected_version sv JOIN version_images vi ON vi.version_id = sv.id
-       JOIN images i ON i.id = vi.image_id JOIN platforms p ON p.id = i.platform_id
-       JOIN apps a ON a.id = p.app_id
+       FROM paged_images page JOIN images i ON i.id = page.id
+       JOIN selected_version sv ON true JOIN version_images vi ON vi.version_id = sv.id AND vi.image_id = i.id
+       JOIN platforms p ON p.id = i.platform_id JOIN apps a ON a.id = p.app_id
        LEFT JOIN LATERAL (
          SELECT occurrence.screen_image_id, screen.image_url AS screen_image_url,
            type.name AS component_type, type.group_name AS component_group,

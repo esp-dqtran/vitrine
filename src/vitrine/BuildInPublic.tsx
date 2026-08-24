@@ -196,7 +196,7 @@ export function BuildInPublicPage({ onHome, onBrowse, onPricing }: {
             </div>
             <Heading level={1} type="display-1">Building the design intelligence workspace in the open</Heading>
             <div style={{ maxWidth: 660, margin: '20px auto 0' }}>
-              <Text type="large" color="secondary">Astryx runs on three engines — crawling real products, analyzing the data, and shipping features. All three move at once, in public.</Text>
+              <Text type="large" color="secondary">Vitrines runs on three engines — crawling real products, analyzing the data, and shipping features. All three move at once, in public.</Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginTop: 28 }}>
               <Button label="Browse the library" variant="primary" size="lg" onClick={onBrowse} />
@@ -208,7 +208,7 @@ export function BuildInPublicPage({ onHome, onBrowse, onPricing }: {
 
         <section aria-labelledby="pipeline-heading" style={{ ...wrap, paddingBottom: 96 }}>
           <div style={{ maxWidth: 620, margin: '0 auto 40px', textAlign: 'center' }}>
-            <Text type="supporting" color="secondary">HOW ASTRYX RUNS</Text>
+            <Text type="supporting" color="secondary">HOW VITRINES RUNS</Text>
             <div style={{ marginTop: 8 }}><Heading id="pipeline-heading" level={2}>Three engines, one pipeline</Heading></div>
             <div style={{ marginTop: 10 }}><Text type="body" color="secondary">Crawling feeds analysis, analysis feeds the product — and all three run in parallel.</Text></div>
           </div>
@@ -250,7 +250,7 @@ export function BuildInPublicPage({ onHome, onBrowse, onPricing }: {
       <footer style={{ ...wrap, paddingTop: 36, paddingBottom: 44 }}>
         <Divider />
         <div style={{ paddingTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
-          <Text type="supporting" color="secondary">Vitrines · building Astryx in public.</Text>
+          <Text type="supporting" color="secondary">Vitrines · building in public.</Text>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             <Button label="Home" variant="ghost" size="sm" onClick={onHome} style={navLink} />
             <Button label="Pricing" variant="ghost" size="sm" onClick={onPricing} style={navLink} />
