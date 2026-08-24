@@ -84,6 +84,17 @@ test("the API image declares every root runtime dependency it imports", async ()
   assert.equal(packageJson.dependencies?.["ffmpeg-static"], "5.3.0");
 });
 
+test("the frontend declares runtime dependencies imported by bundled artifacts", async () => {
+  const packageSource = await readDeploymentFile("package.json");
+  const packageJson = JSON.parse(packageSource) as { dependencies?: Record<string, string> };
+  const pullWindow = await readDeploymentFile(
+    "artifacts/downloads/contentarchitecture.dev/reverse-engineering/full-page/react-demo/src/components/PullWindow.jsx",
+  );
+
+  assert.match(pullWindow, /from ["']motion\/react["']/);
+  assert.match(packageJson.dependencies?.motion ?? "", /^\^13\./);
+});
+
 test("GitHub Actions gates and serializes production releases", async () => {
   const workflow = await readDeploymentFile(".github/workflows/deploy-production.yml");
   assert.notEqual(workflow, "", "production deployment workflow must exist");
