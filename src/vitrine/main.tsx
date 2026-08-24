@@ -4,9 +4,8 @@ import {
   Button,
   EmptyState,
   Theme,
+  defineTheme,
 } from '@astryxdesign/core';
-import { neutralTheme } from '@astryxdesign/theme-neutral/built';
-import '@astryxdesign/theme-neutral/theme.css';
 import { lazy, Suspense, useEffect } from 'react';
 import { AuthProvider, useAuth } from './AuthProvider';
 import { collectionsEnabled } from './featureFlags.ts';
@@ -53,9 +52,9 @@ import './colorPostStudio.css';
 import './Pricing.css';
 import './legalPages.css';
 
-// The pre-built neutral theme avoids runtime style injection while <Theme>
-// continues to drive data-theme (and therefore color-scheme) from `mode`.
-const appTheme = neutralTheme;
+// No token overrides — @astryxdesign/core/astryx.css already ships Vitrines' palette at :root.
+// This theme object exists only so <Theme> can drive data-theme (and thus color-scheme) from `mode`.
+const appTheme = defineTheme({ name: 'neutral' });
 
 const App = lazy(() => import('./App').then((module) => ({ default: module.App })));
 const AdminDashboard = lazy(() => import('./AdminDashboard').then((module) => ({ default: module.AdminDashboard })));
