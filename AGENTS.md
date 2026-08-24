@@ -50,15 +50,6 @@ npm run deploy:production:dry-run
 
 After a successful release, verify the relevant public endpoints: `https://api.vitrines.ai/health`, `https://api.vitrines.ai/ready`, and `https://vitrines.ai`. If a deployment fails, retain the emitted failure/log evidence and fix forward; do not assume an older API image can safely roll back after database migrations have been applied.
 
-### GitHub Actions pipeline
+### Release automation
 
-`.github/workflows/deploy-production.yml` is the production pipeline. Every push to `main` first runs `npm ci`, `npm test`, and `npm run build`; only then does it deploy. The release job is serialized under the `vitrines-production` concurrency group and uses the GitHub `production` Environment, so configure that Environment to allow only `main` and require approval if your GitHub plan supports it.
-
-Store these values as **production Environment secrets**, never in the repository or workflow file:
-
-- `VITRINES_SSH_PRIVATE_KEY`: deploy key permitted to SSH to `root@157.245.48.35`.
-- `VITRINES_SSH_KNOWN_HOSTS`: pinned `known_hosts` line(s) for the production droplet. Do not replace this with `ssh-keyscan` in CI.
-- `VITRINES_DATABASE_URL`: PostgreSQL URL used only by the API migration-parity preflight.
-- `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`: a least-privilege token and account for deploying Worker `astryx-web`.
-
-The workflow can be run manually with `all`, `api`, or `web`, and can run the corresponding dry-run path. A successful push to `main` is the authorization for this configured automation; agents must still not commit or push without the user's explicit request.
+Vitrines does not use a GitHub Actions production deployment workflow. Production releases are explicit manual actions through the guarded package commands above. A push to `main` does not authorize or trigger a deployment.

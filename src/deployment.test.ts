@@ -105,25 +105,9 @@ test("the frontend declares runtime dependencies imported by bundled artifacts",
   assert.equal(packageJson.dependencies?.lenis, "1.3.26");
 });
 
-test("GitHub Actions gates and serializes production releases", async () => {
+test("production releases are not triggered by GitHub Actions", async () => {
   const workflow = await readDeploymentFile(".github/workflows/deploy-production.yml");
-  assert.notEqual(workflow, "", "production deployment workflow must exist");
-  assert.match(workflow, /branches: \[main\]/);
-  assert.match(workflow, /workflow_dispatch:/);
-  assert.match(workflow, /npm ci/);
-  assert.match(workflow, /npm test/);
-  assert.match(workflow, /npm run build/);
-  assert.match(workflow, /needs: verify/);
-  assert.match(workflow, /group: vitrines-production/);
-  assert.match(workflow, /name: production/);
-  assert.match(workflow, /VITRINES_SSH_PRIVATE_KEY/);
-  assert.match(workflow, /VITRINES_SSH_KNOWN_HOSTS/);
-  assert.match(workflow, /VITRINES_DATABASE_URL/);
-  assert.match(workflow, /CLOUDFLARE_API_TOKEN/);
-  assert.match(workflow, /CLOUDFLARE_ACCOUNT_ID/);
-  assert.match(workflow, /deploy:production\$suffix/);
-  assert.match(workflow, /deploy:api\$suffix/);
-  assert.match(workflow, /deploy:web\$suffix/);
+  assert.equal(workflow, "");
 });
 
 test("Cloudflare proxies API requests without changing the frontend API contract", async () => {
