@@ -90,9 +90,14 @@ test("the frontend declares runtime dependencies imported by bundled artifacts",
   const pullWindow = await readDeploymentFile(
     "artifacts/downloads/contentarchitecture.dev/reverse-engineering/full-page/react-demo/src/components/PullWindow.jsx",
   );
+  const repoExplorer = await readDeploymentFile(
+    "artifacts/downloads/contentarchitecture.dev/reverse-engineering/full-page/react-demo/src/components/RepoExplorer.jsx",
+  );
 
   assert.match(pullWindow, /from ["']motion\/react["']/);
   assert.match(packageJson.dependencies?.motion ?? "", /^\^13\./);
+  assert.match(repoExplorer, /from ["']@phosphor-icons\/react["']/);
+  assert.equal(packageJson.dependencies?.["@phosphor-icons/react"], "2.1.10");
 });
 
 test("GitHub Actions gates and serializes production releases", async () => {

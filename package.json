@@ -117,6 +117,7 @@
     "@mantine/hooks": "^8.3.18",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@paddle/paddle-js": "^1.6.4",
+    "@phosphor-icons/react": "2.1.10",
     "@storybook/icons": "^2.1.0",
     "@stylexjs/stylex": "^0.18.3",
     "amqplib": "^2.0.1",
