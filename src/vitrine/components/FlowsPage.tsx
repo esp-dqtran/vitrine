@@ -25,6 +25,7 @@ import {
   type DiscoveryFilterGroup,
 } from './AppsFilterBar.tsx';
 import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
+import { DiscoverySignupReveal } from './DiscoverySignupReveal.tsx';
 import { FlowGallery } from './FlowGallery.tsx';
 import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
 import type { FlowTreeGroup } from '../flowTree.ts';
@@ -204,6 +205,7 @@ export function FlowsPageView({
       guestLimitReached={isGuest && controller.items.length >= PUBLIC_FLOW_CATALOG_LIMIT}
       onGuestLimitReached={onGuestLimitReached}
       sentinelRef={controller.sentinelRef}
+      footerReveal={<DiscoverySignupReveal />}
     >
       <FlowGallery
         groups={catalogGroups}

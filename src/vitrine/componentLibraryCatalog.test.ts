@@ -8,7 +8,7 @@ import {
 } from './componentLibraryCatalog.ts';
 
 test('organizes reconstructed sites into one practical component-family layer', () => {
-  assert.equal(COMPONENT_LIBRARY.length, 91);
+  assert.equal(COMPONENT_LIBRARY.length, 92);
   assert.deepEqual(
     Object.fromEntries(COMPONENT_CATEGORIES.map(({ id }) => [
       id,
@@ -28,17 +28,18 @@ test('organizes reconstructed sites into one practical component-family layer', 
       page: 2,
       media: 4,
       display: 15,
-      effect: 7,
+      effect: 8,
     },
   );
-  assert.equal(new Set(COMPONENT_LIBRARY.map(({ id }) => id)).size, 91);
+  assert.equal(new Set(COMPONENT_LIBRARY.map(({ id }) => id)).size, 92);
 });
 
 test('keeps the public showcase focused on significant standalone components', () => {
-  assert.equal(SIGNIFICANT_COMPONENT_LIBRARY.length, 31);
-  assert.equal(new Set(SIGNIFICANT_COMPONENT_LIBRARY.map(({ id }) => id)).size, 31);
+  assert.equal(SIGNIFICANT_COMPONENT_LIBRARY.length, 32);
+  assert.equal(new Set(SIGNIFICANT_COMPONENT_LIBRARY.map(({ id }) => id)).size, 32);
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.every((component) => COMPONENT_LIBRARY.includes(component)));
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ name }) => name === 'HeroSection'));
+  assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ name }) => name === 'MeliusAnimatedText'));
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ name }) => name === 'SpiralScene'));
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ name }) => name === 'CommonProblemsPanel'));
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ name }) => name === 'AsciiShowcaseCard'));

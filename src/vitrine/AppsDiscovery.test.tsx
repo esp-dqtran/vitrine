@@ -125,13 +125,16 @@ test('renders the editorial Apps hero alongside the compact filter bar', () => {
   assert.match(html, /the world’s best APPS\./);
   assert.match(html, /Explore the screens and patterns/);
   assert.match(html, />Explore apps</);
-  assert.match(html, /aria-label="Catalog scale: 32 products indexed"/);
+  assert.match(html, /aria-label="Featured app icons"/);
+  assert.doesNotMatch(html, /products indexed/);
   assert.match(html, />Categories</);
   assert.match(html, />Screens</);
   assert.doesNotMatch(html, /data-taxonomy-count=/);
   assert.doesNotMatch(html, />UI Elements</);
   assert.doesNotMatch(html, />Navigation Menu</);
   assert.doesNotMatch(html, />Flows</);
+  assert.match(html, /data-discovery-signup-reveal="true"/);
+  assert.match(html, /data-melius-source-component="FooterEasterEgg"/);
 });
 
 test('limits the Storybook chrome review without attaching infinite pagination', () => {
@@ -151,13 +154,14 @@ test('limits the Storybook chrome review without attaching infinite pagination',
   assert.doesNotMatch(html, /data-discovery-sentinel="apps"/);
 });
 
-test('keeps the hard-coded App proof total for public visitors without a duplicate result meta row', () => {
+test('keeps the featured App icon proof for public visitors without a duplicate result meta row', () => {
   const html = renderAppsPage(
     pageController({ totalCount: 40 }),
     { isGuest: true },
   );
 
-  assert.match(html, /Catalog scale: 32 products indexed/);
+  assert.match(html, /Featured app icons/);
+  assert.doesNotMatch(html, /products indexed/);
   assert.doesNotMatch(html, /reference-discovery__result-meta/);
   assert.doesNotMatch(html, /40 apps/);
 });
@@ -517,7 +521,8 @@ test('renders the Mobbin-style Apps filter bar, grid, and media-first card', () 
   assert.match(platformMarkup, /role="radio"[^>]*aria-checked="true"[^>]*aria-label="Web"/);
   assert.doesNotMatch(html, /aria-label="Sort:/);
   assert.doesNotMatch(html, /Popular/);
-  assert.match(html, /Catalog scale: 32 products indexed/);
+  assert.match(html, /Featured app icons/);
+  assert.doesNotMatch(html, /products indexed/);
   assert.doesNotMatch(html, /reference-discovery__result-meta/);
   assert.doesNotMatch(html, /Most popular/);
   assert.match(html, /data-apps-discovery-grid="true"/);
@@ -553,13 +558,13 @@ test('keeps App cards stable and shows compact progress while loading another pa
   assert.doesNotMatch(html, /data-app-card-skeleton="true"/);
 });
 
-test('keeps the fixed hero proof independent from server totals and preserves screen content mode semantics', () => {
+test('keeps the fixed hero icon proof independent from server totals and preserves screen content mode semantics', () => {
   const appsMode = renderAppsPage(pageController({
     totalCount: 12,
     items: [makeApp()],
   }));
-  assert.match(appsMode, /Catalog scale: 32 products indexed/);
-  assert.doesNotMatch(appsMode, /Catalog scale: 12 products indexed/);
+  assert.match(appsMode, /Featured app icons/);
+  assert.doesNotMatch(appsMode, /products indexed/);
   assert.doesNotMatch(appsMode, /reference-discovery__result-meta/);
   assert.match(appsMode, /data-apps-results-mode="apps"/);
   assert.match(appsMode, /data-apps-results-transition-direction="neutral"/);
@@ -886,11 +891,10 @@ test('replaces the animated taxonomy preview with the editorial hero', async () 
   assert.match(pageSource, /stiffness: 240,[\s\S]*damping: 28,[\s\S]*mass: 0\.82/);
   assert.match(pageSource, /className="apps-discovery-hero__icon-track"/);
   assert.match(pageSource, /const AppsDiscoveryHero = memo\(function AppsDiscoveryHero/);
-  assert.match(pageSource, /const APPS_HERO_INDEXED_TOTAL = 32;/);
   assert.match(pageSource, /const APPS_HERO_PROOF_APPS = \[/);
   assert.match(pageSource, /name: 'Aboard',[\s\S]*name: 'Twingate'/);
-  assert.match(pageSource, /Catalog scale: \$\{APPS_HERO_INDEXED_TOTAL\} products indexed/);
-  assert.match(pageSource, /<span>\{APPS_HERO_INDEXED_TOTAL\} products indexed<\/span>/);
+  assert.match(pageSource, /aria-label="Featured app icons"/);
+  assert.doesNotMatch(pageSource, /products indexed/);
   assert.match(pageSource, /APPS_HERO_PROOF_APPS\.map\(\(app\) =>/);
   assert.match(pageSource, /<AppsDiscoveryHero\s+onExplore=\{exploreCatalog\}/);
   assert.doesNotMatch(pageSource, /currentProofApps|heroProof|stableHeroProofApps|proofApps/);

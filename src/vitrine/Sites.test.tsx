@@ -238,6 +238,8 @@ test('renders the selected live hero above the Sites filters and a semantic full
   assert.match(html, /class="discovery-card__media site-discovery-card__media"/);
   assert.match(html, /class="discovery-card__identity site-discovery-card__identity"/);
   assert.match(html, /data-site-discovery-card="true"/);
+  assert.match(html, /data-discovery-signup-reveal="true"/);
+  assert.match(html, /data-melius-source-component="FooterEasterEgg"/);
   assert.doesNotMatch(html, /Latest · 46 sections/);
   // A first capture reads "New"; a re-captured Site reads "Updated".
   assert.match(html, /<span class="discovery-card__badge site-discovery-card__status">New<\/span>/);

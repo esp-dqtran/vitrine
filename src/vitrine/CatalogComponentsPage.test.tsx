@@ -9,7 +9,7 @@ test('renders the component library categories and source links', () => {
 
   assert.match(html, /data-component-library="true"/);
   assert.match(html, /data-reference-component="component-card"/);
-  assert.match(html, />31 components</);
+  assert.match(html, />32 components</);
   assert.match(html, /data-component-source-group="site:Melius"/);
   assert.match(html, /data-component-source-group="site:Content Architecture"/);
   assert.match(html, /data-component-source-group="site:Craft\/Wild"/);
@@ -22,7 +22,7 @@ test('renders the component library categories and source links', () => {
   assert.match(html, />Taste Labs<\/strong>/);
   assert.match(html, />Flim<\/strong>/);
   assert.match(html, />Details.so<\/strong>/);
-  assert.match(html, />6 components<\/span>/);
+  assert.match(html, />7 components<\/span>/);
   assert.match(html, />9 components<\/span>/);
   assert.match(html, />7 components<\/span>/);
   assert.match(html, />5 components<\/span>/);
@@ -42,7 +42,7 @@ test('renders the component library categories and source links', () => {
   assert.match(html, />Section <span>16</);
   assert.match(html, />Media <span>1</);
   assert.match(html, />Display <span>2</);
-  assert.match(html, />Effects &amp; Motion <span>3</);
+  assert.match(html, />Effects &amp; Motion <span>4</);
   assert.doesNotMatch(html, />Input <span>/);
   assert.doesNotMatch(html, />Checkbox &amp; Toggle <span>/);
   assert.doesNotMatch(html, /Primitives|Composites/);
@@ -56,13 +56,14 @@ test('renders the component library categories and source links', () => {
   assert.match(html, /component-preview--melius-button/);
   assert.doesNotMatch(html, /component-preview--model-controls/);
   assert.match(html, /component-preview--split-button/);
-  assert.equal(html.match(/data-component-preview-name=/g)?.length, 31);
+  assert.equal(html.match(/data-component-preview-name=/g)?.length, 32);
   assert.doesNotMatch(html, /data-component-preview-name="AccordionContent"/);
   assert.match(html, /data-component-preview-name="MenuCard"/);
   assert.match(html, /data-live-component="SiteHeader"/);
   assert.match(html, /data-live-component="HeroSection"/);
   assert.match(html, /data-live-component="FooterEasterEgg"/);
-  assert.doesNotMatch(html, /data-live-component="MeliusFooter"/);
+  assert.match(html, /data-component-preview-name="MeliusAnimatedText"/);
+  assert.match(html, /data-melius-animated-text="MELIUS"/);
   assert.match(html, /data-live-component="ModelWebGLCarousel"/);
   assert.match(html, /data-live-component="PersonaStack"/);
   assert.match(html, /data-component-preview-name="SpiralScene"/);

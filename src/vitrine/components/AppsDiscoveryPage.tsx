@@ -46,6 +46,7 @@ import { AppIcon } from './AppIcon.tsx';
 import { AppsDiscoveryScreenCard } from './AppsDiscoveryScreenCard.tsx';
 import { DiscoveryFilterBar } from './AppsFilterBar.tsx';
 import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
+import { DiscoverySignupReveal } from './DiscoverySignupReveal.tsx';
 
 export interface AppsDiscoveryPageProps {
   isAdmin: boolean;
@@ -133,7 +134,6 @@ interface AppsDiscoveryHeroProps {
   onExplore(): void;
 }
 
-const APPS_HERO_INDEXED_TOTAL = 32;
 const APPS_HERO_PROOF_APPS = [
   { name: 'Aboard', iconUrl: '/assets/icons/1713649/1c9e9c7a6ba04331339db89c48c5751fdf447352328cc812c90ec5983597bbf3.webp' },
   { name: 'Artlist', iconUrl: '/assets/icons/1712996/e48bdcb7cefc31405ca61938616d1571154a509ae2f55a7dc66b5188ca72f96a.webp' },
@@ -259,7 +259,7 @@ const AppsDiscoveryHero = memo(function AppsDiscoveryHero({
           />
           <div
             className="apps-discovery-hero__proof"
-            aria-label={`Catalog scale: ${APPS_HERO_INDEXED_TOTAL} products indexed`}
+            aria-label="Featured app icons"
           >
             <span className="apps-discovery-hero__icons" aria-hidden="true">
               <span
@@ -280,7 +280,6 @@ const AppsDiscoveryHero = memo(function AppsDiscoveryHero({
                 ))}
               </span>
             </span>
-            <span>{APPS_HERO_INDEXED_TOTAL} products indexed</span>
           </div>
         </div>
       </div>
@@ -644,6 +643,7 @@ export function AppsDiscoveryPageView({
       onGuestLimitReached={onGuestLimitReached}
       sentinelRef={reviewItemLimit === undefined ? controller.sentinelRef : undefined}
       beforeResults={beforeGrid}
+      footerReveal={<DiscoverySignupReveal />}
     >
       <AnimatePresence
         initial={false}

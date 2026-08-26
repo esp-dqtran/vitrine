@@ -13,6 +13,7 @@ import {
   type DiscoveryFilterGroup,
 } from './AppsFilterBar.tsx';
 import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
+import { DiscoverySignupReveal } from './DiscoverySignupReveal.tsx';
 import { SiteCard } from './SiteCard.tsx';
 import { SitesDiscoveryHero } from './SitesDiscoveryHero.tsx';
 import {
@@ -258,6 +259,7 @@ export function SitesPageView({
       guestLimitReached={isGuest && controller.items.length >= PUBLIC_SITES_CATALOG_LIMIT}
       onGuestLimitReached={onGuestLimitReached}
       sentinelRef={controller.sentinelRef}
+      footerReveal={<DiscoverySignupReveal />}
     >
       <div
         data-reference-gallery-grid="true"

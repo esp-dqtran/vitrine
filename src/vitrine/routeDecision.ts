@@ -59,13 +59,13 @@ export function decideRootRoute(
     return { kind: "public", page: route.name };
   }
 
+  if (route.name === "landing") {
+    return { kind: "redirect", route: { name: "apps" } };
+  }
+
   if (context.auth === "loading") return { kind: "loading" };
 
   switch (route.name) {
-    case "landing":
-      return context.auth === "guest"
-        ? { kind: "public", page: "landing" }
-        : { kind: "redirect", route: { name: "apps" } };
     case "signin":
       return context.auth === "guest"
         ? { kind: "signin" }

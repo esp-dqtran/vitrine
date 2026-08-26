@@ -34,7 +34,9 @@ function renderLayout(overrides: Partial<ComponentProps<typeof DiscoveryPageLayo
 }
 
 test('composes discovery content in the stable header, taxonomy, toolbar, meta, result, sentinel order', () => {
-  const html = renderLayout();
+  const html = renderLayout({
+    footerReveal: <footer data-layout-part="footer-reveal">Footer reveal</footer>,
+  });
   const ordered = [
     'data-layout-part="header"',
     'data-layout-part="taxonomy"',
@@ -42,6 +44,7 @@ test('composes discovery content in the stable header, taxonomy, toolbar, meta, 
     'reference-discovery__result-meta',
     'data-layout-part="result"',
     'discovery-page-layout__sentinel',
+    'data-layout-part="footer-reveal"',
   ];
   const offsets = ordered.map((part) => html.indexOf(part));
 

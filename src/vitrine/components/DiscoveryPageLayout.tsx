@@ -24,6 +24,7 @@ export interface DiscoveryPageLayoutProps {
   onReset?: () => void;
   sentinelRef?: RefObject<HTMLDivElement | null>;
   beforeResults?: ReactNode;
+  footerReveal?: ReactNode;
   guestLimitReached?: boolean;
   onGuestLimitReached?: () => void;
   children: ReactNode;
@@ -50,6 +51,7 @@ export function DiscoveryPageLayout({
   onReset,
   sentinelRef,
   beforeResults,
+  footerReveal,
   guestLimitReached = false,
   onGuestLimitReached,
   children,
@@ -133,6 +135,7 @@ export function DiscoveryPageLayout({
             aria-hidden="true"
           />
         ) : null}
+        {footerReveal}
       </section>
     </ReferenceDiscoveryPageShell>
   );

@@ -158,6 +158,8 @@ test('renders a first-class searchable Flow catalog beside Apps and Sites', () =
   assert.doesNotMatch(html, /flows-discovery__flow/);
   assert.match(html, /data-discovery-page-layout="flows"/);
   assert.match(html, /data-discovery-sentinel="flows"/);
+  assert.match(html, /data-discovery-signup-reveal="true"/);
+  assert.match(html, /data-melius-source-component="FooterEasterEgg"/);
   assert.doesNotMatch(html, /Load more Flows/);
 });
 

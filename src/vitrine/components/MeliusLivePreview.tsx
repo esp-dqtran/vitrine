@@ -5,7 +5,7 @@ type PreviewSurface = 'card' | 'full';
 const EMPTY_HERO_IMAGE_URLS: readonly string[] = [];
 
 interface MeliusLivePreviewProps {
-  componentName: 'FooterEasterEgg' | 'HeroSection' | 'MeliusFooter' | 'ModelWebGLCarousel' | 'PersonaStack' | 'SiteHeader';
+  componentName: 'FooterEasterEgg' | 'HeroSection' | 'ModelWebGLCarousel' | 'PersonaStack' | 'SiteHeader';
   surface: PreviewSurface;
   viewport?: 'desktop' | 'mobile';
   appearance?: 'source' | 'vitrines-dark';
@@ -16,7 +16,6 @@ interface MeliusLivePreviewProps {
 const PREVIEW_DIMENSIONS = {
   FooterEasterEgg: { width: 1280, height: 900 },
   HeroSection: { width: 1280, height: 900 },
-  MeliusFooter: { width: 1280, height: 760 },
   ModelWebGLCarousel: { width: 1280, height: 900 },
   PersonaStack: { width: 1280, height: 933 },
   SiteHeader: { width: 230, height: 250 },
@@ -123,10 +122,6 @@ async function loadPreviewStyles(): Promise<string> {
     .melius-live-stage--easter-egg .footer-easter-egg {
       width: var(--melius-live-width);
       height: var(--melius-live-height);
-      min-height: var(--melius-live-height);
-    }
-    .melius-live-stage--footer .melius-footer {
-      width: var(--melius-live-width);
       min-height: var(--melius-live-height);
     }
     .melius-live-stage--header {
@@ -269,22 +264,6 @@ async function loadPreviewElement(
       createElement(ModelWebGLCarousel, {
         assetBase: '',
         assetUrls: assetUrlMap(MODEL_PROVIDERS.map(([, file]: [string, string]) => file)),
-      }),
-    );
-  }
-
-  if (componentName === 'MeliusFooter') {
-    const { MeliusFooter } = await import(
-      '../../../artifacts/downloads/melius.com/reverse-engineering/home/react-demo/src/components/MeliusFooter.jsx'
-    );
-    return createElement(
-      'div',
-      { className: 'melius-live-stage melius-live-stage--footer' },
-      createElement(MeliusFooter, {
-        assetBase: '',
-        enableEasterEgg: false,
-        initiallyEntered: true,
-        wordmarkMaskUrl: meliusAssetUrl('a668d8cdad59095d755f.svg'),
       }),
     );
   }

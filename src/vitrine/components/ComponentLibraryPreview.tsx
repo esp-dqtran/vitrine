@@ -3,6 +3,7 @@ import type { ComponentRecord } from '../componentLibraryCatalog.ts';
 import { ContentArchitectureLivePreview } from './ContentArchitectureLivePreview.tsx';
 import { CraftWildLivePreview, type CraftWildLiveComponentName } from './CraftWildLivePreview.tsx';
 import { FlimLivePreview, type FlimLiveComponentName } from './FlimLivePreview.tsx';
+import { MeliusAnimatedText } from './MeliusAnimatedText.tsx';
 import { MeliusLivePreview } from './MeliusLivePreview.tsx';
 import { OdometerWord, ReconstructedButtonPreview } from './ReconstructedButtonComponents.tsx';
 import { TasteLabsLivePreview, type TasteLabsLiveComponentName } from './TasteLabsLivePreview.tsx';
@@ -375,8 +376,8 @@ function MeliusPreview({
       return <PreviewShell item={item} surface={surface}><ComponentPreviewViewport className="melius-live-preview-viewport" fit="contain" surface={surface}><MeliusLivePreview componentName="FooterEasterEgg" surface={surface} /></ComponentPreviewViewport></PreviewShell>;
     case 'HeroSection':
       return <PreviewShell item={item} surface={surface}><ComponentPreviewViewport className="melius-live-preview-viewport" fit="contain" surface={surface}><MeliusLivePreview componentName="HeroSection" surface={surface} /></ComponentPreviewViewport></PreviewShell>;
-    case 'MeliusFooter':
-      return <PreviewShell item={item} surface={surface}><ComponentPreviewViewport className="melius-live-preview-viewport" fit="contain" surface={surface}><MeliusLivePreview componentName="MeliusFooter" surface={surface} /></ComponentPreviewViewport></PreviewShell>;
+    case 'MeliusAnimatedText':
+      return <PreviewShell item={item} surface={surface}><div className="melius-animated-text-preview"><MeliusAnimatedText text="MELIUS" /></div></PreviewShell>;
     case 'ModelWebGLCarousel':
       return <PreviewShell item={item} surface={surface}><ComponentPreviewViewport className="melius-live-preview-viewport" fit="contain" surface={surface}><MeliusLivePreview componentName="ModelWebGLCarousel" surface={surface} /></ComponentPreviewViewport></PreviewShell>;
     case 'PersonaStack':

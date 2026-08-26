@@ -790,10 +790,6 @@
 .apps-discovery-hero__proof {
   display: flex;
   align-items: center;
-  gap: 12px;
-  color: var(--color-text-secondary);
-  font-size: 16px;
-  white-space: nowrap;
 }
 
 .apps-discovery-hero__icons {
@@ -1824,6 +1820,205 @@
   height: 1px;
 }
 
+.discovery-signup-reveal {
+  width: 100vw;
+  margin: 0 calc(50% - 50vw);
+  overflow: clip;
+  background: #0f0f10;
+}
+
+.discovery-signup-reveal__trigger {
+  width: 100%;
+  height: 1px;
+}
+
+.discovery-signup-reveal__stage {
+  position: relative;
+  width: 100%;
+  height: 0;
+  overflow: hidden;
+  background: #0f0f10;
+  opacity: 0;
+  transition:
+    height 900ms cubic-bezier(.22, .8, .2, 1),
+    opacity 420ms ease;
+}
+
+.discovery-signup-reveal[data-revealed='true'] .discovery-signup-reveal__stage {
+  height: min(760px, 100svh);
+  opacity: 1;
+}
+
+.discovery-signup-reveal__cta {
+  position: absolute;
+  z-index: 4;
+  top: clamp(74px, 15svh, 128px);
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(18px, 3vw, 42px);
+  max-width: calc(100vw - 48px);
+  color: #f7f7f5;
+  text-decoration: none;
+  transform: translate(-50%, 34px);
+  opacity: 0;
+  transition:
+    color 180ms ease,
+    opacity 620ms 300ms ease,
+    transform 820ms 250ms cubic-bezier(.22, .8, .2, 1);
+}
+
+.discovery-signup-reveal[data-revealed='true'] .discovery-signup-reveal__cta {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+
+.discovery-signup-reveal__cta-copy {
+  display: flex;
+  align-items: baseline;
+  white-space: nowrap;
+  font-family: var(--font-display-serif, Georgia, serif);
+  font-size: clamp(52px, 8.5vw, 128px);
+  font-weight: 400;
+  letter-spacing: -.055em;
+  line-height: .9;
+}
+
+.discovery-signup-reveal__cta-copy > span {
+  display: inline-block;
+  transform: translateY(.72em);
+  opacity: 0;
+  transition:
+    opacity 400ms calc(360ms + var(--signup-character-index) * 24ms) ease,
+    transform 680ms calc(300ms + var(--signup-character-index) * 24ms) cubic-bezier(.22, .8, .2, 1);
+}
+
+.discovery-signup-reveal[data-revealed='true'] .discovery-signup-reveal__cta-copy > span {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.discovery-signup-reveal__cta-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.discovery-signup-reveal__cta-arrow {
+  display: grid;
+  width: clamp(58px, 7vw, 98px);
+  aspect-ratio: 1;
+  flex: none;
+  place-items: center;
+  border: 1px solid rgb(247 247 245 / 42%);
+  border-radius: 50%;
+  font-size: clamp(28px, 3.6vw, 52px);
+  line-height: 1;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    transform 300ms cubic-bezier(.22, .8, .2, 1);
+}
+
+.discovery-signup-reveal__cta:hover .discovery-signup-reveal__cta-arrow,
+.discovery-signup-reveal__cta:focus-visible .discovery-signup-reveal__cta-arrow {
+  color: #0f0f10;
+  background: #f7f7f5;
+  transform: rotate(45deg);
+}
+
+.discovery-signup-reveal__cta:focus-visible {
+  border-radius: 8px;
+  outline: 2px solid #f7f7f5;
+  outline-offset: 8px;
+}
+
+.discovery-signup-reveal__screens {
+  position: absolute;
+  inset: auto 0 0;
+  height: 64%;
+  pointer-events: none;
+}
+
+.discovery-signup-reveal__screen {
+  position: absolute;
+  bottom: -62px;
+  left: 50%;
+  width: clamp(76px, 9vw, 132px);
+  aspect-ratio: 9 / 19.5;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 24%);
+  border-radius: clamp(13px, 1.5vw, 22px);
+  background: #202024;
+  box-shadow: 0 26px 60px rgb(0 0 0 / 44%);
+  transform: translate(calc(-50% + var(--signup-screen-x)), calc(100% + var(--signup-screen-y))) rotate(var(--signup-screen-rotation));
+  opacity: 0;
+  transition:
+    opacity 500ms calc(420ms + var(--signup-screen-index) * 34ms) ease,
+    transform 940ms calc(360ms + var(--signup-screen-index) * 34ms) cubic-bezier(.18, .78, .22, 1);
+}
+
+.discovery-signup-reveal[data-revealed='true'] .discovery-signup-reveal__screen {
+  transform: translate(calc(-50% + var(--signup-screen-x)), var(--signup-screen-y)) rotate(var(--signup-screen-rotation));
+  opacity: 1;
+}
+
+.discovery-signup-reveal__screen img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: top center;
+}
+
+@media (max-width: 720px) {
+  .discovery-signup-reveal {
+    margin-top: 0;
+  }
+
+  .discovery-signup-reveal[data-revealed='true'] .discovery-signup-reveal__stage {
+    height: min(600px, 80svh);
+  }
+
+  .discovery-signup-reveal__cta {
+    top: 72px;
+    gap: 14px;
+    max-width: calc(100vw - 32px);
+  }
+
+  .discovery-signup-reveal__cta-copy {
+    font-size: clamp(38px, 11vw, 70px);
+  }
+
+  .discovery-signup-reveal__cta-arrow {
+    width: clamp(48px, 13vw, 66px);
+  }
+
+  .discovery-signup-reveal__screens {
+    height: 66%;
+  }
+
+  .discovery-signup-reveal__screen {
+    bottom: -40px;
+    width: clamp(66px, 16vw, 94px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discovery-signup-reveal__stage,
+  .discovery-signup-reveal__cta,
+  .discovery-signup-reveal__cta-copy > span,
+  .discovery-signup-reveal__screen,
+  .discovery-signup-reveal__cta-arrow {
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+  }
+}
+
 .apps-discovery__grid,
 .colors-discovery__grid,
 .apps-discovery__screen-grid {
@@ -2191,8 +2386,6 @@
     width: 100%;
     min-width: 0;
     justify-content: center;
-    gap: 10px;
-    font-size: 14px;
   }
 
   .apps-discovery-hero__icons {

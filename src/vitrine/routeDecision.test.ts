@@ -34,14 +34,25 @@ test('keeps public pages available while authentication is loading', () => {
     decideRootRoute({ name: 'feature-document-share', token: 'share' }, loading),
     { kind: 'public', page: 'feature-document-share' },
   );
+  assert.deepEqual(decideRootRoute({ name: 'landing' }, loading), {
+    kind: 'redirect',
+    route: { name: 'apps' },
+  });
   assert.deepEqual(decideRootRoute({ name: 'apps' }, loading), { kind: 'loading' });
 });
 
-test('redirects authenticated landing and sign-in routes to Apps', () => {
+test('redirects the landing route to Apps for every visitor', () => {
+  assert.deepEqual(decideRootRoute({ name: 'landing' }, guest), {
+    kind: 'redirect',
+    route: { name: 'apps' },
+  });
   assert.deepEqual(decideRootRoute({ name: 'landing' }, member), {
     kind: 'redirect',
     route: { name: 'apps' },
   });
+});
+
+test('redirects authenticated sign-in routes to Apps', () => {
   assert.deepEqual(decideRootRoute({ name: 'signin' }, member), {
     kind: 'redirect',
     route: { name: 'apps' },

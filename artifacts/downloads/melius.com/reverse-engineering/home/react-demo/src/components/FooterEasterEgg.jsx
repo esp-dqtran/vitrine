@@ -36,28 +36,28 @@ function modulo(value, length) {
   return ((value % length) + length) % length;
 }
 
-function getCardMetrics(width, height) {
+function getCardMetrics(width, height, cardVariant) {
   const isMobile = width < 768;
   let cardWidth = Math.round(134 * Math.min(1, Math.max(isMobile ? 0.558 : 0.5, width / 1024)));
-  let cardHeight = Math.round(cardWidth * 1.2388059701492537);
+  let cardHeight = cardVariant === "icon" ? cardWidth : Math.round(cardWidth * 1.2388059701492537);
   const maxHeight = height * (isMobile ? 0.2 : 0.28);
   if (cardHeight > maxHeight) {
     cardHeight = Math.round(maxHeight);
-    cardWidth = Math.round(cardHeight / 1.2388059701492537);
+    cardWidth = cardVariant === "icon" ? cardHeight : Math.round(cardHeight / 1.2388059701492537);
   }
   return { width: cardWidth, height: cardHeight, step: cardWidth * (isMobile ? 0.35 : 0.5), isMobile };
 }
 
-export function FooterEasterEgg({ assetBase = "/assets/", assetUrls, initiallyRevealed = false, viewportSize }) {
+export function FooterEasterEgg({ assetBase = "/assets/", assetUrls, initiallyRevealed = false, viewportSize, ctaHref = "https://app.melius.com/signup", ctaRel = "noopener noreferrer", ctaTarget = "_blank", scrollToBottom, autoScrollOnReveal = true, showTransitionStep = true, cardItems, cardVariant = "media", renderCard }) {
   const { prefersReducedMotion, scrollTo } = useMeliusScroll();
-  const [revealed, setRevealed] = useState(false);
+  const [revealed, setRevealed] = useState(initiallyRevealed);
   const [viewport, setViewport] = useState(() => viewportSize ?? ({ width: window.innerWidth, height: window.innerHeight }));
   const accumulatedDelta = useRef(0);
   const cardRefs = useRef([]);
   const rootRef = useRef(null);
   const touchY = useRef(null);
-  const images = useMemo(() => shuffled(EASTER_EGG_ASSETS), []);
-  const metrics = useMemo(() => getCardMetrics(viewport.width, viewport.height), [viewport]);
+  const images = useMemo(() => shuffled(cardItems?.length ? cardItems : EASTER_EGG_ASSETS), [cardItems]);
+  const metrics = useMemo(() => getCardMetrics(viewport.width, viewport.height, cardVariant), [cardVariant, viewport]);
   const cards = useMemo(() => {
     if (!viewport.width) return [];
     const count = Math.ceil((viewport.width + 2 * metrics.width) / metrics.step) + 1;
@@ -120,24 +120,26 @@ export function FooterEasterEgg({ assetBase = "/assets/", assetUrls, initiallyRe
   }, [revealed]);
 
   useEffect(() => {
-    if (!revealed) return undefined;
+    if (!revealed || !autoScrollOnReveal) return undefined;
     let firstFrame = 0;
     let secondFrame = 0;
     firstFrame = window.requestAnimationFrame(() => {
       secondFrame = window.requestAnimationFrame(() => {
-        scrollTo("bottom", {
+        const options = {
           duration: 1.05,
           easing: (value) => -(Math.cos(Math.PI * value) - 1) / 2,
           force: true,
           immediate: prefersReducedMotion(),
-        });
+        };
+        if (scrollToBottom) scrollToBottom(options);
+        else scrollTo("bottom", options);
       });
     });
     return () => {
       window.cancelAnimationFrame(firstFrame);
       window.cancelAnimationFrame(secondFrame);
     };
-  }, [prefersReducedMotion, revealed, scrollTo]);
+  }, [autoScrollOnReveal, prefersReducedMotion, revealed, scrollTo, scrollToBottom]);
 
   useEffect(() => {
     if (!revealed || !cards.length || !viewport.width) return undefined;
@@ -246,17 +248,17 @@ export function FooterEasterEgg({ assetBase = "/assets/", assetUrls, initiallyRe
     };
   }, [cards, metrics, revealed, viewport]);
 
-  return <div className="footer-easter-egg" data-footer-easter-egg data-revealed={revealed} ref={rootRef}>
-    <div className="footer-easter-egg__step" aria-hidden="true">
+  return <div className="footer-easter-egg" data-card-variant={cardVariant} data-footer-easter-egg data-revealed={revealed} ref={rootRef}>
+    {showTransitionStep ? <div className="footer-easter-egg__step" aria-hidden="true">
       <div className="footer-easter-egg__shape" style={{ WebkitMaskImage: `url("${SHAPE_MASK}")`, maskImage: `url("${SHAPE_MASK}")` }} />
       <div className="footer-easter-egg__coin-track"><div className="footer-easter-egg__coin"><img alt="Coin" src={assetUrls?.["782641dca23238877693.webp"] ?? `${assetBase}782641dca23238877693.webp`} /></div></div>
-    </div>
+    </div> : null}
     <div className="footer-easter-egg__cards" aria-hidden="true">
-      {cards.map((card, index) => <span className="footer-easter-egg__card-reveal" key={`${card.asset}-${index}`} style={{ width: metrics.width, height: metrics.height, left: card.left, top: `calc(${card.topRatio * 100}% - ${metrics.height / 2}px)`, "--card-index": index }}>
-        <span className="footer-easter-egg__card" data-footer-easter-egg-card={index} ref={(node) => { cardRefs.current[index] = node; }}><img alt="" src={assetUrls?.[card.asset] ?? `${assetBase}${card.asset}`} /></span>
+      {cards.map((card, index) => <span className="footer-easter-egg__card-reveal" key={`${typeof card.asset === "string" ? card.asset : card.asset.id}-${index}`} style={{ width: metrics.width, height: metrics.height, left: card.left, top: `calc(${card.topRatio * 100}% - ${metrics.height / 2}px)`, "--card-index": index }}>
+        <span className="footer-easter-egg__card" data-footer-easter-egg-card={index} ref={(node) => { cardRefs.current[index] = node; }}>{renderCard ? renderCard(card.asset, index, metrics) : <img alt="" src={assetUrls?.[card.asset] ?? `${assetBase}${card.asset}`} />}</span>
       </span>)}
     </div>
-    <a className="footer-easter-egg__cta" href="https://app.melius.com/signup" rel="noopener noreferrer" target="_blank">
+    <a className="footer-easter-egg__cta" href={ctaHref} rel={ctaRel} target={ctaTarget}>
       <span className="footer-easter-egg__cta-label" aria-label={CTA_LABEL}>
         {CTA_LABEL.split("").map((character, index) => character === " "
           ? " "
