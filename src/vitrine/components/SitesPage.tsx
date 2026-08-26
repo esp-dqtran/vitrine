@@ -171,7 +171,6 @@ interface SitesPageViewProps {
   onOpen?: (site: SiteSummary) => void;
   memberControls?: ReactNode;
   isGuest?: boolean;
-  onGuestLimitReached?: () => void;
 }
 
 export function SitesPageView({
@@ -179,7 +178,6 @@ export function SitesPageView({
   isAdmin,
   onOpen = (site) => navigate({ name: 'site-version', siteSlug: site.routeSlug }),
   isGuest = false,
-  onGuestLimitReached,
 }: SitesPageViewProps) {
   void isAdmin;
   const previewPools = useMemo(
@@ -256,8 +254,6 @@ export function SitesPageView({
       onRetry={controller.retry}
       onRetryLoadMore={controller.retryLoadMore}
       onReset={() => controller.setState({ ...controller.state, query: '', filters: [] })}
-      guestLimitReached={isGuest && controller.items.length >= PUBLIC_SITES_CATALOG_LIMIT}
-      onGuestLimitReached={onGuestLimitReached}
       sentinelRef={controller.sentinelRef}
       footerReveal={<DiscoverySignupReveal />}
     >
@@ -309,7 +305,6 @@ interface SitesPageProps {
   activeFilterCount?: number;
   memberControls?: ReactNode;
   isGuest?: boolean;
-  onGuestLimitReached?: () => void;
 }
 
 interface UseSitesDiscoveryPageControllerOptions {
@@ -380,7 +375,6 @@ export function SitesPage({
   activeFilterCount,
   memberControls,
   isGuest = false,
-  onGuestLimitReached,
 }: SitesPageProps) {
   const locationKey = useLocationKey();
   const search = locationKey.includes('?') ? locationKey.slice(locationKey.indexOf('?')) : '';
@@ -406,7 +400,6 @@ export function SitesPage({
       activeFilterCount={activeFilterCount}
       memberControls={memberControls}
       isGuest={isGuest}
-      onGuestLimitReached={onGuestLimitReached}
     />
   );
 }

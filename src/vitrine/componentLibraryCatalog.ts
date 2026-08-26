@@ -255,7 +255,6 @@ const SIGNIFICANT_COMPONENT_IDS = new Set([
   'flim-flimherosearchsection',
   'flim-flimwhatisflimsection',
   'flim-flimdatabasescrollsection',
-  'details-so-overlaptransitionstage',
 ]);
 
 export const SIGNIFICANT_COMPONENT_LIBRARY: readonly ComponentRecord[] = COMPONENT_LIBRARY.filter(

@@ -100,12 +100,15 @@ export function DiscoverySignupReveal() {
           display: block;
           width: 100%;
           overflow: hidden;
-          background: #0f0f10;
+          background: #111112;
           font-synthesis: none;
         }
         .melius-catalog-footer-root {
           width: 100%;
-          background: #0f0f10;
+          background: #111112;
+        }
+        .footer-easter-egg[data-revealed="true"] {
+          height: max(100svh, 1080px);
         }
         .footer-easter-egg[data-card-variant="icon"] .footer-easter-egg__card {
           border: 1px solid rgba(255, 255, 255, .2);
@@ -117,6 +120,11 @@ export function DiscoverySignupReveal() {
           width: 100% !important;
           height: 100% !important;
           border-radius: 25% !important;
+        }
+        @media (max-width: 767px) {
+          .footer-easter-egg[data-revealed="true"] {
+            height: max(100svh, 760px);
+          }
         }
       `;
     });

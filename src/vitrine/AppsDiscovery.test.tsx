@@ -164,6 +164,7 @@ test('keeps the featured App icon proof for public visitors without a duplicate 
   assert.doesNotMatch(html, /products indexed/);
   assert.doesNotMatch(html, /reference-discovery__result-meta/);
   assert.doesNotMatch(html, /40 apps/);
+  assert.doesNotMatch(html, /data-guest-catalog-limit/);
 });
 
 test('filters Apps across Mobbin taxonomy fields and platform', () => {

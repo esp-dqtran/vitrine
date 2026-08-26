@@ -49,7 +49,11 @@ export function AppCard({
     : platform
     ? eligibleScreens[0]
     : app.screens[0];
-  const resolvedPreviewUrl = slider && active
+  const activePlatform = active?.platform
+    ?? (platform && app.platforms?.includes(platform) ? platform : app.platforms?.[0]);
+  const isMobile = activePlatform === 'ios' || activePlatform === 'android';
+  const prefersScreenPreview = slider || (isMobile && Boolean(active));
+  const resolvedPreviewUrl = prefersScreenPreview && active
     ? active.thumbnailUrl ?? active.url
     : app.previewUrl;
   const [sitePreviewFailed, setSitePreviewFailed] = useState(false);
@@ -80,15 +84,14 @@ export function AppCard({
   // The catalog supplies up to three published preview screens. Fall back to
   // the filtered platform, then the app's declared platforms if a card has no
   // servable preview image yet.
-  const activePlatform = active?.platform
-    ?? (platform && app.platforms?.includes(platform) ? platform : app.platforms?.[0]);
-  const isMobile = activePlatform === 'ios' || activePlatform === 'android';
   const mobilePreviewFit = activePlatform === 'android' ? 'cover' : 'contain';
   // A screen-derived preview is the same image the phone-framed path already
   // renders, so on iOS/Android it is ignored and mobile cards keep the shared
   // phone-frame treatment below.
-  const previewIsScreen = slider || isScreenPreview(resolvedPreviewUrl);
-  const usingSitePreview = Boolean(resolvedPreviewUrl) && !sitePreviewFailed;
+  const previewIsScreen = prefersScreenPreview || isScreenPreview(resolvedPreviewUrl);
+  const usingSitePreview = Boolean(resolvedPreviewUrl)
+    && !sitePreviewFailed
+    && !(isMobile && prefersScreenPreview);
   // A phone screenshot belongs in the phone frame whether it arrives as the
   // card preview or from the screen list.
   const showsPhoneScreenshot = isMobile && (!usingSitePreview || previewIsScreen);

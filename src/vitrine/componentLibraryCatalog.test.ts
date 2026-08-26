@@ -35,8 +35,8 @@ test('organizes reconstructed sites into one practical component-family layer', 
 });
 
 test('keeps the public showcase focused on significant standalone components', () => {
-  assert.equal(SIGNIFICANT_COMPONENT_LIBRARY.length, 32);
-  assert.equal(new Set(SIGNIFICANT_COMPONENT_LIBRARY.map(({ id }) => id)).size, 32);
+  assert.equal(SIGNIFICANT_COMPONENT_LIBRARY.length, 31);
+  assert.equal(new Set(SIGNIFICANT_COMPONENT_LIBRARY.map(({ id }) => id)).size, 31);
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.every((component) => COMPONENT_LIBRARY.includes(component)));
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ name }) => name === 'HeroSection'));
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ name }) => name === 'MeliusAnimatedText'));
@@ -61,7 +61,7 @@ test('keeps the public showcase focused on significant standalone components', (
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ id }) => id === 'flim-flimherosearchsection'));
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ id }) => id === 'flim-flimwhatisflimsection'));
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ id }) => id === 'flim-flimdatabasescrollsection'));
-  assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ id }) => id === 'details-so-overlaptransitionstage'));
+  assert.ok(!SIGNIFICANT_COMPONENT_LIBRARY.some(({ id }) => id === 'details-so-overlaptransitionstage'));
   assert.ok(!SIGNIFICANT_COMPONENT_LIBRARY.some(({ id }) => id === 'content-architecture-herosection'));
   assert.ok(!SIGNIFICANT_COMPONENT_LIBRARY.some(({ id }) => id === 'content-architecture-pricingsection'));
   assert.ok(!SIGNIFICANT_COMPONENT_LIBRARY.some(({ id }) => id === 'content-architecture-app'));

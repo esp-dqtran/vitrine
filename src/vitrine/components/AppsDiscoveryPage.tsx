@@ -62,7 +62,6 @@ export interface AppsDiscoveryPageProps {
   beforeGrid?: ReactNode;
   reviewItemLimit?: number;
   isGuest?: boolean;
-  onGuestLimitReached?: () => void;
 }
 
 export interface AppsDiscoveryPageViewProps
@@ -470,7 +469,6 @@ export function AppsDiscoveryPageView({
   beforeGrid,
   reviewItemLimit,
   isGuest = false,
-  onGuestLimitReached,
 }: AppsDiscoveryPageViewProps) {
   const state = filterState(controller.state);
   const activeFacets = appsDiscoveryFacets(state);
@@ -639,8 +637,6 @@ export function AppsDiscoveryPageView({
       onRetry={controller.retry}
       onRetryLoadMore={controller.retryLoadMore}
       onReset={() => changeState({ ...state, filters: {} })}
-      guestLimitReached={isGuest && controller.items.length >= PUBLIC_APPS_CATALOG_LIMIT}
-      onGuestLimitReached={onGuestLimitReached}
       sentinelRef={reviewItemLimit === undefined ? controller.sentinelRef : undefined}
       beforeResults={beforeGrid}
       footerReveal={<DiscoverySignupReveal />}
@@ -718,7 +714,6 @@ export function AppsDiscoveryPage({
   query = '',
   onFacetChange,
   isGuest = false,
-  onGuestLimitReached,
   ...props
 }: AppsDiscoveryPageProps) {
   const locationKey = useLocationKey();
@@ -745,7 +740,6 @@ export function AppsDiscoveryPage({
       controller={controller}
       onFacetChange={onFacetChange}
       isGuest={isGuest}
-      onGuestLimitReached={onGuestLimitReached}
     />
   );
 }

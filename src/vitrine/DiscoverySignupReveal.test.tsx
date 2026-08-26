@@ -47,6 +47,11 @@ test('mounts the source FooterEasterEgg without its dotted background layer', as
   assert.match(wrapperSource, /initiallyRevealed: true/);
   assert.match(wrapperSource, /showTransitionStep: false/);
   assert.doesNotMatch(wrapperSource, /FooterDotBackground/);
+  assert.match(wrapperSource, /:host \{[\s\S]*background: #111112/);
+  assert.match(wrapperSource, /\.melius-catalog-footer-root \{[\s\S]*background: #111112/);
+  assert.doesNotMatch(wrapperSource, /background:\s*#0f0f10/);
+  assert.match(wrapperSource, /height: max\(100svh, 1080px\)/);
+  assert.match(wrapperSource, /@media \(max-width: 767px\)[\s\S]*height: max\(100svh, 760px\)/);
   assert.match(sourceComponent, /data-card-variant=\{cardVariant\}/);
   assert.match(sourceComponent, /footer-easter-egg__card-reveal/);
   const revealCss = css.slice(css.indexOf('.discovery-signup-reveal'));

@@ -420,6 +420,7 @@ test('hides the capped Site result total for public visitors', () => {
 
   assert.doesNotMatch(html, /reference-discovery__result-meta/);
   assert.doesNotMatch(html, /12 sites|100 sites/);
+  assert.doesNotMatch(html, /data-guest-catalog-limit/);
 });
 
 test('composes Sites through the shared reference discovery shell', () => {

@@ -863,7 +863,6 @@ export function App() {
         <SitesPage
           isAdmin={isAdmin}
           isGuest={isCatalogLimited}
-          onGuestLimitReached={openCatalogLimit}
           query={siteQuery}
           onQueryChange={setSiteQuery}
           onOpenSearch={(seed) => void openPalette("sites", seed)}
@@ -1378,7 +1377,6 @@ export function App() {
         <AppsDiscoveryPage
           isAdmin={isAdmin}
           isGuest={isCatalogLimited}
-          onGuestLimitReached={openCatalogLimit}
           facet={appFacet}
           initialPlatform={appPlatform}
           onFacetChange={setAppFacet}
