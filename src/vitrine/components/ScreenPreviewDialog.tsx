@@ -1,6 +1,7 @@
 import { Button, Icon, IconButton } from '@astryxdesign/core';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ResearchCollection } from '../../db.ts';
+import { useDeliveredImageUrl } from '../mediaDelivery.ts';
 import type { Screen } from '../types.ts';
 import { copyScreenImageAsPng, copyShareLink } from '../screenActions.ts';
 import { CollectionPicker } from './CollectionPicker.tsx';
@@ -65,6 +66,8 @@ export function ScreenPreviewDialog({
   const [mediaFailed, setMediaFailed] = useState(false);
   const [mediaDimensions, setMediaDimensions] = useState<Record<number, { width: number; height: number }>>({});
   const [infoOpen, setInfoOpen] = useState(false);
+  const deliveredScreenImage = useDeliveredImageUrl(screen.url);
+  useEffect(() => { setMediaFailed(false); }, [screen.id, screen.url]);
   const saved = savedScreens.has(screen.id);
   const context = foundInFlows[0]
     ?? usefulLabel(screen.productArea)
@@ -193,7 +196,9 @@ export function ScreenPreviewDialog({
                 ? { aspectRatio: `${dimensions.width} / ${dimensions.height}` }
                 : undefined}
             >
-              {mediaFailed ? (
+              {deliveredScreenImage.loading ? (
+                <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: '#fff' }} />
+              ) : mediaFailed || deliveredScreenImage.failed ? (
                 <PlaceholderImage
                   seed={`${appName}-${screen.id}`}
                   style={{ objectFit: 'contain', background: '#fff' }}
@@ -201,7 +206,7 @@ export function ScreenPreviewDialog({
               ) : (
                 <img
                   key={screen.id}
-                  src={screen.url}
+                  src={deliveredScreenImage.url}
                   alt=""
                   loading="eager"
                   onLoad={(event) => registerMediaDimensions(event.currentTarget)}

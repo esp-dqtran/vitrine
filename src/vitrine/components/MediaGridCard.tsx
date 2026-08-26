@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from 'react';
 import { ClickableCard } from '@astryxdesign/core';
 import { observeNearViewportMedia } from './deferredMedia.ts';
+import { useDeliveredImageUrl } from '../mediaDelivery.ts';
 
 interface MediaGridCardBaseProps {
   label: string;
@@ -52,9 +53,15 @@ export function MediaGridCard({
   const [mediaFailed, setMediaFailed] = useState(false);
   const [naturalAspectRatio, setNaturalAspectRatio] = useState<number | null>(null);
   const imageSrc = preferFullImage ? url : thumbnailUrl ?? url;
+  const deliveredImage = useDeliveredImageUrl(imageSrc, mediaActive && kind === 'image');
+  const displayedImageSrc = deliveredImage.url;
   const imageSrcSet = !preferFullImage && thumbnailUrl && url && thumbnailUrl !== url
     ? `${thumbnailUrl} 1x,${url} 2x`
     : undefined;
+
+  useEffect(() => {
+    setMediaFailed(false);
+  }, [kind, url, thumbnailUrl]);
 
   useEffect(() => {
     const card = cardRef.current;
@@ -87,11 +94,13 @@ export function MediaGridCard({
     transition: 'transform .22s cubic-bezier(.16,1,.3,1), box-shadow .22s cubic-bezier(.16,1,.3,1)',
     transform: hovered ? 'translateY(-4px)' : 'none',
   };
+  const authenticatedImageLoading = mediaActive && deliveredImage.loading && !mediaFailed;
+  const previewFailed = mediaFailed || deliveredImage.failed;
   const contents = (
     <>
-      {!mediaActive ? (
+      {!mediaActive || authenticatedImageLoading ? (
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: accent ? `${accent}22` : 'var(--color-background-muted)' }} />
-      ) : mediaFailed || !url ? (
+      ) : previewFailed || (kind === 'image' ? !displayedImageSrc : !url) ? (
         <div role="img" aria-label="Preview unavailable" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: 'var(--color-text-secondary)', background: `linear-gradient(135deg, ${accent ? `${accent}22` : 'var(--color-background-muted)'}, var(--color-background-surface))` }}>
           Preview unavailable
         </div>
@@ -111,8 +120,8 @@ export function MediaGridCard({
         />
       ) : (
         <img
-          src={imageSrc}
-          srcSet={imageSrcSet}
+          src={displayedImageSrc}
+          srcSet={deliveredImage.protected ? undefined : imageSrcSet}
           alt=""
           loading="lazy"
           decoding="async"

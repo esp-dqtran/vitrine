@@ -1,5 +1,6 @@
 import type { ResearchCollection } from '../db.ts';
 import { apiFetch } from './apiFetch.ts';
+import { inlineMediaUrl } from './mediaDelivery.ts';
 import type { SaveReference } from './researchApi.ts';
 
 export const SAVED_COLLECTION_NAMES = new Set(['saved', 'all saved']);
@@ -46,12 +47,7 @@ export const dedupeSaveReferences = (references: SaveReference[]) => {
   return [...unique.values()];
 };
 
-export const screenImageCopyUrl = (url: string) => {
-  if (!url.startsWith('/api/media/')) return url;
-  const target = new URL(url, 'http://localhost');
-  target.searchParams.set('delivery', 'inline');
-  return `${target.pathname}${target.search}${target.hash}`;
-};
+export const screenImageCopyUrl = inlineMediaUrl;
 
 const fetchImageBlob = async (url: string) => {
   const response = await apiFetch(screenImageCopyUrl(url));

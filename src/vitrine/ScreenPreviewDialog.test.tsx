@@ -113,6 +113,23 @@ test('shows the complete web capture in the wide preview frame', () => {
   );
 });
 
+test('does not emit a native protected-media request from the screen viewer', () => {
+  const html = renderToStaticMarkup(
+    <ScreenPreviewDialog
+      appName="Aboard"
+      screen={{ ...screen, url: '/api/media/aboard/0123456789abcdef' }}
+      index={0}
+      total={1}
+      onClose={() => undefined}
+      onNavigate={() => undefined}
+    />,
+  );
+
+  assert.doesNotMatch(html, /src="\/api\/media\//);
+  assert.doesNotMatch(html, /Captured preview unavailable/);
+  assert.match(html, /aria-label="Aboard screen viewer"/);
+});
+
 test('keeps next navigation available when another screen page can be loaded', () => {
   const html = renderToStaticMarkup(
     <ScreenPreviewDialog
