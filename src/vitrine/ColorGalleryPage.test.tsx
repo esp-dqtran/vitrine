@@ -265,6 +265,7 @@ test('uses the reusable Melius animated text as a responsive Colors hero', async
 
   assert.match(css, /\.colors-discovery-hero\s*\{[^}]*container-type:\s*inline-size[^}]*min-height:\s*clamp\(280px,\s*42vw,\s*520px\)/s);
   assert.match(css, /\.colors-discovery-hero__title\s*\{[^}]*max-width:\s*calc\(100vw - 48px\)/s);
+  assert.match(css, /\.colors-discovery-hero__title \.melius-animated-text__layer\s*\{[^}]*font-size:\s*clamp\(5rem,\s*18cqi,\s*15rem\)/s);
   assert.match(css, /@media \(max-width:\s*720px\)[\s\S]*?\.colors-discovery-hero\s*\{[^}]*min-height:\s*300px/s);
 });
 

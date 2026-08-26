@@ -13,6 +13,10 @@
   max-width: calc(100vw - 48px);
 }
 
+.colors-discovery-hero__title .melius-animated-text__layer {
+  font-size: clamp(5rem, 18cqi, 15rem);
+}
+
 @media (max-width: 720px) {
   .colors-discovery-hero {
     min-height: 300px;
