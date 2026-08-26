@@ -42,3 +42,14 @@ test("indexes current app evidence in the same order used by the gallery cursor"
     /CREATE INDEX IF NOT EXISTS images_platform_kind_id_idx[\s\S]*images\s*\(platform_id,\s*kind,\s*id DESC\)/,
   );
 });
+
+test("keeps versioned gallery pagination on the bounded per-version plan", async () => {
+  const source = await readFile(new URL("./db.ts", import.meta.url), "utf8");
+  const appEvidencePage = source.slice(
+    source.indexOf("export async function appEvidencePage"),
+    source.indexOf("export async function appScreenTypes"),
+  );
+  assert.match(appEvidencePage, /SET LOCAL enable_hashjoin = off/);
+  assert.match(appEvidencePage, /SET LOCAL enable_mergejoin = off/);
+  assert.match(appEvidencePage, /client\.query<CrawledImage>/);
+});

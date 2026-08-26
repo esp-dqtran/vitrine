@@ -775,8 +775,10 @@ export async function appEvidencePage(input: {
 }): Promise<AppEvidencePage> {
   const requestedLimit = Math.min(Math.max(Math.floor(input.limit ?? 48), 1), 48);
   const cursorId = input.cursor ? decodeImageCursor(input.cursor) : null;
-  const res = await query<CrawledImage>(
-    `WITH selected_version AS (
+  const res = await withTransaction(async (client) => {
+    await client.query("SET LOCAL enable_hashjoin = off; SET LOCAL enable_mergejoin = off");
+    return client.query<CrawledImage>(
+      `WITH selected_version AS (
        SELECT av.id
        FROM app_versions av JOIN apps a ON a.id = av.app_id
        WHERE a.name = $1 AND av.platform = $3
@@ -978,17 +980,18 @@ export async function appEvidencePage(input: {
      WHERE ($6::integer IS NULL OR id < $6)
      ORDER BY id DESC
      LIMIT $7`,
-    [
-      input.app,
-      input.kind,
-      input.platform,
-      input.versionNumber ?? null,
-      input.publishedOnly ?? false,
-      cursorId,
-      requestedLimit + 1,
-      input.screenTypes?.length ? input.screenTypes : null,
-    ],
-  );
+      [
+        input.app,
+        input.kind,
+        input.platform,
+        input.versionNumber ?? null,
+        input.publishedOnly ?? false,
+        cursorId,
+        requestedLimit + 1,
+        input.screenTypes?.length ? input.screenTypes : null,
+      ],
+    );
+  });
   const hasMore = res.rows.length > requestedLimit;
   const rows = hasMore ? res.rows.slice(0, requestedLimit) : res.rows;
   return {
