@@ -785,7 +785,9 @@
   max-width: 100%;
   place-items: center;
   color: #4b4747;
-  cursor: crosshair;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
   opacity: 1;
   transform: translateY(0) scale(1);
   transform-origin: center;
