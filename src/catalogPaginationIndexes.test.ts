@@ -53,3 +53,14 @@ test("keeps versioned gallery pagination on the bounded per-version plan", async
   assert.match(appEvidencePage, /SET LOCAL enable_mergejoin = off/);
   assert.match(appEvidencePage, /client\.query<CrawledImage>/);
 });
+
+test("persists published analyzed counts instead of rescanning version images", async () => {
+  const migration = await readFile(
+    new URL("../migrations/0108_app_versions_analyzed_count.sql", import.meta.url),
+    "utf8",
+  );
+  const source = await readFile(new URL("./db.ts", import.meta.url), "utf8");
+  assert.match(migration, /ADD COLUMN IF NOT EXISTS analyzed_count INTEGER NOT NULL DEFAULT 0/);
+  assert.match(source, /ELSE av\.analyzed_count END::int AS analyzed_count/);
+  assert.match(source, /analyzed_count = counts\.analyzed_count/);
+});

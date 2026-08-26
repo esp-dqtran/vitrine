@@ -1571,9 +1571,12 @@ const versionSelect = `SELECT av.id, av.app_id, platform_identity.id AS platform
   COALESCE(av.source_url, apple_listing.source_url) AS source_url,
   av.provider, av.status,
   av.notes, av.captured_at, av.submitted_at, av.published_at,
-  COALESCE(image_counts.screen_count, 0)::int AS screen_count,
-  COALESCE(image_counts.ui_element_count, 0)::int AS ui_element_count,
-  COALESCE(image_counts.analyzed_count, 0)::int AS analyzed_count,
+  CASE WHEN av.status IN ('draft','in_review')
+    THEN COALESCE(image_counts.screen_count, 0) ELSE av.screen_count END::int AS screen_count,
+  CASE WHEN av.status IN ('draft','in_review')
+    THEN COALESCE(image_counts.ui_element_count, 0) ELSE av.ui_element_count END::int AS ui_element_count,
+  CASE WHEN av.status IN ('draft','in_review')
+    THEN COALESCE(image_counts.analyzed_count, 0) ELSE av.analyzed_count END::int AS analyzed_count,
   COALESCE(jsonb_array_length((CASE WHEN av.status IN ('draft','in_review') THEN ds.snapshot ELSE dsv.snapshot END)->'components'), 0)::int AS component_count,
   COALESCE(jsonb_array_length((CASE WHEN av.status IN ('draft','in_review') THEN ds.snapshot ELSE dsv.snapshot END)->'tokens'), 0)::int AS token_count,
   CASE WHEN av.status IN ('draft','in_review')
@@ -1606,7 +1609,7 @@ const versionSelect = `SELECT av.id, av.app_id, platform_identity.id AS platform
       ))::int AS ui_element_count,
       COUNT(*) FILTER (WHERE i.kind = 'screen' AND i.analysis IS NOT NULL)::int AS analyzed_count
     FROM version_images vi JOIN images i ON i.id = vi.image_id
-    WHERE vi.version_id = av.id
+    WHERE vi.version_id = av.id AND av.status IN ('draft','in_review')
   ) image_counts ON true
   LEFT JOIN design_system_versions dsv ON dsv.version_id = av.id
   LEFT JOIN design_systems ds ON ds.app_id = av.app_id AND ds.platform = av.platform`;
@@ -1828,7 +1831,8 @@ export async function publishAppVersion(versionId: number, userId: number): Prom
                SELECT 1 FROM ui_element_extractions e
                WHERE e.source_image_id = i.id AND e.status = 'complete'
              )
-           ))::int AS ui_element_count
+           ))::int AS ui_element_count,
+           COUNT(*) FILTER (WHERE i.kind = 'screen' AND i.analysis IS NOT NULL)::int AS analyzed_count
          FROM version_images vi
          JOIN images i ON i.id = vi.image_id
          WHERE vi.version_id = $1
@@ -1836,7 +1840,8 @@ export async function publishAppVersion(versionId: number, userId: number): Prom
        UPDATE app_versions
        SET status = 'published', published_at = now(), reviewed_by = $2,
          screen_count = counts.screen_count,
-         ui_element_count = counts.ui_element_count
+         ui_element_count = counts.ui_element_count,
+         analyzed_count = counts.analyzed_count
        FROM counts
        WHERE id = $1 AND status = 'in_review'`, [versionId, userId]
     );
