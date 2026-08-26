@@ -1,3 +1,29 @@
+.colors-discovery-hero {
+  container-type: inline-size;
+  display: grid;
+  width: 100%;
+  min-height: clamp(280px, 42vw, 520px);
+  box-sizing: border-box;
+  place-items: center;
+  overflow: hidden;
+  padding: clamp(32px, 7vw, 96px) 24px;
+}
+
+.colors-discovery-hero__title {
+  max-width: calc(100vw - 48px);
+}
+
+@media (max-width: 720px) {
+  .colors-discovery-hero {
+    min-height: 300px;
+    padding-inline: 16px;
+  }
+
+  .colors-discovery-hero__title {
+    max-width: calc(100vw - 32px);
+  }
+}
+
 .colors-discovery__grid {
   align-items: start;
 }

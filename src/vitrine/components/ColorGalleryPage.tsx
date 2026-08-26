@@ -19,6 +19,7 @@ import { ColorPackStack } from './ColorPackStack.tsx';
 import { CopyButton } from './CopyButton.tsx';
 import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
 import { CommandPaletteFrame } from './CommandPaletteFrame.tsx';
+import { MeliusAnimatedText } from './MeliusAnimatedText.tsx';
 import { navigate } from '../router.ts';
 import { trackAnalyticsEvent } from '../analytics.ts';
 import { analyticsEvent, paletteAnalyticsProperties } from '../analyticsEvents.ts';
@@ -698,7 +699,11 @@ export function ColorGalleryPage({
     <>
     <DiscoveryPageLayout
       kind="colors"
-      header={null}
+      header={(
+        <section className="colors-discovery-hero" aria-label="Colors">
+          <MeliusAnimatedText className="colors-discovery-hero__title" text="COLORS" />
+        </section>
+      )}
       toolbar={(
         <DiscoveryFilterBar
           kind="colors"

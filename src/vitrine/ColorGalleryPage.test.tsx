@@ -136,6 +136,8 @@ test('renders a browsable gallery of solid and layered gradient palettes', () =>
     ],
   );
   assert.match(html, /data-discovery-filterbar="colors"/);
+  assert.match(html, /class="colors-discovery-hero" aria-label="Colors"/);
+  assert.match(html, /data-melius-animated-text="COLORS"/);
   assert.match(html, /aria-label="Color discovery controls"/);
   assert.match(html, /Open Collection filters/);
   assert.match(html, /aria-label="Type: Mono"/);
@@ -256,6 +258,14 @@ test('uses the same responsive three-up result grid as Apps', async () => {
   assert.match(css, /\.apps-discovery__grid,\s*\.colors-discovery__grid,\s*\.apps-discovery__screen-grid\s*\{[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/s);
   assert.match(css, /@media \(min-width:\s*721px\) and \(max-width:\s*1080px\)[\s\S]*?\.colors-discovery__grid,[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(css, /@media \(max-width:\s*720px\)[\s\S]*?\.colors-discovery__grid,[\s\S]*?grid-template-columns:\s*1fr/);
+});
+
+test('uses the reusable Melius animated text as a responsive Colors hero', async () => {
+  const css = await readFile(new URL('./colorGallery.css', import.meta.url), 'utf8');
+
+  assert.match(css, /\.colors-discovery-hero\s*\{[^}]*container-type:\s*inline-size[^}]*min-height:\s*clamp\(280px,\s*42vw,\s*520px\)/s);
+  assert.match(css, /\.colors-discovery-hero__title\s*\{[^}]*max-width:\s*calc\(100vw - 48px\)/s);
+  assert.match(css, /@media \(max-width:\s*720px\)[\s\S]*?\.colors-discovery-hero\s*\{[^}]*min-height:\s*300px/s);
 });
 
 test('uses the shared Apps discovery rail for palette type and annual collections', async () => {
