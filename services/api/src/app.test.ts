@@ -1965,6 +1965,34 @@ test("returns 404 when an app has no structured design system", async (t) => {
   );
 });
 
+test("reuses the version list when loading an explicit design system", async (t) => {
+  let versionLists = 0;
+  let resolvedVersionId: number | undefined;
+  const snapshot = {
+    app: "linear", generatedAt: "2026-07-10T00:00:00.000Z",
+    tokens: [], components: [], flows: [], rules: [],
+  };
+  const { base, server } = await serve(createApiApp({
+    verifyAuthToken: async () => admin,
+    canAccessApp: async () => true,
+    listAppVersions: async () => {
+      versionLists += 1;
+      return [publishedVersion];
+    },
+    getVersionDesignSystem: async (_app, _platform, _number, resolvedVersion) => {
+      resolvedVersionId = resolvedVersion?.id;
+      return { version: publishedVersion, snapshot, flows: [] };
+    },
+    versionImages: async () => [],
+  }));
+  t.after(() => close(server));
+
+  assert.equal((await fetch(`${base}/apps/linear/versions?platform=web`, { headers: adminAuth })).status, 200);
+  assert.equal((await fetch(`${base}/design-systems/linear?platform=web&version=1`, { headers: adminAuth })).status, 200);
+  assert.equal(versionLists, 1);
+  assert.equal(resolvedVersionId, publishedVersion.id);
+});
+
 test("serves imported current design when an entitled user has no published version", async (t) => {
   const imported = {
     app: "linear", generatedAt: "2026-07-22T00:00:00.000Z", summary: "Dark product UI",
@@ -3136,12 +3164,16 @@ test("returns captured website metadata and serves its app-scoped scrolling prev
 
 test("loads screens with complete category facets and filters the paged result", async (t) => {
   const calls: Array<{ kind: string; limit?: number; screenTypes?: string[] }> = [];
+  let versionLists = 0;
   let versionResolutions = 0;
   const { base, server } = await serve(createApiApp({
     verifyAuthToken: async () => admin,
     canAccessApp: async () => true,
     appPlatforms: async () => { throw new Error("explicit platform must skip platform discovery"); },
-    listAppVersions: async () => { throw new Error("section routes must not list all versions"); },
+    listAppVersions: async () => {
+      versionLists += 1;
+      return [{ ...publishedVersion, app: "linear", platform: "ios" }];
+    },
     resolveAppVersion: async () => {
       versionResolutions += 1;
       return { ...publishedVersion, app: "linear", platform: "ios" };
@@ -3157,15 +3189,18 @@ test("loads screens with complete category facets and filters the paged result",
   }));
   t.after(() => close(server));
 
+  const versions = await fetch(`${base}/apps/linear/versions?platform=ios`, { headers: adminAuth });
   const screens = await fetch(`${base}/apps/linear/screens?platform=ios&version=1&type=Login&limit=48`, { headers: adminAuth });
   const elements = await fetch(`${base}/apps/linear/ui-elements?platform=ios&version=1&limit=24`, { headers: adminAuth });
+  assert.equal(versions.status, 200);
   assert.equal(screens.status, 200);
   assert.equal(elements.status, 200);
   assert.deepEqual(calls, [
     { kind: "screen", limit: 48, screenTypes: ["Login"] },
     { kind: "ui_element", limit: 24, screenTypes: undefined },
   ]);
-  assert.equal(versionResolutions, 1);
+  assert.equal(versionLists, 1);
+  assert.equal(versionResolutions, 0);
   const screenBody = await screens.json();
   assert.equal(screenBody.screens.length, 1);
   assert.deepEqual(screenBody.screenTypes, ["Dashboard", "Login"]);

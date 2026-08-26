@@ -1847,15 +1847,20 @@ export async function publishAppVersion(versionId: number, userId: number): Prom
   return (await appVersionById(versionId))!;
 }
 
-export async function getVersionDesignSystem(app: string, platform: string, versionNumber?: number): Promise<{
+export async function getVersionDesignSystem(
+  app: string,
+  platform: string,
+  versionNumber?: number,
+  resolvedVersion?: AppVersion,
+): Promise<{
   version: AppVersion;
   snapshot: DesignSystemSnapshot;
   flows: DesignFlow[];
 } | undefined> {
-  const versions = await listAppVersions(app, platform);
-  const version = versionNumber == null
-    ? versions.find(({ status }) => status === 'published')
-    : versions.find(({ version_number }) => version_number === versionNumber);
+  const versions = resolvedVersion ? undefined : await listAppVersions(app, platform);
+  const version = resolvedVersion ?? (versionNumber == null
+    ? versions?.find(({ status }) => status === 'published')
+    : versions?.find(({ version_number }) => version_number === versionNumber));
   if (!version) return undefined;
   if (version.status === 'draft' || version.status === 'in_review') {
     const snapshot = await getDesignSystem(app, platform);

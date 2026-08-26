@@ -946,6 +946,34 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     listPublishedDesignSystems: overrides.listPublishedDesignSystems ?? overrides.listDesignSystems ?? defaults.listPublishedDesignSystems,
     listPublishedFlowSets: overrides.listPublishedFlowSets ?? overrides.listAppFlowSets ?? defaults.listPublishedFlowSets,
   };
+  const appVersionListCache = new Map<string, {
+    expiresAt: number;
+    promise: ReturnType<typeof deps.listAppVersions>;
+  }>();
+  const appVersionListKey = (appSlug: string, platform: Platform, publishedOnly: boolean) =>
+    `${appSlug}\u0000${platform}\u0000${publishedOnly}`;
+  const cachedAppVersions = (appSlug: string, platform: Platform, publishedOnly: boolean) => {
+    const key = appVersionListKey(appSlug, platform, publishedOnly);
+    const cached = appVersionListCache.get(key);
+    if (cached && cached.expiresAt > Date.now()) return cached.promise;
+    if (cached) appVersionListCache.delete(key);
+    return undefined;
+  };
+  const listCachedAppVersions = (appSlug: string, platform: Platform, publishedOnly: boolean) => {
+    const cached = cachedAppVersions(appSlug, platform, publishedOnly);
+    if (cached) return cached;
+    if (appVersionListCache.size >= 128) {
+      const oldest = appVersionListCache.keys().next().value;
+      if (oldest !== undefined) appVersionListCache.delete(oldest);
+    }
+    const key = appVersionListKey(appSlug, platform, publishedOnly);
+    const promise = deps.listAppVersions(appSlug, platform, publishedOnly);
+    appVersionListCache.set(key, { expiresAt: Date.now() + 10_000, promise });
+    void promise.catch(() => {
+      if (appVersionListCache.get(key)?.promise === promise) appVersionListCache.delete(key);
+    });
+    return promise;
+  };
   const requestCrawlRepair = overrides.requestCrawlRepair ?? createCrawlRepairRequester({
     getRun: deps.getCrawlRun,
     getPlan: deps.getCrawlPlan,
@@ -2703,7 +2731,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "invalid app slug or platform" });
       return;
     }
-    res.json(await deps.listAppVersions(appSlug, platform, res.locals.user.role !== "admin"));
+    res.json(await listCachedAppVersions(appSlug, platform, res.locals.user.role !== "admin"));
   });
 
   app.post("/apps/:app/versions", requireAdmin, async (req, res) => {
@@ -3427,7 +3455,12 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       const oldest = sectionVersionCache.keys().next().value;
       if (oldest !== undefined) sectionVersionCache.delete(oldest);
     }
-    const promise = deps.resolveAppVersion(appSlug, platform, requestedVersion, publishedOnly);
+    const listed = cachedAppVersions(appSlug, platform, publishedOnly);
+    const promise = listed
+      ? listed.then((versions) => requestedVersion === undefined
+        ? versions.find(({ status }) => status === "published")
+        : versions.find(({ version_number }) => version_number === requestedVersion))
+      : deps.resolveAppVersion(appSlug, platform, requestedVersion, publishedOnly);
     sectionVersionCache.set(key, { expiresAt: now + 10_000, promise });
     void promise.catch(() => {
       if (sectionVersionCache.get(key)?.promise === promise) sectionVersionCache.delete(key);
@@ -4016,14 +4049,20 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     if (res.locals.user.role !== "admin" && requestedVersion !== undefined) {
-      const published = await deps.listAppVersions(appSlug, platform, true);
+      const published = await listCachedAppVersions(appSlug, platform, true);
       if (!published.some(({ version_number }) => version_number === requestedVersion)) {
         res.status(404).json({ error: "published design system version not found" });
         return;
       }
     }
+    const listedVersions = cachedAppVersions(appSlug, platform, res.locals.user.role !== "admin");
+    const resolvedVersion = listedVersions
+      ? (await listedVersions).find((version) => requestedVersion === undefined
+        ? version.status === "published"
+        : version.version_number === requestedVersion)
+      : undefined;
     const versioned = requestedVersion !== undefined || res.locals.user.role !== "admin"
-      ? await deps.getVersionDesignSystem(appSlug, platform, requestedVersion)
+      ? await deps.getVersionDesignSystem(appSlug, platform, requestedVersion, resolvedVersion)
       : undefined;
     const versionedSnapshot = versioned?.snapshot;
     const versionedPlaceholder = versionedSnapshot
