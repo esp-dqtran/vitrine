@@ -1,8 +1,16 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { createCloudflareFrontendWorker, applyHtmlSeo } from "./cloudflareFrontendWorker.ts";
 import { metadataForPath } from "./seoMetadata.ts";
 import { buildSitemapXml } from "./seoSitemap.ts";
+
+test("Cloudflare runs the SEO Worker before SPA asset fallback", async () => {
+  const config = JSON.parse(await readFile(new URL("../wrangler.jsonc", import.meta.url), "utf8")) as {
+    assets?: { run_worker_first?: boolean | string[] };
+  };
+  assert.equal(config.assets?.run_worker_first, true);
+});
 
 test("SEO metadata canonicalizes catalog routes and noindexes filtered variants", () => {
   const catalog = metadataForPath("/browse/example-app");
