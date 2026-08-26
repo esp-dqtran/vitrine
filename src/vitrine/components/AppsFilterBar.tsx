@@ -577,11 +577,14 @@ export function DiscoveryFilterMenu({
     return [...groups.entries()];
   }, [visibleOptions]);
   const controlClassName = `discovery-filter-control apps-filterbar__filter ${primary ? 'apps-filterbar__filter--primary' : ''} ${selectedCount ? 'apps-filterbar__filter--selected' : ''} ${filterClassName ?? ''}`;
+  const selectedValue = group.selected[0];
+  const selectedLabel = selectedValue
+    ? options.find((option) => option.value === selectedValue)?.label ?? selectedValue
+    : undefined;
   useDiscoveryFilterWidthMotion(motionContainerRef, selectedKey);
   const setSearchMenuRef = useDiscoveryFilterSearchMotion(open, query, searchResultKey);
 
   if (group.selectionMode === 'single') {
-    const selectedValue = group.selected[0];
     return (
       <div
         className={controlClassName}
@@ -590,8 +593,8 @@ export function DiscoveryFilterMenu({
         ref={setControlRef}
       >
         <AstryxDropdown
-          label={selectedValue ?? group.label}
-          ariaLabel={`${group.label}: ${selectedValue ?? 'Choose option'}`}
+          label={selectedLabel ?? group.label}
+          ariaLabel={`${group.label}: ${selectedLabel ?? 'Choose option'}`}
           open={open}
           triggerClassName="apps-filterbar__filter-button"
           triggerVariant={primary ? 'primary' : 'secondary'}
@@ -606,7 +609,7 @@ export function DiscoveryFilterMenu({
           {group.options.map((option) => (
             <AstryxDropdownItem
               key={option.value}
-              label={option.value}
+              label={option.label ?? option.value}
               selected={selectedValue === option.value}
               onSelect={() => {
                 onToggleOption(option);
@@ -638,9 +641,9 @@ export function DiscoveryFilterMenu({
     >
       <AstryxDropdown
         mode="panel"
-        label={selectedCount === 1 ? group.selected[0]! : group.label}
+        label={selectedCount === 1 ? selectedLabel! : group.label}
         ariaLabel={selectedCount
-          ? `Filter (${selectedCount} selected): ${selectedCount === 1 ? group.selected[0] : group.label}`
+          ? `Filter (${selectedCount} selected): ${selectedCount === 1 ? selectedLabel : group.label}`
           : `Open ${group.label} filters`}
         panelAriaLabel={`${group.label} filters`}
         panelPortal

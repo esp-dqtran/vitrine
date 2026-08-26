@@ -388,6 +388,7 @@ export function ComponentsPage() {
         singularResultLabel="component"
         totalCount={items.length}
         renderedCount={items.length}
+        showResultMeta={false}
         loading={false}
         error={null}
         loadMoreError={null}

@@ -108,6 +108,50 @@ test('keeps DiscoveryFilterBar generic across discovery kinds', () => {
   assert.match(html, /2 sites/);
 });
 
+test('shows selected filter labels instead of URL slugs', () => {
+  const renderMenu = (group: Parameters<typeof DiscoveryFilterMenu>[0]['group']) =>
+    renderToStaticMarkup(
+      <DiscoveryFilterMenu
+        group={group}
+        open={false}
+        query=""
+        preview={null}
+        onToggleOpen={() => undefined}
+        onQueryChange={() => undefined}
+        onPreview={() => undefined}
+        onToggleOption={() => undefined}
+        onClear={() => undefined}
+      />,
+    );
+
+  const categoryHtml = renderMenu({
+    id: 'flowCategories',
+    label: 'Categories',
+    selected: ['communication-collaboration'],
+    options: [{
+      value: 'communication-collaboration',
+      label: 'Communication & Collaboration',
+      section: 'Flow categories',
+    }],
+  });
+  const typeHtml = renderMenu({
+    id: 'flowTypes',
+    label: 'Flow Types',
+    selected: ['authentication/sign-in'],
+    selectionMode: 'single',
+    options: [{
+      value: 'authentication/sign-in',
+      label: 'Sign in',
+      section: 'Authentication',
+    }],
+  });
+
+  assert.match(categoryHtml, /Filter \(1 selected\): Communication &amp; Collaboration/);
+  assert.match(categoryHtml, />Communication &amp; Collaboration</);
+  assert.match(typeHtml, /aria-label="Flow Types: Sign in"/);
+  assert.match(typeHtml, />Sign in</);
+});
+
 test('supports a primary filter and a right-aligned toolbar action', () => {
   const html = renderToStaticMarkup(
     <DiscoveryFilterBar

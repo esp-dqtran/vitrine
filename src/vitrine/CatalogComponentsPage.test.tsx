@@ -9,7 +9,8 @@ test('renders the component library categories and source links', () => {
 
   assert.match(html, /data-component-library="true"/);
   assert.match(html, /data-reference-component="component-card"/);
-  assert.match(html, />31 components</);
+  assert.doesNotMatch(html, /reference-discovery__result-meta/);
+  assert.match(html, />All <span>31<\/span>/);
   assert.match(html, /data-component-source-group="site:Melius"/);
   assert.match(html, /data-component-source-group="site:Content Architecture"/);
   assert.match(html, /data-component-source-group="site:Craft\/Wild"/);

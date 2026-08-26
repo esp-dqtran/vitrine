@@ -189,6 +189,7 @@ export function FlowsPageView({
           onClearFilter={controller.clearFilterGroup}
         />
       )}
+      showResultMeta={false}
       resultLabel="flows"
       singularResultLabel="flow"
       totalCount={isGuest

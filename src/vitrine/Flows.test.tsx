@@ -138,8 +138,8 @@ test('renders a first-class searchable Flow catalog beside Apps and Sites', () =
   assert.match(html, /role="radio"[^>]*aria-label="Android"/);
   assert.match(html, /Open Categories filters/);
   assert.match(html, /Open Flow Types filters/);
-  assert.match(html, /Showing<\/small> <strong>23 flows/);
-  assert.equal((html.match(/23 flows/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /reference-discovery__result-meta/);
+  assert.doesNotMatch(html, /23 flows/);
   assert.doesNotMatch(html, />Popular|>Grouped</);
   assert.doesNotMatch(html, /data-reference-discovery-toolbar="true"/);
   assert.match(html, />Authentication</);
@@ -183,7 +183,7 @@ test('leaves Flow search to the shared header trigger', () => {
   assert.doesNotMatch(html, /Search flows by name or group/);
 });
 
-test('shows the server total independently of loaded cards', () => {
+test('hides the server total independently of loaded cards', () => {
   const html = renderToStaticMarkup(
     <FlowsPageView
       controller={controller({
@@ -201,11 +201,12 @@ test('shows the server total independently of loaded cards', () => {
     />,
   );
 
-  assert.match(html, /40 flows/);
+  assert.doesNotMatch(html, /reference-discovery__result-meta/);
+  assert.doesNotMatch(html, /40 flows/);
   assert.doesNotMatch(html, /Load more Flows/);
 });
 
-test('caps the visible Flow result total for public visitors', () => {
+test('hides the capped Flow result total for public visitors', () => {
   const html = renderToStaticMarkup(
     <FlowsPageView
       controller={controller({ totalCount: 40 })}
@@ -215,8 +216,8 @@ test('caps the visible Flow result total for public visitors', () => {
     />,
   );
 
-  assert.match(html, /Showing<\/small> <strong>12 flows/);
-  assert.doesNotMatch(html, /40 flows/);
+  assert.doesNotMatch(html, /reference-discovery__result-meta/);
+  assert.doesNotMatch(html, /12 flows|40 flows/);
 });
 
 test('keeps the controlled 13-category Flow taxonomy independent from response facets', () => {
