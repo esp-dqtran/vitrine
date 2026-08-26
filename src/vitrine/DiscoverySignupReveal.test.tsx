@@ -50,6 +50,6 @@ test('mounts the source FooterEasterEgg without its dotted background layer', as
   assert.match(sourceComponent, /data-card-variant=\{cardVariant\}/);
   assert.match(sourceComponent, /footer-easter-egg__card-reveal/);
   const revealCss = css.slice(css.indexOf('.discovery-signup-reveal'));
-  assert.match(revealCss, /background:\s*#0f0f10/);
+  assert.match(revealCss, /background:\s*#111112/);
   assert.doesNotMatch(revealCss, /radial-gradient/);
 });
