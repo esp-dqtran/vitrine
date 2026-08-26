@@ -5,15 +5,34 @@ import {
   adminCatalogPage,
   catalogFacetCacheForQuery,
   createCatalogFacetCache,
+  publishedCatalogAppSlugs,
   publishedCatalogPage,
   type DatabaseQuery,
 } from "./publicCatalogStore.ts";
+
 import {
   CatalogCursorError,
   decodeCatalogCursor,
   encodeCatalogCursor,
   encodeUpdatedCatalogCursor,
 } from "./catalogCursor.ts";
+
+test("loads published sitemap App slugs in one bounded query", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const appSlugs = await publishedCatalogAppSlugs(
+    { platform: "web", now: new Date("2026-08-26T04:59:59.000Z") },
+    async (sql, values) => {
+      calls.push({ sql, values });
+      return { rows: [{ app: "figma" }, { app: "linear" }, { app: null }], rowCount: 3 } as QueryResult;
+    },
+  );
+
+  assert.deepEqual(appSlugs, ["figma", "linear"]);
+  assert.equal(calls.length, 1);
+  assert.match(calls[0]!.sql, /SELECT DISTINCT a\.name AS app/);
+  assert.match(calls[0]!.sql, /latest\.screen_count > 0/);
+  assert.deepEqual(calls[0]!.values, ["2026-08-26T04:59:00.000Z", "web"]);
+});
 
 function result(rows: Record<string, unknown>[] = []): QueryResult<any> {
   return { rows, rowCount: rows.length, command: "SELECT", oid: 0, fields: [] };

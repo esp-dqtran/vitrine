@@ -917,6 +917,33 @@ export function publishedCatalogPage(
   return catalogPage(input, runQuery, facetCache, "public");
 }
 
+export async function publishedCatalogAppSlugs(
+  input: { platform?: string; now?: Date } = {},
+  runQuery: DatabaseQuery = query,
+): Promise<string[]> {
+  const snapshotAt = stableCatalogSnapshotAt(input.now ?? new Date());
+  const result = await runQuery(
+    `WITH latest AS (
+       SELECT DISTINCT ON (av.app_id, av.platform)
+         av.app_id, av.platform, av.screen_count
+       FROM app_versions av
+       WHERE av.published_at IS NOT NULL
+         AND av.published_at <= $1::timestamptz
+         AND ($2::text IS NULL OR av.platform = $2)
+       ORDER BY av.app_id, av.platform, av.published_at DESC, av.version_number DESC
+     )
+     SELECT DISTINCT a.name AS app
+     FROM latest
+     JOIN apps a ON a.id = latest.app_id
+     WHERE latest.screen_count > 0
+     ORDER BY a.name`,
+    [snapshotAt, input.platform ?? null],
+  );
+  return result.rows.flatMap((row: { app?: unknown }) =>
+    typeof row.app === "string" && row.app.length > 0 ? [row.app] : []
+  );
+}
+
 export function adminCatalogPage(
   input: Parameters<typeof catalogPage>[0] = {},
   runQuery: DatabaseQuery = query,

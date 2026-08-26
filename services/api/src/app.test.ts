@@ -297,6 +297,30 @@ function close(server: Server): Promise<void> {
   });
 }
 
+test("serves a sitemap from one App identity query without invalid slugs", async () => {
+  let appSlugQueries = 0;
+  const { base, server } = await serve(createApiApp({
+    publishedCatalogAppSlugs: async () => {
+      appSlugQueries += 1;
+      return ["figma", "linear"];
+    },
+    sitesStore: {
+      listReadySites: async () => [],
+    } as never,
+  }));
+  try {
+    const response = await fetch(`${base}/seo/sitemap.xml`);
+    const xml = await response.text();
+    assert.equal(response.status, 200);
+    assert.equal(appSlugQueries, 1);
+    assert.match(xml, /<loc>https:\/\/vitrines\.ai\/browse\/figma<\/loc>/);
+    assert.match(xml, /<loc>https:\/\/vitrines\.ai\/browse\/linear<\/loc>/);
+    assert.doesNotMatch(xml, /\/undefined/);
+  } finally {
+    await close(server);
+  }
+});
+
 async function readSseUntil(reader: ReadableStreamDefaultReader<Uint8Array>, pattern: RegExp): Promise<string> {
   let output = "";
   const deadline = Date.now() + 2_000;

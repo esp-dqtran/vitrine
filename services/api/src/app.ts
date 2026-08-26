@@ -99,7 +99,11 @@ import {
   buildPublishedCatalogPage,
   buildPublishedPreviewScreens,
 } from "../../../src/gallery.ts";
-import { adminCatalogPage, publishedCatalogPage } from "../../../src/publicCatalogStore.ts";
+import {
+  adminCatalogPage,
+  publishedCatalogAppSlugs,
+  publishedCatalogPage,
+} from "../../../src/publicCatalogStore.ts";
 import { CatalogCursorError } from "../../../src/catalogCursor.ts";
 import {
   parsePublicFacet,
@@ -428,6 +432,7 @@ const defaults = {
   versionImages,
   publishedImages,
   publishedPreviewImages,
+  publishedCatalogAppSlugs,
   publishedCatalogPage,
   publishedFacetPreviews,
   publishedFlowCatalogPage,
@@ -1751,20 +1756,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
 
   app.get("/seo/sitemap.xml", async (_req, res) => {
     try {
-      const appSlugs: string[] = [];
-      let cursor: string | undefined;
-      for (let pageNumber = 0; pageNumber < 500; pageNumber += 1) {
-        const page = await deps.publishedCatalogPage({
-          ...(cursor ? { cursor } : {}),
-          limit: 24,
-          includeFacets: false,
-          platform: "web",
-          sort: "latest",
-        });
-        appSlugs.push(...page.apps.map((app) => app.id));
-        if (!page.nextCursor || page.nextCursor === cursor) break;
-        cursor = page.nextCursor;
-      }
+      const appSlugs = await deps.publishedCatalogAppSlugs({ platform: "web" });
       const siteSlugs = withRouteSlugs(await deps.sitesStore.listReadySites())
         .map((site) => site.routeSlug);
       res
