@@ -8,7 +8,7 @@ import {
 } from './componentLibraryCatalog.ts';
 
 test('organizes reconstructed sites into one practical component-family layer', () => {
-  assert.equal(COMPONENT_LIBRARY.length, 90);
+  assert.equal(COMPONENT_LIBRARY.length, 91);
   assert.deepEqual(
     Object.fromEntries(COMPONENT_CATEGORIES.map(({ id }) => [
       id,
@@ -28,15 +28,15 @@ test('organizes reconstructed sites into one practical component-family layer', 
       page: 2,
       media: 4,
       display: 15,
-      effect: 6,
+      effect: 7,
     },
   );
-  assert.equal(new Set(COMPONENT_LIBRARY.map(({ id }) => id)).size, 90);
+  assert.equal(new Set(COMPONENT_LIBRARY.map(({ id }) => id)).size, 91);
 });
 
 test('keeps the public showcase focused on significant standalone components', () => {
-  assert.equal(SIGNIFICANT_COMPONENT_LIBRARY.length, 30);
-  assert.equal(new Set(SIGNIFICANT_COMPONENT_LIBRARY.map(({ id }) => id)).size, 30);
+  assert.equal(SIGNIFICANT_COMPONENT_LIBRARY.length, 31);
+  assert.equal(new Set(SIGNIFICANT_COMPONENT_LIBRARY.map(({ id }) => id)).size, 31);
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.every((component) => COMPONENT_LIBRARY.includes(component)));
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ name }) => name === 'HeroSection'));
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ name }) => name === 'SpiralScene'));
@@ -60,6 +60,7 @@ test('keeps the public showcase focused on significant standalone components', (
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ id }) => id === 'flim-flimherosearchsection'));
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ id }) => id === 'flim-flimwhatisflimsection'));
   assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ id }) => id === 'flim-flimdatabasescrollsection'));
+  assert.ok(SIGNIFICANT_COMPONENT_LIBRARY.some(({ id }) => id === 'details-so-overlaptransitionstage'));
   assert.ok(!SIGNIFICANT_COMPONENT_LIBRARY.some(({ id }) => id === 'content-architecture-herosection'));
   assert.ok(!SIGNIFICANT_COMPONENT_LIBRARY.some(({ id }) => id === 'content-architecture-pricingsection'));
   assert.ok(!SIGNIFICANT_COMPONENT_LIBRARY.some(({ id }) => id === 'content-architecture-app'));

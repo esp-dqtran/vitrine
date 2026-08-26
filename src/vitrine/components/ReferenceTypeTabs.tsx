@@ -1,8 +1,16 @@
 import { ToggleButton } from '@astryxdesign/core';
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { navigate } from '../router.ts';
 
 export type ReferenceType = 'apps' | 'sites' | 'color' | 'flows' | 'components' | 'projects';
+
+const DEFAULT_REFERENCE_TYPES: readonly ReferenceType[] = [
+  'apps',
+  'sites',
+  'flows',
+  'components',
+  'color',
+];
 
 interface ReferenceTypeTabsProps {
   active: ReferenceType;
@@ -27,9 +35,11 @@ export function ReferenceTypeTabs({
             : { name: 'projects' },
   ),
   className,
-  values = ['apps', 'sites', 'flows', 'components', 'color'],
+  values = DEFAULT_REFERENCE_TYPES,
 }: ReferenceTypeTabsProps) {
   const tablistRef = useRef<HTMLDivElement>(null);
+  const tabRefs = useRef<Partial<Record<ReferenceType, HTMLSpanElement>>>({});
+  const [indicatorStyle, setIndicatorStyle] = useState<CSSProperties>({ opacity: 0 });
 
   useEffect(() => {
     tablistRef.current
@@ -37,33 +47,68 @@ export function ReferenceTypeTabs({
       ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }, [active]);
 
+  useLayoutEffect(() => {
+    const tablist = tablistRef.current;
+    const activeTab = tabRefs.current[active];
+    if (!tablist || !activeTab) return;
+
+    const measure = () => {
+      const tablistRect = tablist.getBoundingClientRect();
+      const activeRect = activeTab.getBoundingClientRect();
+      setIndicatorStyle({
+        width: activeRect.width,
+        opacity: 1,
+        transform: `translateX(${activeRect.left - tablistRect.left + tablist.scrollLeft}px)`,
+      });
+    };
+
+    measure();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
+    observer?.observe(tablist);
+    window.addEventListener('resize', measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [active, values]);
+
   return (
     <div
       ref={tablistRef}
       role="tablist"
       aria-label="Reference type"
-      className={className}
+      className={['reference-type-tabs', className].filter(Boolean).join(' ')}
       style={className ? undefined : { display: 'flex', gap: 8, overflowX: 'auto', padding: '4px 0 14px' }}
     >
+      <span
+        className="reference-type-tabs__indicator"
+        style={indicatorStyle}
+        aria-hidden="true"
+      />
       {values.map((value) => (
-        <ToggleButton
+        <span
           key={value}
-          label={value === 'apps'
-            ? 'Apps'
-            : value === 'sites'
-              ? 'Sites'
-              : value === 'color'
-                ? 'Colors'
-                : value === 'flows'
-                  ? 'Flows'
-                  : value === 'components' ? 'Components' : 'Projects'}
-          isPressed={active === value}
-          onPressedChange={() => onChange(value)}
-          role="tab"
-          aria-pressed={undefined}
-          aria-selected={active === value}
-          size="sm"
-        />
+          ref={(node) => { tabRefs.current[value] = node ?? undefined; }}
+          className="reference-type-tabs__tab"
+        >
+          <ToggleButton
+            label={value === 'apps'
+              ? 'Apps'
+              : value === 'sites'
+                ? 'Sites'
+                : value === 'color'
+                  ? 'Colors'
+                  : value === 'flows'
+                    ? 'Flows'
+                    : value === 'components' ? 'Components' : 'Projects'}
+            isPressed={active === value}
+            onPressedChange={() => onChange(value)}
+            role="tab"
+            aria-pressed={undefined}
+            aria-selected={active === value}
+            size="sm"
+          />
+        </span>
       ))}
     </div>
   );

@@ -187,6 +187,7 @@ export function CatalogSearchPage({
                 app={app}
                 platform={controller.state.platform}
                 onOpen={() => onOpenApp(app.id)}
+                href={`/browse/${encodeURIComponent(app.id)}`}
               />
             ))}
           </div>

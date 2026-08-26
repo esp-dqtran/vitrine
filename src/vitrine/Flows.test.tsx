@@ -132,10 +132,12 @@ test('renders a first-class searchable Flow catalog beside Apps and Sites', () =
   assert.doesNotMatch(html, /Browse by category/);
   assert.match(html, /data-flows-filterbar="true"/);
   assert.match(html, /aria-label="Flow discovery controls"/);
-  assert.match(html, /aria-label="Flow platform: Web"/);
-  assert.doesNotMatch(html, /role="radiogroup"[^>]*aria-label="Flow platform"/);
-  assert.match(html, /Open Category filters/);
-  assert.match(html, /Open Flow type filters/);
+  assert.match(html, /role="radiogroup"[^>]*aria-label="Flow platform"/);
+  assert.match(html, /role="radio"[^>]*aria-checked="true"[^>]*aria-label="Web"/);
+  assert.match(html, /role="radio"[^>]*aria-label="iOS"/);
+  assert.match(html, /role="radio"[^>]*aria-label="Android"/);
+  assert.match(html, /Open Categories filters/);
+  assert.match(html, /Open Flow Types filters/);
   assert.match(html, /Showing<\/small> <strong>23 flows/);
   assert.equal((html.match(/23 flows/g) ?? []).length, 1);
   assert.doesNotMatch(html, />Popular|>Grouped</);

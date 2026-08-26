@@ -209,7 +209,9 @@ test('copies selected screens as one board without exposing image downloads', ()
 test('animates the active platform indicator and platform content', () => {
   const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
   const switcherSource = readFileSync(new URL('./components/AppsPlatformSwitcher.tsx', import.meta.url), 'utf8');
-  assert.match(switcherSource, /--apps-platform-indicator-shift/);
+  assert.match(switcherSource, /<LayoutGroup id="apps-platform-switcher">/);
+  assert.match(switcherSource, /layoutId="apps-platform-active-pill"/);
+  assert.match(switcherSource, /transition=\{prefersReducedMotion/);
   assert.match(source, /\}, \[section, selectedPlatform\]\);/);
 });
 

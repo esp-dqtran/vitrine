@@ -68,7 +68,6 @@
 
 .apps-discovery :is(
   .apps-filterbar__checkbox-option,
-  .apps-platform-switcher::before,
   .reference-discovery-toolbar__sort button,
   .reference-discovery-toolbar__sort button::after
 ) {
@@ -82,25 +81,30 @@
   transition-timing-function: var(--vitrine-motion-ease) !important;
 }
 
-/* Apps and Screens are alternate views of the same result region. Remounting
- * the selected view gives the incoming layout a lightweight handoff instead
- * of replacing every visible card in one frame. */
+.apps-discovery__results-transition {
+  transform-origin: 50% calc(100% + clamp(48px, 7vw, 96px));
+}
+
 @keyframes apps-discovery-results-enter {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    translate: 0 8px;
   }
 
   to {
     opacity: 1;
-    transform: none;
+    translate: 0 0;
   }
 }
 
-.apps-discovery__results-transition,
 .discovery-page-layout--apps .reference-discovery__result-meta {
   animation: apps-discovery-results-enter var(--vitrine-motion-medium)
     var(--vitrine-motion-ease) both;
+}
+
+.apps-discovery__motion-card {
+  min-width: 0;
+  transform-origin: 50% 120%;
 }
 
 /* Interactive cards use local motion and a restrained two-pixel lift. */
@@ -156,6 +160,11 @@
     .project-file-index__empty
   ):hover {
     transform: translateY(-2px) scale(1);
+  }
+
+  .apps-discovery .app-discovery-card:hover {
+    box-shadow: var(--shadow-low);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -277,10 +286,10 @@ dialog.astryx-modal.astryx-modal--dialog:not(.flow-preview-dialog-shell) {
     transform: none !important;
   }
 
-  .apps-discovery__results-transition,
   .discovery-page-layout--apps .reference-discovery__result-meta {
     animation: none !important;
   }
+
 }
 
 /*

@@ -13,9 +13,13 @@ test('renders only supported platforms in Apps order with radio state', () => {
   );
 
   assert.match(html, /role="radiogroup"/);
-  assert.match(html, />Web</);
-  assert.match(html, />iOS</);
-  assert.doesNotMatch(html, />Android</);
+  assert.match(html, /data-platform-icon="web"/);
+  assert.match(html, /data-platform-icon="ios"/);
+  assert.doesNotMatch(html, /data-platform-icon="android"/);
+  const buttonMarkup = (html.match(/<button[\s\S]*?<\/button>/g) ?? []).join('');
+  assert.match(buttonMarkup, /apps-platform-switcher__label">Web</);
+  assert.match(buttonMarkup, /apps-platform-switcher__label">iOS</);
   assert.match(html, /role="radio"[^>]*aria-checked="true"[^>]*aria-label="Web"/);
-  assert.ok(html.indexOf('>Web<') < html.indexOf('>iOS<'));
+  assert.match(html, /aria-label="iOS"/);
+  assert.ok(html.indexOf('data-platform-icon="web"') < html.indexOf('data-platform-icon="ios"'));
 });

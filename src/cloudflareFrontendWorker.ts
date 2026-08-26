@@ -1,3 +1,11 @@
+import { buildSitemapXml } from "./seoSitemap.ts";
+import {
+  metadataForApp,
+  metadataForPath,
+  metadataForSite,
+  type SeoMetadata,
+} from "./seoMetadata.ts";
+
 interface StaticAssetsBinding {
   fetch(request: Request): Promise<Response>;
 }
@@ -224,6 +232,205 @@ function collaborationRequest(request: Request, origin: URL): Request {
   return new Request(target, request);
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function replaceHtmlMeta(
+  html: string,
+  attribute: "name" | "property",
+  key: string,
+  content: string,
+): string {
+  const tag = `<meta ${attribute}="${key}" content="${escapeHtml(content)}" />`;
+  const pattern = new RegExp(
+    `<meta\\s+${attribute}=["']${escapeRegExp(key)}["'][^>]*>`,
+    "i",
+  );
+  return pattern.test(html)
+    ? html.replace(pattern, tag)
+    : html.replace("</head>", `  ${tag}\n</head>`);
+}
+
+export function applyHtmlSeo(html: string, metadata: SeoMetadata): string {
+  let result = html.replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(metadata.title)}</title>`);
+  result = replaceHtmlMeta(result, "name", "description", metadata.description);
+  result = replaceHtmlMeta(result, "name", "robots", metadata.robots);
+  result = replaceHtmlMeta(result, "property", "og:type", metadata.ogType ?? "website");
+  result = replaceHtmlMeta(result, "property", "og:site_name", "Vitrines");
+  result = replaceHtmlMeta(result, "property", "og:title", metadata.title);
+  result = replaceHtmlMeta(result, "property", "og:description", metadata.description);
+  result = replaceHtmlMeta(result, "property", "og:url", `https://vitrines.ai${metadata.canonicalPath}`);
+  result = replaceHtmlMeta(result, "property", "og:image", metadata.image ?? "https://vitrines.ai/landing/vitrines-social-card-v6.png");
+  result = replaceHtmlMeta(result, "property", "og:image:alt", `${metadata.title} — Vitrines`);
+  result = replaceHtmlMeta(result, "name", "twitter:card", "summary_large_image");
+  result = replaceHtmlMeta(result, "name", "twitter:title", metadata.title);
+  result = replaceHtmlMeta(result, "name", "twitter:description", metadata.description);
+  result = replaceHtmlMeta(result, "name", "twitter:image", metadata.image ?? "https://vitrines.ai/landing/vitrines-social-card-v6.png");
+  result = replaceHtmlMeta(result, "name", "twitter:image:alt", `${metadata.title} — Vitrines`);
+  result = result.replace(
+    /<link\s+rel=["']canonical["'][^>]*>/i,
+    `<link rel="canonical" href="https://vitrines.ai${escapeHtml(metadata.canonicalPath)}" />`,
+  );
+  const jsonLd = metadata.jsonLd
+    ? `  <script type="application/ld+json">${JSON.stringify(metadata.jsonLd)
+      .replace(/</g, "\\u003c")
+      .replace(/>/g, "\\u003e")
+      .replace(/&/g, "\\u0026")}</script>`
+    : "";
+  const jsonLdPattern = /\s*<script\s+type=["']application\/ld\+json["'][\s\S]*?<\/script>/i;
+  result = jsonLdPattern.test(result)
+    ? result.replace(jsonLdPattern, jsonLd)
+    : jsonLd
+      ? result.replace("</head>", `\n${jsonLd}\n</head>`)
+      : result;
+  return result;
+}
+
+function isKnownHtmlRoute(pathname: string): boolean {
+  if ([
+    "/",
+    "/landing",
+    "/build-in-public",
+    "/pricing",
+    "/terms",
+    "/privacy",
+    "/refunds",
+    "/billing/success",
+    "/settings/billing",
+    "/signin",
+    "/forgot-password",
+    "/reset-password",
+    "/search",
+    "/apps",
+    "/browse",
+    "/browse/flows",
+    "/components",
+    "/browse/sites",
+    "/browse/search",
+    "/browse/pricing",
+    "/browse/build-in-public",
+    "/browse/billing-success",
+    "/browse/forgot-password",
+    "/browse/reset-password",
+    "/browse/collections",
+    "/browse/projects",
+    "/browse/settings",
+    "/browse/admin",
+    "/flows",
+    "/sites",
+    "/colors",
+    "/color",
+    "/colors/compose",
+    "/color/compose",
+    "/colors/create",
+    "/color/create",
+    "/sites/motion",
+    "/projects",
+    "/collections",
+    "/admin",
+  ].includes(pathname)) return true;
+  return /^\/(?:browse|apps|sites|projects|collections|feature-document-shares)\/[^/]+(?:\/.*)?$/.test(pathname);
+}
+
+async function catalogRouteMetadata(
+  pathname: string,
+  search: string,
+  request: Request,
+  environment: CloudflareFrontendEnvironment,
+  fetchApi: ApiFetch,
+): Promise<{ exists: boolean | null; metadata?: SeoMetadata }> {
+  const origin = apiOrigin(environment.API_ORIGIN);
+  if (!origin) return { exists: null };
+  const appMatch = pathname.match(/^\/browse\/([^/]+)$/);
+  const siteMatch = pathname.match(/^\/browse\/sites\/([^/]+)$/);
+  if (!appMatch && !siteMatch) return { exists: null };
+  let decodedSlug: string;
+  try {
+    decodedSlug = decodeURIComponent((appMatch ?? siteMatch)![1]);
+  } catch {
+    return { exists: false };
+  }
+  const target = new URL(origin);
+  target.pathname = appMatch
+    ? `/apps/${encodeURIComponent(decodedSlug)}/preview`
+    : `/sites/${encodeURIComponent(decodedSlug)}`;
+  target.search = appMatch ? "v=2" : "";
+  const response = await fetchApi(new Request(target, {
+    method: "GET",
+    headers: { accept: "application/json", "user-agent": request.headers.get("user-agent") ?? "" },
+  }));
+  if (response.status === 404) return { exists: false };
+  if (!response.ok) return { exists: null };
+  try {
+    const body = await response.json() as {
+      app?: Parameters<typeof metadataForApp>[0];
+      site?: Parameters<typeof metadataForSite>[0];
+      routeSlug?: string;
+    };
+    if (appMatch && body.app) return { exists: true, metadata: metadataForApp(body.app, search) };
+    if (siteMatch && body.site && body.routeSlug) {
+      return {
+        exists: true,
+        metadata: metadataForSite({
+          routeSlug: body.routeSlug,
+          name: body.site.name,
+          description: body.site.description,
+          logoUrl: body.site.logoUrl,
+          sourceUrl: body.site.sourceUrl,
+        }, search),
+      };
+    }
+  } catch {
+    // The route still exists when the API payload cannot be used for head metadata.
+  }
+  return { exists: true };
+}
+
+async function htmlAssetResponse(
+  request: Request,
+  environment: CloudflareFrontendEnvironment,
+  metadata: SeoMetadata,
+  status = 200,
+): Promise<Response> {
+  const asset = await environment.ASSETS.fetch(request);
+  if (!asset.headers.get("content-type")?.includes("text/html")) return asset;
+  const html = applyHtmlSeo(await asset.text(), metadata);
+  const headers = new Headers(asset.headers);
+  headers.set("content-type", "text/html; charset=UTF-8");
+  return new Response(html, { status, headers });
+}
+
+async function sitemapResponse(
+  request: Request,
+  environment: CloudflareFrontendEnvironment,
+  fetchApi: ApiFetch,
+): Promise<Response> {
+  const origin = apiOrigin(environment.API_ORIGIN);
+  if (origin) {
+    const target = new URL(origin);
+    target.pathname = "/seo/sitemap.xml";
+    target.search = "";
+    const response = await fetchApi(new Request(target, request));
+    if (response.ok) return response;
+  }
+  return new Response(buildSitemapXml(), {
+    headers: {
+      "content-type": "application/xml; charset=UTF-8",
+      "cache-control": "public, max-age=3600, stale-while-revalidate=86400",
+    },
+  });
+}
+
 export function createCloudflareFrontendWorker(
   fetchApi: ApiFetch = (request) => fetch(request),
   edgeCache: EdgeCache | null = defaultEdgeCache(),
@@ -235,6 +442,10 @@ export function createCloudflareFrontendWorker(
       context?: ExecutionContext,
     ): Promise<Response> {
       const url = new URL(request.url);
+
+      if (url.pathname === "/sitemap.xml" && (request.method === "GET" || request.method === "HEAD")) {
+        return sitemapResponse(request, environment, fetchApi);
+      }
 
       const mediaKey = publicMediaKey(url.pathname);
       if (mediaKey) {
@@ -325,6 +536,21 @@ export function createCloudflareFrontendWorker(
         if (context) context.waitUntil(write);
         else await write;
         return responseWithHeader(response, "X-Vitrines-Edge-Cache", "MISS");
+      }
+
+      if (request.method === "GET" && request.headers.get("accept")?.includes("text/html")) {
+        if (!isKnownHtmlRoute(url.pathname)) {
+          return htmlAssetResponse(request, environment, metadataForPath(url.pathname, url.search), 404);
+        }
+        const routeMetadata = await catalogRouteMetadata(url.pathname, url.search, request, environment, fetchApi);
+        if (routeMetadata?.exists === false) {
+          return htmlAssetResponse(request, environment, metadataForPath(url.pathname, url.search), 404);
+        }
+        return htmlAssetResponse(
+          request,
+          environment,
+          routeMetadata?.metadata ?? metadataForPath(url.pathname, url.search),
+        );
       }
       return environment.ASSETS.fetch(request);
     },

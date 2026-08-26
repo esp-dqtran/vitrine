@@ -9,6 +9,8 @@ import {
   type CatalogSidebarSection,
 } from './CatalogSidebar.tsx';
 import { CatalogShell } from './CatalogShell.tsx';
+import { applySeoMetadata } from '../seo.ts';
+import { metadataForSite } from '../../seoMetadata.ts';
 
 export interface CatalogSitePageProps {
   siteSlug: string;
@@ -34,6 +36,17 @@ export function CatalogSitePage(props: CatalogSitePageProps) {
       .catch((cause: Error) => { if (live) setError(cause.message); });
     return () => { live = false; };
   }, [siteSlug]);
+
+  useEffect(() => {
+    if (!detail) return;
+    applySeoMetadata(metadataForSite({
+      routeSlug: detail.routeSlug,
+      name: detail.site.name,
+      description: detail.site.description,
+      logoUrl: detail.site.logoUrl,
+      sourceUrl: detail.site.sourceUrl,
+    }, window.location.search));
+  }, [detail]);
 
   const categories = useCatalogCategories(
     { platform: 'web', contentType: 'apps', sort: 'latest', query: '', filters: [] },

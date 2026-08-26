@@ -16887,45 +16887,91 @@ body {
 
 .apps-platform-switcher {
   position: relative;
+  width: 188px;
+  height: 44px;
   display: inline-flex;
+  align-items: center;
   flex: 0 0 auto;
   gap: 2px;
-  padding: 3px;
-  border: 1px solid var(--color-border);
+  padding: 4px;
+  overflow: hidden;
+  border: 0;
   border-radius: 999px;
+  cursor: grab;
   isolation: isolate;
 }
 
-.apps-platform-switcher::before {
-  position: absolute;
-  z-index: 0;
-  top: 3px;
-  bottom: 3px;
-  left: 3px;
-  width: var(--apps-platform-indicator-width);
-  border-radius: 999px;
-  background: var(--color-text-primary);
-  content: "";
-  pointer-events: none;
-  transform: translateX(var(--apps-platform-indicator-shift));
-  transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+.apps-platform-switcher:active {
+  cursor: grabbing;
 }
 
 .apps-platform-switcher button {
   position: relative;
   z-index: 1;
-  width: 96px !important;
-  height: 30px !important;
-  padding: 0 13px !important;
+  width: 38px !important;
+  flex: 0 0 38px;
+  min-width: 38px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 !important;
   border: 0 !important;
   border-radius: 999px !important;
   background: transparent !important;
   transition: color 180ms ease;
 }
 
+.apps-platform-switcher__active-pill {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--color-text-primary);
+  pointer-events: none;
+}
+
+.apps-platform-switcher__icon-wrap {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+}
+
+.apps-platform-switcher__label {
+  position: relative;
+  z-index: 1;
+  max-width: 0;
+  margin-left: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(-4px);
+  color: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    max-width 240ms var(--vitrine-motion-ease),
+    margin-left 240ms var(--vitrine-motion-ease),
+    opacity 160ms var(--vitrine-motion-ease),
+    transform 240ms var(--vitrine-motion-ease);
+}
+
 .apps-platform-switcher button[aria-checked="true"] {
+  width: 100px !important;
+  flex-basis: 100px;
   background: transparent !important;
   color: var(--color-background-body) !important;
+}
+
+.apps-platform-switcher button[aria-checked="true"] .apps-platform-switcher__label {
+  max-width: 64px;
+  margin-left: 7px;
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .reference-discovery-toolbar__sort {

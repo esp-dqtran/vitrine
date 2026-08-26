@@ -120,6 +120,7 @@ export function CatalogSitesPage({
                 key={`${site.id}:${site.versionId}`}
                 site={site}
                 onOpen={() => onOpenSite(site)}
+                href={`/browse/sites/${encodeURIComponent(site.routeSlug)}`}
               />
             ))}
           </div>

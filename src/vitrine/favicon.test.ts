@@ -24,7 +24,10 @@ test('publishes crawlable catalog metadata', async () => {
   ]);
 
   assert.match(html, /<meta name="description" content="[^"]+" \/>/);
-  assert.equal(robots, 'User-agent: *\nAllow: /\n');
+  assert.match(robots, /^User-agent: \*\nAllow: \/\n/m);
+  assert.match(robots, /Disallow: \/admin/);
+  assert.match(robots, /Disallow: \/projects/);
+  assert.match(robots, /Sitemap: https:\/\/vitrines\.ai\/sitemap\.xml/);
 });
 
 test('renders the real Vitrines mark everywhere the brand icon appears', async () => {

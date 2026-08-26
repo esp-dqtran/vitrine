@@ -1,5 +1,7 @@
+import { Icon } from '@astryxdesign/core';
 import { useEffect, useState, type ReactNode } from 'react';
 import { navigate, routeToPath } from '../router.ts';
+import { AstryxDropdownItem, AstryxMenu } from './AstryxDropdown.tsx';
 import { ReferenceTypeTabs, type ReferenceType } from './ReferenceTypeTabs.tsx';
 
 interface ApplicationHeaderProps {
@@ -10,6 +12,34 @@ interface ApplicationHeaderProps {
   contextIconUrl?: string | null;
 }
 
+const REFERENCE_TYPES = ['apps', 'sites', 'flows', 'components', 'color'] as const;
+
+function referenceTypeLabel(value: ReferenceType) {
+  return value === 'apps'
+    ? 'Apps'
+    : value === 'sites'
+      ? 'Sites'
+      : value === 'color'
+        ? 'Colors'
+        : value === 'flows'
+          ? 'Flows'
+          : value === 'components' ? 'Components' : 'Projects';
+}
+
+function referenceTypeRoute(value: ReferenceType) {
+  return value === 'apps'
+    ? { name: 'apps' } as const
+    : value === 'sites'
+      ? { name: 'sites' } as const
+      : value === 'color'
+        ? { name: 'color' } as const
+        : value === 'flows'
+          ? { name: 'flows' } as const
+          : value === 'components'
+            ? { name: 'components' } as const
+            : { name: 'projects' } as const;
+}
+
 export function ApplicationHeader({
   active,
   className,
@@ -18,6 +48,7 @@ export function ApplicationHeader({
   contextIconUrl,
 }: ApplicationHeaderProps) {
   const [showContextIcon, setShowContextIcon] = useState(false);
+  const [mobileReferenceMenuOpen, setMobileReferenceMenuOpen] = useState(false);
   useEffect(() => {
     if (!contextIconUrl) {
       setShowContextIcon(false);
@@ -28,26 +59,9 @@ export function ApplicationHeader({
     window.addEventListener('scroll', updateContextIcon, { passive: true });
     return () => window.removeEventListener('scroll', updateContextIcon);
   }, [contextIconUrl]);
-  const activeRoute = active === 'apps'
-    ? { name: 'apps' } as const
-    : active === 'sites'
-      ? { name: 'sites' } as const
-      : active === 'color'
-        ? { name: 'color' } as const
-      : active === 'flows'
-        ? { name: 'flows' } as const
-        : active === 'components'
-          ? { name: 'components' } as const
-        : { name: 'projects' } as const;
-  const activeLabel = active === 'apps'
-    ? 'Apps'
-    : active === 'sites'
-      ? 'Sites'
-      : active === 'color'
-        ? 'Colors'
-      : active === 'flows'
-        ? 'Flows'
-        : active === 'components' ? 'Components' : 'Projects';
+  const activeRoute = referenceTypeRoute(active);
+  const activeLabel = referenceTypeLabel(active);
+  const referenceTypes = active === 'projects' ? ['projects'] as const : REFERENCE_TYPES;
   return (
     <header
       data-reference-component="top-nav"
@@ -95,6 +109,38 @@ export function ApplicationHeader({
       <div className={`reference-discovery-nav__search ${className}__search`}>{search}</div>
       <div className={`reference-discovery-nav__actions ${className}__actions`}>
         {accountControls}
+      </div>
+      <div
+        className={`reference-discovery-nav__mobile-switcher ${className}__mobile-switcher`}
+        data-reference-mobile-switcher="true"
+      >
+        <AstryxMenu
+          button={{
+            label: `Switch reference type: ${activeLabel}`,
+            'aria-label': `Switch reference type: ${activeLabel}`,
+            icon: <Icon icon="menu" size="sm" />,
+            isIconOnly: true,
+            variant: 'ghost',
+            size: 'sm',
+            className: 'reference-discovery-nav__mobile-switcher-trigger',
+          }}
+          isMenuOpen={mobileReferenceMenuOpen}
+          onOpenChange={setMobileReferenceMenuOpen}
+          hasChevron={false}
+          menuWidth={220}
+        >
+          {referenceTypes.map((value) => (
+            <AstryxDropdownItem
+              key={value}
+              label={referenceTypeLabel(value)}
+              selected={active === value}
+              onSelect={() => {
+                setMobileReferenceMenuOpen(false);
+                navigate(referenceTypeRoute(value));
+              }}
+            />
+          ))}
+        </AstryxMenu>
       </div>
     </header>
   );

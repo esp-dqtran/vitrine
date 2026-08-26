@@ -6,6 +6,7 @@ import { FlimLivePreview, type FlimLiveComponentName } from './FlimLivePreview.t
 import { MeliusLivePreview } from './MeliusLivePreview.tsx';
 import { OdometerWord, ReconstructedButtonPreview } from './ReconstructedButtonComponents.tsx';
 import { TasteLabsLivePreview, type TasteLabsLiveComponentName } from './TasteLabsLivePreview.tsx';
+import { OverlapTransitionDemo } from '../generated-components/overlap-transition/OverlapTransitionDemo.tsx';
 
 function PreviewShell({
   item,
@@ -537,6 +538,7 @@ export function ComponentLibraryPreview({
   }
 
   if (item.source.label === 'Flim') return <FlimPreview item={item} surface={surface} />;
+  if (item.source.label === 'Details.so') return <PreviewShell item={item}><OverlapTransitionDemo /></PreviewShell>;
   if (item.source.label === 'Craft/Wild') return <CraftWildPreview item={item} surface={surface} />;
   if (item.source.label === 'Taste Labs') return <TasteLabsPreview item={item} surface={surface} />;
   if (item.source.label === 'Melius') return <MeliusPreview item={item} menuViewport={menuViewport} surface={surface} />;

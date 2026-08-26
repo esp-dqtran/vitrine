@@ -343,6 +343,12 @@ export function CommandPalette({
       backToResults();
       return;
     }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      requestClose();
+      return;
+    }
     if (selected || comparison) return;
     if (nav === 'flows' && richFlowSearchEnabled && richFlowItems.length) {
       if (event.key === 'Enter') {
@@ -538,7 +544,7 @@ export function CommandPalette({
   return (
     <CommandPaletteFrame
       isOpen
-      data-closing={closing ? 'true' : undefined}
+      dataClosing={closing ? 'true' : undefined}
       onAnimationEnd={(event) => { if (closing && event.animationName === 'vitrine-command-palette-out') finishClose(); }}
       onOpenChange={(open) => { if (!open) requestClose(); }}
       dataNav={nav}

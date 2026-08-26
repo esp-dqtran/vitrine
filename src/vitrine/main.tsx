@@ -16,6 +16,7 @@ import { initializeAnalytics, trackPageView } from './analytics.ts';
 import { decideRootRoute } from './routeDecision.ts';
 import { WorkspaceChromeProvider } from './components/WorkspaceChromeContext.tsx';
 import type { Route } from './router.ts';
+import { applyRouteSeo } from './seo.ts';
 import '@fontsource/figtree/400.css';
 import '@fontsource/figtree/500.css';
 import '@fontsource/figtree/600.css';
@@ -33,6 +34,7 @@ import './projectsWorkspace.css';
 import './collectionsWorkspace.css';
 import './catalogSidebar.css';
 import './componentLibrary.css';
+import './generated-components/overlap-transition/overlapTransition.css';
 import './settingsWorkspace.css';
 import './components/AstryxDropdown.css';
 import './components/AstryxModal.css';
@@ -228,6 +230,14 @@ function ThemedRoot() {
   useEffect(() => {
     trackPageView();
   }, [pathname]);
+
+  useEffect(() => {
+    const split = locationKey.indexOf('?');
+    applyRouteSeo(
+      split < 0 ? locationKey : locationKey.slice(0, split),
+      split < 0 ? '' : locationKey.slice(split),
+    );
+  }, [locationKey]);
 
   return (
     <Theme theme={appTheme} mode={mode}>

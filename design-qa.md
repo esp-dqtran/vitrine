@@ -49,6 +49,47 @@ final result: passed
 
 ---
 
+# Apps hero motion refinement QA — 2026-08-25
+
+## Scope and evidence
+
+- Scope: the three annotated Apps-page motion refinements only: header search, editorial title, and catalog proof icons. The surrounding header, hero layout, copy, CTA, filters, and cards remain unchanged.
+- Source visual truth: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/apps-hero-build/01-details-hero-reference-919.png`, supplemented by browser Comments 1–3 describing the intended interaction states.
+- Desktop implementation: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/apps-hero-build/15-vitrines-apps-motion-desktop-919.png`.
+- Mobile implementation: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/apps-hero-build/16-vitrines-apps-motion-mobile-390.png`.
+- Desktop viewport and images: 919 x 863 CSS pixels and image pixels at 1x density. Mobile viewport and image: 390 x 844 CSS pixels and image pixels at 1x density.
+- State: dark theme, Apps selected, catalog loaded with 32 products, page at the top, search at rest and hovered.
+
+## Comparison evidence
+
+- Full normalized comparison: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/apps-hero-build/17-details-vs-vitrines-motion-919.png`.
+- Focused header and hero comparison: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/apps-hero-build/20-details-vs-vitrines-motion-focused.png`.
+- The full and focused comparisons show no static layout drift: headline wrapping, subtitle measure, CTA position, proof row, filter transition, typography, spacing, colors, real app assets, and product copy remain consistent with the previously approved hero adaptation.
+
+## Findings and iteration history
+
+1. P2: the first ambient search sweep targeted `background-position` on a button whose shared background shorthand is `!important`, so the keyframe could not move. Fixed by moving the sweep to an isolated, non-interactive pseudo-element. Post-fix browser evidence changed the sweep from `120%` to `87.68%` during the sampled cycle; hover stops the ambient animation at `-120%`, lifts the button by 1px, and moves/scales the icon.
+2. P2: the first moving proof strip exposed hard partial-icon edges during entry and exit. Fixed with a narrow edge mask while retaining real catalog icon assets. The final 919px and 390px captures show a softened continuous left-to-right loop.
+3. P0/P1: none.
+
+No actionable P0, P1, or P2 issues remain.
+
+## Required fidelity and runtime checks
+
+- Fonts and typography: Instrument Serif wrapping, size, weight, tracking, and hierarchy are unchanged; the React Bits-inspired shine is background-clipped to the existing title without changing its metrics.
+- Spacing and layout rhythm: search, hero, CTA, proof, and filter geometry are unchanged at 919px and 390px; no horizontal overflow was detected (`scrollWidth` equals viewport width).
+- Colors and tokens: motion uses the existing text, surface, border, and motion tokens; the shine remains neutral and restrained against the dark theme.
+- Image quality and assets: the carousel continues to use real `AppIcon` catalog imagery, duplicated only for a seamless track; no replacement or placeholder asset was introduced.
+- Copy and content: all Apps-page copy and the live `32 products indexed` count are unchanged.
+- Motion: title background position and icon-track transform both changed across timed browser samples; the search ambient sweep and hover state were independently measured. Reduced-motion disables all three continuous/transition effects.
+- Primary interactions: search still opens the modal and Escape restores page scrolling; Explore apps behavior remains covered by the existing hero QA.
+- Browser console errors: none.
+- Focused automated checks: 34 passed, 0 failed. `git diff --check` passed.
+
+final result: passed
+
+---
+
 # Apps Screens filter transition design QA
 
 ## Comparison target
@@ -236,5 +277,103 @@ No actionable P0, P1, or P2 differences remain.
 
 - `npx tsx --test src/vitrine/ColorGalleryPage.test.tsx src/vitrine/router.test.ts` — 49 passing.
 - `npm run build` — passing; Vite reports only existing large-chunk advisory warnings.
+
+final result: passed
+
+---
+
+# Details-inspired discovery header QA
+
+Final result: passed
+
+## Scope and state
+
+- Scope: the shared Vitrines discovery header on Apps, Sites, Flows, Components, and Colors. Content below the header is intentionally outside this comparison.
+- Reference: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/header-audit/02-details-header-1062.png`
+- Desktop implementation: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/header-build/12-vitrines-header-desktop-final.png`
+- Mobile reference: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/header-audit/03-details-header-mobile.png`
+- Mobile implementation: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/header-build/04-vitrines-header-mobile-closed.png`
+- Desktop viewport and image size: 1062 x 863 CSS pixels, 1062 x 863 image pixels, 1x CSS-density capture.
+- Mobile viewport and image size: 390 x 844 CSS pixels, 390 x 844 image pixels, 1x CSS-density capture.
+- State: dark theme, signed-in Vitrines account, Apps selected, discovery page at the top of the document.
+
+## Comparison evidence
+
+- Full desktop comparison: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/header-build/13-desktop-full-comparison-final.jpg`
+- Focused desktop header comparison: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/header-build/14-desktop-header-comparison-final.jpg`
+- Focused mobile header comparison: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/header-build/10-mobile-header-comparison.jpg`
+- Mobile menu state: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/header-build/05-vitrines-header-mobile-menu.png`
+- Tablet state: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/header-build/03-vitrines-header-tablet-fixed.png`
+
+The final header preserves the reference's compact dark bar, brand-first left edge, rounded selected destination, centered rounded search field, quiet secondary navigation, and terminal menu affordance. Product-specific differences are intentional: Vitrines retains its five reference types and shows the signed-in account control instead of Details' pricing and authentication calls to action.
+
+## Iteration history
+
+1. P1: At 850px, the five desktop type tabs crowded and clipped beneath the centered search. Fixed by moving 721-900px layouts to the compact type menu while keeping search visible. Rechecked at 850 x 900 with a 56px header and no horizontal overflow.
+2. P2: At 1062px, the final Colors tab had insufficient clearance from the search field. Fixed by compacting medium-width tab typography and padding. Final measured clearance is 20.8px; all five tabs are fully visible.
+3. P0: none.
+
+No P0, P1, or P2 visual issues remain. The only remaining differences are intentional product-content adaptations rather than fidelity defects.
+
+## Interaction and runtime checks
+
+- Mobile type menu opens and exposes Apps, Sites, Flows, Components, and Colors with the current type marked selected.
+- Selecting Sites navigates from `/apps` to `/sites`, updates the header identity, and changes the search label to `Search Sites…`.
+- The shared search trigger opens the catalog search dialog on Apps and Sites.
+- Keyboard shortcuts remain available through Command-K and Command-Space.
+- Desktop, tablet, and mobile document widths match their viewports; no horizontal overflow was detected.
+- Browser console errors: none.
+- Focused automated checks: 121 passed, 0 failed.
+- Production build: passed. Existing unresolved-asset and large-chunk warnings remain outside this header change.
+- Search modal regression check: close button, native Escape, and backdrop dismissal all unmount the dialog after the exit transition; 44 focused search and application-boundary tests pass.
+
+---
+
+# Details-inspired Apps hero QA — 2026-08-25
+
+## Scope and comparison target
+
+- Scope: replace the Apps discovery category showcase with a Details-inspired editorial hero while retaining the functional platform, category, and screen filters below it.
+- Source visual truth: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/apps-hero-build/01-details-hero-reference-919.png`.
+- Final implementation: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/apps-hero-build/08-vitrines-apps-hero-dark-919.png` at `http://127.0.0.1:5173/apps`.
+- Desktop viewport and image size: 919 x 863 CSS pixels, 919 x 863 image pixels, 1x CSS-density capture for both source and implementation.
+- Additional responsive evidence: 850 x 900 and 390 x 844 CSS pixels, both captured at 1x density.
+- State: dark color scheme, Apps selected, catalog loaded with 32 products, page at the top of the document.
+
+## Comparison evidence
+
+- Full-view normalized comparison: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/apps-hero-build/11-source-vs-vitrines-919.png`.
+- Focused hero comparison: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/apps-hero-build/14-source-vs-vitrines-hero-focused.png`.
+- Mobile implementation: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/apps-hero-build/09-vitrines-apps-hero-mobile-390.png`.
+- Tablet implementation: `/Users/kai/.codex/visualizations/2026/08/25/01a03856-1e30-7f91-b3b1-6c69b61a2e22/apps-hero-build/10-vitrines-apps-hero-tablet-850.png`.
+
+The final desktop comparison preserves the source's centered two-line serif headline, muted centered support copy, white pill CTA, overlapping proof imagery, roughly 500px hero field, and immediate transition into the filtering/results surface. Product-specific differences are intentional: Vitrines keeps its own navigation, copy, real catalog app icons, exact catalog scale, and functional Apps filters rather than Details' membership conversion and inspiration-category pills.
+
+## Comparison history
+
+1. P1: the first rendered pass inherited a medium-width two-column taxonomy rule, compressing the hero to 411.5px and turning the headline into a small product title. Fixed by making the Apps hero taxonomy a single track at every breakpoint and explicitly preserving editorial typography from the global product-title contract.
+2. P2: product-wide spacing rules added 32px/48px taxonomy padding, reduced the CTA to 40px, and collapsed the CTA/proof gap to 8px. Fixed with hero-scoped spacing exclusions: zero taxonomy padding, a 52px CTA, and a 24px action gap.
+3. P2: after the structural fixes, the desktop title fit on one line and the hero ran 540px tall, drifting from the source's wrapping and catalog entry point. Fixed by constraining the title to 560px and the hero to 500px. The post-fix evidence is the final 919px full and focused comparison above.
+
+No actionable P0, P1, or P2 findings remain.
+
+## Required fidelity surfaces
+
+- Fonts and typography: Instrument Serif 400 at 52px/54.08px on the 919px reference viewport; a 560px measure preserves the source's two-line editorial wrap. Supporting copy remains Vitrines Figtree at 17px with muted contrast.
+- Spacing and layout rhythm: 500px hero field begins immediately below the 56px navigation; the filter toolbar begins at 556px, within the same visible transition zone as the source. CTA, proof row, and subtitle spacing match the source hierarchy without horizontal overflow.
+- Colors and tokens: the hero uses Vitrines page, primary-text, secondary-text, border, and action tokens. Dark and light color schemes both remain supported; the dark comparison matches the selected source state.
+- Image and icon fidelity: the proof row uses three real catalog `AppIcon` assets and the shared chevron-right icon. No placeholder imagery, emoji, CSS art, or handcrafted SVG is used.
+- Copy and content: source conversion copy is adapted to the Apps catalog: “The details behind the world’s best apps,” a product-research description, “Explore apps,” and a live catalog count.
+
+## Interaction, responsive, and runtime checks
+
+- Clicking Explore apps scrolled from `scrollY: 0` to `499.5` and moved focus to `#apps-catalog`.
+- The Categories filter opened its dialog with the full catalog taxonomy; Escape closed and unmounted it.
+- The 390px layout has no horizontal overflow (`scrollWidth` equals `innerWidth` at 390px), stacks CTA and proof, merges the compact filter control, and retains the visible result count.
+- The 850px layout has no horizontal overflow and preserves the same full-width hero composition and two-column result grid.
+- Browser console errors: none. The existing neutral-theme runtime-injection performance advisory remains unchanged.
+- Focused automated verification: `npx tsx --test src/vitrine/AppsDiscovery.test.tsx src/vitrine/ProductSpacingCoverage.test.ts src/vitrine/ProductTypographyCoverage.test.ts src/vitrine/ResponsiveSystem.test.ts` — 47 passed, 0 failed.
+- `npm run build` — passed; existing unresolved-asset and large-chunk advisories only.
+- `git diff --check` — passed.
 
 final result: passed

@@ -4,7 +4,7 @@ import test from 'node:test';
 
 const read = (path: string) => readFile(new URL(path, import.meta.url), 'utf8');
 
-test('keeps persistent product chrome opaque and free of backdrop blur', async () => {
+test('uses translucent discovery chrome while keeping workspace chrome opaque', async () => {
   const [discoveryCss, legacyCss, galleryToolbar, documentCss, pricing, home, settingsCss] = await Promise.all([
     read('./referenceDiscovery.css'),
     read('./styles.css'),
@@ -15,7 +15,7 @@ test('keeps persistent product chrome opaque and free of backdrop blur', async (
     read('./settingsWorkspace.css'),
   ]);
 
-  assert.match(discoveryCss, /\.reference-discovery-nav\s*\{[^}]*background:\s*var\(--reference-chrome-bg,\s*var\(--color-background-body\)\)/s);
+  assert.match(discoveryCss, /\.reference-discovery-nav\s*\{[^}]*background:\s*color-mix\(in srgb,\s*var\(--reference-chrome-bg,\s*var\(--color-background-body\)\) 92%,\s*transparent\);[^}]*backdrop-filter:\s*blur\(18px\)/s);
   assert.match(legacyCss, /\.apps-top-nav\s*\{[^}]*background:\s*var\(--color-background-body\);[^}]*backdrop-filter:\s*none;/s);
   assert.match(legacyCss, /\.sites-top-nav\s*\{[^}]*background:\s*var\(--color-background-body\);[^}]*backdrop-filter:\s*none;/s);
   assert.match(galleryToolbar, /background:\s*'var\(--color-background-body\)'[\s\S]*backdropFilter:\s*'none'/);

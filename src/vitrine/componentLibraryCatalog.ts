@@ -70,6 +70,11 @@ const SOURCES = {
     label: 'Flim',
     query: 'flim.ai',
   },
+  details: {
+    type: 'site',
+    label: 'Details.so',
+    query: 'details.so',
+  },
 } as const satisfies Record<string, ComponentSource>;
 
 function idFor(source: ComponentSource, name: string): string {
@@ -212,6 +217,9 @@ export const COMPONENT_LIBRARY: readonly ComponentRecord[] = [
     ['FlimWhatIsFlimSection', 'section'],
     ['FlimDatabaseScrollSection', 'section'],
   ]),
+  ...records(SOURCES.details, [
+    ['OverlapTransitionStage', 'effect'],
+  ]),
 ];
 
 const SIGNIFICANT_COMPONENT_IDS = new Set([
@@ -245,6 +253,7 @@ const SIGNIFICANT_COMPONENT_IDS = new Set([
   'flim-flimherosearchsection',
   'flim-flimwhatisflimsection',
   'flim-flimdatabasescrollsection',
+  'details-so-overlaptransitionstage',
 ]);
 
 export const SIGNIFICANT_COMPONENT_LIBRARY: readonly ComponentRecord[] = COMPONENT_LIBRARY.filter(

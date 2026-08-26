@@ -218,10 +218,12 @@ import { createSitesStore } from "../../../src/sitesStore.ts";
 import {
   mountPrivateSitesRoutes,
   mountPublicSitesRoutes,
+  withRouteSlugs,
 } from "./sites.ts";
 import { canonicalPublicPageUrl } from "../../../src/publicPage.ts";
 import { publishPublicPageJob } from "../../../src/publicPageQueue.ts";
 import { createPublicPageStore } from "../../../src/publicPageStore.ts";
+import { buildSitemapXml } from "../../../src/seoSitemap.ts";
 import {
   activateProMonth,
   attributeReferralSignup,
@@ -1746,6 +1748,33 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     },
   };
   mountPublicSitesRoutes(app, sitesRouteDependencies);
+
+  app.get("/seo/sitemap.xml", async (_req, res) => {
+    try {
+      const appSlugs: string[] = [];
+      let cursor: string | undefined;
+      for (let pageNumber = 0; pageNumber < 500; pageNumber += 1) {
+        const page = await deps.publishedCatalogPage({
+          ...(cursor ? { cursor } : {}),
+          limit: 24,
+          includeFacets: false,
+          platform: "web",
+          sort: "latest",
+        });
+        appSlugs.push(...page.apps.map((app) => app.id));
+        if (!page.nextCursor || page.nextCursor === cursor) break;
+        cursor = page.nextCursor;
+      }
+      const siteSlugs = withRouteSlugs(await deps.sitesStore.listReadySites())
+        .map((site) => site.routeSlug);
+      res
+        .setHeader("Cache-Control", "public, max-age=3600, stale-while-revalidate=86400")
+        .type("application/xml")
+        .send(buildSitemapXml({ appSlugs, siteSlugs }));
+    } catch {
+      res.status(503).type("application/xml").send(buildSitemapXml());
+    }
+  });
 
   // Browser-native image requests cannot attach the bearer token kept in session storage, so
   // this endpoint is limited to derivatives explicitly classified for the public catalog.

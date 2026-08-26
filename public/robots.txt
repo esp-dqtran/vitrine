@@ -1,2 +1,22 @@
 User-agent: *
 Allow: /
+
+Disallow: /admin
+Disallow: /browse/admin
+Disallow: /browse/search
+Disallow: /browse/collections
+Disallow: /browse/projects
+Disallow: /browse/settings
+Disallow: /browse/billing-success
+Disallow: /browse/forgot-password
+Disallow: /browse/reset-password
+Disallow: /projects
+Disallow: /collections
+Disallow: /settings
+Disallow: /billing
+Disallow: /search
+Disallow: /signin
+Disallow: /forgot-password
+Disallow: /reset-password
+
+Sitemap: https://vitrines.ai/sitemap.xml

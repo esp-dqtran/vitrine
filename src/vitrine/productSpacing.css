@@ -20,6 +20,7 @@
     [class$="__tools"],
     [class*="__tools "]
   ):not(
+    .apps-discovery-hero__actions,
     .project-document__editor *,
     .project-canvas-document-editor *,
     .document-flow *,
@@ -114,6 +115,7 @@
   .astryx-selector.astryx-selector.md,
   .astryx-selector.astryx-selector.lg
 ):not(
+  .apps-discovery-hero .astryx-button,
   .reference-discovery__facet *,
   .reference-detail__tabs *,
   .project-document__editor *,
@@ -124,6 +126,7 @@
   .flow-strip-card__track,
   .flow-preview-dialog *,
   .astryx-modal__icon-action,
+  .apps-filterbar__clear,
   .excalidraw *
 ) {
   box-sizing: border-box;
@@ -142,14 +145,6 @@
   min-height: calc(var(--vitrine-control-height) - var(--spacing-1)) !important;
 }
 
-.discovery-filter-control.discovery-filter-control .apps-filterbar__clear.apps-filterbar__clear {
-  width: calc(var(--vitrine-control-height) - var(--spacing-2)) !important;
-  min-width: calc(var(--vitrine-control-height) - var(--spacing-2)) !important;
-  height: calc(var(--vitrine-control-height) - var(--spacing-2)) !important;
-  min-height: calc(var(--vitrine-control-height) - var(--spacing-2)) !important;
-  margin-right: var(--spacing-1);
-}
-
 /* Discovery: 24px gutters, 32px section entry, and 48px major separation. */
 .reference-discovery__content {
   padding-inline: var(--spacing-6) !important;
@@ -158,6 +153,11 @@
 .reference-discovery__taxonomy {
   gap: var(--spacing-12) !important;
   padding-block: var(--spacing-8) var(--spacing-12) !important;
+}
+
+.reference-discovery__taxonomy--apps:has(.apps-discovery-hero) {
+  gap: 0 !important;
+  padding-block: 0 !important;
 }
 
 .reference-discovery__taxonomy :where(ul, [role="list"]) {

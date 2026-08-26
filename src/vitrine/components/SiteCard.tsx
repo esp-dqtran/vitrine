@@ -8,10 +8,12 @@ export function SiteCard({
   site,
   onOpen,
   matchLabel,
+  href = `/sites/${encodeURIComponent(site.routeSlug)}`,
 }: {
   site: SiteSummary;
   onOpen: () => void;
   matchLabel?: string;
+  href?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   // Preview videos are multi-megabyte, so nothing about them is fetched — not
@@ -66,7 +68,7 @@ export function SiteCard({
       kind="site"
       ariaLabel={`Open ${site.name}`}
       onOpen={onOpen}
-      href={`/sites/${encodeURIComponent(site.routeSlug)}`}
+      href={href}
       articleProps={{
         onMouseEnter: startPreview,
         onMouseLeave: stopPreview,

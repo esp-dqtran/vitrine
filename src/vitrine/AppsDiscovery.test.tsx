@@ -5,6 +5,7 @@ import { createRef, type ComponentProps } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
   appsDiscoveryFacetOptions,
+  appsPlatformTransitionDirection,
   AppsDiscoveryPageView,
 } from './components/AppsDiscoveryPage.tsx';
 import { ApplicationHeader } from './components/ApplicationHeader.tsx';
@@ -110,7 +111,7 @@ function renderAppsPage(
   );
 }
 
-test('renders the full Apps taxonomy alongside the compact filter bar', () => {
+test('renders the editorial Apps hero alongside the compact filter bar', () => {
   const html = renderAppsPage();
   assert.match(html, /data-apps-filterbar="true"/);
   assert.match(html, /aria-label="Open Categories filters"/);
@@ -118,12 +119,16 @@ test('renders the full Apps taxonomy alongside the compact filter bar', () => {
   assert.doesNotMatch(html, /aria-label="Open UI Elements filters"/);
   assert.doesNotMatch(html, /aria-label="Open Flows filters"/);
   assert.doesNotMatch(html, /aria-label="More filters"/);
-  assert.match(html, /aria-label="App discovery filters"/);
+  assert.match(html, /aria-label="Vitrines app inspiration"/);
+  assert.match(html, /data-apps-discovery-hero="true"/);
+  assert.match(html, /The details behind/);
+  assert.match(html, /the world’s best APPS\./);
+  assert.match(html, /Explore the screens and patterns/);
+  assert.match(html, />Explore apps</);
+  assert.match(html, /aria-label="Catalog scale: 32 products indexed"/);
   assert.match(html, />Categories</);
-  assert.match(html, />AI</);
-  assert.match(html, /aria-label="AI, 104 apps"/);
-  assert.match(html, /data-taxonomy-count="142"/);
   assert.match(html, />Screens</);
+  assert.doesNotMatch(html, /data-taxonomy-count=/);
   assert.doesNotMatch(html, />UI Elements</);
   assert.doesNotMatch(html, />Navigation Menu</);
   assert.doesNotMatch(html, />Flows</);
@@ -146,13 +151,14 @@ test('limits the Storybook chrome review without attaching infinite pagination',
   assert.doesNotMatch(html, /data-discovery-sentinel="apps"/);
 });
 
-test('caps the visible App result total for public visitors', () => {
+test('keeps the hard-coded App proof total for public visitors without a duplicate result meta row', () => {
   const html = renderAppsPage(
     pageController({ totalCount: 40 }),
     { isGuest: true },
   );
 
-  assert.match(html, /Showing<\/small> <strong>12 apps/);
+  assert.match(html, /Catalog scale: 32 products indexed/);
+  assert.doesNotMatch(html, /reference-discovery__result-meta/);
   assert.doesNotMatch(html, /40 apps/);
 });
 
@@ -254,6 +260,16 @@ test('shows only Apps that contain the active platform', () => {
   }
 });
 
+test('maps platform travel to the shortest circular switcher direction', () => {
+  assert.equal(appsPlatformTransitionDirection('web', 'ios'), 'right');
+  assert.equal(appsPlatformTransitionDirection('ios', 'android'), 'right');
+  assert.equal(appsPlatformTransitionDirection('android', 'web'), 'right');
+  assert.equal(appsPlatformTransitionDirection('ios', 'web'), 'left');
+  assert.equal(appsPlatformTransitionDirection('android', 'ios'), 'left');
+  assert.equal(appsPlatformTransitionDirection('web', 'android'), 'left');
+  assert.equal(appsPlatformTransitionDirection('ios', 'ios'), 'neutral');
+});
+
 test('seeds Preview and Wallpaper as screen-level filters, not app categories', () => {
   assert.ok(ALL_APPS_SCREENS.includes('Preview'));
   assert.ok(ALL_APPS_SCREENS.includes('Wallpaper'));
@@ -353,7 +369,7 @@ test('accepts a Flow-search platform handoff as the selected App platform', () =
     items: [makeApp({ platforms: ['ios'] })],
   }), { isAdmin: true });
 
-  assert.match(html, /aria-label="App platform: iOS"/);
+  assert.match(html, /role="radio"[^>]*aria-checked="true"[^>]*aria-label="iOS"/);
 });
 
 test('shows an active Category as a removable filter-bar pill', () => {
@@ -400,6 +416,8 @@ test('renders the shared full-width discovery navigation for Apps', () => {
   assert.match(html, /aria-label="Reference type"/);
   assert.match(html, /aria-selected="true"/);
   assert.match(html, /aria-label="Vitrines Apps"/);
+  assert.match(html, /data-reference-mobile-switcher="true"/);
+  assert.match(html, /aria-label="Switch reference type: Apps"/);
   assert.doesNotMatch(html, /<strong>Vitrine<\/strong>/);
   assert.match(html, /Search on Web/);
   assert.doesNotMatch(html, /Import App/);
@@ -421,6 +439,7 @@ test('links the shared Colors navigation identity to the plural canonical route'
 test('keeps the Apps search compact on desktop and in the mobile header', async () => {
   const css = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
   const discoveryCss = await readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
+  const responsiveCss = await readFile(new URL('./productResponsive.css', import.meta.url), 'utf8');
 
   assert.match(
     css,
@@ -432,12 +451,31 @@ test('keeps the Apps search compact on desktop and in the mobile header', async 
   );
   assert.match(
     discoveryCss,
-    /@media \(max-width:\s*720px\)[\s\S]*\.reference-discovery-nav\.apps-top-nav\s*\{[^}]*grid-template-rows:\s*58px 38px/,
+    /\.reference-discovery-nav\s*\{[^}]*border-bottom:\s*0;/,
   );
   assert.match(
     discoveryCss,
-    /\.reference-discovery-nav\.apps-top-nav \.apps-top-nav__search\s*\{[^}]*grid-column:\s*2;[^}]*grid-row:\s*1;[^}]*width:\s*min\(190px,\s*100%\)/,
+    /\[data-sticky-chrome\] \.reference-discovery-nav\.apps-top-nav\s*\{[^}]*border-bottom:\s*0;/,
   );
+  assert.match(
+    responsiveCss,
+    /@media \(min-width:\s*721px\) and \(max-width:\s*1100px\)[\s\S]*grid-template-columns:\s*minmax\(360px,\s*1fr\)\s*minmax\(220px,\s*294px\)\s*minmax\(72px,\s*1fr\)/,
+  );
+  assert.match(
+    responsiveCss,
+    /@media \(max-width:\s*720px\)[\s\S]*\.reference-discovery-nav\.apps-top-nav\s*\{[^}]*grid-template-columns:\s*28px minmax\(120px,\s*1fr\) minmax\(44px,\s*72px\) 44px/,
+  );
+  assert.match(
+    responsiveCss,
+    /@media \(min-width:\s*721px\) and \(max-width:\s*900px\)[\s\S]*\.reference-discovery-nav\.apps-top-nav\s*\{[^}]*grid-template-columns:\s*32px minmax\(220px,\s*1fr\) minmax\(44px,\s*72px\) 44px/,
+  );
+  assert.match(
+    responsiveCss,
+    /\.reference-discovery-nav\.apps-top-nav \.apps-top-nav__search\s*\{[^}]*grid-column:\s*2;[^}]*grid-row:\s*1;[^}]*width:\s*100%/,
+  );
+  assert.match(responsiveCss, /\.apps-top-nav \.reference-discovery-nav__types\s*\{[^}]*display:\s*none/);
+  assert.match(responsiveCss, /\.apps-top-nav \.reference-discovery-nav__mobile-switcher\s*\{[^}]*grid-column:\s*4/);
+  assert.match(discoveryCss, /\.reference-discovery-nav__mobile-switcher\s*\{[^}]*display:\s*none/);
 });
 
 test('renders the Mobbin-style Apps filter bar, grid, and media-first card', () => {
@@ -464,21 +502,23 @@ test('renders the Mobbin-style Apps filter bar, grid, and media-first card', () 
   assert.match(html, /Screens/);
   assert.doesNotMatch(html, /UI Elements/);
   assert.doesNotMatch(html, /Flows/);
-  assert.match(html, /data-facet-preview="categories"/);
+  assert.doesNotMatch(html, /data-facet-preview="categories"/);
   assert.doesNotMatch(html, /data-facet-preview="screens"/);
   assert.doesNotMatch(html, /data-facet-preview="elements"/);
   assert.doesNotMatch(html, /data-facet-preview="flows"/);
-  assert.match(html, /class="apps-discovery__hover-preview"/);
-  assert.equal((html.match(/data-preview-frame=/g) ?? []).length, 3);
-  assert.match(html, /aria-label="App platform: Web"/);
+  assert.match(html, /data-apps-discovery-hero="true"/);
+  assert.doesNotMatch(html, /apps-discovery__hover-preview/);
+  assert.match(html, /role="radiogroup" aria-label="App platform"/);
   const platformMarkup = html.slice(
     html.indexOf('aria-label="App platform"'),
     html.indexOf('aria-label="Open Categories filters"'),
   );
-  assert.doesNotMatch(platformMarkup, /role="radiogroup"/);
+  assert.match(platformMarkup, /role="radiogroup"/);
+  assert.match(platformMarkup, /role="radio"[^>]*aria-checked="true"[^>]*aria-label="Web"/);
   assert.doesNotMatch(html, /aria-label="Sort:/);
   assert.doesNotMatch(html, /Popular/);
-  assert.match(html, /1 app/);
+  assert.match(html, /Catalog scale: 32 products indexed/);
+  assert.doesNotMatch(html, /reference-discovery__result-meta/);
   assert.doesNotMatch(html, /Most popular/);
   assert.match(html, /data-apps-discovery-grid="true"/);
   assert.match(html, /class="[^"]*reference-discovery__grid[^"]*"/);
@@ -513,13 +553,16 @@ test('keeps App cards stable and shows compact progress while loading another pa
   assert.doesNotMatch(html, /data-app-card-skeleton="true"/);
 });
 
-test('shows the server App total once and preserves screen content mode semantics', () => {
+test('keeps the fixed hero proof independent from server totals and preserves screen content mode semantics', () => {
   const appsMode = renderAppsPage(pageController({
     totalCount: 12,
     items: [makeApp()],
   }));
-  assert.equal((appsMode.match(/12 apps/g) ?? []).length, 1);
+  assert.match(appsMode, /Catalog scale: 32 products indexed/);
+  assert.doesNotMatch(appsMode, /Catalog scale: 12 products indexed/);
+  assert.doesNotMatch(appsMode, /reference-discovery__result-meta/);
   assert.match(appsMode, /data-apps-results-mode="apps"/);
+  assert.match(appsMode, /data-apps-results-transition-direction="neutral"/);
   assert.match(appsMode, /apps-discovery__results-transition/);
   assert.doesNotMatch(appsMode, /apps-filterbar__count/);
 
@@ -536,9 +579,9 @@ test('shows the server App total once and preserves screen content mode semantic
   }));
   assert.match(screenMode, /data-apps-discovery-screen-grid="true"/);
   assert.match(screenMode, /data-apps-results-mode="screens"/);
-  assert.match(screenMode, /data-discovery-result-count="screen"/);
+  assert.doesNotMatch(screenMode, /data-discovery-result-count="screen"/);
   assert.match(screenMode, /data-apps-discovery-screen-card="true"/);
-  assert.match(screenMode, /1 screen/);
+  assert.doesNotMatch(screenMode, /reference-discovery__result-meta/);
   assert.doesNotMatch(screenMode, /12 apps/);
 });
 
@@ -561,7 +604,7 @@ test('keeps every server-matched App visible for flow-only results', () => {
   assert.match(flowOnly, /data-apps-discovery-grid="true"/);
   assert.equal((flowOnly.match(/data-app-discovery-card="true"/g) ?? []).length, 2);
   assert.doesNotMatch(flowOnly, /data-apps-discovery-screen-grid="true"/);
-  assert.match(flowOnly, /2 apps/);
+  assert.doesNotMatch(flowOnly, /reference-discovery__result-meta/);
   assert.doesNotMatch(flowOnly, /0 flows/);
 });
 
@@ -625,17 +668,22 @@ test('defines the Apps-led shared discovery design contract', async () => {
   const legacyCss = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
 
   assert.match(css, /--reference-font-family:\s*var\(--font-family-body\)/);
-  assert.match(css, /--reference-nav-height:\s*72px/);
+  assert.match(css, /--reference-nav-height:\s*56px/);
   assert.match(css, /--reference-content-padding:\s*32px/);
   assert.match(css, /--reference-facet-size:\s*24px/);
   assert.match(css, /--reference-card-radius:\s*24px/);
   assert.match(css, /\.reference-discovery-nav\s*\{[^}]*height:\s*var\(--reference-nav-height\)/);
-  assert.match(css, /\.reference-discovery-nav\s*\{[^}]*background:\s*var\(--reference-chrome-bg,\s*var\(--color-background-body\)\)/);
+  assert.match(css, /\.reference-discovery-nav\s*\{[^}]*background:\s*color-mix\([^}]*--reference-chrome-bg[^}]*92%/);
+  assert.match(css, /\.reference-discovery-nav\s*\{[^}]*backdrop-filter:\s*blur\(18px\)/);
   assert.match(css, /\.reference-discovery-nav__types button\s*\{[^}]*background:\s*transparent\s*!important/);
   assert.match(css, /\.reference-discovery-nav__types button\[aria-selected="true"\]\s*\{/);
   assert.match(css, /\.reference-discovery-nav__search\s+\.reference-search-trigger\s*\{[^}]*max-width:\s*none/);
   assert.match(css, /\.astryx-input-text\s*\{[^}]*background:\s*var\(--reference-chrome-surface-raised\)\s*!important/);
   assert.match(css, /\.reference-search-trigger__shortcut\s*\{[^}]*display:\s*none/);
+  assert.match(css, /\.reference-discovery-nav\.apps-top-nav \.apps-top-nav__search \.reference-search-trigger__button::before\s*\{[^}]*background:\s*linear-gradient\([^}]*background-position:\s*120% center;[^}]*animation:\s*apps-search-ambient-sweep 8s ease-in-out infinite/);
+  assert.match(css, /@keyframes apps-search-ambient-sweep[\s\S]*background-position:\s*120% center[\s\S]*background-position:\s*-120% center/);
+  assert.match(css, /\.reference-discovery-nav\.apps-top-nav \.apps-top-nav__search \.reference-search-trigger__button:hover,[\s\S]*:focus-visible\s*\{[^}]*transform:\s*translateY\(-1px\)/);
+  assert.match(css, /\.reference-search-trigger__button:hover::before,[\s\S]*:focus-visible::before\s*\{[^}]*background-position:\s*-120% center;[^}]*animation:\s*none/);
   assert.match(css, /\.reference-discovery-toolbar\s*\{[^}]*min-height:\s*var\(--reference-toolbar-height\)/);
   assert.match(css, /\.reference-discovery__facet h2\s*\{[^}]*font-family:\s*inherit\s*!important/);
   assert.match(css, /\.reference-discovery__facet button\s*\{[^}]*transition:[^}]*transform/);
@@ -653,8 +701,29 @@ test('styles Apps as the three-column Mobbin results layout with a mobile fallba
   const cardRule = css.match(/\.discovery-card\s*\{[^}]+\}/)?.[0] ?? '';
   const mediaRule = css.match(/\.discovery-card__media\s*\{[^}]+\}/)?.[0] ?? '';
 
-  assert.match(discoveryCss, /\.reference-discovery__taxonomy--apps\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+  assert.match(discoveryCss, /\.reference-discovery__taxonomy--apps\s*\{[^}]*--reference-taxonomy-top:\s*0;[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
   assert.doesNotMatch(discoveryCss, /\.reference-discovery__taxonomy--apps\s*\{[^}]*display:\s*none/);
+  assert.match(discoveryCss, /--reference-discovery-hero-height:\s*clamp\(430px,[^;]*560px\);/);
+  assert.match(discoveryCss, /\.apps-discovery-hero,\s*\.sites-discovery-hero\s*\{[^}]*min-height:\s*var\(--reference-discovery-hero-height\)/);
+  assert.match(discoveryCss, /\.apps-discovery-hero\s*\{[^}]*place-items:\s*center/);
+  assert.match(discoveryCss, /\.apps-discovery-hero__content\s*\{[^}]*min-width:\s*0;[^}]*box-sizing:\s*border-box/);
+  assert.match(discoveryCss, /\.apps-discovery-hero h1\s*\{[^}]*width:\s*min\(100%,\s*560px\);[^}]*font-family:\s*'Instrument Serif'[^}]*font-size:\s*clamp\(48px,\s*6vw,\s*76px\)/);
+  assert.match(discoveryCss, /\.apps-discovery-hero__headline\s*\{[^}]*width:\s*100%;[^}]*flex-direction:\s*column;[^}]*align-items:\s*center/);
+  assert.match(discoveryCss, /\.apps-discovery-hero__headline-line--rotating\s*\{[^}]*width:\s*max-content;[^}]*max-width:\s*100%;[^}]*flex-wrap:\s*nowrap;[^}]*white-space:\s*nowrap/);
+  assert.match(discoveryCss, /\.apps-discovery-hero__headline-line--rotating > span\s*\{[^}]*flex:\s*0 0 auto/);
+  assert.match(discoveryCss, /@media \(max-width:\s*720px\)[\s\S]*\.apps-discovery-hero h1\s*\{[^}]*max-width:\s*100%;[^}]*font-size:\s*clamp\(32px,\s*10vw,\s*48px\)/);
+  assert.match(discoveryCss, /@media \(max-width:\s*420px\)[\s\S]*\.apps-discovery-hero h1\s*\{[^}]*font-size:\s*clamp\(32px,\s*10vw,\s*42px\)/);
+  assert.match(discoveryCss, /@media \(max-width:\s*720px\)[\s\S]*\.apps-discovery-hero__actions\s*\{[^}]*width:\s*min\(100%,\s*320px\);[^}]*flex-direction:\s*column/);
+  assert.match(discoveryCss, /@media \(max-width:\s*720px\)[\s\S]*\.apps-discovery-hero__proof\s*\{[^}]*width:\s*100%;[^}]*min-width:\s*0;[^}]*justify-content:\s*center/);
+  assert.match(discoveryCss, /@media \(max-width:\s*720px\)[\s\S]*\.apps-discovery-hero__icons\s*\{[^}]*width:\s*min\(132px,\s*38vw\)/);
+  assert.match(discoveryCss, /@media \(hover:\s*hover\) and \(pointer:\s*fine\)[\s\S]*\.apps-discovery-hero__actions > \.astryx-button \.astryx-icon\s*\{[^}]*opacity:\s*0;[^}]*transform:\s*translateX\(-6px\)/);
+  assert.match(discoveryCss, /\.apps-discovery-hero__actions > \.astryx-button:hover \.astryx-icon,[\s\S]*:focus-visible \.astryx-icon\s*\{[^}]*opacity:\s*1;[^}]*transform:\s*translateX\(0\)/);
+  assert.match(discoveryCss, /@media \(hover:\s*hover\) and \(pointer:\s*fine\)[\s\S]*\.apps-discovery-hero__actions > \.astryx-button > span:first-child > span:first-child\s*\{[^}]*transform:\s*translateX\(12px\)/);
+  assert.match(discoveryCss, /\.apps-discovery-hero__actions > \.astryx-button:hover > span:first-child > span:first-child,[\s\S]*:focus-visible > span:first-child > span:first-child\s*\{[^}]*transform:\s*translateX\(0\)/);
+  assert.match(
+    discoveryCss,
+    /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.apps-discovery-hero__actions > \.astryx-button \.astryx-icon,\s*[\s\S]*\.apps-discovery-hero__actions > \.astryx-button > span:first-child > span:first-child\s*\{[^}]*transition:\s*none/,
+  );
   assert.match(discoveryCss, /\.apps-discovery__grid,[\s\S]*\.apps-discovery__screen-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(discoveryCss, /\.apps-discovery-screen-card__media\s*\{[^}]*position:\s*relative/);
   assert.match(discoveryCss, /@media \(min-width:\s*721px\) and \(max-width:\s*1080px\)[\s\S]*\.apps-discovery__grid,[\s\S]*\.apps-discovery__screen-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
@@ -694,6 +763,15 @@ test('renders App information below a self-contained media tile', async () => {
   assert.doesNotMatch(css, /\.app-discovery-card__overlay/);
 });
 
+test('keeps Apps catalog cards visually still on hover', async () => {
+  const motionCss = await readFile(new URL('./productMotion.css', import.meta.url), 'utf8');
+
+  assert.match(
+    motionCss,
+    /@media \(hover:\s*hover\) and \(pointer:\s*fine\)[\s\S]*\.apps-discovery \.app-discovery-card:hover\s*\{[^}]*box-shadow:\s*var\(--shadow-low\);[^}]*transform:\s*translateY\(0\) scale\(1\)/,
+  );
+});
+
 test('shares animated discovery ordering styles without toolbar borders', async () => {
   const [css, discoveryCss] = await Promise.all([
     readFile(new URL('./styles.css', import.meta.url), 'utf8'),
@@ -713,27 +791,56 @@ test('shares animated discovery ordering styles without toolbar borders', async 
   assert.match(css, /\.reference-discovery-toolbar__sort button\[aria-selected=["']true["']\]::after\s*\{[\s\S]*opacity:\s*1;[\s\S]*transform:\s*scaleX\(1\)/);
 });
 
-test('animates the Apps platform pill across Web, iOS, and Android', async () => {
-  const css = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
+test('slides a calm active pill across the Apps platforms', async () => {
+  const [css, switcherSource] = await Promise.all([
+    readFile(new URL('./styles.css', import.meta.url), 'utf8'),
+    readFile(new URL('./components/AppsPlatformSwitcher.tsx', import.meta.url), 'utf8'),
+  ]);
 
-  assert.match(css, /\.apps-platform-switcher::before\s*\{[\s\S]*width:\s*var\(--apps-platform-indicator-width\);[\s\S]*transform:\s*translateX\(var\(--apps-platform-indicator-shift\)\);[\s\S]*transition:\s*transform/);
-  assert.match(css, /\.apps-platform-switcher button\s*\{[\s\S]*width:\s*96px\s*!important;[\s\S]*background:\s*transparent\s*!important;[\s\S]*transition:\s*color/);
+  assert.match(css, /\.apps-platform-switcher\s*\{[\s\S]*width:\s*188px;[\s\S]*display:\s*inline-flex;[\s\S]*border:\s*0;/);
+  assert.match(css, /\.apps-platform-switcher button\s*\{[\s\S]*position:\s*relative;/);
+  assert.match(css, /\.apps-platform-switcher__active-pill\s*\{[\s\S]*position:\s*absolute;[\s\S]*inset:\s*0;[\s\S]*background:\s*var\(--color-text-primary\)/);
   assert.match(css, /\.apps-platform-switcher button\[aria-checked=["']true["']\]\s*\{[\s\S]*color:\s*var\(--color-background-body\)\s*!important/);
+  assert.match(switcherSource, /import \{ LayoutGroup, motion, useReducedMotion, type PanInfo \} from 'motion\/react'/);
+  assert.match(switcherSource, /<LayoutGroup id="apps-platform-switcher">/);
+  assert.match(switcherSource, /<motion\.button/);
+  assert.match(switcherSource, /<motion\.div[\s\S]*drag=\{prefersReducedMotion \? false : 'x'\}/);
+  assert.match(switcherSource, /Math\.abs\(info\.offset\.x\) >= 22/);
+  assert.match(switcherSource, /onDragEnd=\{selectBySwipe\}/);
+  assert.match(switcherSource, /className="apps-platform-switcher__active-pill"/);
+  assert.match(switcherSource, /layoutId="apps-platform-active-pill"/);
+  assert.match(switcherSource, /className="apps-platform-switcher__label"[\s\S]*PLATFORM_LABEL\[platform\]/);
+  assert.match(switcherSource, /<motion\.button[\s\S]*layout[\s\S]*transition=\{prefersReducedMotion/);
+  assert.match(switcherSource, /type: 'spring'[\s\S]*stiffness: 420[\s\S]*damping: 34/);
+  assert.match(switcherSource, /prefersReducedMotion \? \{ duration: 0 \}/);
 });
 
-test('renders the Apps platform as a single-select filter using the shared dropdown shell', async () => {
-  const [source, discoveryCss] = await Promise.all([
+test('renders the Apps platform as a smooth segmented switcher', async () => {
+  const [source, switcherSource, discoveryCss] = await Promise.all([
     readFile(new URL('./components/AppsFilterBar.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./components/AppsPlatformSwitcher.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8'),
   ]);
 
-  assert.match(source, /<AstryxDropdown[\s\S]*type: 'platform'/);
-  assert.match(source, /<DiscoveryPlatformFilterOptions/);
+  assert.match(source, /kind === 'apps'[\s\S]*<AppsPlatformSwitcher/);
+  assert.match(source, /ariaLabel=\{platform\.ariaLabel\}/);
+  assert.match(switcherSource, /className="apps-platform-switcher__option"/);
+  assert.doesNotMatch(switcherSource, /platformSlot|data-platform-slot|data-platform-wrap|orbitDirection/);
+  assert.match(switcherSource, /title=\{PLATFORM_LABEL\[platform\]\}/);
+  assert.doesNotMatch(switcherSource, /import \{ Button \}/);
+  assert.match(switcherSource, /GlobeSimple/);
+  assert.match(switcherSource, /AppleLogo/);
+  assert.match(switcherSource, /AndroidLogo/);
   assert.match(
     discoveryCss,
-    /\.apps-filterbar__filter--platform\s*\{[\s\S]*min-width:\s*104px;[\s\S]*background:\s*transparent;/,
+    /\.apps-filterbar__filter--platform\s*\{[\s\S]*min-width:\s*184px;[\s\S]*border:\s*0;[\s\S]*background:\s*transparent;/,
   );
-  assert.match(source, /triggerVariant="primary"/);
+  assert.match(discoveryCss, /\.apps-filterbar \.apps-platform-switcher\s*\{[^}]*width:\s*184px;[^}]*height:\s*var\(--vitrine-control-height\);[^}]*padding:\s*2px;[^}]*overflow:\s*hidden;[^}]*border:\s*0;[^}]*background:\s*var\(--reference-chrome-surface-raised\);[^}]*box-shadow:\s*none/);
+  assert.match(discoveryCss, /\.apps-filterbar \.apps-platform-switcher__active-pill\s*\{[^}]*background:\s*#fff/);
+  assert.match(discoveryCss, /\.apps-filterbar \.apps-platform-switcher button\[aria-checked='true'\]\s*\{[^}]*color:\s*var\(--color-background-body\)\s*!important/);
+  assert.match(discoveryCss, /\.apps-filterbar \.apps-platform-switcher button\s*\{[^}]*width:\s*38px\s*!important;[^}]*height:\s*36px\s*!important;[^}]*display:\s*inline-flex;[^}]*align-items:\s*center;[^}]*justify-content:\s*center/);
+  assert.match(discoveryCss, /\.apps-filterbar \.apps-platform-switcher button\[aria-checked='true'\]\s*\{[^}]*width:\s*100px\s*!important;[^}]*flex-basis:\s*100px/);
+  assert.match(discoveryCss, /\.apps-filterbar \.apps-platform-switcher__icon\s*\{[^}]*width:\s*17px;[^}]*height:\s*17px/);
   assert.match(
     discoveryCss,
     /\.apps-filterbar__search\s*\{[\s\S]*min-height:\s*var\(--vitrine-form-input-height\);/,
@@ -742,25 +849,65 @@ test('renders the Apps platform as a single-select filter using the shared dropd
   assert.match(source, /hasClear/);
 });
 
-test('restores the animated Apps taxonomy hover preview without eager requests', async () => {
-  const [pageSource, motionSource, css] = await Promise.all([
+test('replays a staggered card entrance when the Apps platform changes', async () => {
+  const [pageSource, motionCss] = await Promise.all([
     readFile(new URL('./components/AppsDiscoveryPage.tsx', import.meta.url), 'utf8'),
-    readFile(new URL('./useCategoryHoverPreview.ts', import.meta.url), 'utf8'),
-    readFile(new URL('./styles.css', import.meta.url), 'utf8'),
+    readFile(new URL('./productMotion.css', import.meta.url), 'utf8'),
   ]);
 
-  assert.match(pageSource, /useCategoryHoverPreview\(\)/);
-  assert.match(pageSource, /readyAppFacetPreviews\.get/);
-  assert.match(pageSource, /onPointerEnter=/);
-  assert.match(pageSource, /onPointerMove=/);
-  assert.match(pageSource, /onPointerLeave=/);
-  assert.match(pageSource, /void prefetchAppFacetPreview\(/);
-  assert.doesNotMatch(pageSource, /prefetchVisibleAppFacetPreviews/);
-  assert.match(motionSource, /\(hover: hover\) and \(pointer: fine\)/);
-  assert.match(motionSource, /gsap\.quickTo/);
-  assert.match(motionSource, /matchMedia\.revert\(\)/);
-  assert.match(
-    css,
-    /\.apps-discovery__hover-preview\s*\{[\s\S]*position:\s*fixed;[\s\S]*pointer-events:\s*none;[\s\S]*visibility:\s*hidden;/,
-  );
+  assert.match(pageSource, /AnimatePresence,[\s\S]*arc,[\s\S]*motion,[\s\S]*useReducedMotion,[\s\S]*type Variants,[\s\S]*from 'motion\/react'/);
+  assert.match(pageSource, /key=\{`apps-results:\$\{controller\.state\.platform\}`\}/);
+  assert.match(pageSource, /key=\{`screen-results:\$\{controller\.state\.platform\}`\}/);
+  assert.match(pageSource, /data-apps-results-transition-direction=\{resultsTransitionDirection\}/);
+  assert.match(pageSource, /<AnimatePresence[\s\S]*mode="popLayout"[\s\S]*custom=\{resultsTransitionDirection\}/);
+  assert.match(pageSource, /<motion\.div[\s\S]*className="reference-discovery__grid apps-discovery__grid apps-discovery__results-transition"/);
+  assert.match(pageSource, /const appsResultsMotionVariants: Variants = \{[\s\S]*initial: \(direction:[\s\S]*exit: \(direction:/);
+  assert.match(pageSource, /custom=\{resultsTransitionDirection\}[\s\S]*variants=\{appsResultsMotionVariants\}[\s\S]*exit=\{prefersReducedMotion \? \{ opacity: 0 \} : 'exit'\}/);
+  assert.match(pageSource, /className="apps-discovery__motion-card"/);
+  assert.match(pageSource, /delay: Math\.min\(index, 6\) \* 0\.035/);
+  assert.match(pageSource, /arc\(\{ direction: 'cw', strength: 0\.18, rotate: 0\.1 \}\)/);
+  assert.match(pageSource, /type: 'spring' as const,[\s\S]*stiffness: 250,[\s\S]*damping: 29/);
+  assert.match(motionCss, /\.apps-discovery__motion-card\s*\{[^}]*min-width:\s*0;[^}]*transform-origin:\s*50% 120%/);
+  assert.doesNotMatch(motionCss, /@keyframes apps-discovery-card-enter/);
+});
+
+test('replaces the animated taxonomy preview with the editorial hero', async () => {
+  const [pageSource, css] = await Promise.all([
+    readFile(new URL('./components/AppsDiscoveryPage.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(pageSource, /data-apps-discovery-hero="true"/);
+  assert.match(pageSource, /data-apps-hero-rotating-text="true"/);
+  assert.match(pageSource, /const APPS_HERO_ROTATING_WORDS = \['APPS\.', 'SCREENS\.', 'FLOWS\.'\] as const/);
+  assert.match(pageSource, /<AnimatePresence initial=\{false\} mode="wait">/);
+  assert.match(pageSource, /setWordIndex\(\(current\) => \(current \+ 1\) % APPS_HERO_ROTATING_WORDS\.length\)/);
+  assert.match(pageSource, /if \(prefersReducedMotion\) \{[\s\S]*setWordIndex\(0\)/);
+  assert.match(pageSource, /stiffness: 240,[\s\S]*damping: 28,[\s\S]*mass: 0\.82/);
+  assert.match(pageSource, /className="apps-discovery-hero__icon-track"/);
+  assert.match(pageSource, /const AppsDiscoveryHero = memo\(function AppsDiscoveryHero/);
+  assert.match(pageSource, /const APPS_HERO_INDEXED_TOTAL = 32;/);
+  assert.match(pageSource, /const APPS_HERO_PROOF_APPS = \[/);
+  assert.match(pageSource, /name: 'Aboard',[\s\S]*name: 'Twingate'/);
+  assert.match(pageSource, /Catalog scale: \$\{APPS_HERO_INDEXED_TOTAL\} products indexed/);
+  assert.match(pageSource, /<span>\{APPS_HERO_INDEXED_TOTAL\} products indexed<\/span>/);
+  assert.match(pageSource, /APPS_HERO_PROOF_APPS\.map\(\(app\) =>/);
+  assert.match(pageSource, /<AppsDiscoveryHero\s+onExplore=\{exploreCatalog\}/);
+  assert.doesNotMatch(pageSource, /currentProofApps|heroProof|stableHeroProofApps|proofApps/);
+  assert.doesNotMatch(pageSource, /proofTotal/);
+  assert.match(pageSource, /const proofCycleDuration = Math\.max\(7, APPS_HERO_PROOF_APPS\.length \* 1\.1\);/);
+  assert.match(pageSource, /style=\{\{ animationDuration: `\$\{proofCycleDuration\}s` \}\}/);
+  assert.match(pageSource, /const exploreCatalog = useCallback\(\(\) => \{/);
+  assert.match(pageSource, /\[0, 1\]\.map\(\(copyIndex\)/);
+  assert.match(pageSource, /scrollIntoView/);
+  assert.doesNotMatch(pageSource, /useCategoryHoverPreview/);
+  assert.doesNotMatch(pageSource, /prefetchAppFacetPreview/);
+  assert.match(css, /\.apps-discovery-hero__icons \.app-icon\s*\{[^}]*margin-left:\s*-8px/);
+  assert.match(css, /\.apps-discovery-hero__icons\s*\{[^}]*width:\s*146px/);
+  assert.match(css, /\.apps-discovery-hero__rotating-slot\s*\{[^}]*padding:\s*0 \.12em;[^}]*overflow:\s*hidden[^}]*background:\s*#fff;[^}]*color:\s*var\(--color-background-body\)/);
+  assert.doesNotMatch(css, /\.apps-discovery-hero__rotating-slot\s*\{[^}]*min-width:/);
+  assert.match(css, /\.apps-discovery-hero__rotating-word\s*\{[^}]*position:\s*relative;[^}]*top:\s*\.04em;[^}]*white-space:\s*nowrap/);
+  assert.match(css, /@keyframes apps-hero-proof-icons[\s\S]*translateX\(-50%\)[\s\S]*translateX\(0\)/);
+  assert.match(css, /\.apps-discovery-hero__icons\s*\{[^}]*overflow:\s*hidden;[^}]*mask-image:\s*linear-gradient/);
+  assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.apps-discovery-hero__rotating-character\s*\{[^}]*opacity:\s*1 !important;[^}]*transform:\s*none !important/);
 });

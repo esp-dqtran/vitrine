@@ -174,7 +174,7 @@ test('shows the stored app description instead of its category', () => {
   assert.doesNotMatch(html, />Productivity</);
 });
 
-test('renders a top-right video control outside the card link', () => {
+test('renders a poster-first video control outside the card link', () => {
   const html = renderToStaticMarkup(
     <AppCard
       app={{ ...app([screen(1, '/one.png')]), previewVideoUrl: '/preview.mp4' }}
@@ -182,8 +182,12 @@ test('renders a top-right video control outside the card link', () => {
     />,
   );
 
-  assert.match(html, /<video[^>]+src="\/preview\.mp4"/);
-  assert.match(html, /aria-label="Pause video preview"/);
+  assert.match(html, /<video[^>]+poster="\/one\.png"/);
+  assert.match(html, /preload="none"/);
+  assert.match(html, /data-video-preload="poster"/);
+  assert.doesNotMatch(html, /<video[^>]+src=/);
+  assert.doesNotMatch(html, /autoPlay/);
+  assert.match(html, /aria-label="Play video preview"/);
   assert.match(html, /data-video-progress="0"/);
   assert.match(html, /<\/a><span class="discovery-card__badge app-discovery-card__status">New<\/span><button/);
 });

@@ -15,6 +15,7 @@ import {
   AstryxDropdown,
   AstryxDropdownItem,
 } from './AstryxDropdown.tsx';
+import { AppsPlatformSwitcher } from './AppsPlatformSwitcher.tsx';
 import { ControlRail } from './ControlRail.tsx';
 
 type DiscoveryFilterMenuContainer = Pick<HTMLElement, 'contains'>;
@@ -838,23 +839,32 @@ export function DiscoveryFilterBar({
               aria-label={platform.ariaLabel}
               ref={isMenuOpen({ type: 'platform' }) ? openMenuContainerRef : undefined}
             >
-              <AstryxDropdown
-                label={PLATFORM_LABEL[platform.value]}
-                ariaLabel={`${platform.ariaLabel}: ${PLATFORM_LABEL[platform.value]}`}
-                open={isMenuOpen({ type: 'platform' })}
-                triggerClassName="apps-filterbar__filter-button"
-                triggerVariant="primary"
-                onOpenChange={(open) => setSingleSelectOpen({ type: 'platform' }, open)}
-              >
-                <DiscoveryPlatformFilterOptions
+              {kind === 'apps' || kind === 'flows' ? (
+                <AppsPlatformSwitcher
                   value={platform.value}
                   platforms={platform.platforms}
-                  onSelect={(value) => {
-                    platform.onChange(value);
-                    setOpenMenu(null);
-                  }}
+                  ariaLabel={platform.ariaLabel}
+                  onChange={platform.onChange}
                 />
-              </AstryxDropdown>
+              ) : (
+                <AstryxDropdown
+                  label={PLATFORM_LABEL[platform.value]}
+                  ariaLabel={`${platform.ariaLabel}: ${PLATFORM_LABEL[platform.value]}`}
+                  open={isMenuOpen({ type: 'platform' })}
+                  triggerClassName="apps-filterbar__filter-button"
+                  triggerVariant="primary"
+                  onOpenChange={(open) => setSingleSelectOpen({ type: 'platform' }, open)}
+                >
+                  <DiscoveryPlatformFilterOptions
+                    value={platform.value}
+                    platforms={platform.platforms}
+                    onSelect={(value) => {
+                      platform.onChange(value);
+                      setOpenMenu(null);
+                    }}
+                  />
+                </AstryxDropdown>
+              )}
             </div>
             <span className="apps-filterbar__divider" aria-hidden="true" />
           </>

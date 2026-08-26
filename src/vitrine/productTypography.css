@@ -15,6 +15,7 @@
 [data-application-surface="true"]
   :where(h1):not(
     .reference-detail__heading *,
+    .apps-discovery-hero *,
     .color-composer__intro *,
     .project-files__hero-heading *,
     .project-document__title,
@@ -33,6 +34,7 @@
   :where(h2, h3):not(
     .reference-discovery__taxonomy *,
     .reference-detail__heading *,
+    .apps-discovery-hero *,
     .color-gallery__palette-title,
     .color-pack-stack *,
     .project-files__hero-heading *,
@@ -66,6 +68,7 @@
     .astryx-text-input input,
     .astryx-textarea textarea,
     .reference-detail__heading *,
+    .apps-discovery-hero *,
     .project-files__hero-heading *,
     .project-document__editor *,
     .project-canvas-document-editor *,

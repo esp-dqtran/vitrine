@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, type ReactNode } from 'react';
-import { Button } from '@astryxdesign/core';
 import type { FacetPreview } from '../facetPreviewApi.ts';
 import type { SearchFilters } from '../../searchTypes.ts';
 import { navigate, updateLocation, useLocationKey } from '../router.ts';
@@ -9,14 +8,13 @@ import {
   type SitesDiscoveryControllerState,
 } from '../sitesDiscoveryAdapter.ts';
 import type { SiteSummary } from '../types.ts';
-import { useCategoryHoverPreview } from '../useCategoryHoverPreview.ts';
 import {
   DiscoveryFilterBar,
   type DiscoveryFilterGroup,
 } from './AppsFilterBar.tsx';
 import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
 import { SiteCard } from './SiteCard.tsx';
-import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
+import { SitesDiscoveryHero } from './SitesDiscoveryHero.tsx';
 import {
   useDiscoveryController,
   type DiscoveryController,
@@ -25,8 +23,6 @@ export type SiteSort = 'latest' | 'popular';
 export type SiteFacet = { group: 'categories' | 'sections' | 'styles'; value: string };
 export type SiteFacetPreviewPools = Map<string, FacetPreview[]>;
 
-const siteFacetImageCache = new Map<string, Promise<void>>();
-const siteFacetImageReady = new Set<string>();
 const SITE_SECTION_PREVIEW_VALUES = ['Pricing', 'How It Works', 'About', 'FAQ', 'Hero'];
 
 const DISCOVERY_FACETS: Array<{
@@ -75,29 +71,6 @@ const DISCOVERY_FACETS: Array<{
     ],
   },
 ];
-
-const SITE_DISCOVERY_COUNTS: Readonly<Record<SiteFacet['group'], Readonly<Record<string, number>>>> = {
-  categories: {
-    Portfolio: 31,
-    Lifestyle: 19,
-    Finance: 47,
-    Business: 209,
-    Shopping: 50,
-  },
-  sections: {
-    'How It Works': 136,
-    About: 333,
-    FAQ: 288,
-    Hero: 0,
-  },
-  styles: {
-    Minimal: 80,
-    Dark: 59,
-    Photography: 48,
-    Motion: 290,
-    Colorful: 30,
-  },
-};
 
 const siteFacetKey = (facet: SiteFacet) => `${facet.group}:${facet.value.toLowerCase()}`;
 const siteFacetPreviewUrl = (preview: FacetPreview) => (
@@ -184,43 +157,6 @@ export function visibleSiteFacetPreviews(pools: SiteFacetPreviewPools): FacetPre
   });
 }
 
-function prefetchSiteFacetPreview(preview: FacetPreview): Promise<void> {
-  const url = siteFacetPreviewUrl(preview);
-  if (!url || typeof Image === 'undefined') return Promise.resolve();
-
-  const cached = siteFacetImageCache.get(url);
-  if (cached) return cached;
-
-  const request = new Promise<void>((resolve) => {
-    const image = new Image();
-    image.decoding = 'async';
-    image.onload = () => {
-      const decode = typeof image.decode === 'function'
-        ? image.decode().catch(() => undefined)
-        : Promise.resolve();
-      decode.finally(() => {
-        siteFacetImageReady.add(url);
-        resolve();
-      });
-    };
-    image.onerror = () => {
-      siteFacetImageCache.delete(url);
-      resolve();
-    };
-    image.src = url;
-  });
-  siteFacetImageCache.set(url, request);
-  return request;
-}
-
-function prefetchNextSiteFacetPreview(pools: SiteFacetPreviewPools, facet: SiteFacet): void {
-  const next = (pools.get(siteFacetKey(facet)) ?? []).find((preview) => {
-    const url = siteFacetPreviewUrl(preview);
-    return Boolean(url && !siteFacetImageCache.has(url));
-  });
-  if (next) void prefetchSiteFacetPreview(next);
-}
-
 interface SitesPageViewProps {
   controller: DiscoveryController<
     SiteSummary,
@@ -245,7 +181,6 @@ export function SitesPageView({
   onGuestLimitReached,
 }: SitesPageViewProps) {
   void isAdmin;
-  const { previewRef, showPreview, movePreview, hidePreview } = useCategoryHoverPreview();
   const previewPools = useMemo(
     () => buildSiteFacetPreviewPools(controller.items),
     [controller.items],
@@ -277,70 +212,9 @@ export function SitesPageView({
     <DiscoveryPageLayout
       kind="sites"
       header={null}
-      taxonomyLabel="Site discovery filters"
-      taxonomy={(
-        <>
-          {DISCOVERY_FACETS.map((group) => (
-            <ReferenceDiscoveryFacetGroup
-              key={group.group}
-              label={group.label}
-              className={`sites-discovery__facet sites-discovery__facet--${group.group}`}
-            >
-              {group.defaults.map((value) => {
-                const facet = {
-                  group: group.group,
-                  value,
-                };
-                const count = SITE_DISCOVERY_COUNTS[group.group][value] ?? 0;
-                const selected = controller.state.filters.some(
-                  (filter) => filter.group === group.group && filter.value === value,
-                );
-                const hoverFacet = facet.group === 'styles' ? null : facet;
-                return (
-                  <Button
-                    key={value}
-                    label={value}
-                    aria-label={`${value}, ${count} sites`}
-                    variant="ghost"
-                    size="sm"
-                    aria-pressed={selected}
-                    data-taxonomy-count={count}
-                    data-facet-preview={hoverFacet?.group}
-                    onPointerEnter={hoverFacet ? (event) => {
-                      const preview = siteFacetPreview(
-                        previewPools,
-                        hoverFacet,
-                        Math.random,
-                        siteFacetImageReady,
-                      ) ?? siteFacetPreview(previewPools, hoverFacet);
-                      if (preview) showPreview(preview, event.clientX, event.clientY);
-                      prefetchNextSiteFacetPreview(previewPools, hoverFacet);
-                    } : undefined}
-                    onPointerMove={hoverFacet ? (event) => {
-                      movePreview(event.clientX, event.clientY);
-                    } : undefined}
-                    onPointerLeave={hoverFacet ? hidePreview : undefined}
-                    onClick={() => {
-                      controller.toggleFilter(facet);
-                    }}
-                  />
-                );
-              })}
-            </ReferenceDiscoveryFacetGroup>
-          ))}
-        </>
-      )}
-      preview={(
-        <div
-          ref={previewRef}
-          className="apps-discovery__hover-preview sites-discovery__hover-preview"
-          aria-hidden="true"
-        >
-          <img alt="" aria-hidden="true" data-preview-frame="1" />
-          <img alt="" aria-hidden="true" data-preview-frame="2" />
-          <img alt="" aria-hidden="true" data-preview-frame="3" />
-        </div>
-      )}
+      taxonomyLabel="Site inspiration"
+      taxonomy={<SitesDiscoveryHero />}
+      preview={null}
       toolbar={(
         <DiscoveryFilterBar
           kind="sites"
@@ -367,6 +241,7 @@ export function SitesPageView({
           onClearFilter={controller.clearFilterGroup}
         />
       )}
+      showResultMeta={false}
       resultLabel="sites"
       singularResultLabel="site"
       totalCount={isGuest && controller.totalCount !== null

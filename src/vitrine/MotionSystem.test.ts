@@ -71,11 +71,16 @@ test('defines direct, local, and reduced-motion interaction behavior', async () 
 });
 
 test('transitions Apps and Screens result modes without ignoring reduced motion', async () => {
-  const styles = await read('./productMotion.css');
+  const [styles, page] = await Promise.all([
+    read('./productMotion.css'),
+    read('./components/AppsDiscoveryPage.tsx'),
+  ]);
 
   assert.match(styles, /@keyframes apps-discovery-results-enter/);
-  assert.match(styles, /\.apps-discovery__results-transition,[\s\S]*animation:\s*apps-discovery-results-enter\s+var\(--vitrine-motion-medium\)/);
-  assert.match(styles, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.apps-discovery__results-transition,[\s\S]*animation:\s*none\s*!important/);
+  assert.match(styles, /@media \(prefers-reduced-motion:\s*reduce\)/);
+  assert.match(page, /const prefersReducedMotion = useReducedMotion\(\)/);
+  assert.match(page, /initial=\{prefersReducedMotion \? false : 'initial'\}/);
+  assert.match(page, /exit=\{prefersReducedMotion \? \{ opacity: 0 \} : 'exit'\}/);
 });
 
 test('gives selected discovery filters a medium active-state transition', async () => {

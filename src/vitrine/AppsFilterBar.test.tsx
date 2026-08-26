@@ -60,7 +60,10 @@ test('renders the compact sticky Apps filter controls and result summary', () =>
 
   assert.match(html, /data-apps-filterbar="true"/);
   assert.match(html, /class="control-rail apps-filterbar"/);
-  assert.match(html, /aria-label="App platform: Web"/);
+  assert.match(html, /role="radiogroup" aria-label="App platform"/);
+  assert.match(html, /role="radio"[^>]*aria-checked="true"[^>]*aria-label="Web"/);
+  assert.match(html, /role="radio"[^>]*aria-label="iOS"/);
+  assert.match(html, /role="radio"[^>]*aria-label="Android"/);
   assert.match(html, />Categories</);
   assert.match(html, /apps-filterbar__selection-count[^>]*>3</);
   assert.match(html, /Filter \(3 selected\): Categories/);
@@ -536,12 +539,10 @@ test('keeps selected Apps filters checked only in their grouped taxonomy with th
   );
   assert.match(
     css,
-    /\.apps-filterbar__clear\.astryx-button\s*\{[^}]*width:\s*26px\s*!important;[^}]*height:\s*26px\s*!important;[^}]*min-height:\s*26px\s*!important;/,
+    /\.apps-filterbar__clear\.astryx-button\s*\{[^}]*--reference-filter-clear-size:[^;]+;[^}]*width:\s*var\(--reference-filter-clear-size\)\s*!important;[^}]*max-width:\s*var\(--reference-filter-clear-size\)\s*!important;[^}]*height:\s*var\(--reference-filter-clear-size\)\s*!important;[^}]*max-height:\s*var\(--reference-filter-clear-size\)\s*!important;[^}]*aspect-ratio:\s*1;/,
   );
-  assert.match(
-    spacingCss,
-    /\.discovery-filter-control\.discovery-filter-control \.apps-filterbar__clear\.apps-filterbar__clear\s*\{[^}]*width:\s*calc\(var\(--vitrine-control-height\) - var\(--spacing-2\)\)\s*!important;/,
-  );
+  assert.match(spacingCss, /:not\([\s\S]*\.apps-filterbar__clear,[\s\S]*\)\s*\{/);
+  assert.doesNotMatch(spacingCss, /\.discovery-filter-control\.discovery-filter-control \.apps-filterbar__clear\.apps-filterbar__clear/);
   assert.doesNotMatch(spacingCss, /color-gallery__collection-picker/);
 });
 

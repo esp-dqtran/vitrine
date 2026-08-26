@@ -58,8 +58,8 @@ test('defines compact, medium, and wide Apps behavior without page overflow', as
 
   assert.match(styles, /overflow-x:\s*clip/);
   assert.match(styles, /@media \(min-width:\s*721px\) and \(max-width:\s*1100px\)/);
-  assert.match(styles, /\.reference-discovery-nav\.apps-top-nav\s*\{[\s\S]*?--reference-nav-height:\s*72px[\s\S]*?--vitrine-responsive-gutter:\s*var\(--vitrine-page-gutter-medium\)/);
-  assert.match(styles, /grid-template-rows:\s*72px/);
+  assert.match(styles, /\.reference-discovery-nav\.apps-top-nav\s*\{[\s\S]*?--reference-nav-height:\s*56px[\s\S]*?--vitrine-responsive-gutter:\s*var\(--vitrine-page-gutter-medium\)/);
+  assert.match(styles, /grid-template-rows:\s*56px/);
   assert.doesNotMatch(styles, /--reference-nav-height:\s*(?:96|112)px/);
   assert.match(styles, /\.apps-filterbar\s*\{[\s\S]*?min-height:\s*var\(--reference-nav-height\)[\s\S]*?padding-block:\s*calc\(\(var\(--reference-nav-height\) - var\(--vitrine-control-height\)\) \/ 2\)/);
   assert.doesNotMatch(mediumStyles, /\.apps-filterbar__controls > \.apps-filterbar__filter\[data-filter-group\]\s*\{[^}]*display:\s*none/);
@@ -67,9 +67,9 @@ test('defines compact, medium, and wide Apps behavior without page overflow', as
   assert.match(mediumStyles, /\.apps-filterbar__controls\s*\{[^}]*overflow-x:\s*auto/);
   assert.match(styles, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(styles, /@media \(max-width:\s*720px\)/);
-  assert.match(styles, /grid-template-columns:\s*32px minmax\(132px, 1fr\) 44px 44px/);
-  assert.match(compactStyles, /\.apps-top-nav \.reference-discovery-nav__actions\s*\{[^}]*width:\s*44px;[^}]*max-width:\s*44px/);
-  assert.match(styles, /\.apps-top-nav \.reference-discovery-nav__types\s*\{[^}]*align-self:\s*center\s*!important/);
+  assert.match(styles, /grid-template-columns:\s*28px minmax\(120px,\s*1fr\) minmax\(44px,\s*72px\) 44px/);
+  assert.match(compactStyles, /\.apps-top-nav \.reference-discovery-nav__actions\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*72px/);
+  assert.match(styles, /\.apps-top-nav \.reference-discovery-nav__types\s*\{[^}]*display:\s*none/);
   assert.match(styles, /\.apps-filterbar\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-wrap:\s*nowrap/);
   assert.match(compactStyles, /\.apps-filterbar__controls > \.apps-filterbar__filter\[data-filter-group\]\s*\{[^}]*display:\s*none/);
   assert.match(compactStyles, /\.apps-filterbar__filter--merged\s*\{[^}]*display:\s*inline-flex/);

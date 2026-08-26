@@ -1,0 +1,156 @@
+.overlap-transition-stage {
+  position: relative;
+  display: grid;
+  min-height: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.overlap-transition-stage__layer {
+  grid-area: 1 / 1;
+  min-width: 0;
+  transform-origin: 50% 0;
+  will-change: clip-path, opacity, transform;
+}
+
+.overlap-transition-stage__layer:not(:last-child) {
+  pointer-events: none;
+}
+
+.overlap-transition-demo {
+  display: grid;
+  width: min(100%, 920px);
+  min-height: 440px;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 22px;
+  background: #0c0c10;
+  color: #f6f3ee;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.overlap-transition-demo__shell {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgb(255 255 255 / 9%);
+  background: rgb(12 12 16 / 92%);
+  backdrop-filter: blur(12px);
+}
+
+.overlap-transition-demo__shell strong {
+  font-size: 14px;
+  letter-spacing: -0.02em;
+}
+
+.overlap-transition-demo__shell div {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 999px;
+}
+
+.overlap-transition-demo__shell button {
+  width: 34px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #8d8d98;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+}
+
+.overlap-transition-demo__shell button[aria-pressed='true'] {
+  background: #f5f3ef;
+  color: #111116;
+}
+
+.overlap-transition-demo > .overlap-transition-stage {
+  min-height: 370px;
+}
+
+.overlap-transition-demo__scene {
+  position: relative;
+  display: flex;
+  min-height: 370px;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  padding: clamp(24px, 6vw, 60px);
+  background:
+    radial-gradient(circle at 72% 24%, rgb(180 141 255 / 55%), transparent 25%),
+    linear-gradient(145deg, #1f1930, #0c0c10 60%);
+}
+
+.overlap-transition-demo__scene--2 {
+  background:
+    radial-gradient(circle at 24% 20%, rgb(69 211 180 / 48%), transparent 25%),
+    linear-gradient(145deg, #102621, #0c0c10 62%);
+}
+
+.overlap-transition-demo__scene span {
+  position: relative;
+  z-index: 1;
+  color: rgb(255 255 255 / 62%);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.overlap-transition-demo__scene h3 {
+  position: relative;
+  z-index: 1;
+  max-width: 620px;
+  margin: 10px 0 12px;
+  color: inherit;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(38px, 7vw, 78px);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 0.92;
+}
+
+.overlap-transition-demo__scene p {
+  position: relative;
+  z-index: 1;
+  max-width: 470px;
+  margin: 0;
+  color: rgb(255 255 255 / 62%);
+  font-size: clamp(12px, 1.8vw, 16px);
+  line-height: 1.5;
+}
+
+.overlap-transition-demo__scene i {
+  position: absolute;
+  top: 12%;
+  right: 10%;
+  width: 26%;
+  aspect-ratio: 1;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 50%;
+  box-shadow: 0 0 70px rgb(179 139 255 / 22%);
+}
+
+@media (max-width: 620px) {
+  .overlap-transition-demo {
+    min-height: 390px;
+  }
+
+  .overlap-transition-demo > .overlap-transition-stage,
+  .overlap-transition-demo__scene {
+    min-height: 320px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlap-transition-stage__layer {
+    will-change: opacity;
+  }
+}

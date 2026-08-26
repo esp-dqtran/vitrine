@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { Button } from '@astryxdesign/core';
 import {
   COMPONENT_CATEGORIES,
   SIGNIFICANT_COMPONENT_LIBRARY,
@@ -6,9 +7,11 @@ import {
   type ComponentCategory,
   type ComponentRecord,
 } from '../componentLibraryCatalog.ts';
+import { componentBundleFor } from '../componentBundles.ts';
 import { updateLocation } from '../router.ts';
 import { AppIcon } from './AppIcon.tsx';
 import { ComponentLibraryPreview, type MenuPreviewViewport } from './ComponentLibraryPreview.tsx';
+import { ComponentDeveloperDialog } from './ComponentDeveloperDialog.tsx';
 import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
 import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
 
@@ -26,11 +29,15 @@ const CRAFT_WILD_MARK = new URL(
   '../../../artifacts/downloads/craft.wild.as/2026-08-21-home/mirror/favicon.svg',
   import.meta.url,
 ).href;
+const TASTE_LABS_APP_ICON = 'https://cdn.prod.website-files.com/6a1d5baf94efef5f7c435fc3/6a1da2ac3e6ba66f852367c6_clip.png';
+const FLIM_APP_ICON = 'https://cdn.prod.website-files.com/695bc6699e9ebf7bc1099bbf/695bc6699e9ebf7bc1099cbd_icon.png';
 
 function sourceIconUrl(source: ComponentRecord['source']): string | null {
   if (source.label === 'Melius') return MELIUS_MARK;
   if (source.label === 'Content Architecture') return CONTENT_ARCHITECTURE_MARK;
   if (source.label === 'Craft/Wild') return CRAFT_WILD_MARK;
+  if (source.label === 'Taste Labs') return TASTE_LABS_APP_ICON;
+  if (source.label === 'Flim') return FLIM_APP_ICON;
   return null;
 }
 
@@ -48,6 +55,7 @@ function sourceLogoClass(source: ComponentRecord['source']): string {
   if (source.label === 'Melius') return 'component-library-card__logo--melius';
   if (source.label === 'Taste Labs') return 'component-library-card__logo--taste-labs';
   if (source.label === 'Flim') return 'component-library-card__logo--flim';
+  if (source.label === 'Details.so') return 'component-library-card__logo--details';
   return 'component-library-card__logo--craft-wild';
 }
 
@@ -72,6 +80,7 @@ function intrinsicPreviewRatio(item: ComponentRecord): string | undefined {
   if (item.source.label === 'Flim' && item.name === 'FlimHeroSearchSection') return '1057 / 728';
   if (item.source.label === 'Flim' && item.name === 'FlimWhatIsFlimSection') return '846 / 1913';
   if (item.source.label === 'Flim' && item.name === 'FlimDatabaseScrollSection') return '2114 / 994';
+  if (item.source.label === 'Details.so' && item.name === 'OverlapTransitionStage') return '16 / 9';
   if (item.name === 'RepoExplorer') return '1280 / 900';
   if (item.name === 'SpiralScene') return '1000 / 900';
   if (item.name === 'GlyphField') return '1280 / 900';
@@ -175,8 +184,11 @@ function ComponentPreviewDialog({
 
 function ComponentCard({ item }: { item: ComponentRecord }) {
   const href = componentSourcePath(item.source);
+  const bundle = componentBundleFor(item.id);
   const displayName =
-    item.name === 'MeliusButton'
+    item.name === 'OverlapTransitionStage'
+      ? 'Overlap Transition Stage'
+      : item.name === 'MeliusButton'
       ? 'Button'
       : item.name === 'FooterEasterEgg'
         ? 'Footer'
@@ -194,10 +206,16 @@ function ComponentCard({ item }: { item: ComponentRecord }) {
   const previewRatio = intrinsicPreviewRatio(item);
   const [menuViewport, setMenuViewport] = useState<'desktop' | 'mobile'>('mobile');
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [developerOpen, setDeveloperOpen] = useState(false);
   const openPreviewRef = useRef<HTMLButtonElement>(null);
+  const openDeveloperRef = useRef<HTMLButtonElement>(null);
   const closePreview = () => {
     setPreviewOpen(false);
     requestAnimationFrame(() => openPreviewRef.current?.focus());
+  };
+  const closeDeveloper = () => {
+    setDeveloperOpen(false);
+    requestAnimationFrame(() => openDeveloperRef.current?.focus());
   };
 
   return (
@@ -283,6 +301,15 @@ function ComponentCard({ item }: { item: ComponentRecord }) {
           <strong>{displayName}</strong>
           <span aria-hidden="true">↗</span>
         </button>
+        {bundle ? (
+          <Button
+            className="component-library-card__generate"
+            label="Generate React"
+            onClick={() => setDeveloperOpen(true)}
+            ref={openDeveloperRef}
+            variant="secondary"
+          />
+        ) : null}
       </div>
 
       {previewOpen ? (
@@ -292,6 +319,14 @@ function ComponentCard({ item }: { item: ComponentRecord }) {
           menuViewport={isMenuCard ? menuViewport : undefined}
           onClose={closePreview}
           onMenuViewportChange={isMenuCard ? setMenuViewport : undefined}
+        />
+      ) : null}
+      {developerOpen && bundle ? (
+        <ComponentDeveloperDialog
+          bundle={bundle}
+          item={item}
+          onClose={closeDeveloper}
+          sourceIconUrl={sourceIconUrl(item.source)}
         />
       ) : null}
     </article>

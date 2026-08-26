@@ -10,6 +10,7 @@ export interface DiscoveryPageLayoutProps {
   taxonomy?: ReactNode;
   preview?: ReactNode;
   toolbar: ReactNode;
+  showResultMeta?: boolean;
   resultLabel: string;
   singularResultLabel: string;
   totalCount: number | null;
@@ -35,6 +36,7 @@ export function DiscoveryPageLayout({
   taxonomy,
   preview,
   toolbar,
+  showResultMeta = true,
   resultLabel,
   singularResultLabel,
   totalCount,
@@ -71,7 +73,7 @@ export function DiscoveryPageLayout({
         data-discovery-page-layout={kind}
         aria-label={`${resultLabel} results`}
       >
-        {totalCount !== null ? (
+        {showResultMeta && totalCount !== null ? (
           <p
             key={countLabel}
             className="reference-discovery__result-meta"

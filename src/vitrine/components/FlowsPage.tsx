@@ -100,7 +100,7 @@ export function FlowsPageView({
 }: FlowsPageViewProps) {
   const flowCategories = useMemo<DiscoveryFilterGroup>(() => ({
     id: 'flowCategories',
-    label: 'Category',
+    label: 'Categories',
     selected: controller.state.filters
       .filter(({ group }) => group === 'flowCategories')
       .map(({ value }) => value),
@@ -112,7 +112,7 @@ export function FlowsPageView({
   }), [controller.state.filters, taxonomy]);
   const flowTypes = useMemo<DiscoveryFilterGroup>(() => ({
     id: 'flowTypes',
-    label: 'Flow type',
+    label: 'Flow Types',
     selected: controller.state.filters
       .filter(({ group }) => group === 'flowTypes')
       .map(({ value }) => value),

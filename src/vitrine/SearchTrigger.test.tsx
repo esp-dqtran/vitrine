@@ -48,7 +48,7 @@ test("supports both command search shortcuts", () => {
 
   assert.match(source, /e\.key\.toLowerCase\(\) === 'k'/);
   assert.match(source, /e\.key === ' '/);
-  assert.match(source, /⌘K \/ ⌘Space/);
+  assert.match(source, /⌘K/);
   assert.match(source, /window\.setInterval/);
   assert.match(source, /2_400/);
   assert.match(source, /reference-search-trigger__letter/);

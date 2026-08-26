@@ -66,6 +66,13 @@ test('omits the taxonomy region when a discovery page has no taxonomy content', 
   assert.match(html, /data-discovery-page-layout="colors"/);
 });
 
+test('can omit the result meta without changing result rendering', () => {
+  const html = renderLayout({ showResultMeta: false });
+
+  assert.doesNotMatch(html, /reference-discovery__result-meta/);
+  assert.match(html, /data-layout-part="result"/);
+});
+
 test('right-aligns the shared result count for Apps, Sites, and Flows', async () => {
   const css = await readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
 

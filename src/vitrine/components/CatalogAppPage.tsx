@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { ToggleButton } from '@astryxdesign/core';
 import { useSlidingIndicator } from '../useSlidingIndicator.ts';
 import { ScreenGridCard } from './ScreenGridCard.tsx';
@@ -16,6 +16,8 @@ import {
 } from './CatalogSidebar.tsx';
 import { CatalogShell } from './CatalogShell.tsx';
 import { CatalogNotFoundPage } from './CatalogStaticPages.tsx';
+import { applySeoMetadata } from '../seo.ts';
+import { metadataForApp } from '../../seoMetadata.ts';
 
 /*
  * The preview payload's flow shape, adapted to the one FlowCard takes. The v1
@@ -90,6 +92,10 @@ export interface CatalogAppPageProps {
 
 export function CatalogAppPage(props: CatalogAppPageProps) {
   const { preview, loading, error } = usePublicAppPreview(props.appId, true);
+  useEffect(() => {
+    if (!preview?.app) return;
+    applySeoMetadata(metadataForApp(preview.app, window.location.search));
+  }, [preview]);
   /* Sidebar counts follow the app being viewed, so an iOS app shows the iOS
      ranking rather than the Web default. */
   const platform = preview?.app.platforms?.[0] ?? 'web';

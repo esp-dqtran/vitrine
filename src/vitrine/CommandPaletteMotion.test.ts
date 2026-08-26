@@ -10,7 +10,8 @@ test('keeps the search dialog mounted through its close animation', async () => 
     readFile(new URL('./useCommandPaletteFlowCatalog.ts', import.meta.url), 'utf8'),
   ]);
 
-  assert.match(source, /data-closing=/);
+  assert.match(source, /dataClosing=\{closing \? 'true' : undefined\}/);
+  assert.doesNotMatch(source, /data-closing=\{closing/);
   assert.match(source, /onAnimationEnd=/);
   assert.match(source, /requestClose/);
   assert.match(styles, /@keyframes vitrine-command-palette-in/);
@@ -30,6 +31,7 @@ test('keeps the search dialog mounted through its close animation', async () => 
   assert.doesNotMatch(source, /loadDesignSystem/);
   assert.doesNotMatch(source, /Promise\.all\(apps\.map/);
   assert.match(source, /onKeyDownCapture/);
+  assert.match(source, /if \(event\.key === 'Escape'\) \{[\s\S]*requestClose\(\)/);
   assert.doesNotMatch(source, /appMatches/);
   assert.doesNotMatch(source, /screenMatches/);
   assert.match(styles, /\.inspiration-result-grid/);

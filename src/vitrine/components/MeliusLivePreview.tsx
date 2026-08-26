@@ -2,11 +2,15 @@ import { createElement, useEffect, useRef, useState, type CSSProperties, type Re
 import { createPortal } from 'react-dom';
 
 type PreviewSurface = 'card' | 'full';
+const EMPTY_HERO_IMAGE_URLS: readonly string[] = [];
 
 interface MeliusLivePreviewProps {
   componentName: 'FooterEasterEgg' | 'HeroSection' | 'MeliusFooter' | 'ModelWebGLCarousel' | 'PersonaStack' | 'SiteHeader';
   surface: PreviewSurface;
   viewport?: 'desktop' | 'mobile';
+  appearance?: 'source' | 'vitrines-dark';
+  heroImageUrls?: readonly string[];
+  heroImagesReady?: boolean;
 }
 
 const PREVIEW_DIMENSIONS = {
@@ -53,6 +57,13 @@ const heroAssetUrls = {
   '0345cc7b45c4ceb43c1f.webp': new URL('../../../artifacts/downloads/melius.com/reverse-engineering/home/react-demo/public/assets/0345cc7b45c4ceb43c1f.webp', import.meta.url).href,
   '2da0635abbe3be67d2b6.webp': new URL('../../../artifacts/downloads/melius.com/reverse-engineering/home/react-demo/public/assets/2da0635abbe3be67d2b6.webp', import.meta.url).href,
 };
+
+const heroAssetUrlsForImages = (imageUrls: readonly string[]) => {
+  if (imageUrls.length === 0) return heroAssetUrls;
+  return Object.fromEntries(
+    Object.keys(heroAssetUrls).map((file, index) => [file, imageUrls[index % imageUrls.length]]),
+  );
+};
 const easeFontUrl = new URL(
   '../../../artifacts/downloads/melius.com/reverse-engineering/home/react-demo/public/assets/9d8bb9ce2e47c0afc606.woff2',
   import.meta.url,
@@ -97,6 +108,15 @@ async function loadPreviewStyles(): Promise<string> {
       width: var(--melius-live-width);
       height: var(--melius-live-height);
       overflow: hidden;
+    }
+    :host([data-live-component="HeroSection"]) .hero,
+    :host([data-live-component="HeroSection"]) .hero__content {
+      width: var(--melius-live-width);
+      height: var(--melius-live-height);
+      min-height: var(--melius-live-height);
+    }
+    :host([data-live-component="HeroSection"]) .hero__background-canvas {
+      height: var(--melius-live-height);
     }
     .melius-live-stage--models .model-webgl-section,
     .melius-live-stage--personas .personas,
@@ -182,15 +202,35 @@ async function loadPreviewStyles(): Promise<string> {
     :host([data-preview-viewport="mobile"]) .menu-actions .melius-button--yellow {
       display: none;
     }
+    :host([data-preview-appearance="vitrines-dark"]) .hero__background,
+    :host([data-preview-appearance="vitrines-dark"]) .hero__dot-field {
+      background-color: var(--color-background-body, #101010);
+    }
+    :host([data-preview-appearance="vitrines-dark"]) .hero__dot-field {
+      background-image: none;
+    }
+    :host([data-preview-appearance="vitrines-dark"]) .hero__background-canvas {
+      display: none;
+    }
+    :host([data-preview-appearance="vitrines-dark"]) .hero__content h1 {
+      color: var(--color-text-primary, #f6f6f3);
+      font-family: 'Instrument Serif', 'Iowan Old Style', Baskerville, Georgia, serif;
+    }
+    :host([data-preview-appearance="vitrines-dark"]) .hero__copy {
+      display: none;
+    }
   `;
 }
 
-async function loadPreviewElement(componentName: MeliusLivePreviewProps['componentName']): Promise<ReactElement> {
+async function loadPreviewElement(
+  componentName: MeliusLivePreviewProps['componentName'],
+  heroImageUrls: readonly string[] = [],
+): Promise<ReactElement> {
   if (componentName === 'HeroSection') {
     const { HeroSection } = await import(
       '../../../artifacts/downloads/melius.com/reverse-engineering/home/react-demo/src/components/HeroSection.jsx'
     );
-    return createElement(HeroSection, { assetUrls: heroAssetUrls });
+    return createElement(HeroSection, { assetUrls: heroAssetUrlsForImages(heroImageUrls) });
   }
 
   if (componentName === 'PersonaStack') {
@@ -286,7 +326,14 @@ async function loadPreviewElement(componentName: MeliusLivePreviewProps['compone
   );
 }
 
-export function MeliusLivePreview({ componentName, surface, viewport = 'desktop' }: MeliusLivePreviewProps) {
+export function MeliusLivePreview({
+  componentName,
+  surface,
+  viewport = 'desktop',
+  appearance = 'source',
+  heroImageUrls = EMPTY_HERO_IMAGE_URLS,
+  heroImagesReady = true,
+}: MeliusLivePreviewProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [mount, setMount] = useState<HTMLDivElement | null>(null);
   const [preview, setPreview] = useState<ReactElement | null>(null);
@@ -309,9 +356,12 @@ export function MeliusLivePreview({ componentName, surface, viewport = 'desktop'
     if (!existingMount) shadow.append(nextMount);
     setMount(nextMount);
     setPreview(null);
+
+    if (componentName === 'HeroSection' && !heroImagesReady) return undefined;
+
     let active = true;
 
-    Promise.all([loadPreviewStyles(), loadPreviewElement(componentName)]).then(([css, element]) => {
+    Promise.all([loadPreviewStyles(), loadPreviewElement(componentName, heroImageUrls)]).then(([css, element]) => {
       if (!active) return;
       style.textContent = css;
       setPreview(element);
@@ -320,11 +370,15 @@ export function MeliusLivePreview({ componentName, surface, viewport = 'desktop'
     return () => {
       active = false;
     };
-  }, [componentName]);
+  }, [componentName, heroImageUrls, heroImagesReady]);
 
   return <>
     <div
       data-live-component={componentName}
+      data-hero-image-count={componentName === 'HeroSection' ? heroImageUrls.length : undefined}
+      data-hero-image-source={componentName === 'HeroSection' && heroImageUrls.length > 0 ? 'apps' : undefined}
+      data-hero-image-status={componentName === 'HeroSection' ? (heroImagesReady ? 'ready' : 'loading') : undefined}
+      data-preview-appearance={appearance}
       data-preview-viewport={viewport}
       data-surface={surface}
       ref={hostRef}

@@ -5,6 +5,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { canShowPublicSitePreview } from './App.tsx';
 import { SitesPageView } from './components/SitesPage.tsx';
 import * as SitesPageModule from './components/SitesPage.tsx';
+import {
+  selectSitesHeroAppIconUrls,
+  sitesHeroLayout,
+  SITES_HERO_ICON_TILE_STYLE,
+} from './components/SitesDiscoveryHero.tsx';
 import { CardVideoControl } from './components/CardVideoControl.tsx';
 import * as SiteCardModule from './components/SiteCard.tsx';
 import { SiteVersionView } from './components/SiteVersionPage.tsx';
@@ -197,28 +202,20 @@ const detail: SiteVersionDetail = {
   }],
 };
 
-test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', () => {
+test('renders the selected live hero above the Sites filters and a semantic full-card link', () => {
   const html = renderToStaticMarkup(<SitesPageView controller={siteController()} isAdmin />);
-  const taxonomyHtml = html.slice(
-    html.indexOf('reference-discovery__taxonomy'),
-    html.indexOf('apps-discovery__hover-preview'),
-  );
   assert.match(html, /data-sites-discovery="true"/);
   assert.match(html, /class="[^"]*reference-discovery[^"]*reference-discovery--sites[^"]*"/);
   assert.doesNotMatch(html, /reference-discovery-nav/);
   assert.match(html, /class="[^"]*reference-discovery__content[^"]*"/);
   assert.match(html, /class="[^"]*reference-discovery__taxonomy[^"]*reference-discovery__taxonomy--sites[^"]*"/);
-  assert.doesNotMatch(html, /Hide filter shortcuts|Browse filter shortcuts/);
-  assert.doesNotMatch(html, /sites-discovery__taxonomy-toggle/);
-  assert.match(html, /class="[^"]*reference-discovery__facet[^"]*"/);
-  assert.match(html, /Categories/);
-  assert.doesNotMatch(taxonomyHtml, /Open Sections filters/);
-  assert.match(html, /Styles/);
-  assert.match(html, /Business/);
-  assert.match(html, /aria-label="Business, 209 sites"/);
-  assert.match(html, /data-taxonomy-count="0"/);
-  assert.doesNotMatch(taxonomyHtml, /Pricing/);
-  assert.match(html, /Minimal/);
+  assert.match(html, /data-sites-discovery-hero="true"/);
+  assert.match(html, /class="sites-discovery-hero"/);
+  assert.match(html, /data-sites-hero-height="shared"/);
+  assert.match(html, /aria-label="Site inspiration"/);
+  assert.match(html, /data-live-component="HeroSection"/);
+  assert.match(html, /data-hero-image-status="loading"/);
+  assert.match(html, /data-preview-appearance="vitrines-dark"/);
   assert.match(html, /data-sites-filterbar="true"/);
   assert.match(html, /aria-label="Site discovery controls"/);
   assert.doesNotMatch(html, /placeholder="Search sites, sections, styles, or technology"/);
@@ -228,14 +225,11 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.match(html, /Open Categories filters/);
   assert.match(html, /Open Sections filters/);
   assert.match(html, /Open Styles filters/);
-  assert.match(html, />1 site</);
+  assert.doesNotMatch(html, /reference-discovery__result-meta/);
+  assert.doesNotMatch(html, /Showing/);
   assert.doesNotMatch(html, /aria-label="Sort: Latest"/);
   assert.doesNotMatch(html, /data-reference-discovery-toolbar="true"/);
-  assert.match(html, /data-facet-preview="categories"/);
-  assert.match(html, /data-facet-preview="sections"/);
-  assert.doesNotMatch(html, /data-facet-preview="styles"/);
-  assert.match(html, /class="apps-discovery__hover-preview sites-discovery__hover-preview"/);
-  assert.equal((html.match(/data-preview-frame=/g) ?? []).length, 3);
+  assert.doesNotMatch(html, /sites-discovery__hover-preview/);
   assert.doesNotMatch(html, /sites-discovery__toolbar-actions/);
   assert.match(html, /V7/);
   assert.match(html, /data-discovery-card="true"/);
@@ -253,14 +247,73 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.match(html, /<img[^>]+alt="V7 website preview"/);
   assert.match(html, /<a[^>]+href="\/sites\/v7"[^>]+class="discovery-card__link site-discovery-card__link"/);
   assert.doesNotMatch(html, /Refresh/);
-  assert.equal((html.match(/Showing/g) ?? []).length, 1);
-  assert.match(html, /<strong>1 site<\/strong>/);
   assert.doesNotMatch(html, /Import Site/);
 });
 
 test('anchors full-page Site posters to the homepage hero in discovery cards', () => {
   const styles = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
   assert.match(styles, /\.sites-discovery__grid \.site-discovery-card__preview > img\s*\{\s*object-position:\s*top center;/);
+});
+
+test('fills the Sites hero with one unique icon from each App', () => {
+  const urls = selectSitesHeroAppIconUrls([
+    { iconUrl: '/icon-a' },
+    { iconUrl: '/icon-b' },
+    { iconUrl: '/icon-a' },
+    { iconUrl: null },
+    { iconUrl: '/icon-c' },
+  ], 2);
+
+  assert.deepEqual(urls, ['/icon-a', '/icon-b']);
+});
+
+test('frames Sites hero App icons with the shared dark surface treatment', () => {
+  assert.deepEqual(SITES_HERO_ICON_TILE_STYLE, {
+    background: '#1f1f22',
+    border: '#494d53',
+    borderWidth: 8,
+    cornerRadius: 112,
+    iconInset: 64,
+    size: 512,
+  });
+});
+
+test('pins the embedded Sites hero geometry so fullscreen cannot clip its headline', () => {
+  const source = readFileSync(new URL('./components/MeliusLivePreview.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /\[data-live-component="HeroSection"\]\) \.hero,[\s\S]*\.hero__content \{[\s\S]*height: var\(--melius-live-height\);[\s\S]*min-height: var\(--melius-live-height\);/);
+  assert.match(source, /\[data-live-component="HeroSection"\]\) \.hero__background-canvas \{[\s\S]*height: var\(--melius-live-height\);/);
+  assert.match(source, /\[data-preview-appearance="vitrines-dark"\]\) \.hero__content h1 \{[^}]*font-family: 'Instrument Serif'/);
+});
+
+test('uses a solid Sites hero background without the Melius dot field', () => {
+  const source = readFileSync(new URL('./components/MeliusLivePreview.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /\[data-preview-appearance="vitrines-dark"\]\) \.hero__dot-field \{[^}]*background-image:\s*none;/);
+  assert.match(source, /\[data-preview-appearance="vitrines-dark"\]\) \.hero__background-canvas \{[^}]*display:\s*none;/);
+});
+
+test('bleeds the Sites hero to the full viewport width', () => {
+  const styles = readFileSync(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
+  const source = readFileSync(new URL('./components/SitesDiscoveryHero.tsx', import.meta.url), 'utf8');
+
+  assert.match(styles, /\.reference-discovery--sites \.sites-discovery-hero\s*\{[^}]*width:\s*100vw;[^}]*margin-inline:\s*calc\(50% - 50vw\);/);
+  assert.doesNotMatch(source, /data-sites-discovery-hero="true"[\s\S]{0,400}width:\s*'100%'/);
+});
+
+test('upscales the Sites scene to fill fullscreen widths without clipping its headline', () => {
+  const layout = sitesHeroLayout(1600, 500);
+
+  assert.equal(layout.scale * 1280, 1600);
+  assert.ok(layout.top + 251 * layout.scale >= 32);
+});
+
+test('shares one responsive hero height between Apps and Sites', () => {
+  const styles = readFileSync(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
+
+  assert.match(styles, /--reference-discovery-hero-height:\s*clamp\(430px,\s*calc\(100vh - 220px\),\s*560px\)/);
+  assert.match(styles, /\.apps-discovery-hero,\s*\.sites-discovery-hero\s*\{[^}]*min-height:\s*var\(--reference-discovery-hero-height\)/);
+  assert.match(styles, /@media \(max-width:\s*720px\)[\s\S]*--reference-discovery-hero-height:\s*clamp\(440px,\s*calc\(100svh - 148px\),\s*560px\)/);
 });
 
 test('uses the same media-first card composition for Sites and Apps', () => {
@@ -285,7 +338,7 @@ test('reuses the shared video control for a Site preview after hover or focus', 
   assert.match(control, /Pause video preview/);
 });
 
-test('keeps the Sites hero taxonomy curated when the API returns noisy facets', () => {
+test('keeps the Sites hero independent from noisy API facets', () => {
   const html = renderToStaticMarkup(
     <SitesPageView
       controller={siteController({
@@ -300,9 +353,8 @@ test('keeps the Sites hero taxonomy curated when the API returns noisy facets', 
     />,
   );
 
-  assert.match(html, />Portfolio</);
-  assert.match(html, />How It Works</);
-  assert.match(html, />Colorful</);
+  assert.match(html, /data-sites-discovery-hero="true"/);
+  assert.match(html, /data-live-component="HeroSection"/);
   assert.doesNotMatch(html, />000</);
   assert.doesNotMatch(html, />7HgfXftRBBqsYtAEYcqjGLQrNJLL6Tww9ek4rE3Apump</);
 });
@@ -327,7 +379,7 @@ test('shows a URL-backed Sites query and an understandable card match label', ()
   assert.match(html, /Matched style: Minimal/);
 });
 
-test('uses the server total in Sites result metadata while one cursor page is loaded', () => {
+test('hides the server total while one cursor page is loaded', () => {
   const sites = Array.from({ length: 24 }, (_, index) => ({
     ...site,
     id: index + 1,
@@ -351,10 +403,11 @@ test('uses the server total in Sites result metadata while one cursor page is lo
     />,
   );
 
-  assert.equal((html.match(/<strong>100 sites<\/strong>/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /reference-discovery__result-meta/);
+  assert.doesNotMatch(html, /100 sites/);
 });
 
-test('caps the visible Site result total for public visitors', () => {
+test('hides the capped Site result total for public visitors', () => {
   const html = renderToStaticMarkup(
     <SitesPageView
       controller={siteController({ totalCount: 100 })}
@@ -363,8 +416,8 @@ test('caps the visible Site result total for public visitors', () => {
     />,
   );
 
-  assert.match(html, /<strong>12 sites<\/strong>/);
-  assert.doesNotMatch(html, /<strong>100 sites<\/strong>/);
+  assert.doesNotMatch(html, /reference-discovery__result-meta/);
+  assert.doesNotMatch(html, /12 sites|100 sites/);
 });
 
 test('composes Sites through the shared reference discovery shell', () => {
@@ -421,17 +474,13 @@ test('builds Site hover previews from matching categories and captured sections'
   assert.equal(style, null);
 });
 
-test('loads Site taxonomy previews only after pointer entry', () => {
+test('keeps Site filter previews out of the hero surface', () => {
   const source = readFileSync(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8');
 
   assert.match(source, /const previewPools = useMemo\(\s*\(\) => buildSiteFacetPreviewPools\(controller\.items\),\s*\[controller\.items\],?\s*\)/);
-  assert.doesNotMatch(source, /requestIdleCallback/);
-  assert.doesNotMatch(source, /prefetchVisibleSiteFacetPreviews/);
-  assert.match(source, /siteFacetPreview\([\s\S]*siteFacetImageReady/);
-  assert.match(source, /if \(preview\) showPreview\(preview,\s*event\.clientX,\s*event\.clientY\)/);
-  assert.match(source, /prefetchNextSiteFacetPreview\(previewPools,\s*hoverFacet\)/);
-  assert.doesNotMatch(source, /await prefetchSiteFacetPreview|prefetchSiteFacetPreview\(preview\)\.then/);
-  assert.doesNotMatch(source, /siteFacetPreview\(sites,\s*hoverFacet\)/);
+  assert.match(source, /taxonomy=\{<SitesDiscoveryHero \/>\}/);
+  assert.match(source, /preview=\{null\}/);
+  assert.doesNotMatch(source, /useCategoryHoverPreview|sites-discovery__hover-preview/);
 });
 
 test('renders every Site page item and only the generic discovery sentinel', () => {

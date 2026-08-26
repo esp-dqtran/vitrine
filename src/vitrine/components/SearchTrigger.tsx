@@ -150,7 +150,7 @@ export function SearchTrigger({
         label={displayLabel}
         ariaLabel={actionLabel}
         onOpen={onOpen}
-        endContent={<span className="reference-search-trigger__shortcut">⌘K / ⌘Space</span>}
+        endContent={<span className="reference-search-trigger__shortcut">⌘K</span>}
       />
       {activeCategory && activeCategory !== 'All' && (
         <Button

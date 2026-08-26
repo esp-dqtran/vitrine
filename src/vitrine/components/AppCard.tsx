@@ -7,6 +7,10 @@ import { DiscoveryCard } from './DiscoveryCard';
 import { PlaceholderImage } from './PlaceholderImage';
 
 const NEW_APP_WINDOW_MS = 7 * 24 * 60 * 60 * 1_000;
+const APP_CARD_VIDEO_PRELOAD_MARGIN = '240px 0px';
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
+type VideoPlaybackIntent = 'automatic' | 'manual-play' | 'manual-pause';
 
 function isNewApp(createdAt: string | null | undefined, now = Date.now()): boolean {
   if (!createdAt) return false;
@@ -21,6 +25,7 @@ interface AppCardProps {
   platform?: AppsPlatform;
   slider?: boolean;
   onOpen: () => void;
+  href?: string;
 }
 
 export function AppCard({
@@ -28,6 +33,7 @@ export function AppCard({
   platform,
   slider = false,
   onOpen,
+  href = `/apps/${encodeURIComponent(app.id)}`,
 }: AppCardProps) {
   const isNew = isNewApp(app.createdAt);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -48,13 +54,24 @@ export function AppCard({
     : app.previewUrl;
   const [sitePreviewFailed, setSitePreviewFailed] = useState(false);
   const [videoPreviewFailed, setVideoPreviewFailed] = useState(false);
-  const [videoPaused, setVideoPaused] = useState(false);
+  const [videoPaused, setVideoPaused] = useState(true);
   const [videoProgress, setVideoProgress] = useState(0);
+  const [videoNearViewport, setVideoNearViewport] = useState(false);
+  const [preloadedVideoUrl, setPreloadedVideoUrl] = useState<string | null>(null);
+  const [videoPlaybackIntent, setVideoPlaybackIntent] = useState<VideoPlaybackIntent>('automatic');
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => (
+    typeof window !== 'undefined'
+      && typeof window.matchMedia === 'function'
+      && window.matchMedia(REDUCED_MOTION_QUERY).matches
+  ));
   useEffect(() => { setSitePreviewFailed(false); }, [resolvedPreviewUrl]);
   useEffect(() => {
     setVideoPreviewFailed(false);
-    setVideoPaused(false);
+    setVideoPaused(true);
     setVideoProgress(0);
+    setVideoNearViewport(false);
+    setPreloadedVideoUrl(null);
+    setVideoPlaybackIntent('automatic');
   }, [app.previewVideoUrl]);
   useEffect(() => {
     setActiveSlideIndex(0);
@@ -79,6 +96,51 @@ export function AppCard({
   // even when the app itself is iOS/Android.
   const isMobilePreview = showsPhoneScreenshot;
   const usingVideoPreview = Boolean(app.previewVideoUrl) && !isMobilePreview && !videoPreviewFailed;
+  const videoHasEnteredPreloadZone = Boolean(app.previewVideoUrl)
+    && preloadedVideoUrl === app.previewVideoUrl;
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mediaQuery = window.matchMedia(REDUCED_MOTION_QUERY);
+    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
+    updatePreference();
+    mediaQuery.addEventListener('change', updatePreference);
+    return () => mediaQuery.removeEventListener('change', updatePreference);
+  }, []);
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!usingVideoPreview || !video) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setVideoNearViewport(true);
+      setPreloadedVideoUrl(app.previewVideoUrl ?? null);
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      const isNearViewport = entry?.isIntersecting === true;
+      setVideoNearViewport(isNearViewport);
+      if (isNearViewport) setPreloadedVideoUrl(app.previewVideoUrl ?? null);
+    }, { rootMargin: APP_CARD_VIDEO_PRELOAD_MARGIN, threshold: 0.01 });
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, [app.previewVideoUrl, usingVideoPreview]);
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!usingVideoPreview || !video || !videoHasEnteredPreloadZone) return;
+    const shouldPlay = videoNearViewport && (
+      videoPlaybackIntent === 'manual-play'
+      || (!prefersReducedMotion && videoPlaybackIntent === 'automatic')
+    );
+    if (!shouldPlay) {
+      video.pause();
+      return;
+    }
+    void video.play().catch(() => setVideoPaused(true));
+  }, [
+    prefersReducedMotion,
+    usingVideoPreview,
+    videoHasEnteredPreloadZone,
+    videoNearViewport,
+    videoPlaybackIntent,
+  ]);
   const mobilePreviewScreens = isMobilePreview && !slider
     ? app.screens.filter((screen) => screen.platform === activePlatform).slice(0, 3)
     : [];
@@ -126,13 +188,14 @@ export function AppCard({
   const desktopPreview = usingVideoPreview ? (
     <video
       ref={videoRef}
-      src={app.previewVideoUrl ?? undefined}
-      poster={resolvedPreviewUrl ?? undefined}
-      autoPlay
+      src={videoHasEnteredPreloadZone ? app.previewVideoUrl ?? undefined : undefined}
+      poster={resolvedPreviewUrl ?? previewSrc ?? undefined}
       muted
       loop
       playsInline
-      preload="metadata"
+      preload={videoHasEnteredPreloadZone ? 'metadata' : 'none'}
+      data-video-preload={videoHasEnteredPreloadZone ? 'active' : 'poster'}
+      data-video-motion={prefersReducedMotion ? 'reduced' : 'standard'}
       onPlay={() => setVideoPaused(false)}
       onPause={() => setVideoPaused(true)}
       onTimeUpdate={(event) => {
@@ -155,8 +218,15 @@ export function AppCard({
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) {
+      setVideoPlaybackIntent('manual-play');
+      if (!videoHasEnteredPreloadZone) {
+        setVideoNearViewport(true);
+        setPreloadedVideoUrl(app.previewVideoUrl ?? null);
+        return;
+      }
       void video.play().catch(() => setVideoPaused(true));
     } else {
+      setVideoPlaybackIntent('manual-pause');
       video.pause();
     }
   };
@@ -175,7 +245,7 @@ export function AppCard({
       onOpen={onOpen}
       // A real href, like the Site cards already have: middle-click and
       // open-in-new-tab work, and the card is a link to assistive tech.
-      href={`/apps/${encodeURIComponent(app.id)}`}
+      href={href}
       articleProps={{
         'data-preview-platform': activePlatform,
         // The portrait card shape follows the image, not the app: an iOS app
