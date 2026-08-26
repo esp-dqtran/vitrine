@@ -4,6 +4,8 @@ import {
   inlineMediaUrl,
   isProtectedMediaUrl,
   loadProtectedMediaObjectUrl,
+  loadProtectedMediaUrl,
+  signedMediaRequestUrl,
 } from './mediaDelivery.ts';
 
 test('marks protected API media for authenticated inline delivery', () => {
@@ -15,6 +17,52 @@ test('marks protected API media for authenticated inline delivery', () => {
   );
   assert.equal(isProtectedMediaUrl('/api/preview-media/aboard/web/1'), false);
   assert.equal(inlineMediaUrl('https://objects.example/screen.png'), 'https://objects.example/screen.png');
+});
+
+test('requests a short-lived signed URL for protected browser media', async () => {
+  const controller = new AbortController();
+  let requested = '';
+  let requestedSignal: AbortSignal | null | undefined;
+  const signedUrl = await loadProtectedMediaUrl(
+    '/api/media/aboard/0123456789abcdef?variant=thumb',
+    controller.signal,
+    async (input, init) => {
+      requested = String(input);
+      requestedSignal = init?.signal;
+      return Response.json({ url: 'https://objects.example/signed-screen.png?token=temporary' });
+    },
+  );
+
+  assert.equal(
+    requested,
+    '/api/media/aboard/0123456789abcdef?variant=thumb&delivery=url',
+  );
+  assert.equal(requestedSignal, controller.signal);
+  assert.equal(signedUrl, 'https://objects.example/signed-screen.png?token=temporary');
+  assert.equal(
+    signedMediaRequestUrl('/api/media/aboard/0123456789abcdef'),
+    '/api/media/aboard/0123456789abcdef?delivery=url',
+  );
+});
+
+test('rejects missing and unsafe signed media URLs', async () => {
+  const signal = new AbortController().signal;
+  await assert.rejects(
+    loadProtectedMediaUrl(
+      '/api/media/aboard/0123456789abcdef',
+      signal,
+      async () => Response.json({}),
+    ),
+    /has no URL/,
+  );
+  await assert.rejects(
+    loadProtectedMediaUrl(
+      '/api/media/aboard/0123456789abcdef',
+      signal,
+      async () => Response.json({ url: 'http://objects.example/screen.png' }),
+    ),
+    /invalid URL/,
+  );
 });
 
 test('loads protected media through the authenticated requester and creates an object URL', async () => {

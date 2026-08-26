@@ -2950,6 +2950,44 @@ test("streams protected media through the API when inline delivery is requested"
   assert.equal(signedRequests, 0);
 });
 
+test("returns a short-lived signed URL for authenticated browser media", async (t) => {
+  let objectReads = 0;
+  let signedRequests = 0;
+  const protectedMetadata = { ...previewMetadata, accessClass: "protected" as const };
+  const objectStore: ObjectStore = {
+    ...localObjectStore,
+    get: async () => {
+      objectReads += 1;
+      return { metadata: protectedMetadata, body: Buffer.from("image") };
+    },
+    signedGetUrl: async (_key, expiresSeconds) => {
+      signedRequests += 1;
+      assert.equal(expiresSeconds, 300);
+      return "https://objects.example/signed-screen.png?token=temporary";
+    },
+  };
+  const { base, server } = await serve(createApiApp({
+    verifyAuthToken: async () => admin,
+    objectStore,
+    entitledImageObject: async () => protectedMetadata,
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(
+    `${base}/media/linear/0123456789abcdef?delivery=url`,
+    { headers: adminAuth },
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("cache-control"), "private, max-age=60");
+  assert.deepEqual(await response.json(), {
+    url: "https://objects.example/signed-screen.png?token=temporary",
+    expiresInSeconds: 300,
+  });
+  assert.equal(signedRequests, 1);
+  assert.equal(objectReads, 0);
+});
+
 test("gates customer app detail and unlocks a Free app", async (t) => {
   let unlocked = false;
   const { base, server } = await serve(createApiApp({
@@ -3102,7 +3140,7 @@ test("loads screens with complete category facets and filters the paged result",
   const { base, server } = await serve(createApiApp({
     verifyAuthToken: async () => admin,
     canAccessApp: async () => true,
-    appPlatforms: async () => ["ios"],
+    appPlatforms: async () => { throw new Error("explicit platform must skip platform discovery"); },
     listAppVersions: async () => { throw new Error("section routes must not list all versions"); },
     resolveAppVersion: async () => {
       versionResolutions += 1;
@@ -3127,7 +3165,7 @@ test("loads screens with complete category facets and filters the paged result",
     { kind: "screen", limit: 48, screenTypes: ["Login"] },
     { kind: "ui_element", limit: 24, screenTypes: undefined },
   ]);
-  assert.equal(versionResolutions, 2);
+  assert.equal(versionResolutions, 1);
   const screenBody = await screens.json();
   assert.equal(screenBody.screens.length, 1);
   assert.deepEqual(screenBody.screenTypes, ["Dashboard", "Login"]);

@@ -1800,6 +1800,17 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           });
       if (metadata && (user || metadata.accessClass === "public-preview")) {
         try {
+          if (req.query.delivery === "url") {
+            const signedUrl = await deps.objectStore.signedGetUrl(metadata.key, 300);
+            if (!signedUrl) {
+              res.status(409).json({ error: "signed media unavailable", code: "signed_url_unavailable" });
+              return;
+            }
+            res
+              .setHeader("Cache-Control", "private, max-age=60")
+              .json({ url: signedUrl, expiresInSeconds: 300 });
+            return;
+          }
           await sendStoredObject(
             deps.objectStore,
             metadata,
@@ -3390,17 +3401,38 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
       return false;
     }
-    try {
-      await deps.recordReferralAppOpen(
-        res.locals.user.id,
-        appSlug,
-        new Date(),
-        deps.referralCampaign,
-      );
-    } catch {
-      console.error(`[referrals] app-open recording failed for user ${res.locals.user.id}`);
-    }
     return true;
+  };
+
+  const sectionVersionCache = new Map<string, {
+    expiresAt: number;
+    promise: ReturnType<typeof deps.resolveAppVersion>;
+  }>();
+
+  const resolveCachedAppVersion = (
+    appSlug: string,
+    platform: Platform,
+    requestedVersion: number | undefined,
+    publishedOnly: boolean,
+  ) => {
+    const key = `${appSlug}\u0000${platform}\u0000${requestedVersion ?? "latest"}\u0000${publishedOnly}`;
+    const now = Date.now();
+    const cached = sectionVersionCache.get(key);
+    if (cached && cached.expiresAt > now) return cached.promise;
+    if (cached) sectionVersionCache.delete(key);
+    for (const [candidate, entry] of sectionVersionCache) {
+      if (entry.expiresAt <= now) sectionVersionCache.delete(candidate);
+    }
+    if (sectionVersionCache.size >= 128) {
+      const oldest = sectionVersionCache.keys().next().value;
+      if (oldest !== undefined) sectionVersionCache.delete(oldest);
+    }
+    const promise = deps.resolveAppVersion(appSlug, platform, requestedVersion, publishedOnly);
+    sectionVersionCache.set(key, { expiresAt: now + 10_000, promise });
+    void promise.catch(() => {
+      if (sectionVersionCache.get(key)?.promise === promise) sectionVersionCache.delete(key);
+    });
+    return promise;
   };
 
   const resolveAppSection = async (req: express.Request, res: express.Response) => {
@@ -3410,8 +3442,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "invalid platform" });
       return undefined;
     }
-    const platforms = await deps.appPlatforms(appSlug);
-    const platform = (platformValue as Platform | undefined) ?? platforms.find(isPlatform);
+    const platform = (platformValue as Platform | undefined)
+      ?? (await deps.appPlatforms(appSlug)).find(isPlatform);
     if (!platform) {
       res.status(404).json({ error: "app platform not found" });
       return undefined;
@@ -3423,7 +3455,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return undefined;
     }
     const publishedOnly = res.locals.user.role !== "admin";
-    const version = await deps.resolveAppVersion(appSlug, platform, requestedVersion, publishedOnly);
+    const version = await resolveCachedAppVersion(appSlug, platform, requestedVersion, publishedOnly);
     if (requestedVersion !== undefined && !version) {
       res.status(404).json({ error: publishedOnly ? "published app version not found" : "app version not found" });
       return undefined;
@@ -3435,16 +3467,16 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     return { platform, version, publishedOnly };
   };
 
-  const recordAppDetailSuccess = async (req: express.Request, res: express.Response) => {
+  const recordAppDetailSuccess = (req: express.Request, res: express.Response) => {
     const appSlug = Array.isArray(req.params.app) ? req.params.app[0] : req.params.app;
-    await deps.recordAccessEvent({
+    void deps.recordAccessEvent({
       userId: res.locals.user.id,
       ipPrefix: ipPrefix(req.ip ?? "unknown"),
       appSlug,
       featureKey: "library",
       action: "app-detail",
       outcome: "success",
-    });
+    }).catch(() => console.error(`[access] app-detail recording failed for user ${res.locals.user.id}`));
   };
 
   app.get("/apps/:app/screens", async (req, res) => {
@@ -3483,7 +3515,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         evidence,
         publicImageUrl,
       );
-      await recordAppDetailSuccess(req, res);
+      recordAppDetailSuccess(req, res);
       res.json({
         ...page,
         screenTypes: screenTypesFacet,
@@ -3523,7 +3555,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         }),
         publicImageUrl,
       );
-      await recordAppDetailSuccess(req, res);
+      recordAppDetailSuccess(req, res);
       res.json({ ...page, platform: section.platform, version: section.version ?? null });
     } catch (error) {
       if (error instanceof RangeError) res.status(400).json({ error: error.message });
@@ -3551,7 +3583,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       publishedOnly: section.publishedOnly,
       limit,
     });
-    await recordAppDetailSuccess(req, res);
+    recordAppDetailSuccess(req, res);
     res.json({
       ...summary,
       items: summary.items.map((item) => ({
@@ -3595,7 +3627,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     });
     const emptySnapshot = { app: req.params.app, generatedAt: new Date().toISOString(), tokens: [], components: [], flows };
     const hydrated = hydrateDesignSystem(emptySnapshot, images);
-    await recordAppDetailSuccess(req, res);
+    recordAppDetailSuccess(req, res);
     res.json({ flows: hydrated.flows, platform: section.platform, version: section.version ?? null });
   });
 
@@ -3610,7 +3642,13 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(404).json({ error: "app not found" });
       return;
     }
-    await recordAppDetailSuccess(req, res);
+    recordAppDetailSuccess(req, res);
+    void deps.recordReferralAppOpen(
+      res.locals.user.id,
+      req.params.app,
+      new Date(),
+      deps.referralCampaign,
+    ).catch(() => console.error(`[referrals] app-open recording failed for user ${res.locals.user.id}`));
     res.json({ app: buildAppMetadata(row) });
   });
 

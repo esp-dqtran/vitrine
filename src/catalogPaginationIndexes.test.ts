@@ -31,3 +31,14 @@ test("indexes version evidence in the same order used by the gallery cursor", as
     /CREATE INDEX IF NOT EXISTS version_images_version_image_idx[\s\S]*version_images\s*\(version_id,\s*image_id DESC\)/,
   );
 });
+
+test("indexes current app evidence in the same order used by the gallery cursor", async () => {
+  const migration = await readFile(
+    new URL("../migrations/0107_images_platform_kind_id_pagination.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    migration,
+    /CREATE INDEX IF NOT EXISTS images_platform_kind_id_idx[\s\S]*images\s*\(platform_id,\s*kind,\s*id DESC\)/,
+  );
+});
