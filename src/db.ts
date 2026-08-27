@@ -865,6 +865,43 @@ export async function appEvidencePage(input: {
                (occurrence.review_status = 'accepted') DESC,
                occurrence.confidence DESC, occurrence.id DESC
            ) element
+         ), (
+           SELECT jsonb_agg(jsonb_build_object(
+             'type', element.type,
+             'group', element.group_name,
+             'layer', element.layer,
+             'confidence', element.confidence,
+             'reviewStatus', 'pending'
+           ) ORDER BY lower(element.type), element.layer)
+           FROM (
+             SELECT DISTINCT ON (type.name, component.value->>'layer')
+               type.name AS type, type.group_name,
+               component.value->>'layer' AS layer,
+               (component.value->>'confidence')::double precision AS confidence
+             FROM (
+               SELECT extraction.analysis
+               FROM ui_element_extractions extraction
+               WHERE extraction.screen_image_id = i.id
+                 AND extraction.status = 'complete'
+                 AND extraction.analysis IS NOT NULL
+               ORDER BY extraction.prompt_version DESC,
+                 extraction.analyzed_at DESC NULLS LAST,
+                 extraction.updated_at DESC,
+                 extraction.provider_model
+               LIMIT 1
+             ) latest
+             CROSS JOIN LATERAL jsonb_array_elements(
+               CASE WHEN jsonb_typeof(latest.analysis->'components') = 'array'
+                 THEN latest.analysis->'components' ELSE '[]'::jsonb END
+             ) AS component(value)
+             JOIN ui_element_types type ON type.name = component.value->>'type'
+             WHERE component.value->>'layer' IN (
+               'whole-screen', 'outer-presentation', 'embedded-ui'
+             )
+               AND jsonb_typeof(component.value->'confidence') = 'number'
+             ORDER BY type.name, component.value->>'layer',
+               (component.value->>'confidence')::double precision DESC
+           ) element
          ), '[]'::jsonb) AS ui_elements,
          reference.screen_image_id AS source_screen_id,
          reference.screen_image_url AS source_screen_image_url
@@ -945,6 +982,44 @@ export async function appEvidencePage(input: {
              ORDER BY type.name, occurrence.layer,
                (occurrence.review_status = 'accepted') DESC,
                occurrence.confidence DESC, occurrence.id DESC
+           ) element
+         ), (
+           SELECT jsonb_agg(jsonb_build_object(
+             'type', element.type,
+             'group', element.group_name,
+             'layer', element.layer,
+             'confidence', element.confidence,
+             'reviewStatus', 'pending'
+           ) ORDER BY lower(element.type), element.layer)
+           FROM (
+             SELECT DISTINCT ON (type.name, component.value->>'layer')
+               type.name AS type, type.group_name,
+               component.value->>'layer' AS layer,
+               (component.value->>'confidence')::double precision AS confidence
+             FROM (
+               SELECT extraction.analysis
+               FROM ui_element_extractions extraction
+               WHERE extraction.version_id = sv.id
+                 AND extraction.screen_image_id = i.id
+                 AND extraction.status = 'complete'
+                 AND extraction.analysis IS NOT NULL
+               ORDER BY extraction.prompt_version DESC,
+                 extraction.analyzed_at DESC NULLS LAST,
+                 extraction.updated_at DESC,
+                 extraction.provider_model
+               LIMIT 1
+             ) latest
+             CROSS JOIN LATERAL jsonb_array_elements(
+               CASE WHEN jsonb_typeof(latest.analysis->'components') = 'array'
+                 THEN latest.analysis->'components' ELSE '[]'::jsonb END
+             ) AS component(value)
+             JOIN ui_element_types type ON type.name = component.value->>'type'
+             WHERE component.value->>'layer' IN (
+               'whole-screen', 'outer-presentation', 'embedded-ui'
+             )
+               AND jsonb_typeof(component.value->'confidence') = 'number'
+             ORDER BY type.name, component.value->>'layer',
+               (component.value->>'confidence')::double precision DESC
            ) element
          ), '[]'::jsonb) AS ui_elements,
          reference.screen_image_id AS source_screen_id,

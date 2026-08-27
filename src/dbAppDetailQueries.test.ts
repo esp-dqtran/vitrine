@@ -27,6 +27,10 @@ test("app detail queries are explicit and evidence pagination stays in SQL", () 
   assert.match(evidenceBody, /occurrence\.review_status = 'accepted'/);
   assert.match(evidenceBody, /occurrence\.version_id = sv\.id/);
   assert.match(evidenceBody, /'layer', element\.layer/);
+  assert.match(evidenceBody, /FROM ui_element_extractions extraction/);
+  assert.match(evidenceBody, /jsonb_array_elements/);
+  assert.match(evidenceBody, /latest\.analysis->'components'/);
+  assert.match(evidenceBody, /'reviewStatus', 'pending'/);
   assert.match(evidenceBody, /AS ui_elements/);
   assert.match(evidenceBody, /occurrence\.cropped_image_id = i\.id/);
   assert.doesNotMatch(evidenceBody, /occurrence\.source_image_id = i\.id/);

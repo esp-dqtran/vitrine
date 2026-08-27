@@ -49,9 +49,21 @@ const previewScreen: Screen = {
   type: 'Dashboard',
   productArea: 'Onboarding',
   theme: 'light',
-  visibleStates: [],
+  visibleStates: ['Default'],
   platform: 'web',
   description: 'Aboard onboarding dashboard',
+  purpose: 'Review workspace activity and people insights.',
+  componentNames: ['People overview', 'Activity summary'],
+  layoutPatterns: ['Top navigation', 'Two-column dashboard'],
+  responsiveViewport: 'desktop',
+  confidence: 0.91,
+  uiElements: [
+    { type: 'Avatar', group: 'Imagery', layer: 'whole-screen', confidence: 0.92, reviewStatus: 'pending' },
+    { type: 'Button', group: 'Control', layer: 'whole-screen', confidence: 0.96, reviewStatus: 'pending' },
+    { type: 'Table', group: 'View', layer: 'whole-screen', confidence: 0.89, reviewStatus: 'pending' },
+    { type: 'Text Field', group: 'Control', layer: 'whole-screen', confidence: 0.94, reviewStatus: 'pending' },
+    { type: 'Top Navigation Bar', group: 'View', layer: 'whole-screen', confidence: 0.97, reviewStatus: 'pending' },
+  ],
   url: '/landing/astryx-public-preview-real-flows.png',
 };
 

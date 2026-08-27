@@ -516,12 +516,18 @@ dialog.flow-preview-dialog-shell::backdrop {
 
 .app-screen-preview-dialog__analysis-header {
   display: grid;
-  gap: 4px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.app-screen-preview-dialog__analysis-header > div {
+  display: grid;
+  gap: 6px;
 }
 
 .app-screen-preview-dialog__analysis section {
   display: grid;
-  gap: 7px;
+  gap: 10px;
 }
 
 .app-screen-preview-dialog__analysis h3,
@@ -532,31 +538,29 @@ dialog.flow-preview-dialog-shell::backdrop {
 
 .app-screen-preview-dialog__analysis h3,
 .app-screen-preview-dialog__analysis dt {
-  color: var(--flow-preview-muted);
-  font: var(--vitrine-type-detail);
-  font-weight: 700;
+  color: #b9b9b9;
+  font: 650 15px/20px var(--vitrine-font-family-sans);
+  font-weight: 650;
 }
 
 .app-screen-preview-dialog__analysis-facts {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
   margin: 0;
 }
 
 .app-screen-preview-dialog__analysis-facts > div {
   display: grid;
-  gap: 3px;
+  gap: 6px;
   min-width: 0;
-  padding: 10px;
-  border-radius: 10px;
-  background: var(--vitrine-color-surface-muted);
 }
 
 .app-screen-preview-dialog__analysis-facts dd {
   overflow-wrap: anywhere;
-  color: var(--vitrine-color-text-primary);
-  font: var(--vitrine-type-detail);
+  color: #fff;
+  font: 650 16px/22px var(--vitrine-font-family-sans);
+  font-weight: 650;
   text-transform: capitalize;
 }
 
@@ -570,11 +574,62 @@ dialog.flow-preview-dialog-shell::backdrop {
 }
 
 .app-screen-preview-dialog__analysis-list li {
-  padding: 5px 8px;
-  border: 1px solid var(--vitrine-color-border);
-  border-radius: 999px;
-  color: var(--vitrine-color-text-primary);
-  font: var(--vitrine-type-detail);
+  max-width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: #4b4b4b;
+  color: #fff;
+  font: 650 16px/22px var(--vitrine-font-family-sans);
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.app-screen-preview-dialog__analysis.flow-preview-dialog__info {
+  gap: 24px;
+  padding: 28px 30px;
+  border: 0;
+  border-radius: 26px;
+  background: #242424;
+  color: #fff;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate3d(0, 12px, 0) scale(.985);
+  transform-origin: right bottom;
+  transition:
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(.22, 1, .36, 1),
+    visibility 0s linear 220ms;
+}
+
+.app-screen-preview-dialog__analysis.flow-preview-dialog__info[data-open='true'] {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition-delay: 0s;
+}
+
+.app-screen-preview-dialog__analysis.flow-preview-dialog__info:focus {
+  outline: none;
+}
+
+.app-screen-preview-dialog__analysis .app-screen-preview-dialog__analysis-header span,
+.app-screen-preview-dialog__analysis section h3,
+.app-screen-preview-dialog__analysis dt {
+  color: #b9b9b9;
+}
+
+.app-screen-preview-dialog__analysis .app-screen-preview-dialog__analysis-header strong {
+  color: #fff;
+  font: 650 16px/22px var(--vitrine-font-family-sans);
+  font-weight: 650;
+}
+
+.app-screen-preview-dialog__analysis section p {
+  color: #fff;
+  font: 650 16px/22px var(--vitrine-font-family-sans);
 }
 
 .flow-preview-dialog__status {
@@ -822,8 +877,8 @@ dialog.flow-preview-dialog-shell::backdrop {
     max-height: calc(100% - 182px);
   }
 
-  .app-screen-preview-dialog__analysis-facts {
-    grid-template-columns: 1fr;
+  .app-screen-preview-dialog__analysis.flow-preview-dialog__info {
+    padding: 24px;
   }
 
   .flow-preview-dialog__arrow {
@@ -839,5 +894,10 @@ dialog.flow-preview-dialog-shell::backdrop {
 @media (prefers-reduced-motion: reduce) {
   .flow-preview-dialog__track {
     scroll-behavior: auto;
+  }
+
+  .app-screen-preview-dialog__analysis.flow-preview-dialog__info {
+    transform: none;
+    transition: none;
   }
 }

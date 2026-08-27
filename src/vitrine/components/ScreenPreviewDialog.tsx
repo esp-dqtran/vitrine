@@ -42,11 +42,6 @@ const usefulLabel = (value: string | null | undefined) => (
   value && value !== 'Unclassified' ? value : null
 );
 
-const viewportName = (viewport: Screen['responsiveViewport']) => {
-  if (!viewport || viewport === 'unknown') return 'Unknown viewport';
-  return `${viewport[0].toUpperCase()}${viewport.slice(1)} viewport`;
-};
-
 export function ScreenPreviewDialog({
   appName,
   appIconUrl,
@@ -86,14 +81,6 @@ export function ScreenPreviewDialog({
   const analysisGroups = [
     { label: 'Page Types', values: pageTypes },
     { label: 'UI Elements', values: uiElementTypes },
-    { label: 'Visible states', values: screen.visibleStates },
-    { label: 'Components', values: screen.componentNames ?? [] },
-    { label: 'Layout patterns', values: screen.layoutPatterns ?? [] },
-    { label: 'Interaction patterns', values: screen.interactionPatterns ?? [] },
-    { label: 'Content patterns', values: screen.contentPatterns ?? [] },
-    { label: 'Icons', values: screen.icons ?? [] },
-    { label: 'Imagery', values: screen.imagery ?? [] },
-    { label: 'Visible text', values: screen.visibleText ?? [] },
   ].filter(({ values }) => values.length > 0);
   const analysisPanelId = `screen-analysis-${screen.id}`;
 
@@ -317,18 +304,20 @@ export function ScreenPreviewDialog({
             id={analysisPanelId}
             className="flow-preview-dialog__info app-screen-preview-dialog__analysis"
             aria-label="Screen analysis"
-            hidden={!infoOpen}
+            aria-hidden={!infoOpen}
+            data-open={infoOpen ? 'true' : 'false'}
+            tabIndex={-1}
           >
             <header className="app-screen-preview-dialog__analysis-header">
-              <strong>{usefulLabel(screen.type) ?? `${appName} screen`}</strong>
-              <span>{platformName(screen.platform)}{resolution ? ` · ${resolution}` : ''}</span>
+              <div>
+                <span>Screen</span>
+                <strong>{usefulLabel(screen.type) ?? `${appName} screen`}</strong>
+              </div>
+              <div>
+                <span>Platform</span>
+                <strong>{platformName(screen.platform)}{resolution ? ` · ${resolution}` : ''}</strong>
+              </div>
             </header>
-            {screen.purpose ? (
-              <section>
-                <h3>Purpose</h3>
-                <p>{screen.purpose}</p>
-              </section>
-            ) : null}
             {screen.description ? (
               <section>
                 <h3>Visual description</h3>
@@ -339,8 +328,6 @@ export function ScreenPreviewDialog({
               {usefulLabel(screen.productArea) ? (
                 <div><dt>Product area</dt><dd>{screen.productArea}</dd></div>
               ) : null}
-              <div><dt>Theme</dt><dd>{screen.theme}</dd></div>
-              <div><dt>Viewport</dt><dd>{viewportName(screen.responsiveViewport)}</dd></div>
             </dl>
             {analysisGroups.map(({ label, values }) => (
               <section key={label}>
@@ -350,11 +337,6 @@ export function ScreenPreviewDialog({
                 </ul>
               </section>
             ))}
-            {foundInFlows.length
-              ? <p>Found in {foundInFlows.join(', ')}</p>
-              : context
-                ? <p>Found in {context}</p>
-                : null}
           </aside>
         </div>
       </AstryxModalSurface>

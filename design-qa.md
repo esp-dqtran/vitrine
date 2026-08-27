@@ -1,3 +1,46 @@
+# Screen Analyze dark-card redesign QA — 2026-08-27
+
+## Scope and evidence
+
+- Scope: the Screen Analyze information panel only. The viewer, actions, evidence summary, and stored analysis data remain unchanged.
+- Source visual truth: `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/TemporaryItems/NSIRD_screencaptureui_ZHi3yb/Screenshot 2026-08-27 at 11.06.28.png` (716 × 510 px).
+- Browser-rendered implementation: `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/vitrines-screen-analysis-dark-card-final.png` (603 × 863 px, matching the active 603 × 863 CSS viewport at 1x capture density).
+- State: Storybook visual-review story, mobile-width Screen Preview modal, Screen Analyze panel open at its top position.
+- Full-view evidence: the source and browser-rendered implementation above were opened before review.
+- Focused normalized comparison: `/tmp/vitrines-screen-analysis-qa-comparison.png`. The source card was cropped to 640 × 460 px. The implementation panel was cropped to 571 × 497 px and normalized to 460 px high for the side-by-side comparison.
+
+## Findings and comparison history
+
+1. P2: the first browser pass showed a blue focus outline around the dark panel that was absent from the source. The focus-only outline was removed from the programmatically focusable analysis panel. The final browser capture shows the intended uninterrupted charcoal surface.
+2. P2: initial labels and values were visually smaller and lighter than the source. Labels were adjusted to 15/20 semibold Figtree and values/chips to 16/22 semibold Figtree. The focused comparison shows the source hierarchy carried into the denser Vitrines content.
+3. P2: annotation review found Theme and Viewport unnecessary in this panel. Both fields were removed, leaving Product area as the only secondary fact. The final browser capture at `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/vitrines-screen-analysis-dark-card-simplified.png` shows the shorter hierarchy.
+4. P0/P1: none.
+
+No actionable P0, P1, or P2 differences remain. The implementation preserves Vitrines' visual description, product area, Page Type, and five UI-element values while using the source screenshot's compact hierarchy.
+
+## Required fidelity surfaces
+
+- Fonts and typography: Figtree preserves the source's clean sans-serif character; muted semibold labels and brighter semibold values create the same hierarchy without clipping or truncation.
+- Spacing and layout rhythm: the two-column summary/fact rows, 24 px mobile inset, 24 px section rhythm, compact chip gaps, and 26 px panel radius match the source's proportions while allowing the richer Vitrines payload to scroll safely.
+- Colors and visual tokens: the panel uses the source-like `#242424` charcoal, `#b9b9b9` labels, white values, and `#4b4b4b` chips with sufficient contrast.
+- Image quality and asset fidelity: the source contains no imagery, logo, illustration, or non-standard icon asset inside the card; no placeholder or generated asset was needed.
+- Copy and content: the focused Screen Analyze fields use their existing Vitrines values. Theme and Viewport are intentionally omitted per annotation feedback; the header labels the existing screen type and platform explicitly.
+
+## Browser checks
+
+- Hide info closes the panel and More info reopens it successfully.
+- Opening and closing use the verified 180–220 ms opacity/translate/scale transition; the panel becomes visible during opening and hidden after closing. Reduced-motion mode disables the transform and transition.
+- The panel remains readable at the active mobile-width viewport and scrolls within its existing height constraint.
+- Browser console messages after the interaction check: 0.
+
+## Follow-up polish
+
+- P3: a future wider desktop-specific layout could keep all facts on one row, but the current two-column treatment is more faithful and readable at mobile width.
+
+final result: passed
+
+---
+
 # Pricing page design QA
 
 **Comparison target**
