@@ -30,6 +30,7 @@ export function activeAppSectionKey(input: {
   platform: Platform;
   selectedVersion?: number;
   screenTypes?: string[];
+  flowTitles?: string[];
   versions: AppVersion[] | null;
 }): AppSectionKey | null {
   const section = activeDataSection(input.activeSection);
@@ -41,6 +42,9 @@ export function activeAppSectionKey(input: {
     ...(section === 'screens' && input.screenTypes?.length
       ? { screenTypes: input.screenTypes }
       : {}),
+    ...(section === 'screens' && input.flowTitles?.length
+      ? { flowTitles: input.flowTitles }
+      : {}),
   } : null;
 }
 
@@ -50,6 +54,7 @@ export function useAppSectionData(input: {
   platform: Platform;
   selectedVersion?: number;
   screenTypes?: string[];
+  flowTitles?: string[];
 }) {
   const storeRef = useRef<ReturnType<typeof createAppSectionStore> | null>(null);
   if (!storeRef.current) storeRef.current = createAppSectionStore();
@@ -91,6 +96,7 @@ export function useAppSectionData(input: {
     input.platform,
     input.selectedVersion,
     input.screenTypes,
+    input.flowTitles,
     versions,
   ]);
 
@@ -105,6 +111,7 @@ export function useAppSectionData(input: {
     activeKey?.section,
     activeKey?.version,
     activeKey?.screenTypes?.join(','),
+    activeKey?.flowTitles?.join(','),
     store,
   ]);
 

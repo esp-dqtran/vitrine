@@ -180,14 +180,6 @@
   gap: var(--spacing-8) !important;
 }
 
-.reference-detail[data-reference-detail="app"]
-  .reference-detail__metadata-item
-  .apps-platform-switcher
-  button.astryx-button {
-  height: auto !important;
-  min-height: 0 !important;
-}
-
 .reference-detail__actions {
   gap: var(--spacing-2) !important;
 }
@@ -217,11 +209,11 @@
 .reference-detail__tab-leading :is(
   .astryx-button.astryx-button.astryx-button,
   .astryx-selector.astryx-selector.astryx-selector
-),
+):not(.apps-filterbar__clear),
 .reference-detail__tab-controls :is(
   .astryx-button.astryx-button.astryx-button,
   .astryx-selector.astryx-selector.astryx-selector
-) {
+):not(.apps-filterbar__clear) {
   height: var(--vitrine-control-height) !important;
   min-height: var(--vitrine-control-height) !important;
 }

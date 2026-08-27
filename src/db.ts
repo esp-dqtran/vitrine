@@ -763,6 +763,110 @@ async function legacyAppMetadata(app: string, publishedOnly: boolean): Promise<A
   return res.rows[0] ?? null;
 }
 
+/**
+ * Loads one Screen without paying the cost of the paginated gallery hydration.
+ * Version membership is still enforced so a guessed image id cannot escape the
+ * selected App/platform/version boundary.
+ */
+export async function appScreenById(input: {
+  app: string;
+  platform: string;
+  screenId: number;
+  versionNumber?: number | null;
+  publishedOnly?: boolean;
+}): Promise<CrawledImage | null> {
+  const res = await query<CrawledImage>(
+    `WITH selected_version AS (
+       SELECT av.id
+       FROM app_versions av
+       JOIN apps a ON a.id = av.app_id
+       WHERE a.name = $1 AND av.platform = $2
+         AND (($3::integer IS NOT NULL AND av.version_number = $3)
+           OR ($3::integer IS NULL AND av.status = 'published'))
+         AND ($4::boolean = false OR av.status = 'published')
+       ORDER BY av.version_number DESC
+       LIMIT 1
+     )
+     SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind,
+       i.description, i.analysis, a.icon_url,
+       CASE WHEN $6::boolean THEN COALESCE(vi.source_url, i.image_url)
+         ELSE i.image_url END AS capture_url,
+       CASE WHEN $6::boolean THEN vi.captured_at ELSE i.created_at END AS captured_at,
+       CASE WHEN $6::boolean THEN vi.viewport_width ELSE NULL END AS viewport_width,
+       CASE WHEN $6::boolean THEN vi.viewport_height ELSE NULL END AS viewport_height,
+       CASE WHEN $6::boolean THEN vi.state_context ELSE NULL END AS state_context,
+       COALESCE((
+         SELECT jsonb_agg(jsonb_build_object('group', 'screens', 'value', pattern.name)
+           ORDER BY pattern.position, pattern.id)
+         FROM screen_pattern_assignments assignment
+         JOIN screen_patterns pattern ON pattern.id = assignment.screen_pattern_id
+         WHERE assignment.image_id = i.id
+       ), '[]'::jsonb) AS matched_facets
+     FROM images i
+     JOIN platforms p ON p.id = i.platform_id
+     JOIN apps a ON a.id = p.app_id
+     LEFT JOIN selected_version sv ON true
+     LEFT JOIN version_images vi ON vi.version_id = sv.id AND vi.image_id = i.id
+     WHERE a.name = $1 AND p.name = $2 AND i.id = $5 AND i.kind = 'screen'
+       AND ($6::boolean = false OR vi.image_id IS NOT NULL)
+     LIMIT 1`,
+    [
+      input.app,
+      input.platform,
+      input.versionNumber ?? null,
+      input.publishedOnly ?? false,
+      input.screenId,
+      input.versionNumber != null || input.publishedOnly === true,
+    ],
+  );
+  return res.rows[0] ?? null;
+}
+
+export async function appScreenIdsByImageUrls(input: {
+  app: string;
+  platform: string;
+  imageUrls: string[];
+  versionNumber?: number | null;
+  publishedOnly?: boolean;
+}): Promise<number[]> {
+  if (!input.imageUrls.length) return [];
+  const res = await query<{ id: number }>(
+    `WITH selected_version AS (
+       SELECT av.id
+       FROM app_versions av
+       JOIN apps a ON a.id = av.app_id
+       WHERE a.name = $1 AND av.platform = $2
+         AND (($3::integer IS NOT NULL AND av.version_number = $3)
+           OR ($3::integer IS NULL AND av.status = 'published'))
+         AND ($4::boolean = false OR av.status = 'published')
+       ORDER BY av.version_number DESC
+       LIMIT 1
+     )
+     SELECT i.id
+     FROM apps a
+     JOIN platforms p ON p.app_id = a.id
+     JOIN images i ON i.platform_id = p.id
+     WHERE a.name = $1 AND p.name = $2 AND i.kind = 'screen'
+       AND $3::integer IS NULL AND $4::boolean = false
+       AND i.image_url = ANY($5::text[])
+     UNION ALL
+     SELECT i.id
+     FROM selected_version sv
+     JOIN version_images vi ON vi.version_id = sv.id
+     JOIN images i ON i.id = vi.image_id
+     WHERE i.kind = 'screen' AND ($3::integer IS NOT NULL OR $4::boolean = true)
+       AND i.image_url = ANY($5::text[])`,
+    [
+      input.app,
+      input.platform,
+      input.versionNumber ?? null,
+      input.publishedOnly ?? false,
+      input.imageUrls,
+    ],
+  );
+  return res.rows.map(({ id }) => id);
+}
+
 export async function appEvidencePage(input: {
   app: string;
   kind: "screen" | "ui_element";
@@ -772,6 +876,7 @@ export async function appEvidencePage(input: {
   limit?: number;
   publishedOnly?: boolean;
   screenTypes?: string[];
+  imageIds?: number[];
 }): Promise<AppEvidencePage> {
   const requestedLimit = Math.min(Math.max(Math.floor(input.limit ?? 48), 1), 48);
   const cursorId = input.cursor ? decodeImageCursor(input.cursor) : null;
@@ -792,6 +897,7 @@ export async function appEvidencePage(input: {
        WHERE a.name = $1 AND p.name = $3 AND i.kind = $2
          AND $4::integer IS NULL AND $5::boolean = false
          AND ($8::text[] IS NULL OR i.analysis->>'pageType' = ANY($8))
+         AND ($9::integer[] IS NULL OR i.id = ANY($9))
          AND NOT (i.kind = 'ui_element' AND i.image_url LIKE 'mobbin-bulk:ui_element:%'
            AND EXISTS (
              SELECT 1 FROM ui_element_extractions e
@@ -803,6 +909,7 @@ export async function appEvidencePage(input: {
        JOIN images i ON i.id = vi.image_id
        WHERE i.kind = $2 AND ($4::integer IS NOT NULL OR $5::boolean = true)
          AND ($8::text[] IS NULL OR i.analysis->>'pageType' = ANY($8))
+         AND ($9::integer[] IS NULL OR i.id = ANY($9))
          AND NOT (i.kind = 'ui_element' AND i.image_url LIKE 'mobbin-bulk:ui_element:%'
            AND EXISTS (
              SELECT 1 FROM ui_element_extractions e
@@ -1064,6 +1171,7 @@ export async function appEvidencePage(input: {
         cursorId,
         requestedLimit + 1,
         input.screenTypes?.length ? input.screenTypes : null,
+        input.imageIds ?? null,
       ],
     );
   });

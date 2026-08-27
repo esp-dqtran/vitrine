@@ -12,6 +12,7 @@ export interface EvidenceSectionRequest {
   cursor?: string | null;
   limit?: number;
   screenTypes?: string[];
+  flowTitles?: string[];
   signal?: AbortSignal;
 }
 
@@ -20,6 +21,12 @@ export interface EvidenceSectionPage {
   nextCursor: string | null;
   /** Complete screen-type facet set for the selected App version. */
   screenTypes?: string[];
+  platform: Platform;
+  version: AppVersion | null;
+}
+
+export interface AppScreenResult {
+  screen: Screen;
   platform: Platform;
   version: AppVersion | null;
 }
@@ -84,6 +91,7 @@ function evidenceUrl(appId: string, section: 'screens' | 'ui-elements', input: E
   if (input.cursor) params.set('cursor', input.cursor);
   if (section === 'screens') {
     for (const type of input.screenTypes ?? []) params.append('type', type);
+    for (const flow of input.flowTitles ?? []) params.append('flow', flow);
   }
   params.set('limit', String(input.limit ?? 48));
   return `/api/apps/${encodeURIComponent(appId)}/${section}?${params.toString()}`;
@@ -106,6 +114,19 @@ export function fetchAppScreens(
   request: Requester = apiFetch,
 ): Promise<EvidenceSectionPage> {
   return fetchEvidenceSection(appId, 'screens', input, request);
+}
+
+export async function fetchAppScreen(
+  appId: string,
+  screenId: number,
+  input: Pick<EvidenceSectionRequest, 'platform' | 'version' | 'signal'>,
+  request: Requester = apiFetch,
+): Promise<AppScreenResult> {
+  const params = new URLSearchParams({ platform: input.platform });
+  if (input.version !== undefined) params.set('version', String(input.version));
+  const endpoint = `/api/apps/${encodeURIComponent(appId)}/screens/${screenId}?${params.toString()}`;
+  const response = await request(endpoint, { signal: input.signal });
+  return responseJson<AppScreenResult>(response, endpoint);
 }
 
 export function fetchAppUiElements(

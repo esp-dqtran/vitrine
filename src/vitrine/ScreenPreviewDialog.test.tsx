@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ScreenPreviewDialog } from './components/ScreenPreviewDialog.tsx';
@@ -110,6 +111,63 @@ test('shows the complete web capture in the wide preview frame', () => {
     html,
     /flow-preview-dialog app-screen-preview-dialog flow-preview-dialog--web/,
   );
+});
+
+test('closes only when the empty preview stage is clicked', () => {
+  const source = readFileSync(
+    new URL('./components/ScreenPreviewDialog.tsx', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(
+    source,
+    /app-screen-preview-dialog__stage"[\s\S]*?onClick=\{onClose\}/,
+  );
+  assert.match(
+    source,
+    /app-screen-preview-dialog__screen"[\s\S]*?onClick=\{\(event\) => event\.stopPropagation\(\)\}/,
+  );
+});
+
+test('uses compact dark arrows and direction-aware screen transitions', () => {
+  const source = readFileSync(
+    new URL('./components/ScreenPreviewDialog.tsx', import.meta.url),
+    'utf8',
+  );
+  const css = readFileSync(new URL('./flowPreviewDialog.css', import.meta.url), 'utf8');
+
+  assert.match(source, /setNavigationDirection\('previous'\)/);
+  assert.match(source, /setNavigationDirection\('next'\)/);
+  assert.match(source, /data-navigation-direction=\{navigationDirection \?\? undefined\}/);
+  assert.match(source, /key=\{displayedMedia\?\.screenId \?\? screen\.id\}/);
+  assert.match(css, /\.flow-preview-dialog__arrow\s*\{[^}]*width:\s*44px\s*!important;[^}]*height:\s*44px\s*!important;[^}]*background:\s*var\(--vitrine-color-page\)\s*!important;/);
+  assert.match(css, /@keyframes appScreenPreviewEnterNext[\s\S]*translateX\(28px\)/);
+  assert.match(css, /@keyframes appScreenPreviewEnterPrevious[\s\S]*translateX\(-28px\)/);
+  assert.match(css, /prefers-reduced-motion:\s*reduce[\s\S]*data-navigation-direction[\s\S]*animation:\s*none/);
+});
+
+test('prefetches adjacent screens and keeps the current image until the next one is decoded', () => {
+  const source = readFileSync(
+    new URL('./components/ScreenPreviewDialog.tsx', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(source, /previousScreen\?: Screen \| null/);
+  assert.match(source, /nextScreen\?: Screen \| null/);
+  assert.match(source, /useDeliveredImageUrl\(previousScreen\?\.url/);
+  assert.match(source, /useDeliveredImageUrl\(nextScreen\?\.url/);
+  assert.match(source, /const preload = new Image\(\)/);
+  assert.match(source, /await preload\.decode\(\)/);
+  assert.match(source, /setDisplayedMedia\(\{/);
+});
+
+test('reveals preview navigation on hover, arrow focus, and non-hover devices', () => {
+  const css = readFileSync(new URL('./flowPreviewDialog.css', import.meta.url), 'utf8');
+
+  assert.match(css, /\.flow-preview-dialog__arrow\s*\{[^}]*opacity:\s*0;[^}]*pointer-events:\s*none;/);
+  assert.match(css, /\.flow-preview-dialog:hover \.flow-preview-dialog__arrow/);
+  assert.match(css, /\.flow-preview-dialog__arrow:focus-visible/);
+  assert.match(css, /@media \(hover:\s*none\)[\s\S]*\.flow-preview-dialog__arrow[\s\S]*opacity:\s*1/);
 });
 
 test('does not emit a native protected-media request from the screen viewer', () => {

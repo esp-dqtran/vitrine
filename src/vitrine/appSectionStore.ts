@@ -17,6 +17,7 @@ export interface AppSectionKey {
   platform: Platform;
   version: number | 'latest';
   screenTypes?: string[];
+  flowTitles?: string[];
 }
 
 export type AppSectionData = EvidenceSectionPage | FlowSectionResult;
@@ -45,7 +46,10 @@ export function appSectionCacheKey(key: AppSectionKey): string {
   const screenTypes = key.section === 'screens'
     ? [...(key.screenTypes ?? [])].sort().join(',')
     : '';
-  return `${key.appId}|${key.section}|${key.platform}|${key.version}|${screenTypes}`;
+  const flowTitles = key.section === 'screens'
+    ? [...(key.flowTitles ?? [])].sort().join(',')
+    : '';
+  return `${key.appId}|${key.section}|${key.platform}|${key.version}|${screenTypes}|${flowTitles}`;
 }
 
 export function createAppSectionStore(clients: AppSectionClients = defaultClients) {
@@ -75,6 +79,7 @@ export function createAppSectionStore(clients: AppSectionClients = defaultClient
         cursor,
         limit: 8,
         screenTypes: key.screenTypes,
+        flowTitles: key.flowTitles,
         signal,
       });
     }

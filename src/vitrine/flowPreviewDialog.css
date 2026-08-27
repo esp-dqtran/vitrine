@@ -352,22 +352,82 @@ dialog.flow-preview-dialog-shell::backdrop {
   position: absolute !important;
   top: calc(50% - 44px);
   z-index: 5;
-  width: 56px !important;
-  height: 56px !important;
-  border: 0 !important;
+  width: 44px !important;
+  height: 44px !important;
+  border: 1px solid var(--vitrine-color-border) !important;
   border-radius: 50% !important;
   transform: translateY(-50%);
-  background: color-mix(in srgb, var(--vitrine-color-text-secondary) 78%, transparent) !important;
+  background: var(--vitrine-color-page) !important;
   color: var(--vitrine-color-text-primary) !important;
-  box-shadow: none !important;
+  box-shadow: var(--shadow-med) !important;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 160ms var(--vitrine-motion-ease),
+    background-color 160ms var(--vitrine-motion-ease),
+    border-color 160ms var(--vitrine-motion-ease),
+    transform 160ms var(--vitrine-motion-ease);
+}
+
+.flow-preview-dialog:hover .flow-preview-dialog__arrow,
+.flow-preview-dialog__arrow:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.flow-preview-dialog__arrow:hover:not(:disabled) {
+  border-color: var(--vitrine-color-border-emphasized) !important;
+  transform: translateY(-50%) scale(1.06);
+  background: var(--vitrine-color-surface-muted) !important;
+}
+
+.flow-preview-dialog__arrow:active:not(:disabled) {
+  transform: translateY(-50%) scale(0.96);
+}
+
+.flow-preview-dialog__arrow:focus-visible {
+  outline: 2px solid var(--vitrine-color-text-primary);
+  outline-offset: 3px;
 }
 
 .flow-preview-dialog__arrow--left {
-  left: 34px;
+  left: 18px;
 }
 
 .flow-preview-dialog__arrow--right {
-  right: 34px;
+  right: 18px;
+}
+
+.app-screen-preview-dialog__screen[data-navigation-direction='next'] {
+  animation: appScreenPreviewEnterNext 260ms var(--vitrine-motion-ease);
+}
+
+.app-screen-preview-dialog__screen[data-navigation-direction='previous'] {
+  animation: appScreenPreviewEnterPrevious 260ms var(--vitrine-motion-ease);
+}
+
+@keyframes appScreenPreviewEnterNext {
+  from {
+    opacity: 0.35;
+    transform: translateX(28px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes appScreenPreviewEnterPrevious {
+  from {
+    opacity: 0.35;
+    transform: translateX(-28px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 .flow-preview-dialog__footer-actions {
@@ -744,16 +804,16 @@ dialog.flow-preview-dialog-shell::backdrop {
   }
 
   .flow-preview-dialog__arrow {
-    width: 48px !important;
-    height: 48px !important;
+    width: 44px !important;
+    height: 44px !important;
   }
 
   .flow-preview-dialog__arrow--left {
-    left: 22px;
+    left: 14px;
   }
 
   .flow-preview-dialog__arrow--right {
-    right: 22px;
+    right: 14px;
   }
 
   .flow-preview-dialog__document {
@@ -891,9 +951,24 @@ dialog.flow-preview-dialog-shell::backdrop {
   }
 }
 
+@media (hover: none) {
+  .flow-preview-dialog__arrow {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .flow-preview-dialog__track {
     scroll-behavior: auto;
+  }
+
+  .flow-preview-dialog__arrow {
+    transition: none;
+  }
+
+  .app-screen-preview-dialog__screen[data-navigation-direction] {
+    animation: none;
   }
 
   .app-screen-preview-dialog__analysis.flow-preview-dialog__info {

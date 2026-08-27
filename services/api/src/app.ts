@@ -44,6 +44,8 @@ import {
   appMetadata,
   publishedAppPreviewMetadata,
   publishedAppPreviewFlows,
+  appScreenById,
+  appScreenIdsByImageUrls,
   appEvidencePage,
   appScreenTypes,
   appUiElementSummary,
@@ -444,6 +446,8 @@ const defaults = {
   appMetadata,
   publishedAppPreviewMetadata,
   publishedAppPreviewFlows,
+  appScreenById,
+  appScreenIdsByImageUrls,
   appEvidencePage,
   appScreenTypes,
   appUiElementSummary,
@@ -946,6 +950,131 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     listPublishedDesignSystems: overrides.listPublishedDesignSystems ?? overrides.listDesignSystems ?? defaults.listPublishedDesignSystems,
     listPublishedFlowSets: overrides.listPublishedFlowSets ?? overrides.listAppFlowSets ?? defaults.listPublishedFlowSets,
   };
+  const cachedRead = <T>(
+    cache: Map<string, { expiresAt: number; promise: Promise<T> }>,
+    key: string,
+    read: () => Promise<T>,
+    ttlMs: number,
+    maximumEntries = 256,
+  ): Promise<T> => {
+    const now = Date.now();
+    const cached = cache.get(key);
+    if (cached && cached.expiresAt > now) return cached.promise;
+    if (cached) cache.delete(key);
+    for (const [candidate, entry] of cache) {
+      if (entry.expiresAt <= now) cache.delete(candidate);
+    }
+    if (cache.size >= maximumEntries) {
+      const oldest = cache.keys().next().value;
+      if (oldest !== undefined) cache.delete(oldest);
+    }
+    const promise = read();
+    cache.set(key, { expiresAt: now + ttlMs, promise });
+    void promise.catch(() => {
+      if (cache.get(key)?.promise === promise) cache.delete(key);
+    });
+    return promise;
+  };
+  const evidencePageCache = new Map<string, {
+    expiresAt: number;
+    promise: ReturnType<typeof deps.appEvidencePage>;
+  }>();
+  const screenTypesCache = new Map<string, {
+    expiresAt: number;
+    promise: ReturnType<typeof deps.appScreenTypes>;
+  }>();
+  const exactScreenCache = new Map<string, {
+    expiresAt: number;
+    promise: ReturnType<typeof deps.appScreenById>;
+  }>();
+  const uiElementSummaryCache = new Map<string, {
+    expiresAt: number;
+    promise: ReturnType<typeof deps.appUiElementSummary>;
+  }>();
+  const appMetadataCache = new Map<string, {
+    expiresAt: number;
+    promise: ReturnType<typeof deps.appMetadata>;
+  }>();
+  const flowSectionCache = new Map<string, {
+    expiresAt: number;
+    promise: Promise<ReturnType<typeof hydrateDesignSystem>>;
+  }>();
+  const flowRecordsCache = new Map<string, {
+    expiresAt: number;
+    promise: ReturnType<typeof deps.getVersionFlows>;
+  }>();
+  const cachedEvidencePage = (input: Parameters<typeof deps.appEvidencePage>[0]) => cachedRead(
+    evidencePageCache,
+    [
+      input.app,
+      input.kind,
+      input.platform,
+      input.versionNumber ?? "latest",
+      input.publishedOnly ?? false,
+      input.cursor ?? "first",
+      input.limit ?? 48,
+      [...(input.screenTypes ?? [])].sort().join(","),
+      [...(input.imageIds ?? [])].sort((left, right) => left - right).join(","),
+    ].join("\u0000"),
+    () => deps.appEvidencePage(input),
+    input.publishedOnly ? 60_000 : 10_000,
+  );
+  const cachedScreenTypes = (input: Parameters<typeof deps.appScreenTypes>[0]) => cachedRead(
+    screenTypesCache,
+    [
+      input.app,
+      input.platform,
+      input.versionNumber ?? "latest",
+      input.publishedOnly ?? false,
+    ].join("\u0000"),
+    () => deps.appScreenTypes(input),
+    input.publishedOnly ? 60_000 : 10_000,
+    128,
+  );
+  const cachedExactScreen = (input: Parameters<typeof deps.appScreenById>[0]) => cachedRead(
+    exactScreenCache,
+    [
+      input.app,
+      input.platform,
+      input.screenId,
+      input.versionNumber ?? "latest",
+      input.publishedOnly ?? false,
+    ].join("\u0000"),
+    () => deps.appScreenById(input),
+    input.publishedOnly ? 60_000 : 10_000,
+  );
+  const cachedUiElementSummary = (input: Parameters<typeof deps.appUiElementSummary>[0]) => cachedRead(
+    uiElementSummaryCache,
+    [
+      input.app,
+      input.platform,
+      input.versionNumber ?? "latest",
+      input.publishedOnly ?? false,
+      input.limit ?? 12,
+    ].join("\u0000"),
+    () => deps.appUiElementSummary(input),
+    input.publishedOnly ? 60_000 : 10_000,
+    128,
+  );
+  const cachedAppMetadata = (appSlug: string, publishedOnly: boolean) => cachedRead(
+    appMetadataCache,
+    `${appSlug}\u0000${publishedOnly}`,
+    () => deps.appMetadata(appSlug, publishedOnly),
+    publishedOnly ? 60_000 : 10_000,
+    128,
+  );
+  const cachedFlowRecords = (
+    appSlug: string,
+    platform: Platform,
+    versionNumber: number | undefined,
+    publishedOnly: boolean,
+  ) => cachedRead(
+    flowRecordsCache,
+    [appSlug, platform, versionNumber ?? "latest", publishedOnly].join("\u0000"),
+    () => deps.getVersionFlows(appSlug, platform, versionNumber, publishedOnly),
+    publishedOnly ? 60_000 : 10_000,
+    128,
+  );
   const appVersionListCache = new Map<string, {
     expiresAt: number;
     promise: ReturnType<typeof deps.listAppVersions>;
@@ -3596,7 +3725,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
 
   app.get("/apps/:app/screens", async (req, res) => {
     if (!await authorizeAppDetail(req, res)) return;
-    if (Object.keys(req.query).some((key) => !["platform", "version", "cursor", "limit", "type"].includes(key))) {
+    if (Object.keys(req.query).some((key) => !["platform", "version", "cursor", "limit", "type", "flow"].includes(key))) {
       res.status(400).json({ error: "invalid screens query" });
       return;
     }
@@ -3609,8 +3738,14 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       : (Array.isArray(req.query.type) ? req.query.type : [req.query.type])
         .map(optionalQuery)
         .filter((value): value is string => Boolean(value));
+    const flowTitles = req.query.flow === undefined
+      ? []
+      : (Array.isArray(req.query.flow) ? req.query.flow : [req.query.flow])
+        .map(optionalQuery)
+        .filter((value): value is string => Boolean(value));
     if (!Number.isInteger(limit) || limit < 1 || limit > 48 || (req.query.cursor !== undefined && !cursor)
-      || screenTypes.length > 64 || screenTypes.some((type) => type.length > 120)) {
+      || screenTypes.length > 64 || screenTypes.some((type) => type.length > 120)
+      || flowTitles.length > 64 || flowTitles.some((title) => title.length > 200)) {
       res.status(400).json({ error: "invalid pagination" });
       return;
     }
@@ -3622,9 +3757,48 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         versionNumber: section.version?.version_number,
         publishedOnly: section.publishedOnly,
       };
+      const selectedFlowEvidenceIds = flowTitles.length
+        ? [...new Set((await cachedFlowRecords(
+            req.params.app,
+            section.platform,
+            section.version?.version_number,
+            section.publishedOnly,
+          ))
+            .filter(({ title }) => flowTitles.includes(title))
+            .flatMap((flow) => flow.steps.flatMap(({ evidence: ids }) => ids))
+            .filter((id): id is number => typeof id === "number" && Number.isSafeInteger(id) && id > 0))]
+        : undefined;
+      const selectedFlowScreenUrls = selectedFlowEvidenceIds
+        ? (await deps.flowEvidenceImages({
+            app: req.params.app,
+            platform: section.platform,
+            versionNumber: section.version?.version_number,
+            imageIds: selectedFlowEvidenceIds,
+            publishedOnly: section.publishedOnly,
+          }))
+            .flatMap(({ image_url }) => {
+              const hash = bulkImageHash(image_url);
+              return hash ? [`mobbin-bulk:${hash}`] : [];
+            })
+        : undefined;
+      const selectedFlowScreenIds = selectedFlowScreenUrls
+        ? await deps.appScreenIdsByImageUrls({
+            app: req.params.app,
+            platform: section.platform,
+            versionNumber: section.version?.version_number,
+            publishedOnly: section.publishedOnly,
+            imageUrls: selectedFlowScreenUrls,
+          })
+        : undefined;
       const [evidence, screenTypesFacet] = await Promise.all([
-        deps.appEvidencePage({ ...queryInput, cursor, limit, screenTypes }),
-        deps.appScreenTypes(queryInput),
+        cachedEvidencePage({
+          ...queryInput,
+          cursor,
+          limit,
+          screenTypes,
+          imageIds: selectedFlowScreenIds,
+        }),
+        cachedScreenTypes(queryInput),
       ]);
       const page = buildEvidencePage(
         evidence,
@@ -3643,6 +3817,38 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
   });
 
+  app.get("/apps/:app/screens/:screenId", async (req, res) => {
+    if (!await authorizeAppDetail(req, res)) return;
+    if (Object.keys(req.query).some((key) => !["platform", "version"].includes(key))) {
+      res.status(400).json({ error: "invalid screen query" });
+      return;
+    }
+    const screenId = positiveId(req.params.screenId);
+    if (!screenId) {
+      res.status(400).json({ error: "invalid screen id" });
+      return;
+    }
+    const section = await resolveAppSection(req, res);
+    if (!section) return;
+    const evidence = await cachedExactScreen({
+      app: req.params.app,
+      platform: section.platform,
+      screenId,
+      versionNumber: section.version?.version_number,
+      publishedOnly: section.publishedOnly,
+    });
+    if (!evidence) {
+      res.status(404).json({ error: "screen not found" });
+      return;
+    }
+    const screen = buildEvidencePage(
+      { rows: [evidence], nextCursor: null },
+      publicImageUrl,
+    ).screens[0];
+    recordAppDetailSuccess(req, res);
+    res.json({ screen, platform: section.platform, version: section.version ?? null });
+  });
+
   app.get("/apps/:app/ui-elements", async (req, res) => {
     if (!await authorizeAppDetail(req, res)) return;
     if (Object.keys(req.query).some((key) => !["platform", "version", "cursor", "limit"].includes(key))) {
@@ -3659,7 +3865,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     try {
       const page = buildEvidencePage(
-        await deps.appEvidencePage({
+        await cachedEvidencePage({
           app: req.params.app,
           kind: "ui_element",
           platform: section.platform,
@@ -3691,7 +3897,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "invalid summary limit" });
       return;
     }
-    const summary = await deps.appUiElementSummary({
+    const summary = await cachedUiElementSummary({
       app: req.params.app,
       platform: section.platform,
       versionNumber: section.version?.version_number,
@@ -3725,23 +3931,43 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     const section = await resolveAppSection(req, res);
     if (!section) return;
-    const flows = await deps.getVersionFlows(
+    const flowCacheKey = [
       req.params.app,
       section.platform,
-      section.version?.version_number,
+      section.version?.version_number ?? "latest",
       section.publishedOnly,
+    ].join("\u0000");
+    const hydrated = await cachedRead(
+      flowSectionCache,
+      flowCacheKey,
+      async () => {
+        const flows = await cachedFlowRecords(
+          req.params.app,
+          section.platform,
+          section.version?.version_number,
+          section.publishedOnly,
+        );
+        const imageIds = [...new Set(flows.flatMap((flow) => flow.steps.flatMap(({ evidence }) =>
+          evidence.filter((id): id is number => typeof id === "number" && Number.isSafeInteger(id) && id > 0))))];
+        const images = await deps.flowEvidenceImages({
+          app: req.params.app,
+          platform: section.platform,
+          versionNumber: section.version?.version_number,
+          imageIds,
+          publishedOnly: section.publishedOnly,
+        });
+        const emptySnapshot = {
+          app: req.params.app,
+          generatedAt: new Date().toISOString(),
+          tokens: [],
+          components: [],
+          flows,
+        };
+        return hydrateDesignSystem(emptySnapshot, images);
+      },
+      section.publishedOnly ? 60_000 : 10_000,
+      128,
     );
-    const imageIds = [...new Set(flows.flatMap((flow) => flow.steps.flatMap(({ evidence }) =>
-      evidence.filter((id): id is number => typeof id === "number" && Number.isSafeInteger(id) && id > 0))))];
-    const images = await deps.flowEvidenceImages({
-      app: req.params.app,
-      platform: section.platform,
-      versionNumber: section.version?.version_number,
-      imageIds,
-      publishedOnly: section.publishedOnly,
-    });
-    const emptySnapshot = { app: req.params.app, generatedAt: new Date().toISOString(), tokens: [], components: [], flows };
-    const hydrated = hydrateDesignSystem(emptySnapshot, images);
     recordAppDetailSuccess(req, res);
     res.json({ flows: hydrated.flows, platform: section.platform, version: section.version ?? null });
   });
@@ -3752,7 +3978,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "app metadata does not accept section query parameters" });
       return;
     }
-    const row = await deps.appMetadata(req.params.app, res.locals.user.role !== "admin");
+    const row = await cachedAppMetadata(req.params.app, res.locals.user.role !== "admin");
     if (!row) {
       res.status(404).json({ error: "app not found" });
       return;

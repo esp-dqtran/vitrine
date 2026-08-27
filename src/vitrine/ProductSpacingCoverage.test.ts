@@ -73,6 +73,10 @@ test('keeps selected discovery filters inside one 40px composite control', async
     /\.discovery-filter-control\.discovery-filter-control :is\(\.apps-filterbar__filter-button\.apps-filterbar__filter-button, \.apps-filterbar__filter-label\)\s*\{[\s\S]*?height:\s*calc\(var\(--vitrine-control-height\) - var\(--spacing-1\)\)\s*!important[\s\S]*?min-height:\s*calc\(var\(--vitrine-control-height\) - var\(--spacing-1\)\)\s*!important/,
   );
   assert.match(styles, /:not\([\s\S]*\.apps-filterbar__clear,[\s\S]*\)\s*\{/);
+  assert.match(
+    styles,
+    /\.reference-detail__tab-controls :is\([\s\S]*?\):not\(\.apps-filterbar__clear\)\s*\{/,
+  );
   assert.doesNotMatch(styles, /\.discovery-filter-control\.discovery-filter-control \.apps-filterbar__clear\.apps-filterbar__clear/);
 });
 
@@ -120,7 +124,6 @@ test('balances App-detail tab height, label size, and secondary controls', async
   assert.match(styles, /\.reference-detail__tab-controls\s*\{[\s\S]*?min-height:\s*var\(--vitrine-control-height\)\s*!important/);
   assert.match(styles, /\.reference-detail__tab-leading :is\([\s\S]*?\.astryx-button\.astryx-button\.astryx-button,[\s\S]*?\.astryx-selector\.astryx-selector\.astryx-selector[\s\S]*?\),/);
   assert.match(styles, /\.reference-detail__tab-controls :is\([\s\S]*?\.astryx-button\.astryx-button\.astryx-button,[\s\S]*?\.astryx-selector\.astryx-selector\.astryx-selector[\s\S]*?\)\s*\{[\s\S]*?height:\s*var\(--vitrine-control-height\)\s*!important/);
-  assert.match(styles, /\.apps-platform-switcher\s+button\.astryx-button\s*\{[\s\S]*?height:\s*auto\s*!important[\s\S]*?min-height:\s*0\s*!important/);
   assert.match(styles, /@media \(max-width:\s*720px\)[\s\S]*?\.reference-detail__navigation\s*\{[\s\S]*?min-height:\s*calc\(var\(--spacing-12\) \* 2\)\s*!important/);
 });
 

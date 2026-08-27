@@ -6,6 +6,7 @@ export interface ScreenFilterSelections {
   layouts: string[];
   components: string[];
   states: string[];
+  flows: string[];
 }
 
 export const EMPTY_SCREEN_FILTERS: ScreenFilterSelections = {
@@ -13,6 +14,7 @@ export const EMPTY_SCREEN_FILTERS: ScreenFilterSelections = {
   layouts: [],
   components: [],
   states: [],
+  flows: [],
 };
 
 export interface FlowFilterSelections {

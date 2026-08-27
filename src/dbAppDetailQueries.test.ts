@@ -20,6 +20,7 @@ test("app detail queries are explicit and evidence pagination stays in SQL", () 
     'the bounded page must be selected before per-screen metadata is aggregated',
   );
   assert.match(evidenceBody, /i\.analysis->>'pageType' = ANY\(\$8\)/);
+  assert.match(evidenceBody, /i\.id = ANY\(\$9\)/);
   assert.match(evidenceBody, /LIMIT \$\d/);
   assert.match(evidenceBody, /WHERE \(\$6::integer IS NULL OR id < \$6\)/);
   assert.match(evidenceBody, /ORDER BY id DESC/);
@@ -50,6 +51,30 @@ test("screen category facets are read independently of the paginated gallery", (
   assert.match(body, /SELECT DISTINCT trimmed\.page_type/);
   assert.match(body, /i\.kind = 'screen'/);
   assert.doesNotMatch(body, /LIMIT \$\d/);
+});
+
+test("exact Screen reads stay scoped without hydrating the paginated gallery", () => {
+  const start = source.indexOf("export async function appScreenById(");
+  const end = source.indexOf("\nexport async function", start + 1);
+  const body = source.slice(start, end);
+
+  assert.ok(start >= 0, "appScreenById source was not found");
+  assert.match(body, /i\.id = \$5/);
+  assert.match(body, /i\.kind = 'screen'/);
+  assert.match(body, /vi\.image_id IS NOT NULL/);
+  assert.match(body, /a\.name = \$1 AND p\.name = \$2/);
+  assert.doesNotMatch(body, /paged_images|screen_ui_elements|ui_element_extractions/);
+});
+
+test("Flow capture hashes resolve to selected-version Screen ids before gallery hydration", () => {
+  const start = source.indexOf("export async function appScreenIdsByImageUrls(");
+  const end = source.indexOf("\nexport async function", start + 1);
+  const body = source.slice(start, end);
+
+  assert.ok(start >= 0, "appScreenIdsByImageUrls source was not found");
+  assert.match(body, /JOIN version_images vi ON vi\.version_id = sv\.id/);
+  assert.match(body, /i\.image_url = ANY\(\$5::text\[\]\)/);
+  assert.match(body, /i\.kind = 'screen'/);
 });
 
 test("UI element summaries group reviewed crop occurrences in SQL", () => {

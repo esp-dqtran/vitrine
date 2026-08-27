@@ -2945,55 +2945,6 @@ body {
   font: var(--vitrine-presentation-subheading);
 }
 
-.reference-detail[data-reference-detail="app"]
-  .reference-detail__metadata-item
-  .apps-platform-switcher {
-  gap: 12px;
-  padding: 0;
-  border: 0;
-}
-
-.reference-detail[data-reference-detail="app"]
-  .reference-detail__metadata-item
-  .apps-platform-switcher::before {
-  display: none;
-}
-
-.reference-detail[data-reference-detail="app"]
-  .reference-detail__metadata-item
-  .apps-platform-switcher
-  button {
-  width: auto !important;
-  height: auto !important;
-  min-height: 0 !important;
-  padding: 0 !important;
-  color: var(--color-text-secondary) !important;
-  font: var(--vitrine-presentation-subheading) !important;
-}
-
-.reference-detail[data-reference-detail="app"]
-  .reference-detail__metadata-item
-  .apps-platform-switcher
-  button
-  span {
-  font: var(--vitrine-presentation-subheading) !important;
-}
-
-.reference-detail[data-reference-detail="app"]
-  .reference-detail__metadata-item
-  .apps-platform-switcher
-  button:hover,
-.reference-detail[data-reference-detail="app"]
-  .reference-detail__metadata-item
-  .apps-platform-switcher
-  button:focus-visible,
-.reference-detail[data-reference-detail="app"]
-  .reference-detail__metadata-item
-  .apps-platform-switcher
-  button[aria-checked="true"] {
-  color: var(--color-text-primary) !important;
-}
-
 .site-detail__meta-links {
   display: flex;
   gap: 4px;

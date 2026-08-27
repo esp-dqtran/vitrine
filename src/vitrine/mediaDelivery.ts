@@ -6,6 +6,9 @@ type MediaRequester = (
   init?: RequestInit,
 ) => Promise<Response>;
 
+const protectedMediaUrlCache = new Map<string, { url: string; expiresAt: number }>();
+const protectedMediaUrlCacheLifetimeMs = 60_000;
+
 export function isProtectedMediaUrl(url: string | undefined): url is string {
   return Boolean(url?.startsWith('/api/media/'));
 }
@@ -40,6 +43,34 @@ export async function loadProtectedMediaUrl(
   return signed.toString();
 }
 
+export function cachedProtectedMediaUrl(
+  source: string,
+  now = Date.now(),
+): string | undefined {
+  const cached = protectedMediaUrlCache.get(source);
+  if (!cached) return undefined;
+  if (cached.expiresAt <= now) {
+    protectedMediaUrlCache.delete(source);
+    return undefined;
+  }
+  return cached.url;
+}
+
+export async function loadCachedProtectedMediaUrl(
+  source: string,
+  signal: AbortSignal,
+  request: MediaRequester = apiFetch,
+): Promise<string> {
+  const cached = cachedProtectedMediaUrl(source);
+  if (cached) return cached;
+  const url = await loadProtectedMediaUrl(source, signal, request);
+  protectedMediaUrlCache.set(source, {
+    url,
+    expiresAt: Date.now() + protectedMediaUrlCacheLifetimeMs,
+  });
+  return url;
+}
+
 export async function loadProtectedMediaObjectUrl(
   url: string,
   signal: AbortSignal,
@@ -62,16 +93,23 @@ type ProtectedMediaDelivery =
 export function useDeliveredImageUrl(source: string | undefined, active = true) {
   const protectedSource = isProtectedMediaUrl(source) ? source : undefined;
   const [delivery, setDelivery] = useState<ProtectedMediaDelivery | null>(null);
+  const cachedUrl = protectedSource ? cachedProtectedMediaUrl(protectedSource) : undefined;
 
   useEffect(() => {
     setDelivery(null);
     if (!active || !protectedSource) return;
 
+    const cached = cachedProtectedMediaUrl(protectedSource);
+    if (cached) {
+      setDelivery({ source: protectedSource, status: 'ready', url: cached, revoke: false });
+      return;
+    }
+
     const controller = new AbortController();
     let mounted = true;
     let deliveredUrl: string | undefined;
     let revoke = false;
-    void loadProtectedMediaUrl(protectedSource, controller.signal)
+    void loadCachedProtectedMediaUrl(protectedSource, controller.signal)
       .catch(async () => {
         revoke = true;
         return loadProtectedMediaObjectUrl(protectedSource, controller.signal);
@@ -98,11 +136,12 @@ export function useDeliveredImageUrl(source: string | undefined, active = true) 
   }, [active, protectedSource]);
 
   const currentDelivery = delivery?.source === protectedSource ? delivery : null;
+  const readyUrl = currentDelivery?.status === 'ready' ? currentDelivery.url : cachedUrl;
   return {
     url: protectedSource
-      ? currentDelivery?.status === 'ready' ? currentDelivery.url : undefined
+      ? readyUrl
       : source,
-    loading: Boolean(active && protectedSource && !currentDelivery),
+    loading: Boolean(active && protectedSource && !readyUrl && !currentDelivery),
     failed: currentDelivery?.status === 'failed',
     protected: Boolean(protectedSource),
   };

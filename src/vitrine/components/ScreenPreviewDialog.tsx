@@ -14,6 +14,8 @@ interface ScreenPreviewDialogProps {
   appName: string;
   appIconUrl?: string | null;
   screen: Screen;
+  previousScreen?: Screen | null;
+  nextScreen?: Screen | null;
   index: number;
   total: number;
   canNavigateNext?: boolean;
@@ -46,6 +48,8 @@ export function ScreenPreviewDialog({
   appName,
   appIconUrl,
   screen,
+  previousScreen,
+  nextScreen,
   index,
   total,
   canNavigateNext,
@@ -61,15 +65,88 @@ export function ScreenPreviewDialog({
   const [mediaFailed, setMediaFailed] = useState(false);
   const [mediaDimensions, setMediaDimensions] = useState<Record<number, { width: number; height: number }>>({});
   const [infoOpen, setInfoOpen] = useState(false);
+  const [navigationDirection, setNavigationDirection] = useState<'previous' | 'next' | null>(null);
+  const [displayedMedia, setDisplayedMedia] = useState<{
+    screenId: number;
+    platform: string;
+    url: string;
+  } | null>(null);
   const deliveredScreenImage = useDeliveredImageUrl(screen.url);
+  const deliveredPreviousImage = useDeliveredImageUrl(previousScreen?.url, Boolean(previousScreen));
+  const deliveredNextImage = useDeliveredImageUrl(nextScreen?.url, Boolean(nextScreen));
   useEffect(() => { setMediaFailed(false); }, [screen.id, screen.url]);
+
+  useEffect(() => {
+    if (typeof Image === 'undefined') return;
+    const urls = [deliveredPreviousImage.url, deliveredNextImage.url]
+      .filter((url): url is string => Boolean(url));
+    const preloads = urls.map((url) => {
+      const preload = new Image();
+      preload.decoding = 'async';
+      preload.src = url;
+      void (async () => {
+        try { await preload.decode(); } catch { /* Browser cache warming is best effort. */ }
+      })();
+      return preload;
+    });
+    return () => {
+      for (const preload of preloads) {
+        preload.onload = null;
+        preload.onerror = null;
+      }
+    };
+  }, [deliveredPreviousImage.url, deliveredNextImage.url]);
+
+  useEffect(() => {
+    const url = deliveredScreenImage.url;
+    if (!url) return;
+    if (typeof Image === 'undefined') {
+      setDisplayedMedia({ screenId: screen.id, platform: screen.platform, url });
+      return;
+    }
+
+    let cancelled = false;
+    const preload = new Image();
+    const reveal = () => {
+      if (cancelled || !preload.naturalWidth || !preload.naturalHeight) return;
+      setMediaDimensions((current) => ({
+        ...current,
+        [screen.id]: { width: preload.naturalWidth, height: preload.naturalHeight },
+      }));
+      setDisplayedMedia({ screenId: screen.id, platform: screen.platform, url });
+    };
+    preload.decoding = 'async';
+    preload.onload = reveal;
+    preload.onerror = () => { if (!cancelled) setMediaFailed(true); };
+    preload.src = url;
+    void (async () => {
+      try {
+        await preload.decode();
+        reveal();
+      } catch {
+        if (preload.complete) reveal();
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      preload.onload = null;
+      preload.onerror = null;
+    };
+  }, [deliveredScreenImage.url, screen.id, screen.platform]);
+
+  useEffect(() => {
+    if (mediaFailed || deliveredScreenImage.failed) setDisplayedMedia(null);
+  }, [deliveredScreenImage.failed, mediaFailed]);
   const saved = savedScreens.has(screen.id);
   const context = foundInFlows[0]
     ?? usefulLabel(screen.productArea)
     ?? usefulLabel(screen.type);
   const additionalFlowCount = Math.max(0, foundInFlows.length - 1);
   const resolution = screenResolution(screen);
-  const dimensions = mediaDimensions[screen.id];
+  const displayedDimensions = displayedMedia
+    ? mediaDimensions[displayedMedia.screenId]
+    : undefined;
   const showNext = canNavigateNext ?? index < total - 1;
   const pageTypes = [...new Set([
     usefulLabel(screen.type),
@@ -84,11 +161,11 @@ export function ScreenPreviewDialog({
   ].filter(({ values }) => values.length > 0);
   const analysisPanelId = `screen-analysis-${screen.id}`;
 
-  const registerMediaDimensions = (image: HTMLImageElement) => {
+  const registerMediaDimensions = (image: HTMLImageElement, screenId = screen.id) => {
     if (!image.naturalWidth || !image.naturalHeight) return;
     setMediaDimensions((current) => ({
       ...current,
-      [screen.id]: {
+      [screenId]: {
         width: image.naturalWidth,
         height: image.naturalHeight,
       },
@@ -174,31 +251,40 @@ export function ScreenPreviewDialog({
           role="group"
           aria-label={`${appName} screen viewer`}
         >
-          <div className="flow-preview-dialog__prototype app-screen-preview-dialog__stage">
+          <div
+            className="flow-preview-dialog__prototype app-screen-preview-dialog__stage"
+            onClick={onClose}
+          >
             <div
               className="flow-preview-dialog__screen flow-preview-dialog__prototype-screen app-screen-preview-dialog__screen"
+              key={displayedMedia?.screenId ?? screen.id}
               role="img"
               aria-label={screen.description ?? usefulLabel(screen.type) ?? `${appName} screen ${index + 1}`}
-              style={screen.platform === 'web' && dimensions
-                ? { aspectRatio: `${dimensions.width} / ${dimensions.height}` }
+              data-navigation-direction={navigationDirection ?? undefined}
+              onClick={(event) => event.stopPropagation()}
+              style={(displayedMedia?.platform ?? screen.platform) === 'web' && displayedDimensions
+                ? { aspectRatio: `${displayedDimensions.width} / ${displayedDimensions.height}` }
                 : undefined}
             >
-              {deliveredScreenImage.loading ? (
-                <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: '#fff' }} />
-              ) : mediaFailed || deliveredScreenImage.failed ? (
+              {mediaFailed || deliveredScreenImage.failed ? (
                 <PlaceholderImage
                   seed={`${appName}-${screen.id}`}
                   style={{ objectFit: 'contain', background: '#fff' }}
                 />
-              ) : (
+              ) : displayedMedia ? (
                 <img
-                  key={screen.id}
-                  src={deliveredScreenImage.url}
+                  key={displayedMedia.screenId}
+                  src={displayedMedia.url}
                   alt=""
                   loading="eager"
-                  onLoad={(event) => registerMediaDimensions(event.currentTarget)}
+                  onLoad={(event) => registerMediaDimensions(
+                    event.currentTarget,
+                    displayedMedia.screenId,
+                  )}
                   onError={() => setMediaFailed(true)}
                 />
+              ) : (
+                <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: '#fff' }} />
               )}
             </div>
           </div>
@@ -211,6 +297,7 @@ export function ScreenPreviewDialog({
               variant="secondary"
               className="flow-preview-dialog__arrow flow-preview-dialog__arrow--left"
               onClick={() => {
+                setNavigationDirection('previous');
                 setMediaFailed(false);
                 void onNavigate(index - 1);
               }}
@@ -224,6 +311,7 @@ export function ScreenPreviewDialog({
               variant="secondary"
               className="flow-preview-dialog__arrow flow-preview-dialog__arrow--right"
               onClick={() => {
+                setNavigationDirection('next');
                 setMediaFailed(false);
                 void onNavigate(index + 1);
               }}

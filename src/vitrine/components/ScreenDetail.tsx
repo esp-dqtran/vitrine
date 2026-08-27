@@ -13,6 +13,7 @@ import type { AppsFilterOption } from '../appsDiscovery.ts';
 import { hasDesignSystemContent } from '../designSystemAvailability.ts';
 import { ALL_SCREEN_TYPES } from '../screenCategories.ts';
 import {
+  fetchAppScreen,
   fetchAppFlows,
   fetchAppUiElementSummary,
   replaceAppCardPreviewScreens,
@@ -40,7 +41,6 @@ import type { SaveReference } from '../researchApi.ts';
 import { useAppSectionData, type DetailSection } from '../useAppSectionData';
 import { useDesignSystem } from '../useDesignSystem';
 import { useDesignSystemGeneration } from '../useDesignSystemGeneration';
-import { AppsPlatformSwitcher } from './AppsPlatformSwitcher';
 import { AstryxSingleSelectDropdown } from './AstryxDropdown.tsx';
 import { useApplicationToast } from './ApplicationToast.tsx';
 import { CopyButton } from './CopyButton.tsx';
@@ -66,7 +66,7 @@ const DesignSystemPanel = lazy(() =>
   import('./DesignSystemPanel').then((module) => ({ default: module.DesignSystemPanel })),
 );
 type LightboxState = { index: number } | null;
-type ScreenFilterGroup = 'types' | 'layouts' | 'components' | 'states';
+type ScreenFilterGroup = 'types' | 'layouts' | 'components' | 'states' | 'flows';
 type FlowFilterGroup = 'categories' | 'tags' | 'interactions' | 'states';
 
 interface MetadataFilterGroup {
@@ -79,6 +79,7 @@ interface MetadataFilterGroup {
 interface MetadataFilterControlProps {
   label: string;
   groups: MetadataFilterGroup[];
+  loadOptions?: DiscoveryFilterGroup['loadOptions'];
   onToggle: (group: string, value: string, checked: boolean) => void;
   onClear: () => void;
 }
@@ -87,6 +88,7 @@ function MetadataFilterControl({
   label,
   onToggle,
   onClear,
+  loadOptions,
   groups: sourceGroups,
 }: MetadataFilterControlProps) {
   const [open, setOpen] = useState(false);
@@ -97,6 +99,7 @@ function MetadataFilterControl({
     id: label.toLowerCase().replaceAll(' ', '-'),
     label,
     selected: sourceGroups.flatMap(({ selected }) => selected),
+    loadOptions,
     options: sourceGroups.flatMap(({ label: section, options }) =>
       options.map((value) => ({ value, section }))),
   };
@@ -294,8 +297,15 @@ export function ScreenDetail({
     platform: selectedPlatform,
     selectedVersion,
     screenTypes: screenFilters.types,
+    flowTitles: screenFilters.flows,
   });
   const needsDesignSystem = section === 'design-system' || section === 'export';
+  const [backgroundDesignSystemReady, setBackgroundDesignSystemReady] = useState(false);
+  useEffect(() => {
+    setBackgroundDesignSystemReady(false);
+    const timeout = window.setTimeout(() => setBackgroundDesignSystemReady(true), 800);
+    return () => window.clearTimeout(timeout);
+  }, [app.id, selectedPlatform]);
   const {
     snapshot,
     status: designSystemStatus,
@@ -307,7 +317,7 @@ export function ScreenDetail({
     app.id,
     selectedPlatform,
     sectionData.resolvedVersion,
-    !sectionData.versionsLoading,
+    !sectionData.versionsLoading && (needsDesignSystem || backgroundDesignSystemReady),
   );
   const designSystemAvailable = hasDesignSystemContent(snapshot);
   const designSystemMissing = designSystemStatus === 'missing'
@@ -354,12 +364,14 @@ export function ScreenDetail({
   const [componentCropSummary, setComponentCropSummary] = useState<UiElementSummaryResult | null>(null);
   const [componentCropSummaryLoading, setComponentCropSummaryLoading] = useState(false);
   const [lightbox, setLightbox] = useState<LightboxState>(null);
+  const [directScreen, setDirectScreen] = useState<Screen | null>(null);
   const [selectedScreenIds, setSelectedScreenIds] = useState<Set<number>>(() => new Set());
   const [copyProgress, setCopyProgress] = useState<ImageBatchProgress | null>(null);
   const [previewSelectionSaving, setPreviewSelectionSaving] = useState(false);
   const showApplicationToast = useApplicationToast();
   const contentRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const screenPreviewOpen = Boolean(lightbox || directScreen);
 
   const types = ALL_SCREEN_TYPES.filter((type) => evidence?.screenTypes?.includes(type));
   const layouts = [...new Set(screens.flatMap(({ layoutPatterns }) => layoutPatterns ?? []))];
@@ -370,11 +382,16 @@ export function ScreenDetail({
     layouts,
     components: screenComponents,
     states,
+    flows: [...new Set(screenContextFlows.map(({ title }) => title))]
+      .sort((left, right) => left.localeCompare(right)),
   };
   const screenFlowMembership = useMemo(
     () => buildScreenFlowMembership(screenContextFlows),
     [screenContextFlows],
   );
+  // Flow membership is resolved by the API before pagination. Flow evidence
+  // uses flow-step IDs rather than Screen IDs, so reapplying it here would
+  // incorrectly hide the server-resolved Screen matches.
   const filteredScreens = screens.filter((screen) => screenMatchesFilters(screen, screenFilters));
   const filteredElements = screens.filter((screen) => screenMatchesFilters(screen, elementFilters));
   const flowValues = flows.map(flowFilterValues);
@@ -386,6 +403,13 @@ export function ScreenDetail({
   };
   const filteredFlows = flows.filter((flow) => flowMatchesFilters(flow, flowFilters));
   const selectedScreens = selectedScreensInSelectionOrder(screens, selectedScreenIds);
+  const routedScreenMatch = section === 'screens' && initialEvidence
+    ? /^SCREEN-(\d+)$/.exec(initialEvidence)
+    : null;
+  const routedScreenId = routedScreenMatch ? Number(routedScreenMatch[1]) : null;
+  const routedScreenGalleryIndex = routedScreenId === null
+    ? -1
+    : screens.findIndex(({ id }) => id === routedScreenId);
   const selectedScreenReferences = selectedScreens.map((screen): SaveReference => ({
     kind: 'screen',
     app: app.id,
@@ -420,23 +444,29 @@ export function ScreenDetail({
   };
 
   useEffect(() => {
-    if (section !== 'screens' || sectionData.versionsLoading) return;
+    if (section !== 'screens' || sectionData.versionsLoading || !screenPreviewOpen) return;
     const controller = new AbortController();
-    void fetchAppFlows(app.id, {
-      platform: selectedPlatform,
-      version: sectionData.resolvedVersion,
-      signal: controller.signal,
-    }).then(({ flows: contextFlows }) => {
-      setScreenContextFlows(contextFlows);
-    }).catch((error: Error) => {
-      if (error.name !== 'AbortError') setScreenContextFlows([]);
-    });
-    return () => controller.abort();
+    const timeout = window.setTimeout(() => {
+      void fetchAppFlows(app.id, {
+        platform: selectedPlatform,
+        version: sectionData.resolvedVersion,
+        signal: controller.signal,
+      }).then(({ flows: contextFlows }) => {
+        setScreenContextFlows(contextFlows);
+      }).catch((error: Error) => {
+        if (error.name !== 'AbortError') setScreenContextFlows([]);
+      });
+    }, 500);
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
   }, [
     app.id,
     section,
     sectionData.resolvedVersion,
     sectionData.versionsLoading,
+    screenPreviewOpen,
     selectedPlatform,
   ]);
 
@@ -476,17 +506,6 @@ export function ScreenDetail({
     if (section !== 'screens') setSelectedScreenIds(new Set());
   }, [section]);
 
-  const selectPlatform = (platform: Platform) => {
-    setSelectedPlatform(platform);
-    setSelectedVersion(undefined);
-    setScreenFilters(EMPTY_SCREEN_FILTERS);
-    setElementFilters(EMPTY_SCREEN_FILTERS);
-    setFlowFilters(EMPTY_FLOW_FILTERS);
-    setLightbox(null);
-    setSelectedScreenIds(new Set());
-    onSectionChange?.(section, platform);
-  };
-
   const loadMore = async () => {
     if (!nextCursor || loadingMore) return null;
     setLoadingMore(true);
@@ -507,15 +526,53 @@ export function ScreenDetail({
   }, [section, nextCursor, loadingMore, sectionData.resolvedVersion]);
 
   useEffect(() => {
+    if (!initialEvidence || section !== 'screens') {
+      setDirectScreen(null);
+      return;
+    }
+    if (routedScreenId === null) {
+      setDirectScreen(null);
+      return;
+    }
+    if (routedScreenGalleryIndex >= 0) {
+      setDirectScreen(null);
+      setLightbox({ index: routedScreenGalleryIndex });
+      return;
+    }
+    const controller = new AbortController();
+    setDirectScreen(null);
+    void fetchAppScreen(app.id, routedScreenId, {
+      platform: selectedPlatform,
+      version: selectedVersion,
+      signal: controller.signal,
+    }).then(({ screen }) => {
+      if (!controller.signal.aborted) setDirectScreen(screen);
+    }).catch((error: Error) => {
+      if (error.name !== 'AbortError' && !controller.signal.aborted) setDirectScreen(null);
+    });
+    return () => controller.abort();
+  }, [
+    app.id,
+    initialEvidence,
+    section,
+    routedScreenGalleryIndex,
+    routedScreenId,
+    selectedPlatform,
+    selectedVersion,
+  ]);
+
+  useEffect(() => {
     if (!initialEvidence || (section !== 'screens' && section !== 'elements')) return;
-    const match = /^(?:SCREEN|UI-ELEMENT)-(\d+)$/.exec(initialEvidence);
+    const match = /^(SCREEN|UI-ELEMENT)-(\d+)$/.exec(initialEvidence);
     if (!match) return;
-    const imageId = Number(match[1]);
+    const imageId = Number(match[2]);
     const index = screens.findIndex(({ id }) => id === imageId);
     if (index >= 0) {
+      setDirectScreen(null);
       setLightbox({ index });
       return;
     }
+    if (match[1] === 'SCREEN') return;
     if (nextCursor && !loadingMore) void loadMore();
   }, [initialEvidence, section, screens, nextCursor, loadingMore]);
 
@@ -550,9 +607,16 @@ export function ScreenDetail({
     if (nextPage && 'screens' in nextPage) showLightboxScreen(index, nextPage.screens);
   };
 
+  useEffect(() => {
+    if (!lightbox || !nextCursor || loadingMore) return;
+    if (lightbox.index < screens.length - 2) return;
+    void loadMore();
+  }, [lightbox?.index, screens.length, nextCursor, loadingMore, sectionData.resolvedVersion]);
+
   const openLightbox = (screen: Screen) => {
     const index = screens.indexOf(screen);
     if (index < 0) return;
+    setDirectScreen(null);
     setLightbox({ index });
     if (section === 'screens' || section === 'elements') {
       onEvidenceChange?.(
@@ -566,6 +630,7 @@ export function ScreenDetail({
 
   const closeLightbox = () => {
     setLightbox(null);
+    setDirectScreen(null);
     if (section === 'screens' || section === 'elements') {
       onEvidenceChange?.(
         undefined,
@@ -577,15 +642,15 @@ export function ScreenDetail({
   };
 
   useEffect(() => {
-    if (!lightbox) return;
+    if (!lightbox && !directScreen) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setLightbox(null);
-      else if (event.key === 'ArrowLeft') void goLightbox(lightbox.index - 1);
-      else if (event.key === 'ArrowRight') void goLightbox(lightbox.index + 1);
+      if (event.key === 'Escape') closeLightbox();
+      else if (lightbox && event.key === 'ArrowLeft') void goLightbox(lightbox.index - 1);
+      else if (lightbox && event.key === 'ArrowRight') void goLightbox(lightbox.index + 1);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [lightbox, screens.length, nextCursor, loadingMore]);
+  }, [lightbox, directScreen, screens.length, nextCursor, loadingMore]);
 
   const setScreenSelected = (screenId: number, selected: boolean) => {
     setSelectedScreenIds((current) => {
@@ -734,18 +799,11 @@ export function ScreenDetail({
     </>
   );
 
-  const platformControl = (
-    <AppsPlatformSwitcher
-      value={selectedPlatform}
-      platforms={appPlatforms.length ? appPlatforms : [selectedPlatform]}
-      onChange={selectPlatform}
-    />
-  );
   const tabs = appDetailTabs(
     designSystemAvailable || (section === 'design-system' && !designSystemMissing),
   );
   const metadata = [
-    { label: 'Platform', value: PLATFORM_LABEL[selectedPlatform], content: platformControl },
+    { label: 'Platform', value: PLATFORM_LABEL[selectedPlatform] },
     { label: 'Category', value: app.categories.map(({ name }) => name).join(', ') },
     { label: 'Screens', value: String(sectionTotals.screens) },
     ...(app.lastCapturedAt ? [{ label: 'Last updated', value: formatCapturedAt(app.lastCapturedAt) }] : []),
@@ -772,11 +830,14 @@ export function ScreenDetail({
     ? String(sectionData.resolvedVersion)
     : 'latest';
   const activeFlowFilterCount = Object.values(flowFilters).reduce((total, values) => total + values.length, 0);
+  const activeScreenFilterCount = Object.values(screenFilters).reduce((total, values) => total + values.length, 0);
   const visibleFlowTotal = role === 'admin'
     ? Math.max(sectionTotals.flows, draftFlowCount)
     : sectionTotals.flows;
   const sectionTotal = section === 'screens'
-    ? `${sectionTotals.screens} screens`
+    ? activeScreenFilterCount
+      ? `${filteredScreens.length}${nextCursor ? '+' : ''} of ${sectionTotals.screens} screens`
+      : `${sectionTotals.screens} screens`
     : section === 'elements'
       ? `${sectionTotals.elements} UI elements`
       : section === 'flows'
@@ -792,13 +853,27 @@ export function ScreenDetail({
     includeStates = true,
   ): MetadataFilterGroup[] => [
     { id: 'types', label: typeLabel, options: screenFilterOptions.types, selected: selected.types },
+    ...(selected === screenFilters
+      ? [{ id: 'flows', label: 'Flows', options: screenFilterOptions.flows, selected: selected.flows }]
+      : []),
     ...(includeComponents ? [{ id: 'components', label: componentLabel, options: screenFilterOptions.components, selected: selected.components }] : []),
     ...(includeStates ? [{ id: 'states' as const, label: 'States', options: screenFilterOptions.states, selected: selected.states }] : []),
   ];
-  const activeMetadataFilter = section === 'screens' && screenFilterOptions.types.length > 0
+  const activeMetadataFilter = section === 'screens'
     ? {
         label: 'Screens',
         groups: evidenceFilterGroups(screenFilters, 'Screen categories', 'UI elements', false, false),
+        loadOptions: async (_query: string, signal: AbortSignal) => {
+          const { flows: availableFlows } = await fetchAppFlows(app.id, {
+            platform: selectedPlatform,
+            version: sectionData.resolvedVersion,
+            signal,
+          });
+          setScreenContextFlows(availableFlows);
+          return [...new Set(availableFlows.map(({ title }) => title))]
+            .sort((left, right) => left.localeCompare(right))
+            .map((value) => ({ value, section: 'Flows' }));
+        },
         onToggle: (group: string, value: string, checked: boolean) => {
           const filterGroup = group as ScreenFilterGroup;
           setScreenFilters((current) => ({
@@ -814,8 +889,9 @@ export function ScreenDetail({
       }
     : section === 'elements'
       ? {
-          label: 'UI Elements',
-          groups: evidenceFilterGroups(elementFilters, 'Element types', 'Components', true, false),
+        label: 'UI Elements',
+        groups: evidenceFilterGroups(elementFilters, 'Element types', 'Components', true, false),
+        loadOptions: undefined,
           onToggle: (group: string, value: string, checked: boolean) => {
             const filterGroup = group as ScreenFilterGroup;
             setElementFilters((current) => ({
@@ -830,6 +906,7 @@ export function ScreenDetail({
       : section === 'flows'
         ? {
             label: 'Flows',
+            loadOptions: undefined,
             groups: [
               { id: 'categories', label: 'Flow groups', options: flowFilterOptions.categories, selected: flowFilters.categories },
               { id: 'tags', label: 'Tags', options: flowFilterOptions.tags, selected: flowFilters.tags },
@@ -896,6 +973,7 @@ export function ScreenDetail({
               key={section}
               label={activeMetadataFilter.label}
               groups={activeMetadataFilter.groups}
+              loadOptions={activeMetadataFilter.loadOptions}
               onToggle={activeMetadataFilter.onToggle}
               onClear={activeMetadataFilter.onClear}
             />
@@ -957,16 +1035,21 @@ export function ScreenDetail({
       {typeof document !== 'undefined'
         ? createPortal(screenActionOverlay, document.body)
         : null}
-      {lightbox && screens[lightbox.index] && (() => {
-        const item = screens[lightbox.index];
+      {(directScreen || (lightbox && screens[lightbox.index])) && (() => {
+        const item = lightbox ? screens[lightbox.index] : directScreen;
+        if (!item) return null;
+        const previewIndex = lightbox?.index ?? 0;
         return (
           <ScreenPreviewDialog
             appName={app.app}
             appIconUrl={app.iconUrl}
             screen={item}
-            index={lightbox.index}
+            previousScreen={lightbox ? screens[previewIndex - 1] ?? null : null}
+            nextScreen={lightbox ? screens[previewIndex + 1] ?? null : null}
+            index={previewIndex}
             total={Math.max(sectionTotals.screens, screens.length)}
-            canNavigateNext={lightbox.index < screens.length - 1 || Boolean(nextCursor)}
+            canNavigateNext={Boolean(lightbox)
+              && (previewIndex < screens.length - 1 || Boolean(nextCursor))}
             onClose={closeLightbox}
             onNavigate={goLightbox}
             appId={app.id}

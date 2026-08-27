@@ -3277,6 +3277,114 @@ test("loads screens with complete category facets and filters the paged result",
   assert.equal((await elements.json()).nextCursor, "next");
 });
 
+test("loads one exact Screen without waiting for gallery or facet queries", async (t) => {
+  let requested: unknown;
+  const { base, server } = await serve(createApiApp({
+    verifyAuthToken: async () => admin,
+    canAccessApp: async () => true,
+    appPlatforms: async () => { throw new Error("explicit platform must skip platform discovery"); },
+    resolveAppVersion: async () => publishedVersion,
+    appScreenById: async (input) => {
+      requested = input;
+      return catalogImages[0];
+    },
+    appEvidencePage: async () => { throw new Error("must not load gallery"); },
+    appScreenTypes: async () => { throw new Error("must not load facets"); },
+    recordAccessEvent: async () => {},
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/apps/linear/screens/7?platform=web&version=1`, {
+    headers: adminAuth,
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(requested, {
+    app: "linear",
+    platform: "web",
+    screenId: 7,
+    versionNumber: 1,
+    publishedOnly: false,
+  });
+  const body = await response.json();
+  assert.equal(body.screen.id, 7);
+  assert.equal(body.platform, "web");
+});
+
+test("filters Screens by selected Flow membership before pagination", async (t) => {
+  let imageIds: number[] | undefined;
+  const { base, server } = await serve(createApiApp({
+    verifyAuthToken: async () => admin,
+    canAccessApp: async () => true,
+    appPlatforms: async () => { throw new Error("explicit platform must skip platform discovery"); },
+    resolveAppVersion: async () => publishedVersion,
+    getVersionFlows: async () => [{
+      id: "onboarding",
+      title: "Onboarding",
+      description: "Set up a team",
+      tags: [],
+      steps: [{ label: "Invite", evidence: [7] }],
+    }],
+    flowEvidenceImages: async () => [{
+      ...catalogImages[0],
+      kind: "flow_step",
+      image_url: "mobbin-bulk:flow_step:0123456789abcdef",
+    }],
+    appScreenIdsByImageUrls: async (input) => {
+      assert.deepEqual(input.imageUrls, ["mobbin-bulk:0123456789abcdef"]);
+      return [7];
+    },
+    appEvidencePage: async (input) => {
+      imageIds = input.imageIds;
+      return { rows: catalogImages, nextCursor: null };
+    },
+    appScreenTypes: async () => [],
+    recordAccessEvent: async () => {},
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(
+    `${base}/apps/linear/screens?platform=web&version=1&flow=Onboarding&limit=8`,
+    { headers: adminAuth },
+  );
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(imageIds, [7]);
+});
+
+test("coalesces repeated App Screen pages and reuses facets across pagination", async (t) => {
+  let evidenceReads = 0;
+  let facetReads = 0;
+  const { base, server } = await serve(createApiApp({
+    verifyAuthToken: async () => admin,
+    canAccessApp: async () => true,
+    appPlatforms: async () => { throw new Error("explicit platform must skip platform discovery"); },
+    resolveAppVersion: async () => publishedVersion,
+    appEvidencePage: async () => {
+      evidenceReads += 1;
+      return { rows: catalogImages, nextCursor: null };
+    },
+    appScreenTypes: async () => {
+      facetReads += 1;
+      return ["Dashboard"];
+    },
+    recordAccessEvent: async () => {},
+  }));
+  t.after(() => close(server));
+
+  const endpoint = `${base}/apps/linear/screens?platform=web&version=1&limit=8`;
+  const [first, repeated] = await Promise.all([
+    fetch(endpoint, { headers: adminAuth }),
+    fetch(endpoint, { headers: adminAuth }),
+  ]);
+  const next = await fetch(`${endpoint}&cursor=Nw`, { headers: adminAuth });
+
+  assert.equal(first.status, 200);
+  assert.equal(repeated.status, 200);
+  assert.equal(next.status, 200);
+  assert.equal(evidenceReads, 2);
+  assert.equal(facetReads, 1);
+});
+
 test("returns entitlement-gated Screen and UI Element media URLs", async (t) => {
   const dataDir = mkdtempSync(join(tmpdir(), "astryx-section-media-"));
   mkdirSync(join(dataDir, "images", "linear"), { recursive: true });

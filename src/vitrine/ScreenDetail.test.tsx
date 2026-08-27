@@ -48,7 +48,7 @@ test('shows the Design System tab only when the App has a snapshot', () => {
   assert.doesNotMatch(html, /Design System/);
   assert.doesNotMatch(html, /aria-label="Review"/);
   assert.doesNotMatch(html, /Crawler/);
-  assert.doesNotMatch(html, /aria-label="Open Screens filters"/);
+  assert.match(html, /aria-label="Open Screens filters"/);
 });
 
 test('never exposes AI Crawl in App detail navigation', () => {
@@ -158,7 +158,18 @@ test('continues screen preview navigation across lazy gallery pages', () => {
   assert.match(source, /const nextPage = await loadMore\(\)/);
   assert.match(source, /showLightboxScreen\(index, nextPage\.screens\)/);
   assert.match(source, /total=\{Math\.max\(sectionTotals\.screens, screens\.length\)\}/);
-  assert.match(source, /canNavigateNext=\{lightbox\.index < screens\.length - 1 \|\| Boolean\(nextCursor\)\}/);
+  assert.match(source, /previewIndex < screens\.length - 1 \|\| Boolean\(nextCursor\)/);
+  assert.match(source, /lightbox\.index < screens\.length - 2/);
+  assert.match(source, /void loadMore\(\)/);
+});
+
+test('opens a routed Screen through the exact endpoint before gallery pagination completes', () => {
+  const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /fetchAppScreen\(app\.id, routedScreenId/);
+  assert.match(source, /directScreen \|\| \(lightbox && screens\[lightbox\.index\]\)/);
+  assert.match(source, /if \(match\[1\] === 'SCREEN'\) return;/);
+  assert.doesNotMatch(source, /\^\(\?:SCREEN\|UI-ELEMENT\)-/);
 });
 
 test('removes App Knowledge analysis while preserving route selections', () => {
@@ -301,11 +312,11 @@ test('does not render a Back to all apps button in App detail', () => {
 test('does not use Escape to leave an App detail page', () => {
   const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
 
-  assert.match(source, /if \(!lightbox\) return;/);
+  assert.match(source, /if \(!lightbox && !directScreen\) return;/);
   assert.doesNotMatch(source, /else if \(event\.key === 'Escape'\) onBack\(\)/);
 });
 
-test('renders the App identity and interactive platform inside the reference metadata rhythm', () => {
+test('renders the App identity and platform as plain metadata text', () => {
   const html = renderToStaticMarkup(
     <ScreenDetail
       collections={[]}
@@ -330,8 +341,9 @@ test('renders the App identity and interactive platform inside the reference met
   assert.doesNotMatch(html, /<h1>Linear —<\/h1>/);
   assert.match(
     html,
-    /reference-detail__metadata-item[^>]*><span>Platform<\/span><div role="radiogroup"[^>]*class="apps-platform-switcher"/,
+    /reference-detail__metadata-item[^>]*><span>Platform<\/span><strong>Web<\/strong>/,
   );
+  assert.doesNotMatch(html, /aria-label="App platform"/);
 });
 
 test('does not leave a dangling title dash when an App has no description', () => {
@@ -435,7 +447,7 @@ test('falls back legacy Overview selections to Screens without rendering an Over
   assert.doesNotMatch(html, /115 analyzed/);
 });
 
-test('shows every platform reported by app metadata even when the first screen page is web-only', () => {
+test('shows the routed platform as plain metadata text for multi-platform Apps', () => {
   const html = renderToStaticMarkup(
     <ScreenDetail
       collections={[]}
@@ -451,15 +463,16 @@ test('shows every platform reported by app metadata even when the first screen p
         totalFlows: 20,
         platforms: ['web', 'ios', 'android'],
       }}
+      initialPlatform="ios"
       onBack={() => {}}
     />
   );
 
-  assert.match(html, />Web</);
-  assert.match(html, />iOS</);
-  assert.match(html, />Android</);
-  assert.match(html, /role="radiogroup" aria-label="App platform"/);
-  assert.match(html, /role="radio"[^>]*aria-checked="true"[^>]*aria-label="Web"/);
+  assert.match(
+    html,
+    /reference-detail__metadata-item[^>]*><span>Platform<\/span><strong>iOS<\/strong>/,
+  );
+  assert.doesNotMatch(html, /role="radiogroup" aria-label="App platform"/);
 });
 
 test('shows full metadata totals before paginated Screens, UI Elements, and Flows finish loading', () => {
@@ -543,12 +556,12 @@ test('shows only Screens and Flows to members', () => {
   assert.match(html, /Account/);
 });
 
-test('renders detail platforms through the Apps platform switcher', () => {
+test('keeps the discovery platform switcher out of App detail metadata', () => {
   const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
 
-  assert.match(source, /import \{ AppsPlatformSwitcher \} from '.\/AppsPlatformSwitcher'/);
-  assert.match(source, /onSectionChange\?\.\(section, platform\)/);
-  assert.match(source, /<AppsPlatformSwitcher/);
+  assert.doesNotMatch(source, /import \{ AppsPlatformSwitcher \} from '.\/AppsPlatformSwitcher'/);
+  assert.doesNotMatch(source, /<AppsPlatformSwitcher/);
+  assert.match(source, /\{ label: 'Platform', value: PLATFORM_LABEL\[selectedPlatform\] \}/);
 });
 
 test('renders the Mobbin-style App detail navigation rail with real version state and totals', () => {
@@ -597,7 +610,7 @@ test('renders the Mobbin-style App detail navigation rail with real version stat
   );
 });
 
-test('only renders the Screens filter when the current App has classified screen categories', () => {
+test('keeps the Screens filter available while screen categories load', () => {
   const renderSection = (initialSection: 'screens' | 'elements' | 'flows') => renderToStaticMarkup(
     <ScreenDetail
       collections={[]}
@@ -626,11 +639,12 @@ test('only renders the Screens filter when the current App has classified screen
   const css = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
   const discoveryCss = readFileSync(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
 
-  assert.doesNotMatch(screensHtml, /class="reference-detail__tab-controls"/);
-  assert.doesNotMatch(screensHtml, /aria-label="Open Screens filters"/);
+  assert.match(screensHtml, /class="reference-detail__tab-controls"/);
+  assert.match(screensHtml, /aria-label="Open Screens filters"/);
   assert.match(elementsHtml, /aria-label="Open UI Elements filters"/);
   assert.match(flowsHtml, /aria-label="Open Flows filters"/);
-  assert.match(source, /section === 'screens' && screenFilterOptions\.types\.length > 0/);
+  assert.match(source, /const activeMetadataFilter = section === 'screens'/);
+  assert.doesNotMatch(source, /section === 'screens' && screenFilterOptions\.types\.length > 0/);
   assert.match(source, /tabControls=\{activeMetadataFilter \?/);
   assert.match(source, /app-detail__navigation-tools/);
   assert.doesNotMatch(source, /adminSectionControl|More sections|app-detail__more-selector/);
@@ -672,13 +686,24 @@ test('combines selections within a metadata group and intersects separate groups
     layouts: [],
     components: ['Button'],
     states: ['Error'],
+    flows: [],
   }), true);
   assert.equal(screenMatchesFilters(screen, {
     types: ['Checkout'],
     layouts: ['Single-column'],
     components: [],
     states: [],
+    flows: [],
   }), false);
+});
+
+test('loads and applies Flow membership options in the Screens filter', () => {
+  const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /flowTitles: screenFilters\.flows/);
+  assert.match(source, /label: 'Flows', options: screenFilterOptions\.flows/);
+  assert.match(source, /loadOptions: async \(_query: string, signal: AbortSignal\)/);
+  assert.match(source, /Flow membership is resolved by the API before pagination/);
 });
 
 test('filters flows by real groups, tags, interactions, and analyzed states', () => {

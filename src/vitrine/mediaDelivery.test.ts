@@ -3,10 +3,34 @@ import test from 'node:test';
 import {
   inlineMediaUrl,
   isProtectedMediaUrl,
+  loadCachedProtectedMediaUrl,
   loadProtectedMediaObjectUrl,
   loadProtectedMediaUrl,
   signedMediaRequestUrl,
 } from './mediaDelivery.ts';
+
+test('reuses a recently signed protected-media URL', async () => {
+  const signal = new AbortController().signal;
+  let requests = 0;
+  const request = async () => {
+    requests += 1;
+    return Response.json({ url: 'https://objects.example/prefetched-screen.png?token=temporary' });
+  };
+
+  const first = await loadCachedProtectedMediaUrl(
+    '/api/media/cache-test/adjacent-screen',
+    signal,
+    request,
+  );
+  const second = await loadCachedProtectedMediaUrl(
+    '/api/media/cache-test/adjacent-screen',
+    signal,
+    request,
+  );
+
+  assert.equal(first, second);
+  assert.equal(requests, 1);
+});
 
 test('marks protected API media for authenticated inline delivery', () => {
   const source = '/api/media/aboard/0123456789abcdef?variant=thumb';

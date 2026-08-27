@@ -43,6 +43,23 @@ test('includes selected screen categories in the cached request key and API requ
   assert.deepEqual(screenTypes, [['Login'], ['Dashboard']]);
 });
 
+test('includes selected Flow memberships in the Screens cache key and API request', async () => {
+  const flowTitles: Array<string[] | undefined> = [];
+  const store = createAppSectionStore({
+    screens: async (_app, input) => {
+      flowTitles.push(input.flowTitles);
+      return { screens: [], nextCursor: null, platform: 'ios', version };
+    },
+    uiElements: async () => { throw new Error('unused'); },
+    flows: async () => { throw new Error('unused'); },
+  });
+
+  await store.load({ ...key, flowTitles: ['Onboarding'] });
+  await store.load({ ...key, flowTitles: ['People'] });
+
+  assert.deepEqual(flowTitles, [['Onboarding'], ['People']]);
+});
+
 test('deduplicates in-flight loads and reuses fulfilled section data', async () => {
   let calls = 0;
   let resolve!: (value: unknown) => void;

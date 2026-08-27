@@ -251,8 +251,7 @@ test('shares metadata and action scale without leaking App controls into Sites',
   assert.match(actionRule, /min-height:\s*44px/);
   assert.match(actionRule, /font:\s*var\(--vitrine-presentation-body-large\)\s*!important/);
   assert.match(leadingRule, /padding-bottom:\s*0/);
-
-  assert.match(
+  assert.doesNotMatch(
     styles,
     /\.reference-detail\[data-reference-detail=["']app["']\]\s+\.reference-detail__metadata-item\s+\.apps-platform-switcher/,
   );
