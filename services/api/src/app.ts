@@ -974,6 +974,26 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     });
     return promise;
   };
+  const publishedCatalogPageCache = new Map<string, {
+    expiresAt: number;
+    promise: ReturnType<typeof deps.publishedCatalogPage>;
+  }>();
+  const cachedPublishedCatalogPage = (input: Parameters<typeof deps.publishedCatalogPage>[0]) => {
+    const key = JSON.stringify(input);
+    const cached = publishedCatalogPageCache.get(key);
+    if (cached && cached.expiresAt > Date.now()) return cached.promise;
+    if (cached) publishedCatalogPageCache.delete(key);
+    if (publishedCatalogPageCache.size >= 64) {
+      const oldest = publishedCatalogPageCache.keys().next().value;
+      if (oldest !== undefined) publishedCatalogPageCache.delete(oldest);
+    }
+    const promise = deps.publishedCatalogPage(input);
+    publishedCatalogPageCache.set(key, { expiresAt: Date.now() + 30_000, promise });
+    void promise.catch(() => {
+      if (publishedCatalogPageCache.get(key)?.promise === promise) publishedCatalogPageCache.delete(key);
+    });
+    return promise;
+  };
   const requestCrawlRepair = overrides.requestCrawlRepair ?? createCrawlRepairRequester({
     getRun: deps.getCrawlRun,
     getPlan: deps.getCrawlPlan,
@@ -1031,6 +1051,16 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     if (deps.objectStore) await verifyObjectStoreReady(deps.objectStore);
   };
+  let storageReadyCache: { expiresAt: number; promise: Promise<void> } | undefined;
+  const checkStorageReadyCached = () => {
+    if (storageReadyCache && storageReadyCache.expiresAt > Date.now()) return storageReadyCache.promise;
+    const promise = checkStorageReady();
+    storageReadyCache = { expiresAt: Date.now() + 10_000, promise };
+    void promise.catch(() => {
+      if (storageReadyCache?.promise === promise) storageReadyCache = undefined;
+    });
+    return promise;
+  };
   const requireStorageReady = async (res: express.Response): Promise<boolean> => {
     try {
       await checkStorageReady();
@@ -1043,12 +1073,24 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
 
   app.get("/ready", async (_req, res) => {
     try {
-      await checkStorageReady();
+      await checkStorageReadyCached();
       res.json({ status: "ok" });
     } catch {
       res.status(503).json({ status: "error", error: "object_storage_unavailable" });
     }
   });
+
+  if (process.env.NODE_ENV === "production") {
+    void checkStorageReadyCached().catch(() => console.error("[ready] storage prewarm failed"));
+    void cachedPublishedCatalogPage({
+      cursor: undefined,
+      limit: PUBLIC_CATALOG_GUEST_LIMIT,
+      filters: [],
+      includeFacets: false,
+      platform: "web",
+      sort: "latest",
+    }).catch(() => console.error("[catalog] public Apps prewarm failed"));
+  }
 
   app.use((_req, res, next) => {
     res.setHeader("Cache-Control", "no-store");
@@ -1276,7 +1318,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       }
     }
     try {
-      const page = await deps.publishedCatalogPage({
+      const page = await cachedPublishedCatalogPage({
         cursor,
         limit: pageLimit,
         filters,

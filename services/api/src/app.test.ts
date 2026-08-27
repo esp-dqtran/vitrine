@@ -2197,6 +2197,18 @@ test("keeps liveness up but fails readiness when object storage is unavailable",
   assert.deepEqual(await response.json(), { status: "error", error: "object_storage_unavailable" });
 });
 
+test("briefly reuses a successful storage readiness check", async (t) => {
+  let checks = 0;
+  const { base, server } = await serve(createApiApp({
+    storageReady: async () => { checks += 1; },
+  }));
+  t.after(() => close(server));
+
+  assert.equal((await fetch(`${base}/ready`)).status, 200);
+  assert.equal((await fetch(`${base}/ready`)).status, 200);
+  assert.equal(checks, 1);
+});
+
 test("serves the public catalog from one bounded page dependency", async (t) => {
   let input: { cursor?: string; limit?: number } | undefined;
   const validCursor = encodeUpdatedCatalogCursor({
@@ -2231,6 +2243,22 @@ test("serves the public catalog from one bounded page dependency", async (t) => 
   });
   assert.equal(body.items[0].previewScreens.length, 1);
   assert.doesNotMatch(JSON.stringify(body), /mobbin-bulk|image_url/);
+});
+
+test("briefly reuses an identical public catalog page", async (t) => {
+  let reads = 0;
+  const { base, server } = await serve(createApiApp({
+    publishedCatalogPage: async () => {
+      reads += 1;
+      return catalogPageRecord;
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const path = `${base}/apps?platform=web&facets=summary&limit=12`;
+  assert.equal((await fetch(path)).status, 200);
+  assert.equal((await fetch(path)).status, 200);
+  assert.equal(reads, 1);
 });
 
 test("serves eligible App catalog searches from Typesense with timing metadata", async (t) => {
