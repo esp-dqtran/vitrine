@@ -2209,6 +2209,26 @@ test("briefly reuses a successful storage readiness check", async (t) => {
   assert.equal(checks, 1);
 });
 
+test("serves the last readiness result while refreshing it", async (t) => {
+  let now = 1_000;
+  let checks = 0;
+  let finishRefresh: (() => void) | undefined;
+  t.mock.method(Date, "now", () => now);
+  const { base, server } = await serve(createApiApp({
+    storageReady: async () => {
+      checks += 1;
+      if (checks === 2) await new Promise<void>((resolve) => { finishRefresh = resolve; });
+    },
+  }));
+  t.after(() => close(server));
+
+  assert.equal((await fetch(`${base}/ready`)).status, 200);
+  now += 10_001;
+  assert.equal((await fetch(`${base}/ready`, { signal: AbortSignal.timeout(500) })).status, 200);
+  assert.equal(checks, 2);
+  finishRefresh?.();
+});
+
 test("serves the public catalog from one bounded page dependency", async (t) => {
   let input: { cursor?: string; limit?: number } | undefined;
   const validCursor = encodeUpdatedCatalogCursor({
@@ -2259,6 +2279,28 @@ test("briefly reuses an identical public catalog page", async (t) => {
   assert.equal((await fetch(path)).status, 200);
   assert.equal((await fetch(path)).status, 200);
   assert.equal(reads, 1);
+});
+
+test("serves the last public catalog page while refreshing it", async (t) => {
+  let now = 1_000;
+  let reads = 0;
+  let finishRefresh: (() => void) | undefined;
+  t.mock.method(Date, "now", () => now);
+  const { base, server } = await serve(createApiApp({
+    publishedCatalogPage: async () => {
+      reads += 1;
+      if (reads === 2) await new Promise<void>((resolve) => { finishRefresh = resolve; });
+      return catalogPageRecord;
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const path = `${base}/apps?platform=web&facets=summary&limit=12`;
+  assert.equal((await fetch(path)).status, 200);
+  now += 30_001;
+  assert.equal((await fetch(path, { signal: AbortSignal.timeout(500) })).status, 200);
+  assert.equal(reads, 2);
+  finishRefresh?.();
 });
 
 test("serves eligible App catalog searches from Typesense with timing metadata", async (t) => {

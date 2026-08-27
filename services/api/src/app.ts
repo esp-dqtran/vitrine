@@ -977,12 +977,28 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   const publishedCatalogPageCache = new Map<string, {
     expiresAt: number;
     promise: ReturnType<typeof deps.publishedCatalogPage>;
+    refreshing?: ReturnType<typeof deps.publishedCatalogPage>;
   }>();
   const cachedPublishedCatalogPage = (input: Parameters<typeof deps.publishedCatalogPage>[0]) => {
     const key = JSON.stringify(input);
     const cached = publishedCatalogPageCache.get(key);
     if (cached && cached.expiresAt > Date.now()) return cached.promise;
-    if (cached) publishedCatalogPageCache.delete(key);
+    if (cached) {
+      if (!cached.refreshing) {
+        const refresh = deps.publishedCatalogPage(input);
+        cached.refreshing = refresh;
+        void refresh.then((page) => {
+          if (publishedCatalogPageCache.get(key) !== cached) return;
+          publishedCatalogPageCache.set(key, {
+            expiresAt: Date.now() + 30_000,
+            promise: Promise.resolve(page),
+          });
+        }).catch(() => {
+          if (publishedCatalogPageCache.get(key) === cached) cached.refreshing = undefined;
+        });
+      }
+      return cached.promise;
+    }
     if (publishedCatalogPageCache.size >= 64) {
       const oldest = publishedCatalogPageCache.keys().next().value;
       if (oldest !== undefined) publishedCatalogPageCache.delete(oldest);
@@ -1051,9 +1067,33 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     if (deps.objectStore) await verifyObjectStoreReady(deps.objectStore);
   };
-  let storageReadyCache: { expiresAt: number; promise: Promise<void> } | undefined;
+  let storageReadyCache: {
+    expiresAt: number;
+    promise: Promise<void>;
+    refreshing?: Promise<void>;
+  } | undefined;
   const checkStorageReadyCached = () => {
     if (storageReadyCache && storageReadyCache.expiresAt > Date.now()) return storageReadyCache.promise;
+    if (storageReadyCache) {
+      const cached = storageReadyCache;
+      if (!cached.refreshing) {
+        const refresh = checkStorageReady();
+        cached.refreshing = refresh;
+        void refresh.then(() => {
+          if (storageReadyCache !== cached) return;
+          storageReadyCache = {
+            expiresAt: Date.now() + 10_000,
+            promise: Promise.resolve(),
+          };
+        }).catch((error: unknown) => {
+          if (storageReadyCache !== cached) return;
+          const rejected = Promise.reject(error);
+          void rejected.catch(() => undefined);
+          storageReadyCache = { expiresAt: Date.now() + 10_000, promise: rejected };
+        });
+      }
+      return cached.promise;
+    }
     const promise = checkStorageReady();
     storageReadyCache = { expiresAt: Date.now() + 10_000, promise };
     void promise.catch(() => {
