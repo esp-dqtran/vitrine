@@ -2529,7 +2529,7 @@
 
   .component-library__facet > div {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(8, 32px);
+    grid-template-rows: repeat(5, 32px);
   }
 
   .components-discovery__grid {

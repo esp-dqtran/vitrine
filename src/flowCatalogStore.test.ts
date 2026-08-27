@@ -341,6 +341,48 @@ test("normalizes child and parent search variants and applies controlled categor
   ]);
 });
 
+test("uses the observed-flow query for filtered browsing and preserves fallback taxonomy", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  await publishedFlowCatalogPage({
+    platform: "web",
+    flowCategories: ["authentication"],
+    flowTypes: ["content-detail/other-content-detail"],
+    includeFacets: false,
+    cursorSecret: secret,
+    now: () => new Date(timestamp),
+  }, async (sql, values) => {
+    calls.push({ sql, values });
+    return result([row({ page_total: 1 })]);
+  });
+
+  assert.equal(calls.length, 1);
+  assert.match(calls[0]!.sql, /FROM unique_flow_ids observed/);
+  assert.match(calls[0]!.sql, /COUNT\(\*\) OVER \(\)::int AS page_total/);
+  assert.match(calls[0]!.sql, /approved_taxonomy AS/);
+  assert.match(calls[0]!.sql, /fallback_taxonomy AS/);
+  assert.match(calls[0]!.sql, /approved\.flow_id IS NULL/);
+  assert.match(calls[0]!.sql, /content-detail\/other-content-detail/);
+  assert.doesNotMatch(calls[0]!.sql, /unnest\(\$9::text\[\]\)/);
+});
+
+test("keeps the relevance query when filters are combined with search", async () => {
+  const statements: string[] = [];
+  await publishedFlowCatalogPage({
+    platform: "web",
+    query: "login",
+    flowCategories: ["authentication"],
+    includeFacets: false,
+    cursorSecret: secret,
+    now: () => new Date(timestamp),
+  }, async (sql) => {
+    statements.push(sql);
+    return result([row({ page_total: 1 })]);
+  });
+
+  assert.match(statements[0]!, /unnest\(\$9::text\[\]\)/);
+  assert.doesNotMatch(statements[0]!, /approved_taxonomy AS/);
+});
+
 test("reduces natural Flow queries to meaningful stems with a mostly-matching threshold", () => {
   assert.deepEqual(
     flowCatalogSearchTerms("checkout with payment method selection"),

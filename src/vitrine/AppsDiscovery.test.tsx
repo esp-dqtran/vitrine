@@ -418,6 +418,7 @@ test('renders the shared full-width discovery navigation for Apps', () => {
   );
 
   assert.match(html, /class="[^"]*reference-discovery-nav[^"]*apps-top-nav[^"]*"/);
+  assert.match(html, /data-reference-active="apps"/);
   assert.match(html, /aria-label="Reference type"/);
   assert.match(html, /aria-selected="true"/);
   assert.match(html, /aria-label="Vitrines Apps"/);
@@ -687,6 +688,8 @@ test('defines the Apps-led shared discovery design contract', async () => {
   assert.match(css, /\.astryx-input-text\s*\{[^}]*background:\s*var\(--reference-chrome-surface-raised\)\s*!important/);
   assert.match(css, /\.reference-search-trigger__shortcut\s*\{[^}]*display:\s*none/);
   assert.match(css, /\.reference-discovery-nav\.apps-top-nav \.apps-top-nav__search \.reference-search-trigger__button::before\s*\{[^}]*background:\s*linear-gradient\([^}]*background-position:\s*120% center;[^}]*animation:\s*apps-search-ambient-sweep 8s ease-in-out infinite/);
+  assert.match(css, /\.reference-discovery-nav\[data-reference-active='flows'\] \.apps-top-nav__search \.reference-search-trigger\s*\{[^}]*--reference-search-trigger-hover-ring:\s*rgb\(255 255 255 \/ 24%\)/);
+  assert.match(css, /\.reference-discovery-nav\[data-reference-active='flows'\] \.apps-top-nav__search \.reference-search-trigger__button::before\s*\{[^}]*content:\s*none/);
   assert.match(css, /@keyframes apps-search-ambient-sweep[\s\S]*background-position:\s*120% center[\s\S]*background-position:\s*-120% center/);
   assert.match(css, /\.reference-discovery-nav\.apps-top-nav \.apps-top-nav__search \.reference-search-trigger__button:hover,[\s\S]*:focus-visible\s*\{[^}]*transform:\s*translateY\(-1px\)/);
   assert.match(css, /\.reference-search-trigger__button:hover::before,[\s\S]*:focus-visible::before\s*\{[^}]*background-position:\s*-120% center;[^}]*animation:\s*none/);

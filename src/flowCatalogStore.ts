@@ -410,6 +410,101 @@ function commonCtes(): string {
     )`;
 }
 
+function filteredBrowseCtes(): string {
+  return `query_parameters AS MATERIALIZED (
+      SELECT
+        $3::text AS search,
+        $9::text[] AS search_terms,
+        $10::int AS minimum_term_matches
+    ), latest AS MATERIALIZED (
+      SELECT DISTINCT ON (av.app_id)
+        av.id AS version_id,
+        av.app_id,
+        av.version_number
+      FROM app_versions av
+      WHERE av.platform = $1
+        AND av.published_at IS NOT NULL
+        AND av.published_at <= $2::timestamptz
+      ORDER BY av.app_id, av.published_at DESC, av.version_number DESC, av.id DESC
+    ), instances AS (
+      SELECT
+        latest.app_id,
+        mapping.flow_id,
+        afv.id AS version_flow_id
+      FROM latest
+      JOIN app_flow_versions afv ON afv.version_id = latest.version_id
+      JOIN app_flow_version_mappings mapping
+        ON mapping.app_flow_version_id = afv.id
+    ), unique_flow_ids AS MATERIALIZED (
+      SELECT DISTINCT flow_id
+      FROM instances
+    ), approved_taxonomy AS (
+      SELECT
+        canonical.id AS flow_id,
+        classified_category.id::bigint AS category_id,
+        classified_category.name AS category,
+        classified_category.slug AS category_key,
+        classified_type.name AS flow_type,
+        classified_category.slug || '/' || classified_type.slug AS flow_type_key,
+        canonical.name AS title,
+        canonical.normalized_name AS title_key,
+        0::int AS exact_match,
+        0::int AS title_term_matches,
+        0::int AS term_matches
+      FROM unique_flow_ids observed
+      JOIN flow_classifications classification
+        ON classification.flow_id = observed.flow_id
+       AND classification.status = 'approved'
+      JOIN flow_types classified_type
+        ON classified_type.id = classification.flow_type_id
+      JOIN flow_categories classified_category
+        ON classified_category.id = classified_type.category_id
+      JOIN flows canonical ON canonical.id = observed.flow_id
+      LEFT JOIN flows parent ON parent.id = canonical.parent_id
+      WHERE canonical.created_at <= $2::timestamptz
+        AND (parent.id IS NULL OR parent.created_at <= $2::timestamptz)
+        AND (NOT $6::boolean OR classified_category.slug = ANY($4::text[]))
+        AND (
+          NOT $7::boolean
+          OR (classified_category.slug || '/' || classified_type.slug) = ANY($5::text[])
+        )
+    ), fallback_taxonomy AS (
+      SELECT
+        canonical.id AS flow_id,
+        COALESCE(parent.id, 0)::bigint AS category_id,
+        COALESCE(parent.name, 'Other Flows') AS category,
+        COALESCE(parent.normalized_name, 'other flows') AS category_key,
+        'Other content detail' AS flow_type,
+        'content-detail/other-content-detail' AS flow_type_key,
+        canonical.name AS title,
+        canonical.normalized_name AS title_key,
+        0::int AS exact_match,
+        0::int AS title_term_matches,
+        0::int AS term_matches
+      FROM unique_flow_ids observed
+      JOIN flows canonical ON canonical.id = observed.flow_id
+      LEFT JOIN flows parent ON parent.id = canonical.parent_id
+      LEFT JOIN flow_classifications approved
+        ON approved.flow_id = canonical.id
+       AND approved.status = 'approved'
+      WHERE approved.flow_id IS NULL
+        AND canonical.created_at <= $2::timestamptz
+        AND (parent.id IS NULL OR parent.created_at <= $2::timestamptz)
+        AND (
+          NOT $6::boolean
+          OR COALESCE(parent.normalized_name, 'other flows') = ANY($4::text[])
+        )
+        AND (
+          NOT $7::boolean
+          OR 'content-detail/other-content-detail' = ANY($5::text[])
+        )
+    ), filtered_items AS (
+      SELECT * FROM approved_taxonomy
+      UNION ALL
+      SELECT * FROM fallback_taxonomy
+    )`;
+}
+
 function keyset(cursor: FlowCatalogCursor | undefined): { sql: string; values: unknown[] } {
   if (!cursor) return { sql: "", values: [] };
   const key = cursor.key;
@@ -440,7 +535,7 @@ function keyset(cursor: FlowCatalogCursor | undefined): { sql: string; values: u
   };
 }
 
-function pageSql(after: string): string {
+function pageSql(after: string, filteredBrowse = false): string {
   const order = `ranked.exact_match DESC,
     ranked.title_term_matches DESC,
     ranked.term_matches DESC,
@@ -449,14 +544,14 @@ function pageSql(after: string): string {
     ranked.category_sort,
     ranked.category_id,
     ranked.flow_id`;
-  return `WITH ${commonCtes()},
+  return `WITH ${filteredBrowse ? filteredBrowseCtes() : commonCtes()},
     ranked AS (
       SELECT
         filtered_items.*,
         left(category_key, 120) AS category_sort,
         left(title_key, 120) AS title_sort,
         CASE WHEN category = 'Other Flows' THEN 1 ELSE 0 END::int AS other_rank,
-        (SELECT COUNT(*)::int FROM filtered_items) AS page_total
+        COUNT(*) OVER ()::int AS page_total
       FROM filtered_items
     ), paged AS (
       SELECT *
@@ -715,7 +810,10 @@ async function loadPublishedFlowCatalogPage(
     ?? (runQuery === query ? defaultFacetCache : new FlowCatalogFacetCache());
   const cacheKey = `${input.platform}\0${sort}\0${identity}`;
   let metadata = input.includeFacets === false ? undefined : cache.get(cacheKey);
-  const pageResultPromise = runQuery(pageSql(after.sql), values);
+  const pageResultPromise = runQuery(pageSql(
+    after.sql,
+    search === "" && (flowCategories.length > 0 || flowTypes.length > 0),
+  ), values);
   const metadataResultPromise = input.includeFacets === false || metadata
     ? null
     : runQuery(metadataSql, values.slice(0, 10));

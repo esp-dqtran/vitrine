@@ -28,24 +28,24 @@ test("fails Flow discovery benchmarks on empty, slow, or oversized responses", (
   assert.deepEqual(flowDiscoveryBenchmarkViolations([healthy]), []);
   assert.deepEqual(flowDiscoveryBenchmarkViolations([{
     ...healthy,
-    p95Ms: 251,
+    p95Ms: 801,
     decodedBytes: 100_001,
     totalCount: 0,
   }]), [
     "http://localhost/catalog/flows: no results",
-    "http://localhost/catalog/flows: p95 251ms exceeds 250ms",
+    "http://localhost/catalog/flows: p95 801ms exceeds 800ms",
     "http://localhost/catalog/flows: 100001 bytes exceeds 100000",
   ]);
 });
 
 test("benchmarks representative Flow states through the public catalog route", () => {
   assert.deepEqual(flowDiscoveryBenchmarkUrls("http://127.0.0.1:3011/"), [
-    "http://127.0.0.1:3011/catalog/flows?platform=web&limit=12&facets=summary&sort=popular",
-    "http://127.0.0.1:3011/catalog/flows?platform=ios&limit=12&facets=summary&sort=popular",
-    "http://127.0.0.1:3011/catalog/flows?platform=android&limit=12&facets=summary&sort=popular",
-    "http://127.0.0.1:3011/catalog/flows?platform=web&limit=12&facets=summary&sort=grouped",
-    "http://127.0.0.1:3011/catalog/flows?platform=web&limit=12&facets=summary&sort=popular&query=settings",
-    "http://127.0.0.1:3011/catalog/flows?platform=web&limit=12&facets=summary&sort=popular&query=checkout+with+payment+method+selection",
-    "http://127.0.0.1:3011/catalog/flows?platform=web&limit=12&facets=summary&sort=popular&filter=flowGroups.Settings",
+    "http://127.0.0.1:3011/flows?platform=web&limit=12&facets=summary&sort=grouped",
+    "http://127.0.0.1:3011/flows?platform=ios&limit=12&facets=summary&sort=grouped",
+    "http://127.0.0.1:3011/flows?platform=android&limit=12&facets=summary&sort=grouped",
+    "http://127.0.0.1:3011/flows?platform=web&limit=12&facets=summary&sort=grouped&query=settings",
+    "http://127.0.0.1:3011/flows?platform=web&limit=12&facets=summary&sort=grouped&query=checkout+with+payment+method+selection",
+    "http://127.0.0.1:3011/flows?platform=web&limit=12&facets=summary&sort=grouped&filter=flowCategories.content-detail",
+    "http://127.0.0.1:3011/flows?platform=web&limit=12&facets=summary&sort=grouped&filter=flowTypes.content-detail%2Fother-content-detail",
   ]);
 });

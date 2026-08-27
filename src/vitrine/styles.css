@@ -16302,6 +16302,20 @@ body {
   box-shadow: none !important;
 }
 
+@media (hover: hover) {
+  .flow-strip-card__arrow {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease;
+  }
+
+  .flow-strip-card:hover .flow-strip-card__arrow,
+  .flow-strip-card:focus-within .flow-strip-card__arrow {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 .flow-strip-card__arrow--left {
   left: 28px;
 }
@@ -16629,8 +16643,10 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .flow-tree__skeleton {
+  .flow-tree__skeleton,
+  .flow-strip-card__arrow {
     animation: none;
+    transition: none;
   }
 }
 

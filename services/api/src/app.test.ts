@@ -16,6 +16,7 @@ import type { Server } from "node:http";
 import { createApiApp, createCrawlRepairRequester } from "./app.ts";
 import type { ObjectMetadata, ObjectStore } from "../../../src/objectStore.ts";
 import type { CatalogSearchResult } from "../../../src/catalogResearch.ts";
+import type { AdvancedSearchResult } from "../../../src/searchTypes.ts";
 import type { JobRow, JobStatus } from "../../../src/db.ts";
 import type { ReferralCampaign } from "../../../src/referralStore.ts";
 import type { ProgressSnapshot } from "../../../src/progress.ts";
@@ -1635,6 +1636,27 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
       flows: [],
     },
   ];
+  const catalogResult: CatalogSearchResult = {
+    items: [{
+      id: "component:linear:button",
+      kind: "component",
+      app: "linear",
+      title: "Button",
+      description: "Action",
+      evidenceIds: [7],
+      imageUrl: "/api/media/linear/0123456789abcdef",
+      thumbnailUrl: "/api/media/linear/0123456789abcdef?variant=thumb",
+      states: ["Primary"],
+      layoutPatterns: [],
+      componentNames: ["Button"],
+      appCategories: [],
+    }],
+    facets: {
+      kinds: { app: 0, screen: 0, component: 1, token: 0, flow: 0, pattern: 0 },
+      themes: [], pageTypes: [], productAreas: [], states: ["Primary"], layouts: [],
+      components: ["Button"], appCategories: [], platforms: [], flowTags: [],
+    },
+  };
   const events: Array<{ featureKey?: string; action: string; outcome: string }> = [];
   const { base, server } = await serve(createApiApp({
     verifyAuthToken: async () => user,
@@ -1668,6 +1690,10 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
     listPublishedDesignSystems: async () => systems,
     listAppFlowSets: async () => [],
     listPublishedFlowSets: async () => [],
+    typesenseCatalog: {
+      index: async () => 0,
+      search: async () => catalogResult,
+    },
     recordAccessEvent: async (event) => { events.push(event); },
   }));
   t.after(() => close(server));
@@ -1702,7 +1728,7 @@ test("uses the Typesense catalog before loading the PostgreSQL search source", a
     facets: { kinds: { app: 0, screen: 1, component: 0, token: 0, flow: 0, pattern: 0 }, themes: [], pageTypes: [], productAreas: [], states: ["default"], layouts: [], components: ["Button"], appCategories: ["Productivity"] },
   };
   const { base, server } = await serve(createApiApp({
-    verifyAuthToken: async () => user,
+    verifyAuthToken: async () => admin,
     getAccountEntitlements: async () => proEntitlements,
     typesenseCatalog: {
       index: async () => 0,
@@ -1715,10 +1741,104 @@ test("uses the Typesense catalog before loading the PostgreSQL search source", a
   }));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/search?q=workspace&kind=screen`, { headers: { authorization: "Bearer user" } });
+  const response = await fetch(`${base}/search?q=workspace&kind=screen`, { headers: adminAuth });
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), typesenseResult);
   assert.deepEqual(calls, [{ query: "workspace", kind: "screen", theme: undefined, pageType: undefined, productArea: undefined, state: undefined, layout: undefined, component: undefined, appCategory: undefined, platform: undefined, flowTag: undefined, limit: undefined }]);
+});
+
+test("fails Apps search fast when Typesense is missing or unavailable", async (t) => {
+  let slowSourceCalls = 0;
+  const slowSources = {
+    allImages: async () => { slowSourceCalls += 1; return []; },
+    publishedImages: async () => { slowSourceCalls += 1; return []; },
+    listDesignSystems: async () => { slowSourceCalls += 1; return []; },
+    listPublishedDesignSystems: async () => { slowSourceCalls += 1; return []; },
+    listAppFlowSets: async () => { slowSourceCalls += 1; return []; },
+    listPublishedFlowSets: async () => { slowSourceCalls += 1; return []; },
+  };
+  const missing = await serve(createApiApp({
+    ...slowSources,
+    verifyAuthToken: async () => admin,
+  }));
+  t.after(() => close(missing.server));
+
+  const missingResponse = await fetch(`${missing.base}/search?q=checkout&kind=all`, { headers: adminAuth });
+  assert.equal(missingResponse.status, 503);
+  assert.deepEqual(await missingResponse.json(), {
+    error: "App search is temporarily unavailable",
+    code: "search_unavailable",
+  });
+  const advancedResponse = await fetch(
+    `${missing.base}/search?q=checkout&scope=apps&type=screen&sort=relevance`,
+    { headers: adminAuth },
+  );
+  assert.equal(advancedResponse.status, 503);
+  const suggestionsResponse = await fetch(
+    `${missing.base}/search/suggestions?prefix=check`,
+    { headers: adminAuth },
+  );
+  assert.equal(suggestionsResponse.status, 503);
+
+  const unavailable = await serve(createApiApp({
+    ...slowSources,
+    verifyAuthToken: async () => admin,
+    typesenseCatalog: {
+      index: async () => 0,
+      search: async () => { throw new Error("Typesense unavailable"); },
+    },
+  }));
+  t.after(() => close(unavailable.server));
+  const unavailableResponse = await fetch(`${unavailable.base}/search?q=checkout&kind=all`, { headers: adminAuth });
+  assert.equal(unavailableResponse.status, 503);
+  assert.equal(slowSourceCalls, 0);
+});
+
+test("serves typed suggestions and the URL-owned advanced search contract from Typesense", async (t) => {
+  const requests: unknown[] = [];
+  const advancedResult: AdvancedSearchResult = {
+    requestId: "typesense",
+    items: [],
+    facets: {
+      platform: [], app: [], appCategory: [], pageType: [], productArea: [], flow: [],
+      component: [], state: [], theme: [], layout: [], siteSection: [], siteStyle: [],
+    },
+    typeCounts: { app: 0, site: 0, screen: 3, flow: 0, component: 0, pattern: 0 },
+    nextCursor: null,
+    hasMore: false,
+    degraded: false,
+  };
+  const { base, server } = await serve(createApiApp({
+    verifyAuthToken: async () => user,
+    getAccountEntitlements: async () => proEntitlements,
+    typesenseCatalog: {
+      index: async () => 0,
+      search: async () => ({ items: [], facets: {
+        kinds: { app: 0, screen: 0, component: 0, token: 0, flow: 0, pattern: 0 },
+        themes: [], pageTypes: [], productAreas: [], states: [], layouts: [], components: [],
+        appCategories: [], platforms: [], flowTags: [],
+      } }),
+      searchAdvanced: async (request) => { requests.push(request); return advancedResult; },
+      suggest: async () => [{ kind: "pageType", value: "Checkout", resultCount: 3 }],
+    },
+    recordAccessEvent: async () => undefined,
+  }));
+  t.after(() => close(server));
+
+  const search = await fetch(`${base}/search?q=checkout&scope=apps&type=screen&sort=relevance&limit=24`, {
+    headers: { authorization: "Bearer user" },
+  });
+  assert.equal(search.status, 200);
+  assert.equal((await search.json() as AdvancedSearchResult).typeCounts.screen, 3);
+  assert.equal((requests[0] as { query: string }).query, "checkout");
+
+  const suggestions = await fetch(`${base}/search/suggestions?prefix=check&limit=10`, {
+    headers: { authorization: "Bearer user" },
+  });
+  assert.equal(suggestions.status, 200);
+  assert.deepEqual(await suggestions.json(), {
+    items: [{ kind: "pageType", value: "Checkout", resultCount: 3 }],
+  });
 });
 
 test("creates user-owned collections and edits item notes", async (t) => {
@@ -1847,9 +1967,17 @@ test("keeps search public while enforcing Free collection, note, and unlock poli
     addCollectionItem: async () => { throw new Error("Free notes must be rejected first"); },
     updateCollectionItemNotes: async () => { throw new Error("Free notes must be rejected first"); },
     unlockFreeApp: async () => { unlockCalled = true; return { status: "unlocked", remaining: 2 }; },
-    publishedImages: async () => [],
-    listPublishedDesignSystems: async () => [],
-    listPublishedFlowSets: async () => [],
+    typesenseCatalog: {
+      index: async () => 0,
+      search: async () => ({
+        items: [],
+        facets: {
+          kinds: { app: 0, screen: 0, component: 0, token: 0, flow: 0, pattern: 0 },
+          themes: [], pageTypes: [], productAreas: [], states: [], layouts: [],
+          components: [], appCategories: [], platforms: [], flowTags: [],
+        },
+      }),
+    },
     recordAccessEvent: async () => {},
   }));
   t.after(() => close(server));

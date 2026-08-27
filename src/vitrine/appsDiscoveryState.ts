@@ -169,7 +169,13 @@ export function toggleAppsDiscoveryFacet(
     const next = current.filter((value) => value !== facet.value);
     if (next.length) filters[facet.group] = next;
     else delete filters[facet.group];
-    return { ...state, filters };
+    return {
+      ...state,
+      contentType: next.length === 0 && facet.group === state.contentType
+        ? 'apps'
+        : state.contentType,
+      filters,
+    };
   }
   return setAppsDiscoveryFacet(state, facet);
 }
@@ -180,5 +186,9 @@ export function clearAppsDiscoveryFacet(
 ): AppsDiscoveryFilterState {
   const filters = { ...state.filters };
   delete filters[group];
-  return { ...state, filters };
+  return {
+    ...state,
+    contentType: group === state.contentType ? 'apps' : state.contentType,
+    filters,
+  };
 }

@@ -179,6 +179,15 @@ test('preloads Taste Labs animations before mounting their players', () => {
   assert.match(mission, /animationData \? \{ data: animationData \} : \{ src: animationUrl \}/);
 });
 
+test('balances component taxonomy options across two responsive columns', () => {
+  const css = readFileSync(new URL('./componentLibrary.css', import.meta.url), 'utf8');
+
+  assert.match(
+    css,
+    /@media \(max-width: 1080px\)[\s\S]*?\.component-library__facet > div \{[^}]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);[^}]*grid-template-rows: repeat\(5, 32px\);/,
+  );
+});
+
 test('keeps reconstructed component styles isolated from ComponentCard chrome', () => {
   const previewCss = readFileSync(new URL('./componentLibrary.css', import.meta.url), 'utf8');
   const productTypography = readFileSync(new URL('./productTypography.css', import.meta.url), 'utf8');

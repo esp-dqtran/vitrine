@@ -149,7 +149,22 @@ test('selecting, toggling, and clearing multiple facets keeps Apps newest-only',
   assert.deepEqual(toggled.filters.screens, ['Settings & Preferences']);
 
   const cleared = clearAppsDiscoveryFacet(toggled, 'screens');
-  assert.equal(cleared.contentType, 'screens');
+  assert.equal(cleared.contentType, 'apps');
   assert.equal(cleared.sort, 'latest');
   assert.deepEqual(cleared.filters, { categories: ['Shopping', 'AI'] });
+});
+
+test('returns to the Apps list when the final active Screens option is toggled off', () => {
+  const screens = setAppsDiscoveryFacet(
+    defaultAppsDiscoveryState('web', { group: 'categories', value: 'Business' }),
+    { group: 'screens', value: 'Dashboard' },
+  );
+
+  const apps = toggleAppsDiscoveryFacet(
+    screens,
+    { group: 'screens', value: 'Dashboard' },
+  );
+
+  assert.equal(apps.contentType, 'apps');
+  assert.deepEqual(apps.filters, { categories: ['Business'] });
 });

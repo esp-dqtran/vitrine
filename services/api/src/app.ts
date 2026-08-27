@@ -2,7 +2,7 @@ import express from "express";
 import compression from "compression";
 import { bearerToken } from "./bearerAuth.ts";
 import { readFileSync } from "node:fs";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import {
   query,
   withTransaction,
@@ -142,11 +142,20 @@ import {
 } from "../../../src/pricingStore.ts";
 import type { BillingService } from "./billing.ts";
 import { createDistinctValueLimiter, createFixedWindowLimiter, ipPrefix } from "./rateLimit.ts";
-import { buildComparison, searchCatalog, type CatalogEntityKind } from "../../../src/catalogResearch.ts";
+import { buildComparison, type CatalogEntityKind } from "../../../src/catalogResearch.ts";
 import type { TypesenseCatalogClient } from "../../../src/typesenseCatalog.ts";
 import type { TypesenseAppCatalogClient } from "../../../src/typesenseAppCatalog.ts";
 import type { TypesenseFlowCatalogClient } from "../../../src/typesenseFlowCatalog.ts";
 import type { TypesenseSiteCatalogClient } from "../../../src/typesenseSiteCatalog.ts";
+import {
+  CatalogAdvancedSearchRequestError,
+  advancedSearchRequestFromQuery,
+  decodeAdvancedSearchCursor,
+  emptyAdvancedSearchResult,
+  isAdvancedSearchQuery,
+  mergeAdvancedSearchResults,
+  siteAdvancedSearchResult,
+} from "./catalogAdvancedSearch.ts";
 import { buildExportArtifact, type ExportFormat, type ExportScope } from "../../../src/exportEngine.ts";
 import { applyCuratorAction, type CuratorAction } from "../../../src/curatorReview.ts";
 import { exportObjectKey, type ObjectMetadata, type ObjectStore, type StoredContentType } from "../../../src/objectStore.ts";
@@ -3031,9 +3040,136 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
   });
 
+  app.get("/search/suggestions", async (req, res) => {
+    const user = await resolveRequestUser(req);
+    const prefix = optionalQuery(req.query.prefix) ?? "";
+    const rawLimit = optionalQuery(req.query.limit);
+    if (
+      !prefix.trim()
+      || prefix.length > 100
+      || (rawLimit !== undefined && (!/^\d+$/.test(rawLimit) || Number(rawLimit) < 1 || Number(rawLimit) > 10))
+    ) {
+      res.status(400).json({ error: "invalid search suggestions" });
+      return;
+    }
+    const plan = user?.role === "admin"
+      ? "pro"
+      : user
+        ? (await deps.getAccountEntitlements(user.id)).plan
+        : "free";
+    if (plan !== "pro") {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+      return;
+    }
+    if (!deps.typesenseCatalog?.suggest) {
+      res.status(503).json({ error: "App search is temporarily unavailable", code: "search_unavailable" });
+      return;
+    }
+    const limit = rawLimit ? Number(rawLimit) : 10;
+    try {
+      const [catalogSuggestions, siteSuggestions] = await Promise.all([
+        deps.typesenseCatalog.suggest(prefix, limit),
+        deps.typesenseSiteCatalog
+          ? deps.typesenseSiteCatalog.search({ query: prefix, filters: [], sort: "latest", limit: Math.min(limit, 5) })
+            .then(({ sites, totalCount }) => sites.map((site) => ({
+              kind: "site" as const,
+              value: site.name,
+              resultCount: totalCount,
+            })))
+          : Promise.resolve([]),
+      ]);
+      res.json({ items: [...catalogSuggestions, ...siteSuggestions].slice(0, limit) });
+    } catch {
+      res.status(503).json({ error: "Search suggestions are unavailable" });
+    }
+  });
+
   app.get("/search", async (req, res) => {
     const user = await resolveRequestUser(req);
-    const isAdmin = user?.role === "admin";
+    if (isAdvancedSearchQuery(req.query as Record<string, unknown>)) {
+      const plan = user?.role === "admin"
+        ? "pro"
+        : user
+          ? (await deps.getAccountEntitlements(user.id)).plan
+          : "free";
+      if (!user || plan !== "pro") {
+        res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+        return;
+      }
+      try {
+        const request = advancedSearchRequestFromQuery(req.query as Record<string, unknown>);
+        const relatedTo = optionalQuery(req.query.relatedTo);
+        if (relatedTo) {
+          if (relatedTo.length > 240) throw new CatalogAdvancedSearchRequestError("invalid related search source");
+          if (!deps.typesenseCatalog?.related) {
+            res.status(503).json({ error: "App search is temporarily unavailable", code: "search_unavailable" });
+            return;
+          }
+          const result = await deps.typesenseCatalog.related(relatedTo, request.limit);
+          res.json({ ...result, requestId: randomUUID() });
+          return;
+        }
+        const includeApps = request.scope !== "sites" && request.type !== "site";
+        const includeSites = request.scope !== "apps" && (request.type === "all" || request.type === "site");
+        const siteFilters = [
+          ...request.filters.siteSection.map((value) => ({ group: "sections", value })),
+          ...request.filters.siteStyle.map((value) => ({ group: "styles", value })),
+          ...request.filters.appCategory.map((value) => ({ group: "categories", value })),
+        ];
+        const pagination = decodeAdvancedSearchCursor(request.cursor);
+        const sitePage = pagination.sitePage ?? 1;
+        const appRequest = pagination.appCursor
+          ? { ...request, cursor: pagination.appCursor }
+          : { ...request, cursor: undefined };
+        if (includeApps && !deps.typesenseCatalog?.searchAdvanced) {
+          res.status(503).json({ error: "App search is temporarily unavailable", code: "search_unavailable" });
+          return;
+        }
+        const [appResult, siteResult] = await Promise.all([
+          includeApps
+            ? deps.typesenseCatalog!.searchAdvanced!(appRequest)
+            : Promise.resolve(emptyAdvancedSearchResult()),
+          includeSites
+            ? (deps.typesenseSiteCatalog
+                ? deps.typesenseSiteCatalog.search({
+                    ...(request.query ? { query: request.query } : {}),
+                    filters: siteFilters,
+                    sort: request.sort === "recent" ? "latest" : "popular",
+                    page: Number.isSafeInteger(sitePage) && sitePage > 0 ? sitePage : 1,
+                    limit: request.limit,
+                  }).then(siteAdvancedSearchResult)
+                : deps.sitesStore.listReadySitesPage({
+                    cursorSecret: deps.mediaSigningSecret,
+                    ...(request.query ? { query: request.query } : {}),
+                    filters: siteFilters,
+                    sort: request.sort === "recent" ? "latest" : "popular",
+                    limit: request.limit,
+                    includeFacets: true,
+                  }).then((page) => siteAdvancedSearchResult({
+                    sites: page.items,
+                    totalCount: page.totalCount,
+                    nextPage: null,
+                    facets: page.facets,
+                  })))
+            : Promise.resolve(emptyAdvancedSearchResult()),
+        ]);
+        const result = mergeAdvancedSearchResults(appResult, siteResult, request);
+        await deps.recordAccessEvent({
+          userId: user.id,
+          featureKey: "search",
+          action: "adaptive-search",
+          outcome: "success",
+        });
+        res.json(result);
+      } catch (error) {
+        if (error instanceof CatalogAdvancedSearchRequestError || /search cursor/i.test((error as Error).message)) {
+          res.status(400).json({ error: (error as Error).message, code: "invalid_search_request" });
+        } else {
+          res.status(503).json({ error: "Search is temporarily unavailable", code: "search_unavailable" });
+        }
+      }
+      return;
+    }
     const requestedKind = optionalQuery(req.query.kind) ?? "all";
     if (requestedKind !== "all" && !catalogKinds.has(requestedKind as CatalogEntityKind)) {
       res.status(400).json({ error: "invalid search kind" });
@@ -3053,41 +3189,16 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       flowTag: optionalQuery(req.query.flowTag),
       limit: optionalQuery(req.query.limit) ? Number(req.query.limit) : undefined,
     };
-    let result;
-    if (!isAdmin && deps.typesenseCatalog) {
-      try {
-        result = await deps.typesenseCatalog.search(searchOptions);
-      } catch {
-        console.warn("[api] Typesense search fallback");
-      }
+    if (!deps.typesenseCatalog) {
+      res.status(503).json({ error: "App search is temporarily unavailable", code: "search_unavailable" });
+      return;
     }
-    let imagesById: Map<number, Awaited<ReturnType<typeof deps.publishedImages>>[number]> | undefined;
-    if (!result) {
-      const [images, systems, flows] = await Promise.all([
-        isAdmin ? deps.allImages() : deps.publishedImages(),
-        isAdmin ? deps.listDesignSystems() : deps.listPublishedDesignSystems(),
-        isAdmin ? deps.listAppFlowSets() : deps.listPublishedFlowSets(),
-      ]);
-      const appNames = [...new Set([
-        ...images.map(({ app }) => app),
-        ...systems.map(({ app }) => app),
-        ...flows.map(({ app }) => app),
-      ])];
-      const allowed = new Set(appNames);
-      const allowedImages = images.filter(({ app }) => allowed.has(app));
-      const appCategories = Object.fromEntries(
-        allowedImages.map((image) => [
-          image.app,
-          image.categories?.map(({ name }) => name) ?? [],
-        ]),
-      );
-      result = searchCatalog({
-        images: allowedImages,
-        systems: systems.filter(({ app }) => allowed.has(app)),
-        flows: flows.filter(({ app }) => allowed.has(app)),
-        appCategories,
-      }, searchOptions);
-      imagesById = new Map(allowedImages.map((image) => [image.id, image]));
+    let result;
+    try {
+      result = await deps.typesenseCatalog.search(searchOptions);
+    } catch {
+      res.status(503).json({ error: "App search is temporarily unavailable", code: "search_unavailable" });
+      return;
     }
     if (user) {
       await deps.recordAccessEvent({
@@ -3099,15 +3210,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     res.json({
       ...result,
-      items: imagesById ? result.items.map((item) => {
-        const evidence = item.evidenceIds.map((id) => imagesById.get(id)).find((image) => image !== undefined);
-        if (!evidence) return item;
-        return {
-          ...item,
-          imageUrl: publicImageUrl(evidence.app, evidence.image_url),
-          thumbnailUrl: publicImageUrl(evidence.app, evidence.image_url, "thumb"),
-        };
-      }) : result.items,
+      items: result.items,
     });
   });
 

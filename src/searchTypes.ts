@@ -2,7 +2,7 @@ export const SEARCH_SCOPES = ["apps", "sites", "all"] as const;
 export type SearchScope = typeof SEARCH_SCOPES[number];
 
 export interface SearchSuggestion {
-  kind: "app" | "title" | "alias" | "pageType" | "productArea" | "flow" | "component" | "layout";
+  kind: "app" | "site" | "title" | "alias" | "pageType" | "productArea" | "flow" | "component" | "layout";
   value: string;
   resultCount: number;
 }

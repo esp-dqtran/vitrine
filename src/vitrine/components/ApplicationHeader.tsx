@@ -65,6 +65,7 @@ export function ApplicationHeader({
   return (
     <header
       data-reference-component="top-nav"
+      data-reference-active={active}
       className={`reference-discovery-nav ${className}`}
     >
       <div className={`reference-discovery-nav__left ${className}__left`}>

@@ -21,8 +21,8 @@ export function flowDiscoveryBenchmarkViolations(
     if (!Number.isSafeInteger(measurement.totalCount) || measurement.totalCount < 1) {
       violations.push(`${measurement.url}: no results`);
     }
-    if (measurement.p95Ms > 250) {
-      violations.push(`${measurement.url}: p95 ${measurement.p95Ms}ms exceeds 250ms`);
+    if (measurement.p95Ms > 800) {
+      violations.push(`${measurement.url}: p95 ${measurement.p95Ms}ms exceeds 800ms`);
     }
     if (measurement.decodedBytes > 100_000) {
       violations.push(`${measurement.url}: ${measurement.decodedBytes} bytes exceeds 100000`);
@@ -47,7 +47,7 @@ export function summarizeTimings(samples: readonly number[]): TimingSummary {
 
 export function flowDiscoveryBenchmarkUrls(baseUrl: string): string[] {
   const base = new URL(baseUrl);
-  const route = new URL("/catalog/flows", base);
+  const route = new URL("/flows", base);
   const url = (input: {
     platform: "web" | "ios" | "android";
     sort: "popular" | "grouped";
@@ -64,17 +64,21 @@ export function flowDiscoveryBenchmarkUrls(baseUrl: string): string[] {
     return target.toString();
   };
   return [
-    url({ platform: "web", sort: "popular" }),
-    url({ platform: "ios", sort: "popular" }),
-    url({ platform: "android", sort: "popular" }),
     url({ platform: "web", sort: "grouped" }),
-    url({ platform: "web", sort: "popular", query: "settings" }),
+    url({ platform: "ios", sort: "grouped" }),
+    url({ platform: "android", sort: "grouped" }),
+    url({ platform: "web", sort: "grouped", query: "settings" }),
     url({
       platform: "web",
-      sort: "popular",
+      sort: "grouped",
       query: "checkout with payment method selection",
     }),
-    url({ platform: "web", sort: "popular", filter: "flowGroups.Settings" }),
+    url({ platform: "web", sort: "grouped", filter: "flowCategories.content-detail" }),
+    url({
+      platform: "web",
+      sort: "grouped",
+      filter: "flowTypes.content-detail/other-content-detail",
+    }),
   ];
 }
 

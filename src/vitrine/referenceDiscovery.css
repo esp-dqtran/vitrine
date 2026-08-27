@@ -496,6 +496,14 @@
   transition: background-position 520ms var(--vitrine-motion-ease);
 }
 
+.reference-discovery-nav[data-reference-active='flows'] .apps-top-nav__search .reference-search-trigger {
+  --reference-search-trigger-hover-ring: rgb(255 255 255 / 24%);
+}
+
+.reference-discovery-nav[data-reference-active='flows'] .apps-top-nav__search .reference-search-trigger__button::before {
+  content: none;
+}
+
 .reference-discovery-nav.apps-top-nav .apps-top-nav__search .reference-search-trigger__button > span {
   position: relative;
   z-index: 1;

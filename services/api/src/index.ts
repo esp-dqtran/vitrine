@@ -51,6 +51,7 @@ import {
   threadsMarketingConfigFromEnv,
 } from "./threadsMarketing.ts";
 import { createThreadsMarketingStore } from "../../../src/threadsMarketingStore.ts";
+import { warmFlowCatalogFilters } from "./flowCatalogWarmup.ts";
 
 const PORT = Number(process.env.PORT ?? DEFAULT_API_PORT);
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
@@ -97,25 +98,6 @@ await startApi({
         },
       })
       : undefined;
-    void (async () => {
-      let failedFlowWarmups = 0;
-      for (const platform of ["web", "ios", "android"] as const) {
-        try {
-          await publishedFlowCatalogPage({
-            platform,
-            limit: 12,
-            sort: "grouped",
-            includeFacets: false,
-            cursorSecret: config.mediaSigningSecret,
-          });
-        } catch {
-          failedFlowWarmups += 1;
-        }
-      }
-      if (failedFlowWarmups > 0) {
-        console.warn(`[api] ${failedFlowWarmups} Flow catalog warmup(s) failed`);
-      }
-    })();
     const app = createApiApp({
       ...(billing ? { billing } : {}),
       objectStore,
@@ -137,6 +119,16 @@ await startApi({
     });
     app.listen(PORT, () => {
       console.log(`[api] listening on :${PORT}`);
+    });
+    void warmFlowCatalogFilters({
+      cursorSecret: config.mediaSigningSecret,
+      loadPage: publishedFlowCatalogPage,
+    }).then((failedFlowWarmups) => {
+      if (failedFlowWarmups > 0) {
+        console.warn(`[api] ${failedFlowWarmups} Flow catalog warmup(s) failed`);
+      } else {
+        console.log("[api] Flow filter warmup complete");
+      }
     });
     const threadsMarketingConfig = threadsMarketingConfigFromEnv(process.env);
     if (threadsMarketingConfig) {
