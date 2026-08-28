@@ -106,6 +106,7 @@ interface LocationTarget {
     replaceState(state: unknown, title: string, path: string): void;
   };
   dispatchEvent(event: Event): boolean;
+  scrollTo?(options: ScrollToOptions): void;
 }
 
 export function updateLocation(
@@ -114,6 +115,10 @@ export function updateLocation(
 ): void {
   const target = options.target ?? window;
   if (path === `${target.location.pathname}${target.location.search}`) return;
+  const nextPathname = path.startsWith('?') || path.startsWith('#')
+    ? target.location.pathname
+    : path.split(/[?#]/, 1)[0] || target.location.pathname;
+  const pathnameChanged = nextPathname !== target.location.pathname;
   target.history[options.replace ? "replaceState" : "pushState"](
     null,
     "",
@@ -124,6 +129,9 @@ export function updateLocation(
       ? new PopStateEvent("popstate")
       : new Event("popstate");
   target.dispatchEvent(event);
+  if (pathnameChanged) {
+    target.scrollTo?.({ top: 0, left: 0, behavior: 'auto' });
+  }
 }
 
 function subscribe(fn: () => void) {

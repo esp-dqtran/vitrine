@@ -8,6 +8,7 @@ test('renders the component library categories and source links', () => {
   const html = renderToStaticMarkup(<ComponentsPage />);
 
   assert.match(html, /data-component-library="true"/);
+  assert.match(html, /<h1 class="visually-hidden">Components<\/h1>/);
   assert.match(html, /data-reference-component="component-card"/);
   assert.doesNotMatch(html, /reference-discovery__result-meta/);
   assert.match(html, />All <span>31<\/span>/);
@@ -185,6 +186,10 @@ test('balances component taxonomy options across two responsive columns', () => 
   assert.match(
     css,
     /@media \(max-width: 1080px\)[\s\S]*?\.component-library__facet > div \{[^}]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);[^}]*grid-template-rows: repeat\(5, 32px\);/,
+  );
+  assert.match(
+    css,
+    /@media \(min-width: 721px\) and \(max-width: 900px\)[\s\S]*?\.components-discovery__grid \{[^}]*grid-template-columns: minmax\(0, 1fr\);/,
   );
 });
 

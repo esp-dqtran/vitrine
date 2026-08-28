@@ -127,6 +127,7 @@ test('renders a first-class searchable Flow catalog beside Apps and Sites', () =
   );
 
   assert.match(html, /data-flows-discovery="true"/);
+  assert.match(html, /<h1 class="visually-hidden">Flows<\/h1>/);
   assert.doesNotMatch(html, /reference-discovery-nav/);
   assert.match(html, />Categories</);
   assert.doesNotMatch(html, /Browse by category/);

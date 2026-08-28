@@ -142,7 +142,7 @@ export function FlowsPageView({
   return (
     <DiscoveryPageLayout
       kind="flows"
-      header={null}
+      header={<h1 className="visually-hidden">Flows</h1>}
       taxonomyLabel="Browse Flow categories"
       taxonomy={(
         <ReferenceDiscoveryFacetGroup

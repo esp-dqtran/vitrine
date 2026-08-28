@@ -701,6 +701,7 @@ export function ColorGalleryPage({
       kind="colors"
       header={(
         <section className="colors-discovery-hero" aria-label="Colors">
+          <h1 className="visually-hidden">Colors</h1>
           <MeliusAnimatedText className="colors-discovery-hero__title" text="COLORS" />
         </section>
       )}

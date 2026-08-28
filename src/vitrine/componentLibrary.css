@@ -2537,6 +2537,12 @@
   }
 }
 
+@media (min-width: 721px) and (max-width: 900px) {
+  .components-discovery__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 720px) {
   .components-discovery__content {
     padding-inline: 20px;

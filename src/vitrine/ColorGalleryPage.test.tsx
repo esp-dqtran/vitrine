@@ -137,6 +137,7 @@ test('renders a browsable gallery of solid and layered gradient palettes', () =>
   );
   assert.match(html, /data-discovery-filterbar="colors"/);
   assert.match(html, /class="colors-discovery-hero" aria-label="Colors"/);
+  assert.match(html, /<h1 class="visually-hidden">Colors<\/h1>/);
   assert.match(html, /data-melius-animated-text="COLORS"/);
   assert.match(html, /aria-label="Color discovery controls"/);
   assert.match(html, /Open Collection filters/);

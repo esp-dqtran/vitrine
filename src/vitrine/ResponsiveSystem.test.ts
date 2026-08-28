@@ -68,11 +68,15 @@ test('defines compact, medium, and wide Apps behavior without page overflow', as
   assert.match(styles, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(styles, /@media \(max-width:\s*720px\)/);
   assert.match(styles, /grid-template-columns:\s*28px minmax\(120px,\s*1fr\) minmax\(44px,\s*72px\) 44px/);
+  assert.match(styles, /grid-template-columns:\s*32px minmax\(220px,\s*1fr\) 88px 44px/);
   assert.match(compactStyles, /\.apps-top-nav \.reference-discovery-nav__actions\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*72px/);
   assert.match(styles, /\.apps-top-nav \.reference-discovery-nav__types\s*\{[^}]*display:\s*none/);
   assert.match(styles, /\.apps-filterbar\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-wrap:\s*nowrap/);
   assert.match(compactStyles, /\.apps-filterbar__controls > \.apps-filterbar__filter\[data-filter-group\]\s*\{[^}]*display:\s*none/);
   assert.match(compactStyles, /\.apps-filterbar__filter--merged\s*\{[^}]*display:\s*inline-flex/);
+  assert.match(compactStyles, /@media \(max-width:\s*360px\)[\s\S]*\.apps-filterbar__divider\s*\{[^}]*display:\s*none/);
+  assert.match(compactStyles, /\.apps-filterbar__filter--platform,[\s\S]*\.apps-filterbar \.apps-platform-switcher\s*\{[^}]*width:\s*172px;[^}]*min-width:\s*172px/);
+  assert.match(compactStyles, /\.apps-platform-switcher button\[aria-checked='true'\]\s*\{[^}]*width:\s*88px\s*!important;[^}]*flex-basis:\s*88px/);
   assert.match(styles, /grid-template-columns:\s*minmax\(0,\s*1fr\)/);
 });
 

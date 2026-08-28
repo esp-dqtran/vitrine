@@ -110,7 +110,7 @@
 
 @media (min-width: 721px) and (max-width: 900px) {
   .reference-discovery-nav.apps-top-nav {
-    grid-template-columns: 32px minmax(220px, 1fr) minmax(44px, 72px) 44px;
+    grid-template-columns: 32px minmax(220px, 1fr) 88px 44px;
     gap: 10px;
     padding-inline: 16px;
   }
@@ -284,5 +284,22 @@
     .apps-discovery-screen-card__identity > span:last-child
   ) {
     min-width: 0;
+  }
+}
+
+@media (max-width: 360px) {
+  .apps-filterbar__divider {
+    display: none;
+  }
+
+  .apps-filterbar__filter--platform,
+  .apps-filterbar .apps-platform-switcher {
+    width: 172px;
+    min-width: 172px;
+  }
+
+  .apps-filterbar .apps-platform-switcher button[aria-checked='true'] {
+    width: 88px !important;
+    flex-basis: 88px;
   }
 }

@@ -473,7 +473,7 @@ test('keeps the Apps search compact on desktop and in the mobile header', async 
   );
   assert.match(
     responsiveCss,
-    /@media \(min-width:\s*721px\) and \(max-width:\s*900px\)[\s\S]*\.reference-discovery-nav\.apps-top-nav\s*\{[^}]*grid-template-columns:\s*32px minmax\(220px,\s*1fr\) minmax\(44px,\s*72px\) 44px/,
+    /@media \(min-width:\s*721px\) and \(max-width:\s*900px\)[\s\S]*\.reference-discovery-nav\.apps-top-nav\s*\{[^}]*grid-template-columns:\s*32px minmax\(220px,\s*1fr\) 88px 44px/,
   );
   assert.match(
     responsiveCss,

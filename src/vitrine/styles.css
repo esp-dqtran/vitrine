@@ -16567,6 +16567,14 @@ body {
   }
 }
 
+@media (max-width: 360px) {
+  .flow-strip-card__actions {
+    width: 100%;
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
 @media (max-width: 760px) {
   .selected-flow-workspace__header {
     align-items: stretch;

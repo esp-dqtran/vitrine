@@ -360,7 +360,7 @@ export function ComponentsPage() {
     <div className="component-library" data-component-library="true">
       <DiscoveryPageLayout
         kind="components"
-        header={null}
+        header={<h1 className="visually-hidden">Components</h1>}
         taxonomyLabel="Component categories"
         taxonomy={(
           <ReferenceDiscoveryFacetGroup label="Components" className="component-library__facet">

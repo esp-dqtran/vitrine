@@ -175,6 +175,7 @@ test('defines the desktop rail and 980px drawer transition', () => {
   assert.match(css, /@media \(hover:\s*hover\)\s*\{[\s\S]*\.flow-strip-card__arrow\s*\{[^}]*opacity:\s*0;[^}]*pointer-events:\s*none/);
   assert.match(css, /\.flow-strip-card:hover \.flow-strip-card__arrow[\s\S]*\.flow-strip-card:focus-within \.flow-strip-card__arrow\s*\{[^}]*opacity:\s*1;[^}]*pointer-events:\s*auto/);
   assert.match(css, /\.flow-strip-card__footer\s*\{[\s\S]*justify-content:\s*space-between/);
+  assert.match(css, /@media \(max-width:\s*360px\)[\s\S]*\.flow-strip-card__actions\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*100%;[^}]*flex-wrap:\s*wrap/);
   assert.doesNotMatch(css, /\.flow-strip-card__step-label/);
   assert.match(css, /\.visual-flow-panel\s*\{[\s\S]*background:\s*#1f1f1f/);
   assert.match(css, /\.visual-flow-panel--web \.visual-flow-panel__screen-card\s*\{[\s\S]*flex:\s*0 0 min\(76vw,\s*1120px\)[\s\S]*background:\s*transparent/);
