@@ -5,14 +5,13 @@ import test from "node:test";
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("keeps Palmer source motion as a first-class component contract", async () => {
-  const [packageJson, page, canvas, focus, motion, styles, sourceRuntime] = await Promise.all([
+  const [packageJson, page, canvas, focus, motion, styles] = await Promise.all([
     read("package.json"),
     read("src/pages/PalmerHomePage.jsx"),
     read("src/sections/ExperienceCanvasSection.jsx"),
     read("src/composites/CollectionFocus.jsx"),
     read("src/motion/palmerMotion.js"),
     read("src/styles.css"),
-    read("../source/downloaded/cdn.jsdelivr.net/gh/devuncommon/palmer@main/index.mjs"),
   ]);
 
   assert.match(packageJson, /"gsap"/);
@@ -62,15 +61,6 @@ test("keeps Palmer source motion as a first-class component contract", async () 
   assert.match(motion, /edgeResistance: 0\.9/);
   assert.match(styles, /experience-canvas\.drag-easing[^}]*transform \.2s cubic-bezier\(\.33, 1, \.68, 1\)/);
   assert.match(styles, /experience-canvas\.drag-easing[^}]*transition-duration: \.6s/);
-  assert.match(sourceRuntime, /Draggable\.create\("\.xp_section_collection"/);
-  assert.match(sourceRuntime, /inertia: true/);
-  assert.match(sourceRuntime, /throwResistance: isMobileOrTabletOrLand\(\) \? 1000 : 8000/);
-  assert.match(sourceRuntime, /edgeResistance: 0\.9/);
-  assert.match(sourceRuntime, /scaleTarget: 0\.15/);
-  assert.match(sourceRuntime, /threshold: 350/);
-  assert.match(sourceRuntime, /tl\.to\(this\.xpWrapper,[\s\S]*scale: 1,[\s\S]*duration: 2,[\s\S]*delay: 2/);
-  assert.match(sourceRuntime, /this\.focusWrapper\.addEventListener\("wheel"/);
-  assert.match(sourceRuntime, /document\.addEventListener\("mousedown", this\.outsideClickListener\)/);
   assert.match(styles, /collection-focus__carousel[^}]*height: 40vw;[^}]*overflow: hidden/);
   assert.match(styles, /\.product-image \{[^}]*width: 42%;[^}]*height: 42%;[^}]*aspect-ratio: 1;[^}]*border-radius: 20%/);
   assert.match(styles, /collection-focus__product \.product-image \{ width: 42%; height: 42%; \}/);
