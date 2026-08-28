@@ -65,6 +65,17 @@ export function metadataForPath(pathname: string, search = ""): SeoMetadata {
     };
   }
 
+  if (normalizedPath === "/explore") {
+    return {
+      title: "Explore apps spatially — Vitrines",
+      description: "Browse app identities in a spatial Vitrines catalog, then open the screens and product evidence behind each app.",
+      canonicalPath: "/explore",
+      robots: hasQuery ? "noindex, nofollow" : "index, follow",
+      ogType: "website",
+      image: DEFAULT_SOCIAL_IMAGE,
+    };
+  }
+
   if (normalizedPath === "/browse/flows") {
     return {
       title: "Product flows and user journeys — Vitrines",

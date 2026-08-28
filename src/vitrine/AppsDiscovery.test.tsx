@@ -420,6 +420,7 @@ test('renders the shared full-width discovery navigation for Apps', () => {
   assert.match(html, /class="[^"]*reference-discovery-nav[^"]*apps-top-nav[^"]*"/);
   assert.match(html, /data-reference-active="apps"/);
   assert.match(html, /aria-label="Reference type"/);
+  assert.match(html, />Explore</);
   assert.match(html, /aria-selected="true"/);
   assert.match(html, /aria-label="Vitrines Apps"/);
   assert.match(html, /data-reference-mobile-switcher="true"/);

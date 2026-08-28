@@ -44,6 +44,7 @@ export type Route =
   | { name: "reset-password"; token?: string }
   | { name: "search" }
   | { name: "apps" }
+  | { name: "explore" }
   /* The rebuilt browse surface. Runs beside /apps rather than replacing it. */
   | { name: "browse" }
   | { name: "browse-app"; appId: string }
@@ -162,6 +163,7 @@ export function parseRoutePath(pathname: string): Route {
   if (path === "/reset-password") return { name: "reset-password" };
   if (path === "/search") return { name: "search" };
   if (path === "/apps") return { name: "apps" };
+  if (path === "/explore") return { name: "explore" };
   if (path === "/browse") return { name: "browse" };
   if (path === "/browse/flows") return { name: "browse-flows" };
   if (path === "/components") return { name: "components" };
@@ -456,6 +458,8 @@ export function routeToPath(route: Route): string {
       return "/search";
     case "apps":
       return "/apps";
+    case "explore":
+      return "/explore";
     case "browse":
       return "/browse";
     case "browse-app":

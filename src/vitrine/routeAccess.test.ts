@@ -26,12 +26,13 @@ const publicRoutes: Route[] = [
   { name: 'privacy' },
   { name: 'refunds' },
   { name: 'apps' },
+  { name: 'explore' },
   { name: 'sites' },
   { name: 'flows' },
   { name: 'feature-document-share', token: 'public-token' },
 ];
 
-test('keeps Apps, Sites, and Flows catalogs public while detail and member routes require authentication', async () => {
+test('keeps Explore, Apps, Sites, and Flows catalogs public while detail and member routes require authentication', async () => {
   const policy = await import('./routeAccess.ts').catch(() => null);
   assert.ok(policy, 'route access policy must exist');
 

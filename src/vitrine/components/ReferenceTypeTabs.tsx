@@ -2,9 +2,10 @@ import { ToggleButton } from '@astryxdesign/core';
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { navigate } from '../router.ts';
 
-export type ReferenceType = 'apps' | 'sites' | 'color' | 'flows' | 'components' | 'projects';
+export type ReferenceType = 'explore' | 'apps' | 'sites' | 'color' | 'flows' | 'components' | 'projects';
 
 const DEFAULT_REFERENCE_TYPES: readonly ReferenceType[] = [
+  'explore',
   'apps',
   'sites',
   'flows',
@@ -22,7 +23,9 @@ interface ReferenceTypeTabsProps {
 export function ReferenceTypeTabs({
   active,
   onChange = (value) => navigate(
-    value === 'apps'
+    value === 'explore'
+      ? { name: 'explore' }
+      : value === 'apps'
       ? { name: 'apps' }
       : value === 'sites'
         ? { name: 'sites' }
@@ -92,7 +95,9 @@ export function ReferenceTypeTabs({
           className="reference-type-tabs__tab"
         >
           <ToggleButton
-            label={value === 'apps'
+            label={value === 'explore'
+              ? 'Explore'
+              : value === 'apps'
               ? 'Apps'
               : value === 'sites'
                 ? 'Sites'

@@ -4,22 +4,24 @@ import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ReferenceTypeTabs } from './components/ReferenceTypeTabs.tsx';
 
-test('renders Components next to Flows in the main reference navigation', () => {
+test('renders Explore before Apps in the main reference navigation', () => {
   const html = renderToStaticMarkup(
     <ReferenceTypeTabs active="flows" onChange={() => undefined} />,
   );
   assert.match(html, /role="tablist"/);
+  assert.match(html, /Explore/);
   assert.match(html, /Apps/);
   assert.match(html, /Sites/);
   assert.match(html, /Colors/);
   assert.match(html, /Flows/);
   assert.match(html, /Components/);
+  assert.ok(html.indexOf('Explore') < html.indexOf('Apps'));
   assert.ok(html.indexOf('Flows') < html.indexOf('Components'));
   assert.ok(html.indexOf('Components') < html.indexOf('Colors'));
   assert.ok(html.indexOf('Flows') < html.indexOf('Colors'));
   assert.doesNotMatch(html, /Projects/);
   assert.match(html, /reference-type-tabs__indicator/);
-  assert.equal((html.match(/reference-type-tabs__tab/g) ?? []).length, 5);
+  assert.equal((html.match(/reference-type-tabs__tab/g) ?? []).length, 6);
   assert.match(html, /role="tab"[^>]+aria-selected="true"[^>]*>.*?Flows/s);
 });
 
@@ -44,6 +46,6 @@ test('can render Projects as the only workspace tab', () => {
     />,
   );
 
-  assert.doesNotMatch(html, /Apps|Sites|Colors|Flows|Components/);
+  assert.doesNotMatch(html, /Explore|Apps|Sites|Colors|Flows|Components/);
   assert.match(html, /role="tab"[^>]+aria-selected="true"[^>]*>.*?Projects/s);
 });

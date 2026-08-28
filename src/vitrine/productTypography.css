@@ -14,6 +14,7 @@
 
 [data-application-surface="true"]
   :where(h1):not(
+    .palmer-app *,
     .reference-detail__heading *,
     .apps-discovery-hero *,
     .color-composer__intro *,
@@ -32,6 +33,7 @@
 
 [data-application-surface="true"]
   :where(h2, h3):not(
+    .palmer-app *,
     .reference-discovery__taxonomy *,
     .reference-detail__heading *,
     .apps-discovery-hero *,
@@ -51,6 +53,7 @@
 
 [data-application-surface="true"]
   :where(h4, h5, h6, label, legend):not(
+    .palmer-app *,
     .astryx-field-label,
     .project-document__editor *,
     .project-canvas-document-editor *,
@@ -65,6 +68,7 @@
 
 [data-application-surface="true"]
   :where(p, li, dt, dd, blockquote, input, textarea, select):not(
+    .palmer-app *,
     .astryx-text-input input,
     .astryx-textarea textarea,
     .reference-detail__heading *,
@@ -88,6 +92,7 @@
  */
 [data-application-surface="true"]
   :where(button, [role="button"], [role="tab"], [role="menuitem"]):not(
+    .palmer-app *,
     .reference-discovery__taxonomy *,
     .projects-workspace__desktop-rail *,
     .projects-team-drawer *,
@@ -107,6 +112,7 @@
     button[data-variant="primary"],
     [role="button"][data-variant="primary"]
   ):not(
+    .palmer-app *,
     .project-document__editor *,
     .project-canvas-document-editor *,
     .document-flow *,
@@ -129,6 +135,7 @@
 
 [data-application-surface="true"]
   :where(small, time, figcaption):not(
+    .palmer-app *,
     .project-document__editor *,
     .project-canvas-document-editor *,
     .document-flow *,
@@ -149,6 +156,7 @@
     [class*="__helper"],
     [class*="__hint"]
   ):not(
+    .palmer-app *,
     .reference-detail__metadata,
     .reference-detail__metadata *,
     .project-files__hero-metadata,
@@ -166,6 +174,7 @@
 
 [data-application-surface="true"]
   :where([class*="__brand"] strong):not(
+    .palmer-app *,
     .projects-workspace__desktop-rail *,
     .project-document__editor *,
     .project-canvas-document-editor *,
@@ -179,6 +188,7 @@
 
 [data-application-surface="true"]
   :where([class*="__copy"] strong, [class*="__identity"] strong):not(
+    .palmer-app *,
     .reference-detail__metadata *,
     .project-files__hero-metadata *,
     .project-document__editor *,

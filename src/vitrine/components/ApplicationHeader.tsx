@@ -12,10 +12,12 @@ interface ApplicationHeaderProps {
   contextIconUrl?: string | null;
 }
 
-const REFERENCE_TYPES = ['apps', 'sites', 'flows', 'components', 'color'] as const;
+const REFERENCE_TYPES = ['explore', 'apps', 'sites', 'flows', 'components', 'color'] as const;
 
 function referenceTypeLabel(value: ReferenceType) {
-  return value === 'apps'
+  return value === 'explore'
+    ? 'Explore'
+    : value === 'apps'
     ? 'Apps'
     : value === 'sites'
       ? 'Sites'
@@ -27,7 +29,9 @@ function referenceTypeLabel(value: ReferenceType) {
 }
 
 function referenceTypeRoute(value: ReferenceType) {
-  return value === 'apps'
+  return value === 'explore'
+    ? { name: 'explore' } as const
+    : value === 'apps'
     ? { name: 'apps' } as const
     : value === 'sites'
       ? { name: 'sites' } as const

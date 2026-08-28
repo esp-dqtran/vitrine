@@ -53,6 +53,7 @@ import './colorGallery.css';
 import './colorPostStudio.css';
 import './Pricing.css';
 import './legalPages.css';
+import '../../artifacts/reverse-engineering/palmer-dinnerware/prototype/src/styles.css';
 
 // No token overrides — @astryxdesign/core/astryx.css already ships Vitrines' palette at :root.
 // This theme object exists only so <Theme> can drive data-theme (and thus color-scheme) from `mode`.
@@ -206,7 +207,13 @@ function RouteStatusPage({ title, onBack }: { title: string; onBack: () => void 
 
 function PublicLegalFooter() {
   const route = useRoute();
-  if (route.name === 'terms' || route.name === 'privacy' || route.name === 'refunds' || route.name === 'color-compose') return null;
+  if (
+    route.name === 'terms'
+    || route.name === 'privacy'
+    || route.name === 'refunds'
+    || route.name === 'color-compose'
+    || route.name === 'explore'
+  ) return null;
   return (
     <footer className="site-legal-footer">
       <nav aria-label="Legal information">

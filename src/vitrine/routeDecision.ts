@@ -76,6 +76,7 @@ export function decideRootRoute(
         ? { kind: "public", page: route.name }
         : { kind: "redirect", route: { name: "apps" } };
     case "apps":
+    case "explore":
     case "browse":
     case "browse-app":
     case "browse-flows":

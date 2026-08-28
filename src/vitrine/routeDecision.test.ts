@@ -61,6 +61,7 @@ test('redirects authenticated sign-in routes to Apps', () => {
 
 test('keeps catalogs and the bounded app preview public while sending private guest routes to sign-in', () => {
   assert.deepEqual(decideRootRoute({ name: 'apps' }, guest), { kind: 'application' });
+  assert.deepEqual(decideRootRoute({ name: 'explore' }, guest), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'sites' }, guest), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'color' }, guest), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'sites-motion' }, guest), { kind: 'application' });
@@ -88,6 +89,7 @@ test('selects the isolated Admin dashboard only for an admin session', () => {
 test('uses the same application renderer for members and admins on normal routes', () => {
   const routes: Route[] = [
     { name: 'apps' },
+    { name: 'explore' },
     { name: 'sites' },
     { name: 'color' },
     { name: 'sites-motion' },
@@ -177,6 +179,7 @@ test('produces an explicit decision for every current route name', () => {
     { name: 'signin' },
     { name: 'search' },
     { name: 'apps' },
+    { name: 'explore' },
     { name: 'flows' },
     { name: 'components' },
     { name: 'app', appId: 'linear' },

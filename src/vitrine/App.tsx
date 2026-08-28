@@ -41,6 +41,7 @@ import {
   AstryxDropdownItem,
 } from "./components/AstryxDropdown.tsx";
 import { AppsDiscoveryPage } from "./components/AppsDiscoveryPage.tsx";
+import { ExploreAppsPage } from "./components/ExploreAppsPage.tsx";
 import { CatalogBrowsePage } from "./components/CatalogBrowsePage.tsx";
 import { CatalogAppPage } from "./components/CatalogAppPage.tsx";
 import { CatalogFlowsPage } from "./components/CatalogFlowsPage.tsx";
@@ -822,6 +823,15 @@ export function App() {
   let page: ReactNode;
 
   switch (route.name) {
+    case "explore":
+      page = (
+        <ExploreAppsPage
+          role={user?.role}
+          onOpenApp={(appId) => void openApp(appId)}
+          onGuestLimitReached={openCatalogLimit}
+        />
+      );
+      break;
     case "flows":
       page = (
         <FlowsPage

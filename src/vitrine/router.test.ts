@@ -36,6 +36,12 @@ test("round-trips the first-class Flows catalog route", () => {
   assert.equal(routeToPath({ name: "flows" }), "/flows");
 });
 
+test("round-trips the spatial Explore Apps route", () => {
+  assert.deepEqual(parseRoutePath("/explore"), { name: "explore" });
+  assert.deepEqual(parseRoutePath("/explore/"), { name: "explore" });
+  assert.equal(routeToPath({ name: "explore" }), "/explore");
+});
+
 test("round-trips the top-level Components route", () => {
   assert.deepEqual(parseRoutePath("/components"), { name: "components" });
   assert.equal(routeToPath({ name: "components" }), "/components");
