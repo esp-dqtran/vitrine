@@ -13,6 +13,7 @@ export function useAppCatalog({ catalogSessionKey = "guest", onGuestLimitReached
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hasMore, setHasMore] = useState(false);
+  const [canAutoLoadMore, setCanAutoLoadMore] = useState(false);
   const cursor = useRef(null);
   const requestGeneration = useRef(0);
   const loadingMore = useRef(false);
@@ -33,6 +34,7 @@ export function useAppCatalog({ catalogSessionKey = "guest", onGuestLimitReached
         guestLimitBlocked.current = !page.nextCursor && page.totalCount > items.length;
         setInitialItems(items);
         setAllItems(items);
+        setCanAutoLoadMore(Boolean(page.nextCursor));
         setHasMore(Boolean(page.nextCursor) || Boolean(
           guestLimitBlocked.current && guestLimitHandler.current,
         ));
@@ -63,6 +65,7 @@ export function useAppCatalog({ catalogSessionKey = "guest", onGuestLimitReached
       const items = catalogAppsToItems(page.apps);
       cursor.current = page.nextCursor;
       guestLimitBlocked.current = false;
+      setCanAutoLoadMore(Boolean(page.nextCursor));
       setHasMore(Boolean(page.nextCursor));
       setAllItems((current) => appendUnique(current, items));
       return items;
@@ -71,5 +74,13 @@ export function useAppCatalog({ catalogSessionKey = "guest", onGuestLimitReached
     }
   }, []);
 
-  return { initialItems, allItems, loading, error, hasMore, loadNextPage };
+  return {
+    initialItems,
+    allItems,
+    loading,
+    error,
+    hasMore,
+    canAutoLoadMore,
+    loadNextPage,
+  };
 }

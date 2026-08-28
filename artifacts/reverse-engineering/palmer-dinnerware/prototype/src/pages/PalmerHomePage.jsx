@@ -9,7 +9,15 @@ import { GlobalChrome } from "../sections/GlobalChrome";
 const allSizes = appFacets.sizes.map(Number);
 
 export function PalmerHomePage({ catalogSessionKey, onGuestLimitReached, onOpenApp } = {}) {
-  const { initialItems, allItems, loading, error, hasMore, loadNextPage } = useAppCatalog({
+  const {
+    initialItems,
+    allItems,
+    loading,
+    error,
+    hasMore,
+    canAutoLoadMore,
+    loadNextPage,
+  } = useAppCatalog({
     catalogSessionKey,
     onGuestLimitReached,
   });
@@ -107,6 +115,7 @@ export function PalmerHomePage({ catalogSessionKey, onGuestLimitReached, onOpenA
         loading={loading}
         error={error}
         hasMore={hasMore}
+        canAutoLoadMore={canAutoLoadMore}
         loadNextPage={loadNextPage}
         filterItems={filterItems}
         menu={menu}

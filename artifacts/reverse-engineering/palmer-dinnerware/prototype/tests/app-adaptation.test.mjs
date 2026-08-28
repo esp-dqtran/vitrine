@@ -29,7 +29,9 @@ test("adapts Palmer motion to an API-backed virtual App canvas", async () => {
   assert.match(hook, /fetchAppCatalogPage/);
   assert.match(hook, /catalogSessionKey/);
   assert.match(hook, /\[catalogSessionKey\]/);
+  assert.match(hook, /setCanAutoLoadMore\(Boolean\(page\.nextCursor\)\)/);
   assert.match(page, /useAppCatalog/);
+  assert.match(page, /canAutoLoadMore=\{canAutoLoadMore\}/);
   assert.match(canvas, /canvasLoadDirection/);
   assert.match(canvas, /dragLoadDirection/);
   assert.match(canvas, /nearbyTileIds/);
@@ -37,6 +39,7 @@ test("adapts Palmer motion to an API-backed virtual App canvas", async () => {
   assert.match(canvas, /data-load-more-state/);
   assert.match(canvas, /AUTO_LOAD_DIRECTIONS = \["right", "down", "left", "up"\]/);
   assert.match(canvas, /autoLoadIndex\.current % AUTO_LOAD_DIRECTIONS\.length/);
+  assert.match(canvas, /!canAutoLoadMore/);
   assert.match(canvas, /if \(loadMore\(direction, \{ animate: false \}\)\) autoLoadIndex\.current \+= 1/);
   assert.match(canvas, /if \(pending\.animate === false\)/);
   assert.match(canvas, /data-assignment-count=\{tile\.assignments\.length\}/);

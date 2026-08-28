@@ -53,6 +53,7 @@ export function ExperienceCanvasSection({
   loading,
   error,
   hasMore,
+  canAutoLoadMore,
   loadNextPage,
   filterItems,
   menu,
@@ -203,7 +204,7 @@ export function ExperienceCanvasSection({
   }, [bounds, loadMore, viewport]);
 
   useEffect(() => {
-    if (!items.length || loading || !hasMore || loadingDirection || loadError || loadLock.current) {
+    if (!items.length || loading || !canAutoLoadMore || loadingDirection || loadError || loadLock.current) {
       return undefined;
     }
     const timer = window.setTimeout(() => {
@@ -213,7 +214,7 @@ export function ExperienceCanvasSection({
       if (loadMore(direction, { animate: false })) autoLoadIndex.current += 1;
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [hasMore, items.length, loadError, loadMore, loading, loadingDirection]);
+  }, [canAutoLoadMore, items.length, loadError, loadMore, loading, loadingDirection]);
 
   const dragCallbacks = useRef({});
   dragCallbacks.current = {
