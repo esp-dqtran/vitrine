@@ -27,3 +27,9 @@ export function dragLoadDirection(deltaX, deltaY, threshold = 96) {
   }
   return deltaY > 0 ? "up" : "down";
 }
+
+export function trackpadZoomIndex(currentIndex, deltaY, levelCount) {
+  if (!Number.isFinite(deltaY) || deltaY === 0 || levelCount < 1) return currentIndex;
+  const direction = deltaY < 0 ? 1 : -1;
+  return Math.max(0, Math.min(levelCount - 1, currentIndex + direction));
+}

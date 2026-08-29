@@ -1,12 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { canvasLoadDirection, dragLoadDirection } from "../src/interaction/canvasEdges.js";
+import {
+  canvasLoadDirection,
+  dragLoadDirection,
+  trackpadZoomIndex,
+} from "../src/interaction/canvasEdges.js";
 import {
   allocateAppsToTiles,
   createSpatialTile,
   nearbyTileIds,
   tileExtent,
 } from "../src/interaction/spatialTileAllocator.js";
+import { catalogAppsToItems } from "../src/data/apps.js";
 
 const slots = [
   { index: 0, runtimeColumn: 0, runtimeRow: 0, size: 10 },
@@ -37,6 +42,35 @@ test("maps a deliberate drag to the newly revealed canvas direction", () => {
   assert.equal(dragLoadDirection(20, 140), "up");
   assert.equal(dragLoadDirection(20, -140), "down");
   assert.equal(dragLoadDirection(40, 30), null);
+});
+
+test("maps trackpad pinch direction to the discrete canvas zoom levels", () => {
+  assert.equal(trackpadZoomIndex(1, -12, 3), 2);
+  assert.equal(trackpadZoomIndex(1, 12, 3), 0);
+  assert.equal(trackpadZoomIndex(2, -12, 3), 2);
+  assert.equal(trackpadZoomIndex(0, 12, 3), 0);
+  assert.equal(trackpadZoomIndex(1, 0, 3), 1);
+});
+
+test("preserves useful App metadata for the focus sidebar", () => {
+  const [item] = catalogAppsToItems([{
+    id: "comet",
+    app: "Comet",
+    accent: "#111111",
+    categories: [{ name: "Utilities" }],
+    totalScreens: 124,
+    analyzedScreens: 98,
+    description: "  An AI-powered browser.  ",
+    platforms: ["ios", "ios"],
+    lastCapturedAt: "2026-07-24T11:46:20.491Z",
+    websiteUrl: "https://example.com",
+  }]);
+
+  assert.equal(item.description, "An AI-powered browser.");
+  assert.deepEqual(item.platforms, ["ios"]);
+  assert.equal(item.analyzedScreens, 98);
+  assert.equal(item.lastCapturedAt, "2026-07-24T11:46:20.491Z");
+  assert.equal(item.websiteUrl, "https://example.com");
 });
 
 test("fills empty slots before extending into a neighboring tile", () => {

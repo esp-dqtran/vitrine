@@ -173,9 +173,16 @@ body:has(.palmer-app) { margin: 0; min-width: 320px; min-height: 100vh; color: #
 .collection-focus__thumbs button:focus-visible { outline: 2px solid var(--ink); outline-offset: -3px; }
 .collection-focus__thumbs .product-image { width: 70%; height: 70%; box-shadow: none; }
 .collection-focus__thumb-indicator { position: absolute; inset: 0 auto auto 0; width: 100%; aspect-ratio: 1; border: 1px solid var(--ink); border-radius: 4px; pointer-events: none; }
-.collection-focus__context { position: absolute; z-index: 3; left: 8.7vw; bottom: 0; height: 10vh; display: flex; align-items: baseline; gap: 4px; margin: 0; font-size: 12px; line-height: 1.4; white-space: nowrap; }
+.collection-focus__context { position: absolute; z-index: 3; left: 8.7vw; bottom: 25px; width: min(32vw, 430px); display: grid; gap: 8px; font-size: 12px; line-height: 1.4; }
+.collection-focus__context-summary { margin: 0; white-space: nowrap; }
 .collection-focus__context-char { display: inline-block; backface-visibility: hidden; will-change: transform, opacity; }
 .collection-focus__context-char.is-category { font-size: 1.5em; font-weight: 500; line-height: 1; }
+.collection-focus__context-detail { backface-visibility: hidden; will-change: transform, opacity; }
+.collection-focus__description { display: -webkit-box; max-width: 42ch; margin: 0; overflow: hidden; color: color-mix(in srgb, var(--ink) 72%, transparent); font-size: 13px; line-height: 1.35; letter-spacing: -.01em; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.collection-focus__facts { display: flex; flex-wrap: wrap; gap: 9px 24px; margin: 2px 0 0; }
+.collection-focus__facts > div { display: grid; gap: 1px; }
+.collection-focus__facts dt { color: color-mix(in srgb, var(--ink) 48%, transparent); font-size: 8px; font-weight: 600; letter-spacing: .12em; line-height: 1.2; text-transform: uppercase; }
+.collection-focus__facts dd { margin: 0; font-size: 10px; font-weight: 500; line-height: 1.3; }
 .collection-focus__cta { position: fixed; z-index: 405; right: calc(40% + 1.0417vw); bottom: 26.672px; height: 32px; display: flex; align-items: center; gap: 1px; color: var(--paper); text-decoration: none; pointer-events: auto; font-size: 10.667px; font-weight: 500; }
 .collection-focus__cta-label, .collection-focus__cta-arrow { height: 100%; display: flex; align-items: center; justify-content: center; border-radius: 3px; background: var(--ink); }
 .collection-focus__cta-label { padding: 0 11.301px; }
@@ -231,7 +238,8 @@ body:has(.palmer-app) { margin: 0; min-width: 320px; min-height: 100vh; color: #
   .collection-focus__product { width: 100vw; height: 100vw; flex-basis: 100vw; }
   .collection-focus__thumbs { display: none; }
   .collection-focus__mobile-band { display: block; position: fixed; z-index: 404; left: 0; right: 0; bottom: 0; height: 10vh; border-top: 1px solid var(--ink); background: var(--paper); }
-  .collection-focus__context { position: fixed; left: 4.1026vw; bottom: 27.57vh; height: auto; display: block; font-size: 3.7578vw; line-height: 1.4; }
+  .collection-focus__context { position: fixed; left: 4.1026vw; bottom: 27.57vh; width: auto; display: block; font-size: 3.7578vw; line-height: 1.4; }
+  .collection-focus__description, .collection-focus__facts { display: none; }
   .collection-focus__cta { right: auto; left: 50%; bottom: 18.4px; height: 45.594px; transform: translateX(-50%); font-size: 3.3403vw; }
   .collection-focus__cta-label { padding: 0 14px; }
   .collection-focus__cta-arrow { width: 45.594px; flex-basis: 45.594px; }

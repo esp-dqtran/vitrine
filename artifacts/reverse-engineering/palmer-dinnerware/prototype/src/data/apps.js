@@ -58,6 +58,13 @@ export function catalogAppsToItems(apps) {
       categories,
       size: app.totalScreens,
       totalScreens: app.totalScreens,
+      analyzedScreens: Number.isFinite(app.analyzedScreens) ? app.analyzedScreens : null,
+      description: typeof app.description === "string" && app.description.trim()
+        ? app.description.trim()
+        : null,
+      platforms: [...new Set((app.platforms ?? []).filter(Boolean))],
+      lastCapturedAt: app.lastCapturedAt ?? null,
+      websiteUrl: app.websiteUrl ?? null,
       appUrl: `https://vitrines.ai/apps/${app.id}`,
     };
   });

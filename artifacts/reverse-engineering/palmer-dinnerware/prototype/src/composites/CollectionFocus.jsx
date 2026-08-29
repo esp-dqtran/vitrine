@@ -12,6 +12,24 @@ function usesSourcePortraitTouchMotion() {
   return isTouchDevice && !window.matchMedia("(orientation: landscape)").matches;
 }
 
+function platformLabel(platform) {
+  if (platform === "ios") return "iOS";
+  if (platform === "android") return "Android";
+  if (platform === "web") return "Web";
+  return platform;
+}
+
+function capturedDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
 export function CollectionFocus({ collection, initialProduct, onClose, onOpenApp }) {
   const products = useMemo(() => {
     const selected = collection.products.find((product) => product.id === initialProduct?.id);
@@ -130,14 +148,18 @@ export function CollectionFocus({ collection, initialProduct, onClose, onOpenApp
     contextTween.current?.kill();
     contextTimer.current = setTimeout(() => {
       const oldTitleChars = rootRef.current?.querySelectorAll(".collection-focus__title-char");
-      const oldContextChars = rootRef.current?.querySelectorAll(".collection-focus__context-char");
+      const oldContextChars = rootRef.current?.querySelectorAll(
+        ".collection-focus__context-char, .collection-focus__context-detail",
+      );
       contextTween.current = gsap.timeline({
         onComplete: () => {
           setContextProduct(products[index]);
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               const newTitleChars = rootRef.current?.querySelectorAll(".collection-focus__title-char");
-              const newContextChars = rootRef.current?.querySelectorAll(".collection-focus__context-char");
+              const newContextChars = rootRef.current?.querySelectorAll(
+                ".collection-focus__context-char, .collection-focus__context-detail",
+              );
               gsap.set(titleRef.current, { autoAlpha: 0 });
               gsap.set(newTitleChars, { yPercent: 115, autoAlpha: 1, force3D: true });
               gsap.set(newContextChars, { yPercent: 100, autoAlpha: 0, force3D: true });
@@ -487,16 +509,43 @@ export function CollectionFocus({ collection, initialProduct, onClose, onOpenApp
           </div>
           <span ref={thumbIndicatorRef} className="collection-focus__thumb-indicator" aria-hidden="true" />
         </div>
-        <p ref={contextRef} className="collection-focus__context">
-          {[...`${contextProduct.type} · ${contextProduct.totalScreens.toLocaleString()} screens`].map((character, index) => (
-            <span
-              className={`collection-focus__context-char ${index < contextProduct.type.length ? "is-category" : ""}`.trim()}
-              key={`${character}-${index}`}
-            >
-              {character === " " ? "\u00a0" : character}
-            </span>
-          ))}
-        </p>
+        <div ref={contextRef} className="collection-focus__context">
+          <p className="collection-focus__context-summary">
+            {[...`${contextProduct.type} · ${contextProduct.totalScreens.toLocaleString()} screens`].map((character, index) => (
+              <span
+                className={`collection-focus__context-char ${index < contextProduct.type.length ? "is-category" : ""}`.trim()}
+                key={`${character}-${index}`}
+              >
+                {character === " " ? "\u00a0" : character}
+              </span>
+            ))}
+          </p>
+          {contextProduct.description && (
+            <p className="collection-focus__description collection-focus__context-detail">
+              {contextProduct.description}
+            </p>
+          )}
+          <dl className="collection-focus__facts collection-focus__context-detail" aria-label={`${contextProduct.name} details`}>
+            {contextProduct.platforms?.length > 0 && (
+              <div>
+                <dt>Platforms</dt>
+                <dd>{contextProduct.platforms.map(platformLabel).join(", ")}</dd>
+              </div>
+            )}
+            {Number.isFinite(contextProduct.analyzedScreens) && contextProduct.analyzedScreens > 0 && (
+              <div>
+                <dt>Analyzed</dt>
+                <dd>{contextProduct.analyzedScreens.toLocaleString()} screens</dd>
+              </div>
+            )}
+            {capturedDate(contextProduct.lastCapturedAt) && (
+              <div>
+                <dt>Captured</dt>
+                <dd>{capturedDate(contextProduct.lastCapturedAt)}</dd>
+              </div>
+            )}
+          </dl>
+        </div>
       </div>
       <div className="collection-focus__mobile-band" aria-hidden="true" />
       <a

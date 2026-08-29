@@ -22,6 +22,9 @@ test("adapts Palmer motion to an API-backed virtual App canvas", async () => {
   ]);
 
   assert.match(apps, /catalogAppsToItems/);
+  assert.match(apps, /description: typeof app\.description/);
+  assert.match(apps, /platforms: \[\.\.\.new Set/);
+  assert.match(apps, /lastCapturedAt: app\.lastCapturedAt/);
   assert.doesNotMatch(apps, /const appRecords/);
   assert.match(api, /\/api\/apps/);
   assert.match(api, /cursor/);
@@ -46,6 +49,9 @@ test("adapts Palmer motion to an API-backed virtual App canvas", async () => {
   assert.match(canvas, /suppressClick/);
   assert.match(canvas, /Draggable\.create\(canvas/);
   assert.match(canvas, /minimumMovement: 10/);
+  assert.match(canvas, /if \(!event\.ctrlKey\) return/);
+  assert.match(canvas, /addEventListener\("wheel", onTrackpadPinch, \{ passive: false \}\)/);
+  assert.match(canvas, /trackpadZoomIndex/);
   assert.match(await read("src/composites/ExperienceProduct.jsx"), /role="button"/);
   assert.match(await read("src/composites/ExperienceProduct.jsx"), /event\.key !== "Enter"/);
   assert.match(allocator, /allocateAppsToTiles/);
@@ -53,6 +59,9 @@ test("adapts Palmer motion to an API-backed virtual App canvas", async () => {
   assert.match(vite, /VITRINE_API_TARGET/);
   assert.match(focus, /contextProduct\.name/);
   assert.match(focus, /contextProduct\.totalScreens/);
+  assert.match(focus, /contextProduct\.description/);
+  assert.match(focus, /contextProduct\.platforms/);
+  assert.match(focus, /contextProduct\.lastCapturedAt/);
   assert.match(focus, /href=\{contextProduct\.appUrl\}/);
   assert.match(focus, /aria-label=\{`View \$\{product\.name\}`\}/);
   assert.match(focus, /onOpenApp\(product\.id\)/);

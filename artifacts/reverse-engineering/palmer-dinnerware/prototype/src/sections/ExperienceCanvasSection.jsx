@@ -6,7 +6,7 @@ import {
   PALMER_SOURCE_SLOTS,
 } from "../data/palmerSourceSlots";
 import { ExperienceProduct } from "../composites/ExperienceProduct";
-import { canvasLoadDirection, dragLoadDirection } from "../interaction/canvasEdges";
+import { canvasLoadDirection, dragLoadDirection, trackpadZoomIndex } from "../interaction/canvasEdges";
 import {
   allocateAppsToTiles,
   createSpatialTile,
@@ -82,6 +82,7 @@ export function ExperienceCanvasSection({
   const loadLock = useRef(false);
   const autoLoadIndex = useRef(0);
   const lastProximityUpdate = useRef(0);
+  const pinchGesture = useRef({ active: false, lastEventAt: 0 });
   const tiles = stream.signature === itemSignature ? stream.tiles : initialTiles;
   const extent = useMemo(() => tileExtent(tiles), [tiles]);
   const mountedTileIds = useMemo(
@@ -369,8 +370,8 @@ export function ExperienceCanvasSection({
     return () => tween.kill();
   }, [clampPosition, finishLoad, tiles]);
 
-  const changeZoom = (nextIndex) => {
-    if (nextIndex === zoomIndex || !canvasRef.current) return;
+  const changeZoom = useCallback((nextIndex) => {
+    if (nextIndex === zoomRef.current || !canvasRef.current) return;
     const previousScale = SOURCE_ZOOM_LEVELS[zoomRef.current];
     const nextScale = SOURCE_ZOOM_LEVELS[nextIndex];
     const viewportCenter = { x: viewport.width / 2, y: viewport.height / 2 };
@@ -396,7 +397,32 @@ export function ExperienceCanvasSection({
         updateFocusTile();
       },
     });
-  };
+  }, [bounds, clampPosition, updateFocusTile, viewport.height, viewport.width]);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return undefined;
+    const onTrackpadPinch = (event) => {
+      if (!event.ctrlKey) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (!Number.isFinite(event.deltaY) || event.deltaY === 0) return;
+
+      const now = performance.now();
+      const gesture = pinchGesture.current;
+      if (now - gesture.lastEventAt > 180) gesture.active = false;
+      gesture.lastEventAt = now;
+      if (gesture.active) return;
+      gesture.active = true;
+      changeZoom(trackpadZoomIndex(
+        zoomRef.current,
+        event.deltaY,
+        SOURCE_ZOOM_LEVELS.length,
+      ));
+    };
+    stage.addEventListener("wheel", onTrackpadPinch, { passive: false });
+    return () => stage.removeEventListener("wheel", onTrackpadPinch);
+  }, [changeZoom]);
 
   const columnCount = extent.maxX - extent.minX + 1;
   const rowCount = extent.maxY - extent.minY + 1;
@@ -446,6 +472,7 @@ export function ExperienceCanvasSection({
         });
       }}
       onWheel={(event) => {
+        if (event.ctrlKey) return;
         if (event.target.closest("button,a,input")) return;
         const bounded = clampPosition(
           position.current.x - event.deltaX,
