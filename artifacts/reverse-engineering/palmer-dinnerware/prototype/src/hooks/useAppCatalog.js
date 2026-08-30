@@ -22,11 +22,10 @@ export function useAppCatalog({ catalogSessionKey = "guest", onGuestLimitReached
   guestLimitHandler.current = onGuestLimitReached;
 
   useEffect(() => {
-    const controller = new AbortController();
     const generation = ++requestGeneration.current;
     setLoading(true);
     setError(null);
-    void fetchAppCatalogPage(null, controller.signal)
+    void fetchAppCatalogPage()
       .then((page) => {
         if (generation !== requestGeneration.current) return;
         const items = catalogAppsToItems(page.apps);
@@ -48,7 +47,6 @@ export function useAppCatalog({ catalogSessionKey = "guest", onGuestLimitReached
         if (generation === requestGeneration.current) setLoading(false);
       });
     return () => {
-      controller.abort();
       requestGeneration.current += 1;
     };
   }, [catalogSessionKey]);

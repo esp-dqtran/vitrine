@@ -12,6 +12,11 @@ import {
   tileExtent,
 } from "../src/interaction/spatialTileAllocator.js";
 import { catalogAppsToItems } from "../src/data/apps.js";
+import {
+  equalIdSets,
+  visibleTileIds,
+  viewportTileIds,
+} from "../src/interaction/viewportTiles.js";
 
 const slots = [
   { index: 0, runtimeColumn: 0, runtimeRow: 0, size: 10 },
@@ -121,4 +126,22 @@ test("keeps assignments cached while virtualizing distant tile contents", () => 
   ];
   assert.deepEqual(tileExtent(tiles), { minX: -2, maxX: 2, minY: 0, maxY: 0 });
   assert.deepEqual([...nearbyTileIds(tiles, "0:0", 1)], ["-1:0", "0:0", "1:0"]);
+});
+
+test("mounts visible and cardinal overscan tiles without paying for diagonal tiles", () => {
+  const rects = [
+    { id: "center", left: 0, top: 0, right: 1000, bottom: 700 },
+    { id: "left", left: -1160, top: 0, right: -120, bottom: 700 },
+    { id: "right", left: 1120, top: 0, right: 2160, bottom: 700 },
+    { id: "up", left: 0, top: -860, right: 1000, bottom: -120 },
+    { id: "down", left: 0, top: 820, right: 1000, bottom: 1560 },
+    { id: "diagonal", left: -1160, top: -860, right: -120, bottom: -120 },
+    { id: "far", left: 1400, top: 0, right: 2400, bottom: 700 },
+  ];
+
+  const mounted = viewportTileIds(rects, { width: 1000, height: 700 });
+  assert.deepEqual([...visibleTileIds(rects, { width: 1000, height: 700 })], ["center"]);
+  assert.deepEqual([...mounted], ["center", "left", "right", "up", "down"]);
+  assert.equal(equalIdSets(mounted, new Set(["down", "up", "right", "left", "center"])), true);
+  assert.equal(equalIdSets(mounted, new Set(["center"])), false);
 });

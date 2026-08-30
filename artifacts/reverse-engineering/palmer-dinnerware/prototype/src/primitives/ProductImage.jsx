@@ -6,6 +6,7 @@ export function ProductImage({ item, className = "", eager = false }) {
       src={item.localImage}
       alt={item.name}
       draggable="false"
+      decoding="async"
       loading={eager ? "eager" : "lazy"}
       width={item.image?.width || undefined}
       height={item.image?.height || undefined}

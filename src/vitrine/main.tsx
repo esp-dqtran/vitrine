@@ -54,6 +54,12 @@ import './colorPostStudio.css';
 import './Pricing.css';
 import './legalPages.css';
 import '../../artifacts/reverse-engineering/palmer-dinnerware/prototype/src/styles.css';
+// @ts-expect-error The source-audited Explore artifact is authored in JavaScript.
+import { preloadInitialAppCatalogPage } from '../../artifacts/reverse-engineering/palmer-dinnerware/prototype/src/data/appCatalogApi.js';
+
+if (window.location.pathname === '/explore') {
+  void preloadInitialAppCatalogPage().catch(() => undefined);
+}
 
 // No token overrides — @astryxdesign/core/astryx.css already ships Vitrines' palette at :root.
 // This theme object exists only so <Theme> can drive data-theme (and thus color-scheme) from `mode`.

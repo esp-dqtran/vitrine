@@ -5,6 +5,9 @@ import { BrandLogo } from "../primitives/BrandLogo";
 import { ProductImage } from "../primitives/ProductImage";
 import { ControlButton } from "../primitives/ControlButton";
 
+const FOCUS_CAROUSEL_RADIUS = 2;
+const FOCUS_THUMB_RADIUS = 12;
+
 function usesSourcePortraitTouchMotion() {
   const userAgent = window.navigator?.userAgent ?? "";
   const isTouchDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
@@ -487,7 +490,9 @@ export function CollectionFocus({ collection, initialProduct, onClose, onOpenApp
                   }
                 }}
               >
-                <ProductImage item={product} eager />
+                {Math.abs(index - slide) <= FOCUS_CAROUSEL_RADIUS && (
+                  <ProductImage item={product} eager={Math.abs(index - slide) <= 1} />
+                )}
               </a>
             ))}
           </div>
@@ -503,7 +508,9 @@ export function CollectionFocus({ collection, initialProduct, onClose, onOpenApp
                 onPointerDown={(event) => event.preventDefault()}
                 onClick={() => switchTo(index)}
               >
-                <ProductImage item={product} eager />
+                {Math.abs(index - slide) <= FOCUS_THUMB_RADIUS && (
+                  <ProductImage item={product} />
+                )}
               </button>
             ))}
           </div>

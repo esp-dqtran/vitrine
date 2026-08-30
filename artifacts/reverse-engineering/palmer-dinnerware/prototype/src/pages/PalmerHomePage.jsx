@@ -116,6 +116,7 @@ export function PalmerHomePage({ catalogSessionKey, onGuestLimitReached, onOpenA
         error={error}
         hasMore={hasMore}
         canAutoLoadMore={canAutoLoadMore}
+        allowBackgroundPagination={!entering}
         loadNextPage={loadNextPage}
         filterItems={filterItems}
         menu={menu}

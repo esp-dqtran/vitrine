@@ -10,9 +10,13 @@ import { canvasLoadDirection, dragLoadDirection, trackpadZoomIndex } from "../in
 import {
   allocateAppsToTiles,
   createSpatialTile,
-  nearbyTileIds,
   tileExtent,
 } from "../interaction/spatialTileAllocator";
+import {
+  equalIdSets,
+  visibleTileIds,
+  viewportTileIds,
+} from "../interaction/viewportTiles";
 import { SOURCE_ZOOM_LEVELS, ZoomControl } from "../composites/ZoomControl";
 import {
   Draggable,
@@ -25,6 +29,25 @@ import {
 import { ControlDockSection } from "./ControlDockSection";
 
 const AUTO_LOAD_DIRECTIONS = ["right", "down", "left", "up"];
+const ZOOM_IMAGE_PRELOAD_LIMIT = 32;
+
+function scheduleCatalogIdleWork(callback) {
+  if (typeof window.requestIdleCallback === "function") {
+    const request = window.requestIdleCallback(callback, { timeout: 1_200 });
+    return () => window.cancelIdleCallback(request);
+  }
+  const timer = window.setTimeout(callback, 250);
+  return () => window.clearTimeout(timer);
+}
+
+function scheduleTileOverscanWork(callback) {
+  if (typeof window.requestIdleCallback === "function") {
+    const request = window.requestIdleCallback(callback, { timeout: 300 });
+    return () => window.cancelIdleCallback(request);
+  }
+  const timer = window.setTimeout(callback, 100);
+  return () => window.clearTimeout(timer);
+}
 
 function seededTiles(items) {
   return allocateAppsToTiles(
@@ -35,12 +58,12 @@ function seededTiles(items) {
   ).tiles;
 }
 
-function tileColumns(tile, filterItems) {
+function tileColumns(items) {
   const columns = Array.from(
     { length: PALMER_SOURCE_COLUMN_COUNT },
     () => Array(PALMER_SOURCE_ROW_COUNT).fill(null),
   );
-  filterItems(tile.assignments.map(({ item }) => item)).forEach((item) => {
+  items.forEach((item) => {
     const column = Math.max(0, Math.min(PALMER_SOURCE_COLUMN_COUNT - 1, item.runtimeColumn ?? 0));
     const row = Math.max(0, Math.min(PALMER_SOURCE_ROW_COUNT - 1, item.runtimeRow ?? 0));
     columns[column][row] = item;
@@ -54,6 +77,7 @@ export function ExperienceCanvasSection({
   error,
   hasMore,
   canAutoLoadMore,
+  allowBackgroundPagination = true,
   loadNextPage,
   filterItems,
   menu,
@@ -67,12 +91,14 @@ export function ExperienceCanvasSection({
   const [zoomIndex, setZoomIndex] = useState(initialZoomIndex);
   const [viewport, setViewport] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [hoveredItem, setHoveredItem] = useState(null);
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [loadingDirection, setLoadingDirection] = useState(null);
   const [loadError, setLoadError] = useState(null);
   const [focusTileId, setFocusTileId] = useState("0:0");
+  const [mountedTileIds, setMountedTileIds] = useState(() => new Set(["0:0"]));
+  const [priorityItemKeys, setPriorityItemKeys] = useState(() => new Set());
   const stageRef = useRef(null);
   const canvasRef = useRef(null);
+  const cursorRef = useRef(null);
   const zoomRef = useRef(initialZoomIndex);
   const dragRef = useRef(null);
   const dragState = useRef({ dragged: false, prefetched: false, startX: 0, startY: 0 });
@@ -82,16 +108,31 @@ export function ExperienceCanvasSection({
   const loadLock = useRef(false);
   const autoLoadIndex = useRef(0);
   const lastProximityUpdate = useRef(0);
+  const proximityProducts = useRef(new Set());
   const pinchGesture = useRef({ active: false, lastEventAt: 0 });
+  const wheelFrame = useRef(0);
+  const pendingWheelPosition = useRef(null);
+  const mountFrame = useRef(0);
+  const zoomStartFrame = useRef(0);
+  const pendingMountView = useRef(null);
+  const mountedTileIdsRef = useRef(mountedTileIds);
+  const mountGeneration = useRef(0);
+  const cancelOverscanWork = useRef(null);
   const tiles = stream.signature === itemSignature ? stream.tiles : initialTiles;
   const extent = useMemo(() => tileExtent(tiles), [tiles]);
-  const mountedTileIds = useMemo(
-    () => nearbyTileIds(tiles, focusTileId, 1),
-    [focusTileId, tiles],
-  );
-  const visibleAssignmentCount = useMemo(() => tiles.reduce((count, tile) => (
-    count + filterItems(tile.assignments.map(({ item }) => item)).length
-  ), 0), [filterItems, tiles]);
+  const renderedTiles = useMemo(() => tiles.map((tile) => {
+    const filteredItems = filterItems(tile.assignments.map(({ item }) => item));
+    const mounted = mountedTileIds.has(tile.id);
+    return {
+      tile,
+      mounted,
+      columns: mounted ? tileColumns(filteredItems) : null,
+      visibleAssignmentCount: filteredItems.length,
+    };
+  }), [filterItems, mountedTileIds, tiles]);
+  const visibleAssignmentCount = useMemo(() => renderedTiles.reduce((count, entry) => (
+    count + entry.visibleAssignmentCount
+  ), 0), [renderedTiles]);
 
   useLayoutEffect(() => {
     if (stream.signature === itemSignature) return;
@@ -100,6 +141,10 @@ export function ExperienceCanvasSection({
     setLoadingDirection(null);
     setLoadError(null);
     setFocusTileId("0:0");
+    const initialMountedTiles = new Set(["0:0"]);
+    mountedTileIdsRef.current = initialMountedTiles;
+    setMountedTileIds(initialMountedTiles);
+    setPriorityItemKeys(new Set());
     autoLoadIndex.current = 0;
     setStream({ signature: itemSignature, tiles: initialTiles });
   }, [initialTiles, itemSignature, stream.signature]);
@@ -133,6 +178,133 @@ export function ExperienceCanvasSection({
     position.current = next;
     gsap.set(canvasRef.current, { x: next.x, y: next.y });
   }, []);
+
+  const syncMountedTiles = useCallback((
+    nextPosition = position.current,
+    scale = SOURCE_ZOOM_LEVELS[zoomRef.current],
+    {
+      deferOverscan = false,
+      preserveView = null,
+      visibleOnly = false,
+    } = {},
+  ) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return false;
+    const pages = [...canvas.querySelectorAll(".experience-page")];
+    const projectRects = (viewPosition, viewScale) => pages.map((page) => {
+      const left = viewPosition.x + page.offsetLeft * viewScale;
+      const top = viewPosition.y + page.offsetTop * viewScale;
+      return {
+        id: page.dataset.streamTile,
+        left,
+        top,
+        right: left + page.offsetWidth * viewScale,
+        bottom: top + page.offsetHeight * viewScale,
+      };
+    });
+    const rects = projectRects(nextPosition, scale);
+    const visibleIds = visibleTileIds(rects, viewport);
+    const nextIds = visibleOnly
+      ? new Set(visibleIds)
+      : viewportTileIds(rects, viewport);
+    if (!visibleIds.size && rects.length) {
+      const center = { x: viewport.width / 2, y: viewport.height / 2 };
+      const nearest = rects.reduce((best, rect) => {
+        const distance = Math.hypot(
+          (rect.left + rect.right) / 2 - center.x,
+          (rect.top + rect.bottom) / 2 - center.y,
+        );
+        return distance < best.distance ? { id: rect.id, distance } : best;
+      }, { id: rects[0].id, distance: Infinity });
+      visibleIds.add(nearest.id);
+      nextIds.add(nearest.id);
+    }
+    const generation = ++mountGeneration.current;
+    cancelOverscanWork.current?.();
+    cancelOverscanWork.current = null;
+    const immediateIds = deferOverscan ? new Set(visibleIds) : nextIds;
+    let deferredIds = nextIds;
+    if (deferOverscan) {
+      const nearestOverscan = rects.filter(({ id }) => (
+        nextIds.has(id) && !immediateIds.has(id)
+      )).map((rect) => {
+        const distanceX = rect.left > viewport.width
+          ? rect.left - viewport.width
+          : rect.right < 0 ? -rect.right : 0;
+        const distanceY = rect.top > viewport.height
+          ? rect.top - viewport.height
+          : rect.bottom < 0 ? -rect.bottom : 0;
+        return { id: rect.id, distance: Math.hypot(distanceX, distanceY) };
+      }).sort((left, right) => left.distance - right.distance)[0];
+      deferredIds = new Set(immediateIds);
+      if (nearestOverscan) deferredIds.add(nearestOverscan.id);
+    }
+    if (preserveView) {
+      visibleTileIds(projectRects(preserveView.position, preserveView.scale), viewport)
+        .forEach((id) => immediateIds.add(id));
+    }
+    const changed = !equalIdSets(mountedTileIdsRef.current, immediateIds);
+    if (changed) {
+      mountedTileIdsRef.current = immediateIds;
+      setMountedTileIds(immediateIds);
+    }
+    if (deferOverscan && !equalIdSets(immediateIds, deferredIds)) {
+      cancelOverscanWork.current = scheduleTileOverscanWork(() => {
+        if (generation !== mountGeneration.current) return;
+        cancelOverscanWork.current = null;
+        if (equalIdSets(mountedTileIdsRef.current, deferredIds)) return;
+        mountedTileIdsRef.current = deferredIds;
+        setMountedTileIds(deferredIds);
+      });
+    }
+    return changed;
+  }, [viewport]);
+
+  const scheduleMountedTileSync = useCallback((
+    nextPosition = position.current,
+    scale = SOURCE_ZOOM_LEVELS[zoomRef.current],
+  ) => {
+    pendingMountView.current = { position: { ...nextPosition }, scale };
+    if (mountFrame.current) return;
+    mountFrame.current = window.requestAnimationFrame(() => {
+      mountFrame.current = 0;
+      const pending = pendingMountView.current;
+      if (pending) {
+        syncMountedTiles(pending.position, pending.scale, {
+          deferOverscan: true,
+        });
+      }
+    });
+  }, [syncMountedTiles]);
+
+  const prioritizeZoomTargetImages = useCallback((
+    previousPosition,
+    nextPosition,
+    previousScale,
+    nextScale,
+  ) => {
+    const canvas = canvasRef.current;
+    if (!canvas || previousScale <= 0) return;
+    const center = { x: viewport.width / 2, y: viewport.height / 2 };
+    const candidates = [...canvas.querySelectorAll(".experience-product")].map((product) => {
+      const rect = product.getBoundingClientRect();
+      const layoutLeft = (rect.left - previousPosition.x) / previousScale;
+      const layoutTop = (rect.top - previousPosition.y) / previousScale;
+      const width = rect.width / previousScale * nextScale;
+      const height = rect.height / previousScale * nextScale;
+      const left = nextPosition.x + layoutLeft * nextScale;
+      const top = nextPosition.y + layoutTop * nextScale;
+      return {
+        key: product.dataset.instanceKey,
+        visible: left + width > 0 && left < viewport.width && top + height > 0 && top < viewport.height,
+        distance: Math.hypot(left + width / 2 - center.x, top + height / 2 - center.y),
+      };
+    }).filter(({ key, visible }) => key && visible)
+      .sort((left, right) => left.distance - right.distance)
+      .slice(0, ZOOM_IMAGE_PRELOAD_LIMIT);
+    const nextKeys = new Set(candidates.map(({ key }) => key));
+    setPriorityItemKeys((current) => equalIdSets(current, nextKeys) ? current : nextKeys);
+  }, [viewport]);
 
   const updateFocusTile = useCallback(() => {
     const pages = [...(canvasRef.current?.querySelectorAll(".experience-page") ?? [])];
@@ -205,31 +377,49 @@ export function ExperienceCanvasSection({
   }, [bounds, loadMore, viewport]);
 
   useEffect(() => {
-    if (!items.length || loading || !canAutoLoadMore || loadingDirection || loadError || loadLock.current) {
+    if (!allowBackgroundPagination || !items.length || loading || !canAutoLoadMore
+      || loadingDirection || loadError || loadLock.current) {
       return undefined;
     }
-    const timer = window.setTimeout(() => {
+    return scheduleCatalogIdleWork(() => {
       const direction = AUTO_LOAD_DIRECTIONS[
         autoLoadIndex.current % AUTO_LOAD_DIRECTIONS.length
       ];
       if (loadMore(direction, { animate: false })) autoLoadIndex.current += 1;
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [canAutoLoadMore, items.length, loadError, loadMore, loading, loadingDirection]);
+    });
+  }, [allowBackgroundPagination, canAutoLoadMore, items.length, loadError, loadMore, loading, loadingDirection]);
 
   const dragCallbacks = useRef({});
   dragCallbacks.current = {
     bounds,
     loadMore,
     loadMoreAtEdge,
+    scheduleMountedTileSync,
     updateFocusTile,
     viewport,
   };
 
   useLayoutEffect(() => {
-    const onResize = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
+    let resizeFrame = 0;
+    const onResize = () => {
+      window.cancelAnimationFrame(resizeFrame);
+      resizeFrame = window.requestAnimationFrame(() => {
+        setViewport({ width: window.innerWidth, height: window.innerHeight });
+      });
+    };
     window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    return () => {
+      window.cancelAnimationFrame(resizeFrame);
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+
+  useEffect(() => () => {
+    window.cancelAnimationFrame(wheelFrame.current);
+    window.cancelAnimationFrame(mountFrame.current);
+    window.cancelAnimationFrame(zoomStartFrame.current);
+    cancelOverscanWork.current?.();
+    gsap.killTweensOf([...proximityProducts.current]);
   }, []);
 
   useLayoutEffect(() => {
@@ -243,7 +433,15 @@ export function ExperienceCanvasSection({
     };
     position.current = centered;
     gsap.set(canvas, { x: centered.x, y: centered.y, scale });
-  }, [itemSignature, items.length, viewport]);
+    syncMountedTiles(centered, scale);
+  }, [itemSignature, items.length, syncMountedTiles, viewport]);
+
+  useLayoutEffect(() => {
+    if (!items.length) return;
+    syncMountedTiles(position.current, SOURCE_ZOOM_LEVELS[zoomRef.current], {
+      deferOverscan: true,
+    });
+  }, [items.length, syncMountedTiles, tiles]);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -252,6 +450,7 @@ export function ExperienceCanvasSection({
     const syncPosition = (instance, allowLoad) => {
       const next = { x: instance.x, y: instance.y };
       position.current = next;
+      dragCallbacks.current.scheduleMountedTileSync(next);
       if (!allowLoad) return;
 
       const active = dragState.current;
@@ -274,6 +473,7 @@ export function ExperienceCanvasSection({
     const finishMotion = (instance) => {
       const next = { x: instance.x, y: instance.y };
       position.current = next;
+      dragCallbacks.current.scheduleMountedTileSync(next);
       dragCallbacks.current.updateFocusTile();
       if (!dragState.current.prefetched) dragCallbacks.current.loadMoreAtEdge(next);
     };
@@ -346,15 +546,16 @@ export function ExperienceCanvasSection({
     dragRef.current?.applyBounds(bounds(scale));
     dragRef.current?.update();
 
+    if (pending.animate === false) {
+      finishLoad();
+      return undefined;
+    }
     const assigned = new Set(pending.assignedKeys);
     const products = [...canvas.querySelectorAll(".experience-product")].filter((product) => (
       assigned.has(product.dataset.instanceKey)
     ));
     if (!products.length) {
-      finishLoad();
-      return undefined;
-    }
-    if (pending.animate === false) {
+      if (syncMountedTiles(position.current, scale)) return undefined;
       finishLoad();
       return undefined;
     }
@@ -368,12 +569,13 @@ export function ExperienceCanvasSection({
       onComplete: finishLoad,
     });
     return () => tween.kill();
-  }, [clampPosition, finishLoad, tiles]);
+  }, [clampPosition, finishLoad, mountedTileIds, syncMountedTiles, tiles]);
 
   const changeZoom = useCallback((nextIndex) => {
     if (nextIndex === zoomRef.current || !canvasRef.current) return;
     const previousScale = SOURCE_ZOOM_LEVELS[zoomRef.current];
     const nextScale = SOURCE_ZOOM_LEVELS[nextIndex];
+    const previousPosition = { ...position.current };
     const viewportCenter = { x: viewport.width / 2, y: viewport.height / 2 };
     const scaleRatio = nextScale / previousScale;
     const focalPosition = {
@@ -384,20 +586,37 @@ export function ExperienceCanvasSection({
     position.current = nextPosition;
     zoomRef.current = nextIndex;
     setZoomIndex(nextIndex);
-    gsap.to(canvasRef.current, {
-      x: nextPosition.x,
-      y: nextPosition.y,
-      scale: nextScale,
-      duration: duration(palmerMotion.zoom.duration),
-      ease: palmerMotion.zoom.ease,
-      overwrite: true,
-      onComplete: () => {
-        dragRef.current?.applyBounds(bounds(nextScale));
-        dragRef.current?.update();
-        updateFocusTile();
-      },
+    prioritizeZoomTargetImages(previousPosition, nextPosition, previousScale, nextScale);
+    const mountedChanged = syncMountedTiles(nextPosition, nextScale, {
+      preserveView: { position: previousPosition, scale: previousScale },
+      visibleOnly: true,
     });
-  }, [bounds, clampPosition, updateFocusTile, viewport.height, viewport.width]);
+    const startZoom = () => {
+      zoomStartFrame.current = 0;
+      gsap.to(canvasRef.current, {
+        x: nextPosition.x,
+        y: nextPosition.y,
+        scale: nextScale,
+        duration: duration(palmerMotion.zoom.duration),
+        ease: palmerMotion.zoom.ease,
+        overwrite: true,
+        onComplete: () => {
+          syncMountedTiles(nextPosition, nextScale, {
+            deferOverscan: true,
+          });
+          dragRef.current?.applyBounds(bounds(nextScale));
+          dragRef.current?.update();
+          updateFocusTile();
+        },
+      });
+    };
+    window.cancelAnimationFrame(zoomStartFrame.current);
+    if (mountedChanged && nextScale < previousScale) {
+      zoomStartFrame.current = window.requestAnimationFrame(startZoom);
+    } else {
+      startZoom();
+    }
+  }, [bounds, clampPosition, prioritizeZoomTargetImages, syncMountedTiles, updateFocusTile, viewport.height, viewport.width]);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -426,6 +645,13 @@ export function ExperienceCanvasSection({
 
   const columnCount = extent.maxX - extent.minX + 1;
   const rowCount = extent.maxY - extent.minY + 1;
+  const handleHoverStart = useCallback((nextItem, event) => {
+    setHoveredItem(nextItem);
+    if (cursorRef.current) {
+      gsap.set(cursorRef.current, { x: event.clientX, y: event.clientY + 25 });
+    }
+  }, []);
+  const handleHoverEnd = useCallback(() => setHoveredItem(null), []);
 
   return (
     <section
@@ -439,32 +665,49 @@ export function ExperienceCanvasSection({
         event.stopPropagation();
       }}
       onPointerMove={(event) => {
-        if (hoveredItem) setCursorPosition({ x: event.clientX, y: event.clientY });
+        if (hoveredItem && cursorRef.current) {
+          gsap.set(cursorRef.current, { x: event.clientX, y: event.clientY + 25 });
+        }
         if (usesPortraitTouchMotion() || performance.now() - lastProximityUpdate.current < 100) return;
         lastProximityUpdate.current = performance.now();
-        const products = canvasRef.current?.querySelectorAll(".experience-product") ?? [];
+        const products = [...(canvasRef.current?.querySelectorAll(".experience-product") ?? [])];
+        const nearby = new Map();
         products.forEach((product) => {
           const rect = product.getBoundingClientRect();
           const distance = Math.hypot(
             event.clientX - (rect.left + rect.width / 2),
             event.clientY - (rect.top + rect.height / 2),
           );
-          const scale = distance < palmerMotion.drag.proximityThreshold
-            ? 1 + (1 - distance / palmerMotion.drag.proximityThreshold) * palmerMotion.drag.proximityScale
-            : 1;
+          if (distance >= palmerMotion.drag.proximityThreshold) return;
+          nearby.set(
+            product,
+            1 + (1 - distance / palmerMotion.drag.proximityThreshold) * palmerMotion.drag.proximityScale,
+          );
+        });
+        nearby.forEach((scale, product) => {
           gsap.to(product, {
             scale,
-            duration: duration(distance < palmerMotion.drag.proximityThreshold
-              ? palmerMotion.drag.proximityDuration
-              : 1),
+            duration: duration(palmerMotion.drag.proximityDuration),
             ease: "power3",
             overwrite: "auto",
           });
         });
+        proximityProducts.current.forEach((product) => {
+          if (nearby.has(product)) return;
+          gsap.to(product, {
+            scale: 1,
+            duration: duration(1),
+            ease: "power3",
+            overwrite: "auto",
+          });
+        });
+        proximityProducts.current = new Set(nearby.keys());
       }}
       onPointerLeave={() => {
         if (usesPortraitTouchMotion()) return;
-        gsap.to(canvasRef.current?.querySelectorAll(".experience-product") ?? [], {
+        const products = [...proximityProducts.current];
+        proximityProducts.current.clear();
+        gsap.to(products, {
           scale: 1,
           duration: duration(1),
           ease: "power3",
@@ -485,9 +728,18 @@ export function ExperienceCanvasSection({
           y: position.current.y + (bounded.y - position.current.y) * wheelEase,
         };
         moveCanvas(next);
-        dragRef.current?.update();
-        updateFocusTile();
-        loadMoreAtEdge(next);
+        pendingWheelPosition.current = next;
+        if (!wheelFrame.current) {
+          wheelFrame.current = window.requestAnimationFrame(() => {
+            wheelFrame.current = 0;
+            const latest = pendingWheelPosition.current;
+            if (!latest) return;
+            dragRef.current?.update();
+            scheduleMountedTileSync(latest);
+            updateFocusTile();
+            loadMoreAtEdge(latest);
+          });
+        }
       }}
     >
       {items.length ? (
@@ -500,8 +752,7 @@ export function ExperienceCanvasSection({
               gridTemplateRows: `repeat(${rowCount}, max-content)`,
             }}
           >
-            {tiles.map((tile) => {
-              const mounted = mountedTileIds.has(tile.id);
+            {renderedTiles.map(({ tile, mounted, columns }) => {
               return (
                 <div
                   className={`experience-page ${mounted ? "" : "is-virtual"}`.trim()}
@@ -513,20 +764,18 @@ export function ExperienceCanvasSection({
                     gridRow: tile.y - extent.minY + 1,
                   }}
                 >
-                  {mounted && tileColumns(tile, filterItems).map((columnItems, columnIndex) => (
+                  {mounted && columns.map((columnItems, columnIndex) => (
                     <div className="experience-column" key={`${tile.id}-${columnIndex}`}>
                       {columnItems.map((item, rowIndex) => (
                         <div className="experience-slot" key={`${tile.id}-${columnIndex}-${rowIndex}`}>
                           {item && (
                             <ExperienceProduct
                               item={item}
-                              eager={tile.id === "0:0" && columnIndex < 5 && rowIndex < 3}
+                              eager={priorityItemKeys.has(item.instanceKey)
+                                || (tile.id === "0:0" && columnIndex < 5 && rowIndex < 3)}
                               onOpen={onOpenCollection}
-                              onHoverStart={(nextItem, event) => {
-                                setHoveredItem(nextItem);
-                                setCursorPosition({ x: event.clientX, y: event.clientY });
-                              }}
-                              onHoverEnd={() => setHoveredItem(null)}
+                              onHoverStart={handleHoverStart}
+                              onHoverEnd={handleHoverEnd}
                             />
                           )}
                         </div>
@@ -547,8 +796,8 @@ export function ExperienceCanvasSection({
         <div className="no-results">No apps match these filters.</div>
       )}
       <div
+        ref={cursorRef}
         className={`experience-cursor ${hoveredItem ? "is-visible" : ""}`}
-        style={{ transform: `translate3d(${cursorPosition.x}px, ${cursorPosition.y + 25}px, 0)` }}
         aria-hidden="true"
       >
         {hoveredItem?.name}

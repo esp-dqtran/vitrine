@@ -1,6 +1,7 @@
+import { memo } from "react";
 import { ProductImage } from "../primitives/ProductImage";
 
-export function ExperienceProduct({ item, onOpen, onHoverStart, onHoverEnd, eager = false }) {
+function ExperienceProductView({ item, onOpen, onHoverStart, onHoverEnd, eager = false }) {
   const productKey = `${item.collectionSlug}-${item.index}`;
   const openProduct = (target) => {
     onHoverEnd();
@@ -33,3 +34,5 @@ export function ExperienceProduct({ item, onOpen, onHoverStart, onHoverEnd, eage
     </div>
   );
 }
+
+export const ExperienceProduct = memo(ExperienceProductView);
