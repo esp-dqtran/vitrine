@@ -196,6 +196,48 @@ test("Flow MCP searches the published catalog and filters inaccessible apps", as
   assert.deepEqual(unavailable, []);
 });
 
+test("Flow MCP search result IDs can be passed directly to get_flow", async () => {
+  const deps = dependencies();
+  const page = await deps.publishedFlowCatalogPage({
+    platform: "web",
+    query: "onboarding permissions",
+    limit: 1,
+    sort: "grouped",
+    flowGroups: [],
+    cursorSecret: deps.flowCatalogSecret,
+    includeFacets: false,
+  });
+  const searchableDeps: FlowMcpDependencies = {
+    ...deps,
+    publishedFlowCatalogPage: async () => ({
+      ...page,
+      items: page.items.map((item) => ({
+        ...item,
+        preview: {
+          ...item.preview,
+          sourceFlowId: onboarding.id,
+          flow: { ...item.preview.flow, id: "linear:501" },
+        },
+      })),
+    }),
+  };
+
+  const [searchResult] = await searchAccessibleFlows(proUser, searchableDeps, {
+    query: "onboarding permissions",
+    platform: "web",
+    limit: 1,
+  });
+  assert.ok(searchResult);
+  assert.equal(searchResult.flowId, onboarding.id);
+
+  const flow = await getAccessibleFlow(proUser, searchableDeps, {
+    app: searchResult.app,
+    platform: searchResult.platform,
+    flowId: searchResult.flowId,
+  });
+  assert.equal(flow?.flowId, onboarding.id);
+});
+
 test("Flow MCP continues catalog pagination until it finds accessible results", async () => {
   const deps = dependencies();
   const firstAppPage = await deps.publishedCatalogPage({
@@ -227,6 +269,7 @@ test("Flow MCP continues catalog pagination until it finds accessible results", 
       ...firstFlowPage.items[0]!.preview,
       appId: "notion",
       appName: "Notion",
+      sourceFlowId: "notion-workspace",
       flow: {
         ...firstFlowPage.items[0]!.preview.flow,
         id: "notion-workspace",

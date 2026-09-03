@@ -205,8 +205,9 @@ export async function searchAccessibleFlows(
         app: item.preview.appId,
         platform,
         flow: item.preview.flow,
+        sourceFlowId: item.preview.sourceFlowId,
       })).filter((entry) => {
-        const key = `${entry.app}\0${entry.platform}\0${entry.flow.id}`;
+        const key = `${entry.app}\0${entry.platform}\0${entry.sourceFlowId}`;
         if (seenFlows.has(key)) return false;
         seenFlows.add(key);
         return true;
@@ -219,7 +220,7 @@ export async function searchAccessibleFlows(
         results.push({
           app: entry.app,
           platform: entry.platform,
-          flowId: entry.flow.id,
+          flowId: entry.sourceFlowId,
           title: entry.flow.title,
           ...(entry.flow.category ? { category: entry.flow.category } : {}),
           description: entry.flow.description,
