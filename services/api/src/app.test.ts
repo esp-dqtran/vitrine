@@ -3631,7 +3631,7 @@ test("loads flows without loading a design-system snapshot", async (t) => {
     listAppVersions: async () => [{ ...publishedVersion, app: "linear", platform: "ios" }],
     resolveAppVersion: async () => ({ ...publishedVersion, app: "linear", platform: "ios" }),
     getVersionFlows: async () => [{
-      id: "login", title: "Login", description: "Authenticate", tags: [],
+      id: "mobbin-flow-login", title: "Login", description: "Authenticate", tags: [],
       steps: [{ label: "Enter email", evidence: [7] }],
     }],
     flowEvidenceImages: async ({ imageIds }) => {
@@ -3646,7 +3646,7 @@ test("loads flows without loading a design-system snapshot", async (t) => {
   const response = await fetch(`${base}/apps/linear/flows?platform=ios&version=1`, { headers: adminAuth });
   assert.equal(response.status, 200);
   assert.deepEqual(evidenceIds, [7]);
-  assert.equal((await response.json()).flows[0].id, "login");
+  assert.equal((await response.json()).flows[0].id, "flow-login");
 });
 
 test("uses app-scoped evidence for an admin app without a published version", async (t) => {

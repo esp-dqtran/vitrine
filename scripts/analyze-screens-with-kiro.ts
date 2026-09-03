@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import {
   closePool,
   query,
@@ -14,14 +15,16 @@ import {
 } from "../src/objectStoreConfig.ts";
 
 interface Options {
-  app: string;
+  app?: string;
   platform: "ios" | "android" | "web";
-  versionNumber: number;
+  versionNumber?: number;
   limit: number;
   concurrency: number;
-  output: string;
+  output?: string;
   allowEmpty: boolean;
   force: boolean;
+  latestPublished: boolean;
+  dryRun: boolean;
 }
 
 interface ScreenSource {
@@ -44,8 +47,8 @@ interface ScreenResult {
 function usage(): never {
   throw new Error(
     "Usage: node --env-file=.env --import tsx scripts/analyze-screens-with-kiro.ts "
-    + "--app <name> --platform <ios|android|web> --version <number> "
-    + "[--concurrency 3] [--limit 5000] [--output <path>] [--allow-empty] [--force]",
+    + "(--app <name> --version <number> | --latest-published) --platform <ios|android|web> "
+    + "[--concurrency 3] [--limit 5000] [--output <path>] [--allow-empty] [--force] [--dry-run]",
   );
 }
 
@@ -57,10 +60,12 @@ function positive(value: string | undefined, label: string): number {
   return parsed;
 }
 
-function options(args: string[]): Options {
+export function options(args: string[]): Options {
   const values = new Map<string, string>();
   let allowEmpty = false;
   let force = false;
+  let latestPublished = false;
+  let dryRun = false;
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
     if (argument === "--allow-empty") {
@@ -71,14 +76,26 @@ function options(args: string[]): Options {
       force = true;
       continue;
     }
+    if (argument === "--latest-published") {
+      latestPublished = true;
+      continue;
+    }
+    if (argument === "--dry-run") {
+      dryRun = true;
+      continue;
+    }
     if (!argument.startsWith("--") || !args[index + 1]) usage();
     values.set(argument, args[index + 1]);
     index += 1;
   }
   const app = values.get("--app")?.trim();
   const platform = values.get("--platform");
-  if (!app || !["ios", "android", "web"].includes(platform ?? "")) usage();
-  const versionNumber = positive(values.get("--version"), "version");
+  if (!["ios", "android", "web"].includes(platform ?? "")) usage();
+  const versionNumber = values.has("--version") ? positive(values.get("--version"), "version") : undefined;
+  if (latestPublished ? (app || versionNumber) : (!app || !versionNumber)) usage();
+  if (latestPublished && force) {
+    throw new Error("--force requires an exact --app and --version scope");
+  }
   const limit = positive(values.get("--limit") ?? "5000", "limit");
   const concurrency = positive(values.get("--concurrency") ?? "3", "concurrency");
   if (limit > 20_000) throw new Error("limit cannot exceed 20000");
@@ -89,17 +106,20 @@ function options(args: string[]): Options {
     versionNumber,
     limit,
     concurrency,
-    output: resolve(
-      values.get("--output")
-      ?? `data/screen-analysis/${app}-${platform}-v${versionNumber}-kiro.json`,
-    ),
+    output: values.has("--output")
+      ? resolve(values.get("--output")!)
+      : latestPublished
+        ? undefined
+        : resolve(`data/screen-analysis/${app}-${platform}-v${versionNumber}-kiro.json`),
     allowEmpty,
     force,
+    latestPublished,
+    dryRun,
   };
 }
 
 async function listSources(selected: Options): Promise<ScreenSource[]> {
-  const result = await query<{
+  interface SourceRow {
     id: number;
     app: string;
     platform: Options["platform"];
@@ -110,24 +130,71 @@ async function listSources(selected: Options): Promise<ScreenSource[]> {
     byte_size: string | number;
     content_type: ObjectMetadata["contentType"];
     access_class: ObjectMetadata["accessClass"];
-  }>(
-    `SELECT i.id, a.name AS app, av.platform, av.version_number, i.image_url,
-       so.object_key, so.sha256, so.byte_size, so.content_type, so.access_class
-     FROM app_versions av
-     JOIN apps a ON a.id = av.app_id
-     JOIN version_images vi ON vi.version_id = av.id
-     JOIN images i ON i.id = vi.image_id
-     JOIN stored_objects so ON so.object_key = i.object_key
-     WHERE a.name = $1
-       AND av.platform = $2
-       AND av.version_number = $3
-       AND i.kind = 'screen'
-       AND ($4::boolean OR i.analysis IS NULL)
-     ORDER BY i.id
-     LIMIT $5`,
-    [selected.app, selected.platform, selected.versionNumber, selected.force, selected.limit],
+  }
+
+  interface VersionRow {
+    id: number;
+    app: string;
+    platform: Options["platform"];
+    version_number: number;
+  }
+
+  const versions = selected.latestPublished
+    ? await query<VersionRow>(
+      `SELECT DISTINCT ON (av.app_id)
+         av.id, selected_app.name AS app, av.platform, av.version_number
+       FROM app_versions av
+       JOIN apps selected_app ON selected_app.id = av.app_id
+       WHERE av.platform = $1
+         AND av.status = 'published'
+       ORDER BY av.app_id, av.version_number DESC`,
+      [selected.platform],
+    )
+    : await query<VersionRow>(
+      `SELECT av.id, selected_app.name AS app, av.platform, av.version_number
+       FROM app_versions av
+       JOIN apps selected_app ON selected_app.id = av.app_id
+       WHERE selected_app.name = $1
+         AND av.platform = $2
+         AND av.version_number = $3
+       LIMIT 1`,
+      [selected.app, selected.platform, selected.versionNumber],
+    );
+
+  const orderedVersions = versions.rows.sort((left, right) =>
+    left.app.localeCompare(right.app, undefined, { sensitivity: "base" })
+      || left.version_number - right.version_number
   );
-  return result.rows.map((row) => ({
+  let rows: SourceRow[] = [];
+  for (const version of orderedVersions) {
+    const result = await query<SourceRow>(
+      `SELECT i.id, $2::text AS app, $3::text AS platform,
+         $4::integer AS version_number, i.image_url,
+         so.object_key, so.sha256, so.byte_size, so.content_type, so.access_class
+       FROM version_images vi
+       JOIN images i ON i.id = vi.image_id
+       JOIN stored_objects so ON so.object_key = i.object_key
+       WHERE vi.version_id = $1
+         AND i.kind = 'screen'
+         AND ($5::boolean OR i.analysis IS NULL)
+       ORDER BY i.id
+       LIMIT $6`,
+      [
+        version.id,
+        version.app,
+        version.platform,
+        version.version_number,
+        selected.force,
+        selected.limit,
+      ],
+    );
+    if (result.rows.length > 0) {
+      rows = result.rows;
+      break;
+    }
+  }
+
+  return rows.map((row) => ({
     id: row.id,
     app: row.app,
     platform: row.platform,
@@ -151,6 +218,10 @@ function sameMetadata(left: ObjectMetadata, right: ObjectMetadata): boolean {
     && left.accessClass === right.accessClass;
 }
 
+function safeFilenamePart(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "app";
+}
+
 async function verifiedSource(source: ScreenSource, store: ObjectStore): Promise<Buffer> {
   const object = await store.get(source.object.key);
   const digest = createHash("sha256").update(object.body).digest("hex");
@@ -164,9 +235,27 @@ async function verifiedSource(source: ScreenSource, store: ObjectStore): Promise
   return object.body;
 }
 
-async function run(): Promise<void> {
+export async function run(): Promise<void> {
   const selected = options(process.argv.slice(2));
   const sources = await listSources(selected);
+  if (selected.dryRun) {
+    console.log(JSON.stringify({
+      mode: selected.latestPublished ? "latest-published" : "app-version",
+      app: selected.app ?? null,
+      platform: selected.platform,
+      versionNumber: selected.versionNumber ?? null,
+      force: selected.force,
+      selected: sources.length,
+      limit: selected.limit,
+      sample: sources.slice(0, 20).map(({ id, app, platform, versionNumber }) => ({
+        imageId: id,
+        app,
+        platform,
+        versionNumber,
+      })),
+    }, null, 2));
+    return;
+  }
   if (sources.length === 0) {
     if (selected.allowEmpty) {
       console.log("No matching unanalyzed screen images remain");
@@ -174,6 +263,13 @@ async function run(): Promise<void> {
     }
     throw new Error("No matching unanalyzed screen images were found");
   }
+
+  const target = sources[0];
+  const lastSource = sources[sources.length - 1];
+  const reportOutput = selected.output ?? resolve(
+    `data/screen-analysis/latest-published-${target.platform}-${safeFilenamePart(target.app)}`
+    + `-v${target.versionNumber}-${target.id}-${lastSource.id}-kiro.json`,
+  );
 
   const store = createObjectStore(objectStoreConfigFromEnvironment(process.env));
   const analyzer = createKiroCliScreenAnalyzer(process.env);
@@ -193,7 +289,7 @@ async function run(): Promise<void> {
   process.once("SIGINT", onSigint);
 
   console.log(
-    `Analyzing ${sources.length} ${selected.app} ${selected.platform} v${selected.versionNumber} `
+    `Analyzing ${sources.length} ${target.app} ${target.platform} v${target.versionNumber} `
     + `screen(s) with ${Math.min(selected.concurrency, sources.length)} Kiro worker(s) `
     + `using ${analyzer.model}`,
   );
@@ -255,9 +351,10 @@ async function run(): Promise<void> {
     process.removeListener("SIGTERM", onSigterm);
     process.removeListener("SIGINT", onSigint);
     const report = {
-      app: selected.app,
-      platform: selected.platform,
-      versionNumber: selected.versionNumber,
+      mode: selected.latestPublished ? "latest-published" : "app-version",
+      app: target.app,
+      platform: target.platform,
+      versionNumber: target.versionNumber,
       providerModel: analyzer.model,
       generatedAt: new Date().toISOString(),
       requested: selected.limit,
@@ -267,14 +364,16 @@ async function run(): Promise<void> {
       unfinished: results.filter((result) => result === undefined).length,
       results: results.filter(Boolean),
     };
-    await mkdir(dirname(selected.output), { recursive: true });
-    await writeFile(selected.output, `${JSON.stringify(report, null, 2)}\n`, { mode: 0o600 });
-    console.log(`Wrote ${selected.output}`);
+    await mkdir(dirname(reportOutput), { recursive: true });
+    await writeFile(reportOutput, `${JSON.stringify(report, null, 2)}\n`, { mode: 0o600 });
+    console.log(`Wrote ${reportOutput}`);
   }
 }
 
-try {
-  await run();
-} finally {
-  await closePool();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try {
+    await run();
+  } finally {
+    await closePool();
+  }
 }

@@ -102,6 +102,24 @@ test("returns every observed screen for a catalog Flow", async () => {
   );
 });
 
+test("does not expose source-specific Flow IDs in the published catalog", async () => {
+  let calls = 0;
+  const page = await publishedFlowCatalogPage({
+    platform: "web",
+    sort: "grouped",
+    cursorSecret: secret,
+    now: () => new Date(timestamp),
+  }, async () => {
+    calls += 1;
+    return result(calls === 1
+      ? [row({ source_flow_id: "mobbin-flow-68c35291" })]
+      : [{ total_count: 1, facets: [] }]);
+  });
+
+  assert.equal(page.items[0]?.preview.sourceFlowId, "flow-68c35291");
+  assert.doesNotMatch(JSON.stringify(page), /mobbin/i);
+});
+
 test("deduplicates mapped Flows before attaching taxonomy labels", async () => {
   const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
   await publishedFlowCatalogPage({
@@ -116,11 +134,15 @@ test("deduplicates mapped Flows before attaching taxonomy labels", async () => {
 
   const pageSql = calls.find(({ sql }) => !/total_count/.test(sql))!.sql;
   assert.match(pageSql, /unique_flow_ids AS MATERIALIZED/);
+  assert.match(pageSql, /relevant_taxonomy AS MATERIALIZED/);
   assert.match(
     pageSql,
     /SELECT DISTINCT flow_id\s+FROM instances/,
   );
-  assert.match(pageSql, /FROM unique_flow_ids\s+JOIN relevant_taxonomy taxonomy/);
+  assert.match(
+    pageSql,
+    /FROM unique_flow_ids observed\s+JOIN flows canonical ON canonical\.id = observed\.flow_id/,
+  );
   assert.doesNotMatch(pageSql, /COUNT\(DISTINCT app_id\)/);
 });
 
@@ -420,6 +442,8 @@ test("filters and orders natural Flow queries by lightweight taxonomy relevance"
   assert.equal(calls[0]!.values?.[9], 3);
   assert.match(calls[0]!.sql, /unnest\(\$9::text\[\]\)/);
   assert.match(calls[0]!.sql, /relevance\.term_matches >= \$10::int/);
+  assert.match(calls[0]!.sql, /canonical\.normalized_name = \$3\s+THEN 2/);
+  assert.match(calls[0]!.sql, /relevance\.exact_match > 0/);
   assert.match(calls[0]!.sql, /ORDER BY ranked\.exact_match DESC,[\s\S]*ranked\.title_term_matches DESC,[\s\S]*ranked\.term_matches DESC/);
 });
 

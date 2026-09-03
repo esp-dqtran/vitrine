@@ -90,6 +90,7 @@ import {
 } from "../../../src/featureUsage.ts";
 import { parseJob, publishJob, type Job, type ResearchProvider } from "../../../src/queue.ts";
 import { isPlatform, platformFromUrl, type Platform } from "../../../src/platformFromUrl.ts";
+import { publicFlowId } from "../../../src/publicFlowId.ts";
 import { readProgress, requestCancel, subscribeProgress } from "../../../src/progress.ts";
 import { bulkImageHash, findBulkImage, isAppSlug, legacyRefSuffix, parseImageSource, publicImageUrl } from "../../../src/imageSource.ts";
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
@@ -119,6 +120,7 @@ import {
   FlowCatalogCursorError,
   publishedFlowCatalogPage,
 } from "../../../src/flowCatalogStore.ts";
+import { publishedScreenSearch } from "../../../src/flowScreenSearchStore.ts";
 import {
   createFlowTaxonomyStore,
   FlowTaxonomyNotFoundError,
@@ -447,6 +449,8 @@ const defaults = {
   publishedCatalogPage,
   publishedFacetPreviews,
   publishedFlowCatalogPage,
+  publishedFlowInstanceSearch: undefined as typeof import("../../../src/flowInstanceSearchStore.ts").searchPublishedFlowInstances | undefined,
+  publishedScreenSearch,
   categoryStore,
   flowTaxonomyStore,
   catalogStats,
@@ -1663,7 +1667,15 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           filterCount: flowFilters.flowCategories.length + flowFilters.flowTypes.length,
         }));
         const page = {
-          items: result.items,
+          items: result.items.map((item) => !item.preview || typeof item.preview.sourceFlowId !== "string"
+            ? item
+            : {
+                ...item,
+                preview: {
+                  ...item.preview,
+                  sourceFlowId: publicFlowId(item.preview.sourceFlowId),
+                },
+              }),
           nextCursor: isCatalogLimited ? null : result.nextPage ? `${typesenseCursorPrefix}${result.nextPage}` : null,
           totalCount: isCatalogLimited
             ? Math.min(result.totalCount, PUBLIC_FLOW_CATALOG_GUEST_LIMIT)
@@ -1697,7 +1709,15 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       });
       res.setHeader("Cache-Control", "public, max-age=300");
       res.json({
-        items: page.items,
+        items: page.items.map((item) => !item.preview || typeof item.preview.sourceFlowId !== "string"
+          ? item
+          : {
+              ...item,
+              preview: {
+                ...item.preview,
+                sourceFlowId: publicFlowId(item.preview.sourceFlowId),
+              },
+            }),
         nextCursor: isCatalogLimited ? null : page.nextCursor,
         totalCount: isCatalogLimited
           ? Math.min(page.totalCount, PUBLIC_FLOW_CATALOG_GUEST_LIMIT)
@@ -2217,6 +2237,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     canAccessApp: deps.canAccessApp,
     publishedCatalogPage: deps.publishedCatalogPage,
     publishedFlowCatalogPage: deps.publishedFlowCatalogPage,
+    publishedFlowInstanceSearch: deps.publishedFlowInstanceSearch,
+    publishedScreenSearch: deps.publishedScreenSearch,
     getVersionFlows: deps.getVersionFlows,
     flowEvidenceImages: deps.flowEvidenceImages,
     appMetadata: deps.appMetadata,
@@ -4072,7 +4094,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       128,
     );
     recordAppDetailSuccess(req, res);
-    res.json({ flows: hydrated.flows, platform: section.platform, version: section.version ?? null });
+    res.json({
+      flows: hydrated.flows.map((flow) => ({ ...flow, id: publicFlowId(flow.id) })),
+      platform: section.platform,
+      version: section.version ?? null,
+    });
   });
 
   app.get("/apps/:app", async (req, res) => {

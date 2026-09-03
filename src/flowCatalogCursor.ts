@@ -4,7 +4,7 @@ import type { Platform } from "./platformFromUrl.ts";
 export type FlowCatalogSort = "grouped";
 
 interface FlowCursorKeyBase {
-  exactMatch: 0 | 1;
+  exactMatch: 0 | 1 | 2;
   titleTermMatches: number;
   termMatches: number;
   other: 0 | 1;
@@ -88,7 +88,7 @@ function validKey(value: unknown): boolean {
   ];
   return exactKeys(key, fields)
     && (key.other === 0 || key.other === 1)
-    && (key.exactMatch === 0 || key.exactMatch === 1)
+    && (key.exactMatch === 0 || key.exactMatch === 1 || key.exactMatch === 2)
     && count(key.titleTermMatches, 0)
     && count(key.termMatches, 0)
     && boundedText(key.category)

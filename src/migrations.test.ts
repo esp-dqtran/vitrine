@@ -429,6 +429,18 @@ const migrationDefinitions = [
       /DROP TABLE IF EXISTS sessions/,
     ],
   },
+  {
+    file: "0110_published_screen_search.sql",
+    patterns: [
+      /CREATE TABLE published_screen_search_documents/,
+      /GENERATED ALWAYS AS/,
+      /analysis->>'visibleText'/,
+      /USING GIN \(search_vector\)/,
+      /image\.kind = 'screen'/,
+      /CREATE TRIGGER app_versions_published_screen_search/,
+      /refresh_published_screen_search_version/,
+    ],
+  },
 ] as const;
 
 for (const definition of migrationDefinitions) {

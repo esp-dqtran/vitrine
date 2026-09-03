@@ -62,6 +62,15 @@ test("round-trips the one category/title Flow cursor", () => {
     { sort: "grouped", platform: "web", identity },
     secret,
   ), other);
+  const exactTitle: FlowCatalogCursor = {
+    ...grouped,
+    key: { ...grouped.key, exactMatch: 2 },
+  };
+  assert.deepEqual(decodeFlowCatalogCursor(
+    encodeFlowCatalogCursor(exactTitle, secret),
+    { sort: "grouped", platform: "web", identity },
+    secret,
+  ), exactTitle);
 });
 
 test("rejects tampering, wrong secret, sort/platform/filter mismatch, and overlong input", () => {
@@ -90,6 +99,7 @@ test("rejects extra keys and impossible tuple values before use", () => {
     { ...grouped, extra: true },
     { ...grouped, key: { ...grouped.key, extra: true } },
     { ...grouped, key: { ...grouped.key, category: "Not Normalized" } },
+    { ...grouped, key: { ...grouped.key, exactMatch: 3 } },
     { ...grouped, key: { ...grouped.key, flowId: "9223372036854775808" } },
   ]) {
     assert.throws(() => decodeFlowCatalogCursor(signed(payload), {

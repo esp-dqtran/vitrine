@@ -10,6 +10,7 @@ import {
   type FlowCatalogSort,
 } from "./flowCatalogCursor.ts";
 import type { Platform } from "./platformFromUrl.ts";
+import { publicFlowId } from "./publicFlowId.ts";
 import type { DiscoveryFacet } from "./vitrine/discoveryTypes.ts";
 
 export { FlowCatalogCursorError } from "./flowCatalogCursor.ts";
@@ -328,7 +329,19 @@ function commonCtes(): string {
       -- query, so metadataSql (which shares these CTEs) fails to parse without this
       -- no-op typed reference keeping $8 resolvable in both queries.
       SELECT $8::int AS value
-    ), relevant_taxonomy AS (
+    ), instances AS (
+      SELECT
+        latest.app_id,
+        mapping.flow_id,
+        afv.id AS version_flow_id
+      FROM latest
+      JOIN app_flow_versions afv ON afv.version_id = latest.version_id
+      JOIN app_flow_version_mappings mapping
+        ON mapping.app_flow_version_id = afv.id
+    ), unique_flow_ids AS MATERIALIZED (
+      SELECT DISTINCT flow_id
+      FROM instances
+    ), relevant_taxonomy AS MATERIALIZED (
       SELECT
         canonical.id AS flow_id,
         ${categoryId} AS category_id,
@@ -341,7 +354,8 @@ function commonCtes(): string {
         relevance.exact_match,
         relevance.title_term_matches,
         relevance.term_matches
-      FROM flows canonical
+      FROM unique_flow_ids observed
+      JOIN flows canonical ON canonical.id = observed.flow_id
       LEFT JOIN flows parent ON parent.id = canonical.parent_id
       LEFT JOIN flow_classifications classification
         ON classification.flow_id = canonical.id
@@ -352,7 +366,8 @@ function commonCtes(): string {
         ON classified_category.id = classified_type.category_id
       CROSS JOIN LATERAL (
         SELECT
-          CASE WHEN $3 <> '' AND (
+          CASE WHEN $3 <> '' AND ${titleKey} = $3
+          THEN 2 WHEN $3 <> '' AND (
             ${titleKey} LIKE '%' || $3 || '%'
             OR ${parentKey} LIKE '%' || $3 || '%'
             OR replace(${titleKey}, ' and ', ' ')
@@ -372,21 +387,9 @@ function commonCtes(): string {
         AND (parent.id IS NULL OR parent.created_at <= $2::timestamptz)
         AND (
           $3 = ''
-          OR relevance.exact_match = 1
+          OR relevance.exact_match > 0
           OR relevance.term_matches >= $10::int
         )
-    ), instances AS (
-      SELECT
-        latest.app_id,
-        mapping.flow_id,
-        afv.id AS version_flow_id
-      FROM latest
-      JOIN app_flow_versions afv ON afv.version_id = latest.version_id
-      JOIN app_flow_version_mappings mapping
-        ON mapping.app_flow_version_id = afv.id
-    ), unique_flow_ids AS MATERIALIZED (
-      SELECT DISTINCT flow_id
-      FROM instances
     ), grouped_all AS (
       SELECT
         taxonomy.flow_id,
@@ -400,8 +403,7 @@ function commonCtes(): string {
         taxonomy.exact_match,
         taxonomy.title_term_matches,
         taxonomy.term_matches
-      FROM unique_flow_ids
-      JOIN relevant_taxonomy taxonomy ON taxonomy.flow_id = unique_flow_ids.flow_id
+      FROM relevant_taxonomy taxonomy
     ), filtered_items AS (
       SELECT *
       FROM grouped_all
@@ -658,7 +660,7 @@ const metadataSql = `WITH ${commonCtes()},
       FROM type_facet_items
     ), '[]'::jsonb) AS facets`;
 
-function itemFromRow(row: Record<string, unknown>, platform: Platform): FlowCatalogItem {
+export function flowCatalogItemFromRow(row: Record<string, unknown>, platform: Platform): FlowCatalogItem {
   const appId = String(row.app);
   const versionId = Number(row.version_id);
   const version = Number(row.version_number);
@@ -705,7 +707,7 @@ function itemFromRow(row: Record<string, unknown>, platform: Platform): FlowCata
       appIconUrl: typeof row.app_icon_url === "string" ? row.app_icon_url : null,
       versionId,
       version,
-      sourceFlowId: String(row.source_flow_id),
+      sourceFlowId: publicFlowId(String(row.source_flow_id)),
       screenCount: observedScreens.length,
       flow: {
         id: `${appId}:${versionFlowId}`,
@@ -729,7 +731,7 @@ function cursorFromRow(
   },
 ): FlowCatalogCursor {
   const key = {
-    exactMatch: Number(row.exact_match) as 0 | 1,
+    exactMatch: Number(row.exact_match) as 0 | 1 | 2,
     titleTermMatches: Number(row.title_term_matches),
     termMatches: Number(row.term_matches),
     other: Number(row.other_rank) as 0 | 1,
@@ -848,7 +850,7 @@ async function loadPublishedFlowCatalogPage(
   metadata ??= { totalCount: 0, facets: [] };
 
   const page = {
-    items: visibleRows.map((row) => itemFromRow(row, input.platform)),
+    items: visibleRows.map((row) => flowCatalogItemFromRow(row, input.platform)),
     nextCursor: hasMore && visibleRows.length > 0
       ? encodeFlowCatalogCursor(cursorFromRow(visibleRows.at(-1)!, {
           sort,

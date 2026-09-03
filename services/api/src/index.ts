@@ -23,6 +23,7 @@ import {
 } from "../../../src/pricingStore.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../../../src/objectStoreConfig.ts";
 import { publishedFlowCatalogPage } from "../../../src/flowCatalogStore.ts";
+import { searchPublishedFlowInstances } from "../../../src/flowInstanceSearchStore.ts";
 import { createJwtAuth, jwtAuthConfigFromEnv } from "../../../src/jwtAuth.ts";
 import {
   createPasswordResetEmailSender,
@@ -108,6 +109,7 @@ await startApi({
       mediaRateLimit: config.mediaRateLimit,
       appTraversalLimit: config.appTraversalLimit,
       appUrl: config.appUrl,
+      publishedFlowInstanceSearch: searchPublishedFlowInstances,
       referralCampaign,
       ...(passwordResetEmailConfig
         ? { passwordResetEmailSender: createPasswordResetEmailSender(passwordResetEmailConfig) }
