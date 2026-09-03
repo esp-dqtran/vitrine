@@ -23,6 +23,7 @@ import type { PublishedCatalogPageRecord } from "../../../src/publicCatalogStore
 const PLATFORMS = ["web", "ios", "android"] as const;
 const MAX_INLINE_SCREENSHOT_BYTES = 1_000_000;
 const MAX_INLINE_FLOW_SEARCH_PREVIEWS = 3;
+const MAX_INLINE_FLOW_SEARCH_RESULTS = 4;
 const MAX_INLINE_FLOW_PREVIEW_SCREENSHOTS = 3;
 const MAX_AUTHORIZATION_PAGES = 10;
 
@@ -502,12 +503,12 @@ async function searchAccessibleFlowsForPlatform(
     const allowedApps = await accessibleApps(user, matched, deps.canAccessApp);
     for (const entry of matched) {
       if (!allowedApps.has(entry.app)) continue;
-      const previewScreenshots = entry.flow.steps.flatMap((step) => step.evidence.map((evidence) => ({
+      const orderedScreenshots = entry.flow.steps.flatMap((step) => step.evidence.map((evidence) => ({
         screenshotId: evidence.imageId,
         label: step.label,
         url: absoluteUrl(deps.appUrl, evidence.imageUrl),
-      }))).filter(({ screenshotId, url }) => Number.isSafeInteger(screenshotId) && screenshotId > 0 && Boolean(url))
-        .slice(0, MAX_INLINE_FLOW_PREVIEW_SCREENSHOTS);
+      }))).filter(({ screenshotId, url }) => Number.isSafeInteger(screenshotId) && screenshotId > 0 && Boolean(url));
+      const previewScreenshots = representativeItems(orderedScreenshots, MAX_INLINE_FLOW_PREVIEW_SCREENSHOTS);
       const preview = previewScreenshots[0];
       const previewUrl = preview?.url ?? "";
       results.push({
@@ -534,6 +535,14 @@ async function searchAccessibleFlowsForPlatform(
     cursor = page.nextCursor;
   }
   return results;
+}
+
+function representativeItems<T>(items: readonly T[], limit: number): T[] {
+  if (items.length <= limit) return [...items];
+  if (limit <= 1) return items.length > 0 ? [items[0]!] : [];
+  return Array.from({ length: limit }, (_, index) =>
+    items[Math.round(index * (items.length - 1) / (limit - 1))]!
+  );
 }
 
 interface AccessibleFlow {
@@ -677,21 +686,26 @@ async function inlineFlowSearchPreviews(
   deps: Pick<FlowMcpDependencies, "canAccessApp" | "flowEvidenceImages" | "readInlineImage">,
   flows: readonly FlowMcpSearchResult[],
 ) {
-  const featured = flows.find((flow) => flow.previewScreenshots.length > 0);
-  const candidates = (featured?.previewScreenshots ?? []).slice(0, MAX_INLINE_FLOW_SEARCH_PREVIEWS);
-  const previews = await Promise.all(candidates.map(async (preview, index) => {
-    if (!featured) return undefined;
+  const candidates = flows.slice(0, MAX_INLINE_FLOW_SEARCH_RESULTS).flatMap((flow, flowIndex) =>
+    flow.previewScreenshots.slice(0, MAX_INLINE_FLOW_SEARCH_PREVIEWS).map((preview, previewIndex) => ({
+      flow,
+      flowIndex,
+      preview,
+      previewIndex,
+    }))
+  );
+  const previews = await Promise.all(candidates.map(async ({ flow, flowIndex, preview, previewIndex }) => {
     const screenshot = await getAccessibleScreenshot(user, deps, {
-      app: featured.app,
-      platform: featured.platform,
+      app: flow.app,
+      platform: flow.platform,
       screenshotId: preview.screenshotId,
     });
     if (!screenshot) return undefined;
     const image = await deps.readInlineImage(screenshot, MAX_INLINE_SCREENSHOT_BYTES);
-    return image ? { flow: featured, image, index, label: preview.label } : undefined;
+    return image ? { flow, flowIndex, image, previewIndex, label: preview.label } : undefined;
   }));
   return previews.flatMap((preview) => preview ? [
-    { type: "text" as const, text: `Top Flow preview ${preview.index + 1}: ${preview.flow.title} — ${preview.flow.app} (${preview.flow.platform}) — ${preview.label}` },
+    { type: "text" as const, text: `Flow result ${preview.flowIndex + 1}, preview ${preview.previewIndex + 1}: ${preview.flow.title} — ${preview.flow.app} (${preview.flow.platform}) — ${preview.label}` },
     { type: "image" as const, data: preview.image.data, mimeType: preview.image.mimeType },
   ] : []);
 }

@@ -343,8 +343,8 @@ test("Flow MCP exposes a bounded ordered screenshot sequence for each search res
     }),
   }, { query: "login flow", platform: "web", limit: 5 });
 
-  assert.deepEqual(result[0]?.previewScreenshots, [1, 2, 3].map((step, index) => ({
-    screenshotId: 12 + index,
+  assert.deepEqual(result[0]?.previewScreenshots, [1, 3, 4].map((step) => ({
+    screenshotId: 11 + step,
     label: `Login step ${step}`,
     url: `https://vitrines.ai/api/media/linear/login-step-${step}`,
   })));
@@ -899,6 +899,49 @@ test("Flow MCP exposes accessible published app metadata and one requested scree
 
 test("Flow MCP exposes the standard Streamable HTTP tools behind Vitrines bearer authentication", async (t) => {
   const deps = dependencies();
+  const catalogPage = await deps.publishedFlowCatalogPage({
+    platform: "web",
+    query: "logging in",
+    limit: 4,
+    sort: "grouped",
+    flowGroups: [],
+    cursorSecret: deps.flowCatalogSecret,
+    includeFacets: false,
+  });
+  const catalogItem = catalogPage.items[0]!;
+  deps.publishedFlowCatalogPage = async () => ({
+    ...catalogPage,
+    items: Array.from({ length: 4 }, (_, flowIndex) => ({
+      ...catalogItem,
+      title: `Logging in ${flowIndex + 1}`,
+      preview: {
+        ...catalogItem.preview,
+        sourceFlowId: `logging-in-${flowIndex + 1}`,
+        flow: {
+          ...catalogItem.preview.flow,
+          id: `logging-in-${flowIndex + 1}`,
+          title: `Logging in ${flowIndex + 1}`,
+          steps: Array.from({ length: 3 }, (_, stepIndex) => {
+            const screenshotId = 100 + flowIndex * 3 + stepIndex;
+            return {
+              label: `Login ${flowIndex + 1}, step ${stepIndex + 1}`,
+              evidence: [{
+                imageId: screenshotId,
+                imageUrl: `/api/media/linear/login-${screenshotId}`,
+                description: `Login ${flowIndex + 1}, step ${stepIndex + 1}`,
+              }],
+            };
+          }),
+        },
+      },
+    })),
+    totalCount: 4,
+  });
+  deps.flowEvidenceImages = async ({ imageIds }) => imageIds.map((id) => ({
+    ...capture,
+    id,
+    image_url: `capture:${String(id).padStart(16, "0")}`,
+  }));
   const body = Buffer.from("test-capture");
   const sha256 = createHash("sha256").update(body).digest("hex");
   const accessEvents: Array<Record<string, unknown>> = [];
@@ -961,7 +1004,7 @@ test("Flow MCP exposes the standard Streamable HTTP tools behind Vitrines bearer
   const result = await mcpMessage(search) as {
     result: { content: Array<{ type: string; text?: string; data?: string; mimeType?: string }> };
   };
-  assert.match(result.result.content[0]?.text ?? "", /invite-admins/);
+  assert.match(result.result.content[0]?.text ?? "", /logging-in-1/);
   const searchPayload = JSON.parse(result.result.content[0]?.text ?? "{}") as {
     query?: string;
     effectiveQuery?: string;
@@ -972,12 +1015,15 @@ test("Flow MCP exposes the standard Streamable HTTP tools behind Vitrines bearer
   assert.equal(searchPayload.query, "login flow");
   assert.equal(searchPayload.effectiveQuery, "logging in");
   assert.deepEqual(searchPayload.searchedPlatforms, ["web"]);
-  assert.equal(searchPayload.resultCount, 1);
-  assert.deepEqual(searchPayload.flows?.[0]?.previewSteps, ["Choose administrator permissions"]);
-  assert.deepEqual(result.result.content.slice(1), [
-    { type: "text", text: "Top Flow preview 1: Invite workspace administrators — linear (web) — Choose administrator permissions" },
-    { type: "image", data: "dGVzdC1jYXB0dXJl", mimeType: "image/jpeg" },
-  ]);
+  assert.equal(searchPayload.resultCount, 4);
+  assert.deepEqual(searchPayload.flows?.[0]?.previewSteps, ["Login 1, step 1", "Login 1, step 2", "Login 1, step 3"]);
+  assert.equal(result.result.content.filter(({ type }) => type === "image").length, 12);
+  assert.deepEqual(
+    result.result.content.filter(({ type }) => type === "text").slice(1).map(({ text }) => text),
+    Array.from({ length: 4 }, (_, flowIndex) => Array.from({ length: 3 }, (_, previewIndex) =>
+      `Flow result ${flowIndex + 1}, preview ${previewIndex + 1}: Logging in ${flowIndex + 1} — linear (web) — Login ${flowIndex + 1}, step ${previewIndex + 1}`
+    )).flat(),
+  );
   const screenSearch = await request({
     jsonrpc: "2.0",
     id: 7,
