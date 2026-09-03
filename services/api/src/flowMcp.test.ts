@@ -501,7 +501,10 @@ test("Flow MCP exposes the standard Streamable HTTP tools behind Vitrines bearer
     result: { content: Array<{ type: string; text?: string; data?: string; mimeType?: string }> };
   };
   assert.match(detailResult.result.content[0]?.text ?? "", /Choose administrator permissions/);
-  assert.deepEqual(detailResult.result.content.slice(1), []);
+  assert.deepEqual(detailResult.result.content.slice(1), [
+    { type: "text", text: "Screen capture: Choose administrator permissions" },
+    { type: "image", data: "dGVzdC1jYXB0dXJl", mimeType: "image/jpeg" },
+  ]);
   const app = await request({
     jsonrpc: "2.0",
     id: 5,

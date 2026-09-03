@@ -242,7 +242,7 @@ export async function searchAccessibleFlows(
 
 interface AccessibleFlow {
   value: Record<string, unknown>;
-  screenshots: CrawledImage[];
+  screenshots: Array<{ label: string; image: CrawledImage }>;
 }
 
 async function accessibleFlow(
@@ -263,8 +263,19 @@ async function accessibleFlow(
     publishedOnly: true,
   });
   const imagesById = new Map(images.map((image) => [image.id, image]));
+  const labelsByImageId = new Map<number, string>();
+  for (const step of flow.steps) {
+    for (const imageId of step.evidence) {
+      if (Number.isSafeInteger(imageId) && imageId > 0 && !labelsByImageId.has(imageId)) {
+        labelsByImageId.set(imageId, step.label);
+      }
+    }
+  }
   return {
-    screenshots: images,
+    screenshots: imageIds.flatMap((imageId) => {
+      const image = imagesById.get(imageId);
+      return image ? [{ label: labelsByImageId.get(imageId) ?? flow.title, image }] : [];
+    }),
     value: {
       app: input.app,
       platform: input.platform,
@@ -344,6 +355,7 @@ async function resultWithInlineScreenshots(
   value: unknown,
   screenshots: Array<{ label: string; image: CrawledImage }>,
   deps: { readInlineImage(image: CrawledImage): Promise<FlowMcpInlineImage | undefined> },
+  markUnavailableAsError = true,
 ) {
   const inline = await Promise.all(screenshots.map(async ({ label, image }) => ({
     label,
@@ -360,7 +372,7 @@ async function resultWithInlineScreenshots(
         { type: "text" as const, text: "The screenshot could not be embedded because its verified thumbnail is unavailable or exceeds the size limit. Use the screenshot URL instead." },
       ]),
     ],
-    ...(unavailable ? { isError: true } : {}),
+    ...(unavailable && markUnavailableAsError ? { isError: true } : {}),
   };
 }
 
@@ -419,9 +431,14 @@ export function createFlowMcpServer(user: AuthUser, deps: FlowMcpDependencies): 
       outcome: flow ? "success" : "unavailable",
       ...(flow ? { resultCount: 1 } : {}),
     });
-    return flow ? {
-      content: [{ type: "text" as const, text: JSON.stringify(flow.value, null, 2) }],
-    } : {
+    return flow ? resultWithInlineScreenshots(
+      flow.value,
+      flow.screenshots,
+      {
+        readInlineImage: (image) => deps.readInlineImage(image, MAX_INLINE_SCREENSHOT_BYTES),
+      },
+      false,
+    ) : {
       content: [{ type: "text" as const, text: "This published flow is not available to the current Vitrines account." }],
       isError: true,
     };
