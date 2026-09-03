@@ -1,3 +1,5 @@
+SET LOCAL statement_timeout = '30min';
+
 CREATE TABLE published_screen_search_documents (
   version_id INTEGER NOT NULL REFERENCES app_versions(id) ON DELETE CASCADE,
   image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE,

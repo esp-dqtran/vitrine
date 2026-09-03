@@ -432,6 +432,7 @@ const migrationDefinitions = [
   {
     file: "0110_published_screen_search.sql",
     patterns: [
+      /SET LOCAL statement_timeout = '30min'/,
       /CREATE TABLE published_screen_search_documents/,
       /GENERATED ALWAYS AS/,
       /analysis->>'visibleText'/,
