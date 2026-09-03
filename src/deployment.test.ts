@@ -59,6 +59,7 @@ test("production deploy commands use the guarded release script", async () => {
   assert.match(deployScript, /wrangler deploy --keep-vars/);
   assert.match(deployScript, /wrangler deploy --dry-run --keep-vars/);
   assert.match(deployScript, /preflight_migrations/);
+  assert.match(deployScript, /APP_URL='\$app_url' is not the canonical production origin/);
   assert.match(
     deployScript,
     /docker run --rm --env-file '\$ENV_FILE' '\$IMAGE:\$sha'[\s\\]*node --experimental-strip-types scripts\/migrate\.ts/,

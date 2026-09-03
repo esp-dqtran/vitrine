@@ -92,11 +92,16 @@ Commit the missing migration file(s), or build from a commit that contains them.
 # not a degraded feature, so check before swapping containers.
 preflight_env() {
   say "Preflight: env values"
-  local provider
+  local provider app_url
   provider="$(ssh -o BatchMode=yes "$DROPLET" "grep '^APP_KNOWLEDGE_PROVIDER=' $ENV_FILE | cut -d= -f2-" || true)"
   case "$provider" in
     ""|"chatgpt-browser") echo "ok — APP_KNOWLEDGE_PROVIDER='$provider'" ;;
     *) die "APP_KNOWLEDGE_PROVIDER='$provider' is not a value the code accepts (want '' or chatgpt-browser)" ;;
+  esac
+  app_url="$(ssh -o BatchMode=yes "$DROPLET" "grep '^APP_URL=' $ENV_FILE | cut -d= -f2-" || true)"
+  case "$app_url" in
+    "https://vitrines.ai") echo "ok — APP_URL='$app_url'" ;;
+    *) die "APP_URL='$app_url' is not the canonical production origin (want https://vitrines.ai)" ;;
   esac
 }
 
